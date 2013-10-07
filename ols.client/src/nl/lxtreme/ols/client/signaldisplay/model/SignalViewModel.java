@@ -29,6 +29,7 @@ import javax.swing.*;
 import nl.lxtreme.ols.client.signaldisplay.*;
 import nl.lxtreme.ols.client.signaldisplay.model.SignalDiagramModel.SignalAlignment;
 import nl.lxtreme.ols.client.signaldisplay.view.*;
+import nl.lxtreme.ols.common.annotation.*;
 
 
 /**
@@ -227,6 +228,14 @@ public class SignalViewModel extends AbstractViewModel
   }
 
   /**
+   * @return
+   */
+  public long getAbsoluteLength()
+  {
+    return this.controller.getSignalDiagramModel().getAbsoluteLength();
+  }
+
+  /**
    * Returns whether or not the alternative rendering style for annotations
    * should be used.
    * 
@@ -284,5 +293,13 @@ public class SignalViewModel extends AbstractViewModel
   public boolean isSloppyScopeRenderingAllowed()
   {
     return !UIManager.getBoolean( DISABLE_SLOPPY_SCOPE_PAINTING );
+  }
+
+  /**
+   * @return
+   */
+  public AnnotationData getAnnotationData()
+  {
+    return getSignalDiagramModel().getAnnotationData();
   }
 }

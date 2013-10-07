@@ -41,67 +41,25 @@ class FileUtils
    * @return the file extension (always in lower case), never <code>null</code>
    *         but can be empty if the given file has <em>no</em> file extension.
    */
-  public static final String stripFileExtension( final File aFile, final String... aExtensions )
+  public static final String getFileExtension( final File aFile )
   {
-    return stripFileExtension( aFile.getName(), aExtensions );
-  }
+    String ext = "";
 
-  /**
-   * Returns the "presumed" filename extension (like '.jpg', '.zip') from a
-   * given file.
-   * 
-   * @param aFilename
-   *          the name of the file to strip the extension from, cannot be
-   *          <code>null</code>;
-   * @param aExtensions
-   *          the (optional) extensions that should be stripped. If omitted,
-   *          everything behind the last dot will be removed.
-   * @return the file extension (always in lower case), never <code>null</code>
-   *         but can be empty if the given file has <em>no</em> file extension.
-   */
-  public static final String stripFileExtension( final String aFilename, final String... aExtensions )
-  {
-    String result = "";
+    String filename = aFile.getName();
+    int idx = filename.lastIndexOf( '.' );
 
-    int idx = aFilename.lastIndexOf( '.' );
-    if ( ( idx >= 0 ) && ( idx < ( aFilename.length() - 1 ) ) )
+    if ( ( idx >= 0 ) && ( idx < ( filename.length() - 1 ) ) )
     {
-      result = aFilename.substring( 0, idx );
-
-      boolean found = ( aExtensions == null ) || ( aExtensions.length == 0 );
-
-      final String ext = aFilename.substring( idx + 1 ).toLowerCase();
-      if ( ( aExtensions != null ) && ( aExtensions.length > 0 ) )
-      {
-        for ( String extension : aExtensions )
-        {
-          if ( ext.equalsIgnoreCase( extension ) )
-          {
-            found = true;
-            break;
-          }
-        }
-      }
-
-      if ( !found )
-      {
-        result = aFilename;
-      }
+      ext = filename.substring( idx + 1 ).toLowerCase();
     }
 
-    return result;
-  }
+    // Avoid directories being detected as having a file extension...
+    if ( aFile.exists() && aFile.isDirectory() && !"".equals( ext ) )
+    {
+      ext = "";
+    }
 
-  /**
-   * Returns whether the current host's operating system is Windows.
-   * 
-   * @return <code>true</code> if running on Windows, <code>false</code>
-   *         otherwise.
-   */
-  public boolean isWindows()
-  {
-    final String osName = System.getProperty( "os.name" ).toLowerCase();
-    return osName.indexOf( "win" ) >= 0;
+    return ext;
   }
 
   /**
@@ -148,5 +106,59 @@ class FileUtils
     }
 
     return new File( directory, filename );
+  }
+
+  /**
+   * Returns the "presumed" filename extension (like '.jpg', '.zip') from a
+   * given file.
+   * 
+   * @param aFile
+   *          the file to return the extension for, cannot be <code>null</code>.
+   * @return the file extension (always in lower case), never <code>null</code>
+   *         but can be empty if the given file has <em>no</em> file extension.
+   */
+  public static final String[] stripFileExtension( final File aFile, final String... aExtensions )
+  {
+    return stripFileExtension( aFile.getName(), aExtensions );
+  }
+
+  /**
+   * Returns the "presumed" filename extension (like '.jpg', '.zip') from a
+   * given file.
+   * 
+   * @param aFilename
+   *          the name of the file to strip the extension from, cannot be
+   *          <code>null</code>;
+   * @param aExtensions
+   *          the (optional) extensions that should be stripped. If omitted,
+   *          everything behind the last dot will be removed.
+   * @return the file extension (always in lower case), never <code>null</code>
+   *         but can be empty if the given file has <em>no</em> file extension.
+   */
+  public static final String[] stripFileExtension( final String aFilename, final String... aExtensions )
+  {
+    String strippedName = aFilename;
+    String foundExt = null;
+
+    int idx = aFilename.lastIndexOf( '.' );
+    if ( ( idx >= 0 ) && ( idx < ( aFilename.length() - 1 ) ) )
+    {
+      strippedName = aFilename.substring( 0, idx );
+
+      final String ext = aFilename.substring( idx + 1 ).toLowerCase();
+      if ( ( aExtensions != null ) && ( aExtensions.length > 0 ) )
+      {
+        for ( String extension : aExtensions )
+        {
+          if ( ext.equalsIgnoreCase( extension ) )
+          {
+            foundExt = ext;
+            break;
+          }
+        }
+      }
+    }
+
+    return new String[] { strippedName, foundExt };
   }
 }

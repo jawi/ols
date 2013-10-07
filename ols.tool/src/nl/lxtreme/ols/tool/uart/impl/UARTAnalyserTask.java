@@ -27,7 +27,6 @@ import java.util.logging.*;
 
 import nl.lxtreme.ols.common.acquisition.*;
 import nl.lxtreme.ols.tool.api.*;
-import nl.lxtreme.ols.tool.base.annotation.*;
 import nl.lxtreme.ols.tool.uart.*;
 import nl.lxtreme.ols.tool.uart.AsyncSerialDataDecoder.BitEncoding;
 import nl.lxtreme.ols.tool.uart.AsyncSerialDataDecoder.BitLevel;
@@ -58,7 +57,7 @@ public class UARTAnalyserTask implements ToolTask<UARTDataSet>
 
   private final ToolContext context;
   private final ToolProgressListener progressListener;
-  private final AnnotationListener annotationListener;
+  private final ToolAnnotationHelper annHelper;
 
   private int rxdIndex;
   private int txdIndex;
@@ -80,14 +79,12 @@ public class UARTAnalyserTask implements ToolTask<UARTDataSet>
 
   /**
    * @param aContext
-   * @param aAnnotationListener
    */
-  public UARTAnalyserTask( final ToolContext aContext, final ToolProgressListener aProgressListener,
-      final AnnotationListener aAnnotationListener )
+  public UARTAnalyserTask( final ToolContext aContext, final ToolProgressListener aProgressListener )
   {
     this.context = aContext;
     this.progressListener = aProgressListener;
-    this.annotationListener = aAnnotationListener;
+    this.annHelper = new ToolAnnotationHelper( aContext );
 
     this.rxdIndex = -1;
     this.txdIndex = -1;
@@ -335,8 +332,8 @@ public class UARTAnalyserTask implements ToolTask<UARTDataSet>
   private void addSymbolAnnotation( final int aChannelIndex, final int aSymbol, final long aStartTimestamp,
       final long aEndTimestamp )
   {
-    this.annotationListener.onAnnotation( new SampleDataAnnotation( aChannelIndex, aStartTimestamp, aEndTimestamp,
-        String.format( "0x%1$X (%1$c)", Integer.valueOf( aSymbol ) ) ) );
+    this.annHelper.addAnnotation( aChannelIndex, aStartTimestamp, aEndTimestamp,
+        String.format( "0x%1$X (%1$c)", Integer.valueOf( aSymbol ) ) );
   }
 
   /**
@@ -405,11 +402,14 @@ public class UARTAnalyserTask implements ToolTask<UARTDataSet>
     {
       // Auto detect the baud rate...
       final int mask = ( 1 << aChannelIndex );
-      final BaudRateAnalyzer baudRateAnalyzer = new BaudRateAnalyzer( data.getSampleRate(), data.getValues(), data.getTimestamps(), mask );
+      final BaudRateAnalyzer baudRateAnalyzer = new BaudRateAnalyzer( data.getSampleRate(), data.getValues(),
+          data.getTimestamps(), mask );
       baudRate = baudRateAnalyzer.getBaudRateExact();
       // Set nominal (normalized) baud rate
       aDataSet.setBaudRate( baudRateAnalyzer.getBaudRate() );
-    } else {
+    }
+    else
+    {
       baudRate = this.baudRate;
       // Set nominal baud rate
       aDataSet.setBaudRate( baudRate );
@@ -425,8 +425,8 @@ public class UARTAnalyserTask implements ToolTask<UARTDataSet>
     else
     {
 
-      SerialConfiguration config = new SerialConfiguration( baudRate, this.bitCount,
-          this.stopBits, this.parity, this.bitEncoding, this.bitOrder, this.idleLevel );
+      SerialConfiguration config = new SerialConfiguration( baudRate, this.bitCount, this.stopBits, this.parity,
+          this.bitEncoding, this.bitOrder, this.idleLevel );
 
       AsyncSerialDataDecoder decoder = new AsyncSerialDataDecoder( config, this.context );
       decoder.setProgressListener( this.progressListener );
@@ -572,7 +572,7 @@ public class UARTAnalyserTask implements ToolTask<UARTDataSet>
    */
   private void prepareResult( final int aChannelIndex, final String aLabel )
   {
-    this.annotationListener.clearAnnotations( aChannelIndex );
-    this.annotationListener.onAnnotation( new ChannelLabelAnnotation( aChannelIndex, aLabel ) );
+    this.annHelper.clearAnnotations( aChannelIndex );
+    this.annHelper.addLabelAnnotation( aChannelIndex, aLabel );
   }
 }

@@ -23,7 +23,6 @@ package nl.lxtreme.ols.tool.dmx512;
 
 import nl.lxtreme.ols.common.acquisition.*;
 import nl.lxtreme.ols.tool.api.*;
-import nl.lxtreme.ols.tool.base.annotation.*;
 import nl.lxtreme.ols.tool.uart.AsyncSerialDataDecoder.BitEncoding;
 import nl.lxtreme.ols.tool.uart.AsyncSerialDataDecoder.BitLevel;
 import nl.lxtreme.ols.tool.uart.AsyncSerialDataDecoder.BitOrder;
@@ -52,8 +51,8 @@ public class DMX512AnalyzerTask implements ToolTask<DMX512DataSet>
   // VARIABLES
 
   private final ToolContext context;
+  private final ToolAnnotationHelper annHelper;
   private final ToolProgressListener progressListener;
-  private final AnnotationListener annotationListener;
 
   private int dataLine;
 
@@ -62,12 +61,11 @@ public class DMX512AnalyzerTask implements ToolTask<DMX512DataSet>
   /**
    * Creates a new {@link DMX512AnalyzerTask} instance.
    */
-  public DMX512AnalyzerTask( final ToolContext aContext, final ToolProgressListener aProgressListener,
-      final AnnotationListener aAnnotationListener )
+  public DMX512AnalyzerTask( final ToolContext aContext, final ToolProgressListener aProgressListener )
   {
     this.context = aContext;
     this.progressListener = aProgressListener;
-    this.annotationListener = aAnnotationListener;
+    this.annHelper = new ToolAnnotationHelper( aContext );
 
     this.dataLine = -1;
   }
@@ -109,11 +107,11 @@ public class DMX512AnalyzerTask implements ToolTask<DMX512DataSet>
 
     final DMX512DataSet dataSet = new DMX512DataSet( startOfDecode, endOfDecode, data );
 
-    this.annotationListener.clearAnnotations( this.dataLine );
-    this.annotationListener.onAnnotation( new ChannelLabelAnnotation( this.dataLine, DMX512_DATA_LABEL ) );
+    this.annHelper.clearAnnotations( this.dataLine );
+    this.annHelper.addLabelAnnotation( this.dataLine, DMX512_DATA_LABEL );
 
     final SerialConfiguration config = new SerialConfiguration( BAUDRATE, DATABITS, STOPBITS, PARITY,
-        BitEncoding.HIGH_IS_MARK, BitOrder.MSB_FIRST, BitLevel.HIGH);
+        BitEncoding.HIGH_IS_MARK, BitOrder.MSB_FIRST, BitLevel.HIGH );
 
     final DMX512SerialDataDecoder decoder = new DMX512SerialDataDecoder( config, this.context );
     decoder.setProgressListener( this.progressListener );
@@ -160,8 +158,7 @@ public class DMX512AnalyzerTask implements ToolTask<DMX512DataSet>
       private void addEventAnnotation( final int aChannelIdx, final String aEvent, final long aStartTimestamp,
           final long aEndTimestamp )
       {
-        DMX512AnalyzerTask.this.annotationListener.onAnnotation( new SampleDataAnnotation( aChannelIdx,
-            aStartTimestamp, aEndTimestamp, aEvent ) );
+        DMX512AnalyzerTask.this.annHelper.addAnnotation( aChannelIdx, aStartTimestamp, aEndTimestamp, aEvent );
       }
 
       /**
@@ -177,8 +174,8 @@ public class DMX512AnalyzerTask implements ToolTask<DMX512DataSet>
       private void addSymbolAnnotation( final int aChannelIdx, final int aSymbol, final long aStartTimestamp,
           final long aEndTimestamp )
       {
-        DMX512AnalyzerTask.this.annotationListener.onAnnotation( new SampleDataAnnotation( aChannelIdx,
-            aStartTimestamp, aEndTimestamp, String.format( "0x%1$X (%1$c)", Integer.valueOf( aSymbol ) ) ) );
+        DMX512AnalyzerTask.this.annHelper.addAnnotation( aChannelIdx, aStartTimestamp, aEndTimestamp,
+            String.format( "0x%1$X (%1$c)", Integer.valueOf( aSymbol ) ) );
       }
     } );
 

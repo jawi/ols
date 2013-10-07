@@ -28,7 +28,6 @@ import java.util.logging.*;
 
 import nl.lxtreme.ols.common.acquisition.*;
 import nl.lxtreme.ols.tool.api.*;
-import nl.lxtreme.ols.tool.base.annotation.*;
 
 
 /**
@@ -55,7 +54,7 @@ public class I2CAnalyserTask implements ToolTask<I2CDataSet>
 
   private final ToolContext context;
   private final ToolProgressListener progressListener;
-  private final AnnotationListener annotationListener;
+  private final ToolAnnotationHelper annHelper;
   private final PropertyChangeSupport pcs;
 
   private boolean detectSDA_SCL;
@@ -78,12 +77,11 @@ public class I2CAnalyserTask implements ToolTask<I2CDataSet>
    * @param aContext
    * @param aProgressListener
    */
-  public I2CAnalyserTask( final ToolContext aContext, final ToolProgressListener aProgressListener,
-      final AnnotationListener aAnnotationListener )
+  public I2CAnalyserTask( final ToolContext aContext, final ToolProgressListener aProgressListener )
   {
     this.context = aContext;
     this.progressListener = aProgressListener;
-    this.annotationListener = aAnnotationListener;
+    this.annHelper = new ToolAnnotationHelper( aContext );
 
     this.pcs = new PropertyChangeSupport( this );
 
@@ -177,8 +175,8 @@ public class I2CAnalyserTask implements ToolTask<I2CDataSet>
       // We've just found our start condition, start the report with that...
       reportStartCondition( i2cDataSet, startOfDecode );
 
-      this.annotationListener.onAnnotation( new SampleDataAnnotation( this.sdaIdx, timestamps[startOfDecode],
-          I2CDataSet.I2C_START ) );
+      this.annHelper.addAnnotation( this.sdaIdx, timestamps[startOfDecode], timestamps[startOfDecode] + 1,
+          I2CDataSet.I2C_START );
 
       startCondFound = true;
     }
@@ -246,8 +244,7 @@ public class I2CAnalyserTask implements ToolTask<I2CDataSet>
                 Integer.valueOf( byteValue ), Integer.valueOf( byteValue ) );
           }
 
-          this.annotationListener.onAnnotation( new SampleDataAnnotation( this.sdaIdx, timestamps[prevIdx],
-              timestamps[idx], annotation ) );
+          this.annHelper.addAnnotation( this.sdaIdx, timestamps[prevIdx], timestamps[idx], annotation );
 
           byteValue = 0;
         }
@@ -278,16 +275,14 @@ public class I2CAnalyserTask implements ToolTask<I2CDataSet>
               // NACK
               reportNACK( i2cDataSet, idx );
 
-              this.annotationListener.onAnnotation( new SampleDataAnnotation( this.sdaIdx, timestamps[idx],
-                  I2CDataSet.I2C_NACK ) );
+              this.annHelper.addAnnotation( this.sdaIdx, timestamps[idx], timestamps[idx] + 1, I2CDataSet.I2C_NACK );
             }
             else
             {
               // ACK
               reportACK( i2cDataSet, idx );
 
-              this.annotationListener.onAnnotation( new SampleDataAnnotation( this.sdaIdx, timestamps[idx],
-                  I2CDataSet.I2C_ACK ) );
+              this.annHelper.addAnnotation( this.sdaIdx, timestamps[idx], timestamps[idx] + 1, I2CDataSet.I2C_ACK );
             }
 
             // next byte
@@ -313,8 +308,7 @@ public class I2CAnalyserTask implements ToolTask<I2CDataSet>
             // SDA rises, this is a stop condition
             reportStopCondition( i2cDataSet, idx );
 
-            this.annotationListener.onAnnotation( new SampleDataAnnotation( this.sdaIdx, timestamps[idx],
-                I2CDataSet.I2C_STOP ) );
+            this.annHelper.addAnnotation( this.sdaIdx, timestamps[idx], timestamps[idx] + 1, I2CDataSet.I2C_STOP );
 
             slaveAddress = 0x00;
             direction = -1;
@@ -324,8 +318,7 @@ public class I2CAnalyserTask implements ToolTask<I2CDataSet>
             // SDA falls, this is a start condition
             reportStartCondition( i2cDataSet, idx );
 
-            this.annotationListener.onAnnotation( new SampleDataAnnotation( this.sdaIdx, timestamps[idx],
-                I2CDataSet.I2C_START ) );
+            this.annHelper.addAnnotation( this.sdaIdx, timestamps[idx], timestamps[idx] + 1, I2CDataSet.I2C_START );
 
             startCondFound = true;
           }
@@ -527,11 +520,10 @@ public class I2CAnalyserTask implements ToolTask<I2CDataSet>
     this.pcs.firePropertyChange( PROPERTY_AUTO_DETECT_SDA, null, this.sdaIdx == this.lineBidx ? LINE_B : LINE_A );
 
     // Update the channel labels...
-    this.annotationListener.onAnnotation( new ChannelLabelAnnotation( this.sclIdx, CHANNEL_SCL_NAME ) );
-    this.annotationListener.clearAnnotations( this.sclIdx );
+    this.annHelper.clearAnnotations( this.sclIdx, this.sdaIdx );
 
-    this.annotationListener.onAnnotation( new ChannelLabelAnnotation( this.sdaIdx, CHANNEL_SDA_NAME ) );
-    this.annotationListener.clearAnnotations( this.sdaIdx );
+    this.annHelper.addLabelAnnotation( this.sclIdx, CHANNEL_SCL_NAME );
+    this.annHelper.addLabelAnnotation( this.sdaIdx, CHANNEL_SDA_NAME );
   }
 
   /**

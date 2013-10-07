@@ -18,29 +18,34 @@
  * Copyright (C) 2006-2010 Michael Poppitz, www.sump.org
  * Copyright (C) 2010 J.W. Janssen, www.lxtreme.nl
  */
-package nl.lxtreme.ols.common.acquisition;
+package nl.lxtreme.ols.common.annotation;
 
 
 /**
- * Denotes an annotation for data, which normally covers a certain range of
- * samples.
+ * Denotes an annotation, which is additional data that can be added to a
+ * channel, for example, to show the results of a decoding process.
  */
-public interface DataAnnotation<ANNOTATION_TYPE> extends Annotation<ANNOTATION_TYPE>
+public interface Annotation extends Comparable<Annotation>
 {
   // METHODS
 
   /**
-   * Returns the ending timecstamp of this annotation.
+   * Returns the actual annotation data.
+   * <p>
+   * The returned data can be of <em>any</em> type. One constraint that
+   * <b>all</b> annotation types must adhere is that they have a proper
+   * {@link Object#toString()} implementation.
+   * </p>
    * 
-   * @return a time stamp, >= 0.
+   * @return annotation data, never <code>null</code>.
    */
-  public long getEndTimestamp();
+  Object getData();
 
   /**
-   * Returns the starting time stamp of this annotation.
+   * Returns the index of the channel to annotate.
    * 
-   * @return a time stamp, >= 0.
+   * @return a channel index, >= 0.
    */
-  public long getStartTimestamp();
+  int getChannelIndex();
 
 }

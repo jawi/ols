@@ -94,9 +94,8 @@ public class I2CAnalyserWorkerContentTest
     ToolContext toolContext = DataTestUtils.createToolContext( container );
 
     ToolProgressListener progressListener = Mockito.mock( ToolProgressListener.class );
-    AnnotationListener annotationListener = Mockito.mock( AnnotationListener.class );
 
-    I2CAnalyserTask worker = new I2CAnalyserTask( toolContext, progressListener, annotationListener );
+    I2CAnalyserTask worker = new I2CAnalyserTask( toolContext, progressListener );
     worker.setLineAIndex( aSclIndex );
     worker.setLineBIndex( aSdaIndex );
     worker.setDetectSDA_SCL( false );

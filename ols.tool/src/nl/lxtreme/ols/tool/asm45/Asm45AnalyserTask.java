@@ -232,10 +232,8 @@ public class Asm45AnalyserTask implements ToolTask<Asm45DataSet>
    * 
    * @param aContext
    * @param aProgressListener
-   * @param aAnnotationListener
    */
-  public Asm45AnalyserTask( final ToolContext aContext, final ToolProgressListener aProgressListener,
-      final AnnotationListener aAnnotationListener )
+  public Asm45AnalyserTask( final ToolContext aContext, final ToolProgressListener aProgressListener )
   {
     this.context = aContext;
     this.progressListener = aProgressListener;

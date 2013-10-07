@@ -23,7 +23,6 @@ package nl.lxtreme.ols.tool.asm45;
 
 import java.awt.*;
 
-import nl.lxtreme.ols.common.acquisition.*;
 import nl.lxtreme.ols.tool.api.*;
 
 import org.osgi.framework.*;
@@ -46,10 +45,9 @@ public class Asm45Analyser implements Tool<Asm45DataSet>
    * {@inheritDoc}
    */
   @Override
-  public Asm45AnalyserTask createToolTask( final ToolContext aContext, final ToolProgressListener aProgressListener,
-      final AnnotationListener aAnnotationListener )
+  public Asm45AnalyserTask createToolTask( final ToolContext aContext, final ToolProgressListener aProgressListener )
   {
-    return new Asm45AnalyserTask( aContext, aProgressListener, aAnnotationListener );
+    return new Asm45AnalyserTask( aContext, aProgressListener );
   }
 
   /**

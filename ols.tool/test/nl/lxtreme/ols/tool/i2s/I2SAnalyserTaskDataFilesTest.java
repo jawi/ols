@@ -113,9 +113,8 @@ public class I2SAnalyserTaskDataFilesTest
     ToolContext toolContext = DataTestUtils.createToolContext( container, 0, Integer.MAX_VALUE );
 
     ToolProgressListener progressListener = Mockito.mock( ToolProgressListener.class );
-    AnnotationListener annotationListener = Mockito.mock( AnnotationListener.class );
 
-    I2SAnalyserTask worker = new I2SAnalyserTask( toolContext, progressListener, annotationListener );
+    I2SAnalyserTask worker = new I2SAnalyserTask( toolContext, progressListener );
     worker.setClockIndex( this.clockIdx );
     worker.setDataIndex( this.dataIdx );
     worker.setWordSelectIndex( this.wsIdx );

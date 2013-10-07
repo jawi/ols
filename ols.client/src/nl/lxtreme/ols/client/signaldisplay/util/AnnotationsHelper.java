@@ -23,19 +23,19 @@ package nl.lxtreme.ols.client.signaldisplay.util;
 
 import java.util.*;
 
-import nl.lxtreme.ols.client.signaldisplay.signalelement.*;
-import nl.lxtreme.ols.common.acquisition.*;
+import nl.lxtreme.ols.common.annotation.*;
 
 
 /**
  * 
  */
-@SuppressWarnings( { "rawtypes", "unchecked" } )
-public final class AnnotationsHelper
+@SuppressWarnings( { "unchecked" } )
+public final class AnnotationsHelper extends AnnotationHelper
 {
   // VARIABLES
 
-  private final Channel channel;
+  private final AnnotationData annotationData;
+  private final int channelIdx;
 
   // CONSTRUCTORS
 
@@ -45,33 +45,14 @@ public final class AnnotationsHelper
    * @param aChannel
    *          the channel to use, cannot be <code>null</code>.
    */
-  public AnnotationsHelper( final Channel aChannel )
+  public AnnotationsHelper( final AnnotationData aAnnotationData, final int aChannelIndex )
   {
-    if ( aChannel == null )
+    if ( aAnnotationData == null )
     {
-      throw new IllegalArgumentException( "Channel cannot be null!" );
+      throw new IllegalArgumentException( "AnnotationData cannot be null!" );
     }
-    this.channel = aChannel;
-  }
-
-  /**
-   * Creates a new {@link AnnotationsHelper} instance.
-   * 
-   * @param aElement
-   *          the element to get the annotations from, cannot be
-   *          <code>null</code> and must represent a digital signal.
-   */
-  public AnnotationsHelper( final SignalElement aElement )
-  {
-    if ( aElement == null )
-    {
-      throw new IllegalArgumentException( "Element cannot be null!" );
-    }
-    if ( !aElement.isDigitalSignal() )
-    {
-      throw new IllegalArgumentException( "Can only work for digital channels!" );
-    }
-    this.channel = aElement.getChannel();
+    this.annotationData = aAnnotationData;
+    this.channelIdx = aChannelIndex;
   }
 
   // METHODS
@@ -85,17 +66,17 @@ public final class AnnotationsHelper
    * @return an annotation matching the given timestamp criteria,
    *         <code>null</code> if not found.
    */
-  public DataAnnotation<?> getAnnotation( final long aTimestamp )
+  public DataAnnotation getAnnotation( final long aTimestamp )
   {
-    DataAnnotation<?> result = null;
-    for ( Annotation<?> annotation : this.channel.getAnnotations() )
+    DataAnnotation result = null;
+    for ( Annotation annotation : this.annotationData.getAnnotations( this.channelIdx ) )
     {
-      if ( !( annotation instanceof DataAnnotation<?> ) )
+      if ( !( annotation instanceof DataAnnotation ) )
       {
         continue;
       }
 
-      final DataAnnotation<?> ann = ( DataAnnotation<?> )annotation;
+      final DataAnnotation ann = ( DataAnnotation )annotation;
 
       final long annStartTime = ann.getStartTimestamp();
       final long annEndTime = ann.getEndTimestamp();
@@ -117,17 +98,17 @@ public final class AnnotationsHelper
    * @return an annotation matching the given timestamp criteria,
    *         <code>null</code> if not found.
    */
-  public DataAnnotation<?> getAnnotationAfter( final long aTimestamp )
+  public DataAnnotation getAnnotationAfter( final long aTimestamp )
   {
-    SortedSet<Annotation<?>> annotations = new TreeSet<Annotation<?>>( this.channel.getAnnotations() );
-    for ( Annotation<?> annotation : annotations )
+    SortedSet<Annotation> annotations = new TreeSet<Annotation>( this.annotationData.getAnnotations( this.channelIdx ) );
+    for ( Annotation annotation : annotations )
     {
-      if ( !( annotation instanceof DataAnnotation<?> ) )
+      if ( !( annotation instanceof DataAnnotation ) )
       {
         continue;
       }
 
-      final DataAnnotation<?> ann = ( DataAnnotation<?> )annotation;
+      final DataAnnotation ann = ( DataAnnotation )annotation;
 
       final long annStartTime = ann.getStartTimestamp();
       final long annEndTime = ann.getEndTimestamp();
@@ -149,19 +130,19 @@ public final class AnnotationsHelper
    * @return an annotation matching the given timestamp criteria,
    *         <code>null</code> if not found.
    */
-  public DataAnnotation<?> getAnnotationBefore( final long aTimestamp )
+  public DataAnnotation getAnnotationBefore( final long aTimestamp )
   {
-    DataAnnotation<?> result = null;
+    DataAnnotation result = null;
 
-    SortedSet<Annotation<?>> annotations = new TreeSet<Annotation<?>>( this.channel.getAnnotations() );
-    for ( Annotation<?> annotation : annotations )
+    SortedSet<Annotation> annotations = new TreeSet<Annotation>( this.annotationData.getAnnotations( this.channelIdx ) );
+    for ( Annotation annotation : annotations )
     {
-      if ( !( annotation instanceof DataAnnotation<?> ) )
+      if ( !( annotation instanceof DataAnnotation ) )
       {
         continue;
       }
 
-      final DataAnnotation<?> ann = ( DataAnnotation<?> )annotation;
+      final DataAnnotation ann = ( DataAnnotation )annotation;
 
       final long annStartTime = ann.getStartTimestamp();
       final long annEndTime = ann.getEndTimestamp();
@@ -188,18 +169,18 @@ public final class AnnotationsHelper
    *          the end timestamp.
    * @return a list with annotations, never <code>null</code>.
    */
-  public <T extends DataAnnotation<?>> List<T> getAnnotations( final Class<T> aType, final long aStartTime,
+  public <T extends DataAnnotation> List<T> getAnnotations( final Class<T> aType, final long aStartTime,
       final long aEndTime )
   {
     List<T> result = new ArrayList<T>();
-    for ( Annotation<?> annotation : this.channel.getAnnotations() )
+    for ( Annotation annotation : this.annotationData.getAnnotations( this.channelIdx ) )
     {
       if ( !aType.isAssignableFrom( annotation.getClass() ) )
       {
         continue;
       }
 
-      final DataAnnotation<?> ann = ( DataAnnotation<?> )annotation;
+      final DataAnnotation ann = ( DataAnnotation )annotation;
 
       final long annStartTime = ann.getStartTimestamp();
       final long annEndTime = ann.getEndTimestamp();

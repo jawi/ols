@@ -47,12 +47,10 @@ public interface LineDecoder
 
   /**
    * @param aContext
-   * @param aAnnotationListener
    * @param aListener
    * @throws Exception
    */
-  AcquisitionData decode( LineDecoderToolContext aContext, AnnotationListener aAnnotationListener,
-      ToolProgressListener aListener ) throws Exception;
+  AcquisitionData decode( LineDecoderToolContext aContext, ToolProgressListener aListener ) throws Exception;
 
   /**
    * Provides the names of the lines/channels that are needed by this line

@@ -24,7 +24,6 @@ package nl.lxtreme.ols.tool.i2s;
 import static nl.lxtreme.ols.tool.base.NumberUtils.*;
 import nl.lxtreme.ols.common.acquisition.*;
 import nl.lxtreme.ols.tool.api.*;
-import nl.lxtreme.ols.tool.base.annotation.*;
 
 
 /**
@@ -36,7 +35,7 @@ public class I2SAnalyserTask implements ToolTask<I2SDataSet>
 
   private final ToolContext context;
   private final ToolProgressListener progressListener;
-  private final AnnotationListener annotationListener;
+  private final ToolAnnotationHelper annHelper;
 
   private int clockIdx;
   private int dataIdx;
@@ -50,12 +49,11 @@ public class I2SAnalyserTask implements ToolTask<I2SDataSet>
    * @param aContext
    * @param aProgressListener
    */
-  public I2SAnalyserTask( final ToolContext aContext, final ToolProgressListener aProgressListener,
-      final AnnotationListener aAnnotationListener )
+  public I2SAnalyserTask( final ToolContext aContext, final ToolProgressListener aProgressListener )
   {
     this.context = aContext;
     this.progressListener = aProgressListener;
-    this.annotationListener = aAnnotationListener;
+    this.annHelper = new ToolAnnotationHelper( aContext );
   }
 
   // METHODS
@@ -206,14 +204,11 @@ public class I2SAnalyserTask implements ToolTask<I2SDataSet>
   private void prepareResults()
   {
     // Update the channel labels...
-    this.annotationListener.onAnnotation( new ChannelLabelAnnotation( this.clockIdx, "SCK" ) );
-    this.annotationListener.clearAnnotations( this.clockIdx );
+    this.annHelper.clearAnnotations( this.clockIdx, this.dataIdx, this.wsIdx );
 
-    this.annotationListener.onAnnotation( new ChannelLabelAnnotation( this.dataIdx, "SD" ) );
-    this.annotationListener.clearAnnotations( this.dataIdx );
-
-    this.annotationListener.onAnnotation( new ChannelLabelAnnotation( this.wsIdx, "WS" ) );
-    this.annotationListener.clearAnnotations( this.wsIdx );
+    this.annHelper.addLabelAnnotation( this.clockIdx, "SCK" );
+    this.annHelper.addLabelAnnotation( this.dataIdx, "SD" );
+    this.annHelper.addLabelAnnotation( this.wsIdx, "WS" );
   }
 
   /**
@@ -231,8 +226,7 @@ public class I2SAnalyserTask implements ToolTask<I2SDataSet>
 
     dataSet.reportData( this.dataIdx, startIdx, endIdx, channel, wordValue );
 
-    this.annotationListener.onAnnotation( new SampleDataAnnotation( this.dataIdx, timestamps[startIdx],
-        timestamps[endIdx], text ) );
+    this.annHelper.addAnnotation( this.dataIdx, timestamps[startIdx], timestamps[endIdx], text );
   }
 }
 

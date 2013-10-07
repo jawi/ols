@@ -44,8 +44,7 @@ public class StateAnalyser implements Tool<AcquisitionData>
    * {@inheritDoc}
    */
   @Override
-  public StateAnalysisTask createToolTask( final ToolContext aContext, final ToolProgressListener aProgressListener,
-      final AnnotationListener aAnnotationListener )
+  public StateAnalysisTask createToolTask( final ToolContext aContext, final ToolProgressListener aProgressListener )
   {
     return new StateAnalysisTask( aContext );
   }

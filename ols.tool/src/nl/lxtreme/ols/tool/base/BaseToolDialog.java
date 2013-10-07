@@ -60,7 +60,6 @@ public abstract class BaseToolDialog<RESULT_TYPE> extends JFrame implements Tool
   private final BundleContext bundleContext;
 
   private final TaskExecutionServiceTracker taskExecutionService;
-  private final AnnotationListenerServiceTracker annotationListener;
   private final ToolProgressListenerServiceTracker toolProgressListener;
 
   private ServiceRegistration serviceReg;
@@ -92,7 +91,6 @@ public abstract class BaseToolDialog<RESULT_TYPE> extends JFrame implements Tool
     setModalExclusionType( ModalExclusionType.NO_EXCLUDE );
 
     this.taskExecutionService = new TaskExecutionServiceTracker( aBundleContext );
-    this.annotationListener = new AnnotationListenerServiceTracker( aBundleContext );
     this.toolProgressListener = new ToolProgressListenerServiceTracker( aBundleContext );
   }
 
@@ -120,7 +118,6 @@ public abstract class BaseToolDialog<RESULT_TYPE> extends JFrame implements Tool
   public final void close()
   {
     this.taskExecutionService.close();
-    this.annotationListener.close();
     this.toolProgressListener.close();
 
     try
@@ -181,7 +178,7 @@ public abstract class BaseToolDialog<RESULT_TYPE> extends JFrame implements Tool
     boolean settingsValid = validateToolSettings();
     if ( settingsValid )
     {
-      this.toolTask = this.tool.createToolTask( this.context, this.toolProgressListener, this.annotationListener );
+      this.toolTask = this.tool.createToolTask( this.context, this.toolProgressListener );
       prepareToolTask( this.toolTask );
 
       this.toolFutureTask = this.taskExecutionService.execute( this.toolTask );
@@ -198,7 +195,6 @@ public abstract class BaseToolDialog<RESULT_TYPE> extends JFrame implements Tool
     this.serviceReg = this.bundleContext.registerService( TaskStatusListener.class.getName(), this, null );
 
     this.taskExecutionService.open();
-    this.annotationListener.open();
     this.toolProgressListener.open();
 
     onBeforeShowDialog();

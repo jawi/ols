@@ -28,8 +28,8 @@ import nl.lxtreme.ols.client.signaldisplay.laf.*;
 import nl.lxtreme.ols.client.signaldisplay.model.*;
 import nl.lxtreme.ols.client.signaldisplay.signalelement.*;
 import nl.lxtreme.ols.client.signaldisplay.util.*;
-import nl.lxtreme.ols.common.acquisition.*;
 import nl.lxtreme.ols.common.acquisition.Cursor;
+import nl.lxtreme.ols.common.annotation.*;
 
 
 /**
@@ -107,15 +107,15 @@ public class SignalView extends AbstractViewLayer implements IMeasurementListene
         SignalElement element = findDigitalSignal( point );
         if ( element != null )
         {
-          final AnnotationsHelper helper = new AnnotationsHelper( element );
+          final AnnotationsHelper helper = new AnnotationsHelper( getModel().getAnnotationData(), element.getChannel().getIndex() );
 
           final long timestamp = getModel().locationToTimestamp( point );
 
-          Annotation<?> annotation = helper.getAnnotation( timestamp );
+          Annotation annotation = helper.getAnnotation( timestamp );
           if ( annotation != null )
           {
             SignalView view = ( SignalView )aEvent.getSource();
-            view.setToolTipText( annotation.getAnnotation().toString() );
+            view.setToolTipText( annotation.getData().toString() );
 
             aEvent.consume();
           }

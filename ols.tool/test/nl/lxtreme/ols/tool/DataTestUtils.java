@@ -27,6 +27,7 @@ import java.io.*;
 import java.net.*;
 
 import nl.lxtreme.ols.common.acquisition.*;
+import nl.lxtreme.ols.common.annotation.*;
 import nl.lxtreme.ols.tool.api.*;
 
 import org.junit.*;
@@ -124,8 +125,7 @@ public final class DataTestUtils
    *          the acquisition result to test.
    */
   @SuppressWarnings( "boxing" )
-  public static void assertEquals( final String aMessage, final AcquisitionData aExpected,
-      final AcquisitionData aTested )
+  public static void assertEquals( final String aMessage, final AcquisitionData aExpected, final AcquisitionData aTested )
   {
     assertNotNull( aExpected );
     assertNotNull( aTested );
@@ -188,6 +188,18 @@ public final class DataTestUtils
     // much...
     return new ToolContext()
     {
+      @Override
+      public void addAnnotation( Annotation aAnnotation )
+      {
+        // Nop
+      }
+
+      @Override
+      public void clearAnnotations( int... aChannelIdxs )
+      {
+        // Nop
+      }
+
       @Override
       public int getChannels()
       {

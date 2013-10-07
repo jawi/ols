@@ -16,35 +16,37 @@
  * 51 Franklin St, Fifth Floor, Boston, MA 02110, USA
  *
  * Copyright (C) 2006-2010 Michael Poppitz, www.sump.org
- * Copyright (C) 2010 J.W. Janssen, www.lxtreme.nl
+ * Copyright (C) 2010-2012 J.W. Janssen, www.lxtreme.nl
  */
-package nl.lxtreme.ols.common.acquisition;
+package nl.lxtreme.ols.client.signaldisplay;
+
+
+import java.util.*;
+
+import nl.lxtreme.ols.common.annotation.*;
 
 
 /**
- * Denotes an annotation.
+ * Allows implementations to listen for changes to the annotation data.
  */
-public interface Annotation<ANNOTATION_TYPE> extends Comparable<Annotation<ANNOTATION_TYPE>>
+public interface IAnnotationDataChangedListener extends EventListener
 {
-  // METHODS
+  // METHDOS
 
   /**
-   * Returns the actual annotation.
-   * <p>
-   * The given annotation type is generic, meaning it can be of <em>any</em>
-   * type. One constraint that <b>all</b> annotation types must adhere is that
-   * they have a proper {@link Object#toString()} implementation.
-   * </p>
+   * Called when the annotation data is changed.
    * 
-   * @return an annotation, never <code>null</code>.
+   * @param aData
+   *          the changed annotation data, never <code>null</code>.
    */
-  ANNOTATION_TYPE getAnnotation();
+  void annotationDataChanged( AnnotationData aData );
 
   /**
-   * Returns the channel index of the channel to annotate.
+   * Called when the annotation data is cleared.
    * 
-   * @return a channel index, >= 0 && < 32.
+   * @param aChannelIdx
+   *          the channel index of the channel whose annotations are cleared, or
+   *          <code>null</code> if all annotations are cleared.
    */
-  int getChannel();
-
+  void annotationDataCleared( Integer aChannelIdx );
 }

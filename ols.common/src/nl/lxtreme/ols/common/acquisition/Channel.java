@@ -21,7 +21,6 @@
 package nl.lxtreme.ols.common.acquisition;
 
 
-import java.util.*;
 
 
 /**
@@ -30,27 +29,6 @@ import java.util.*;
 public interface Channel extends Comparable<Channel>
 {
   // METHODS
-
-  /**
-   * Adds a new annotation to this channel.
-   * 
-   * @param aAnnotation
-   *          the annotation to add, cannot be <code>null</code>.
-   */
-  void addAnnotation( Annotation<?> aAnnotation );
-
-  /**
-   * Clears all annotations from this channel.
-   */
-  void clearAnnotations();
-
-  /**
-   * Returns all available annotations for this channel.
-   * 
-   * @return an immutable collection of this channel's annotations, never
-   *         <code>null</code>, never <code>null</code>.
-   */
-  Collection<Annotation<?>> getAnnotations();
 
   /**
    * Returns the index of this channel.

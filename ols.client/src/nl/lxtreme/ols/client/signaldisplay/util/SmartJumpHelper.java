@@ -30,8 +30,8 @@ import nl.lxtreme.ols.client.action.SmartJumpAction.JumpType;
 import nl.lxtreme.ols.client.signaldisplay.*;
 import nl.lxtreme.ols.client.signaldisplay.model.*;
 import nl.lxtreme.ols.client.signaldisplay.signalelement.*;
-import nl.lxtreme.ols.common.acquisition.*;
 import nl.lxtreme.ols.common.acquisition.Cursor;
+import nl.lxtreme.ols.common.annotation.*;
 
 
 /**
@@ -113,9 +113,9 @@ public final class SmartJumpHelper
    */
   private long getAnnotationJumpPosition( final SignalElement signalElement, final long refTimestamp )
   {
-    AnnotationsHelper helper = new AnnotationsHelper( signalElement );
+    AnnotationsHelper helper = new AnnotationsHelper( this.controller.getSignalDiagramModel().getAnnotationData(), signalElement.getChannel().getIndex() );
 
-    DataAnnotation<?> annotation = null;
+    DataAnnotation annotation = null;
     if ( this.direction.isLeft() )
     {
       annotation = helper.getAnnotationBefore( refTimestamp );

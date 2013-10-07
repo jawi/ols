@@ -23,7 +23,6 @@ package nl.lxtreme.ols.tool.jtag;
 
 import java.awt.*;
 
-import nl.lxtreme.ols.common.acquisition.*;
 import nl.lxtreme.ols.tool.api.*;
 
 import org.osgi.framework.*;
@@ -46,10 +45,9 @@ public class JTAGAnalyser implements Tool<JTAGDataSet>
    * {@inheritDoc}
    */
   @Override
-  public JTAGAnalyserTask createToolTask( final ToolContext aContext, final ToolProgressListener aProgressListener,
-      final AnnotationListener aAnnotationListener )
+  public JTAGAnalyserTask createToolTask( final ToolContext aContext, final ToolProgressListener aProgressListener )
   {
-    return new JTAGAnalyserTask( aContext, aProgressListener, aAnnotationListener );
+    return new JTAGAnalyserTask( aContext, aProgressListener );
   }
 
   /**

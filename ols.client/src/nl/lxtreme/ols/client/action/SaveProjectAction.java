@@ -148,7 +148,7 @@ public class SaveProjectAction extends BaseAction
 
     // Strip any "known" file extensions from the given value...
     final String projectName = FileUtils.stripFileExtension( aFile, OpenDataFileAction.OLS_FILE_EXTENSION,
-        OpenProjectAction.OLS_PROJECT_EXTENSION );
+        OpenProjectAction.OLS_PROJECT_EXTENSION )[0];
 
     try
     {

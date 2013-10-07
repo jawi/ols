@@ -23,8 +23,6 @@ package nl.lxtreme.ols.tool.api;
 
 import java.awt.*;
 
-import nl.lxtreme.ols.common.acquisition.*;
-
 
 /**
  * Interface for pluggable tools.
@@ -50,8 +48,7 @@ public interface Tool<RESULT_TYPE>
    *          the tool progress listener the tool can use to report its
    *          progress, cannot be <code>null</code>.
    */
-  ToolTask<RESULT_TYPE> createToolTask( ToolContext aContext, ToolProgressListener aProgressListener,
-      final AnnotationListener aAnnotationListener );
+  ToolTask<RESULT_TYPE> createToolTask( ToolContext aContext, ToolProgressListener aProgressListener );
 
   /**
    * Returns the category for this tool.

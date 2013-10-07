@@ -53,6 +53,8 @@ public interface UIManagerKeys
    * transitions are shown.
    */
   String DISABLE_SLOPPY_SCOPE_PAINTING = "ols.disble.sloppy.scope.painting.boolean";
+  /** Whether or not to use the color property defined for data annotations. */
+  String USE_COLORIZED_ANNOTATIONS = "ols.use.colorized.annotations.boolean";
 
   /** The default color for channels, group summary and the scope of group 1. */
   String CHANNEL_GROUP1_DEFAULT_COLOR = "ols.channelgroup1.default.color";

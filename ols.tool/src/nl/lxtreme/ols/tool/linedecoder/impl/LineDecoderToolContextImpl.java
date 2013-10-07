@@ -22,6 +22,7 @@ package nl.lxtreme.ols.tool.linedecoder.impl;
 
 
 import nl.lxtreme.ols.common.acquisition.*;
+import nl.lxtreme.ols.common.annotation.*;
 import nl.lxtreme.ols.tool.api.*;
 import nl.lxtreme.ols.tool.linedecoder.*;
 
@@ -55,6 +56,24 @@ public class LineDecoderToolContextImpl implements LineDecoderToolContext
   }
 
   // METHODS
+
+  /**
+   * {@inheritDoc}
+   */
+  @Override
+  public void addAnnotation( Annotation aAnnotation )
+  {
+    this.toolContext.addAnnotation( aAnnotation );
+  }
+
+  /**
+   * {@inheritDoc}
+   */
+  @Override
+  public void clearAnnotations( int... aChannelIdxs )
+  {
+    this.toolContext.clearAnnotations( aChannelIdxs );
+  }
 
   /**
    * {@inheritDoc}

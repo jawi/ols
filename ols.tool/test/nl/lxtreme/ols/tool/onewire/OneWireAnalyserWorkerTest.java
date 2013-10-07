@@ -169,9 +169,8 @@ public class OneWireAnalyserWorkerTest
     ToolContext toolContext = DataTestUtils.createToolContext( container );
 
     ToolProgressListener toolProgressListener = Mockito.mock( ToolProgressListener.class );
-    AnnotationListener annotationListener = Mockito.mock( AnnotationListener.class );
 
-    OneWireAnalyserTask worker = new OneWireAnalyserTask( toolContext, toolProgressListener, annotationListener );
+    OneWireAnalyserTask worker = new OneWireAnalyserTask( toolContext, toolProgressListener );
     worker.setOneWireLineIndex( this.channelIdx );
     worker.setOneWireBusMode( this.busMode );
 

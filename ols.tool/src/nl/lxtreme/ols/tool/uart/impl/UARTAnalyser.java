@@ -23,7 +23,6 @@ package nl.lxtreme.ols.tool.uart.impl;
 
 import java.awt.*;
 
-import nl.lxtreme.ols.common.acquisition.*;
 import nl.lxtreme.ols.tool.api.*;
 
 import org.osgi.framework.*;
@@ -44,10 +43,9 @@ public class UARTAnalyser implements Tool<UARTDataSet>
    * {@inheritDoc}
    */
   @Override
-  public UARTAnalyserTask createToolTask( final ToolContext aContext, final ToolProgressListener aProgressListener,
-      final AnnotationListener aAnnotationListener )
+  public UARTAnalyserTask createToolTask( final ToolContext aContext, final ToolProgressListener aProgressListener )
   {
-    return new UARTAnalyserTask( aContext, aProgressListener, aAnnotationListener );
+    return new UARTAnalyserTask( aContext, aProgressListener );
   }
 
   /**

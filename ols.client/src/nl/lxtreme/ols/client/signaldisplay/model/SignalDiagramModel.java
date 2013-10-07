@@ -35,6 +35,7 @@ import nl.lxtreme.ols.client.signaldisplay.signalelement.*;
 import nl.lxtreme.ols.client.signaldisplay.signalelement.SignalElementManager.SignalElementMeasurer;
 import nl.lxtreme.ols.common.acquisition.*;
 import nl.lxtreme.ols.common.acquisition.Cursor;
+import nl.lxtreme.ols.common.annotation.*;
 
 
 /**
@@ -71,6 +72,7 @@ public class SignalDiagramModel
   private final SignalDiagramController controller;
   private final EventListenerList eventListeners;
   private final PropertyChangeSupport propertyChangeSupport;
+  private final AnnotationDataImpl annotationData;
 
   // CONSTRUCTORS
 
@@ -90,6 +92,8 @@ public class SignalDiagramModel
 
     this.eventListeners = new EventListenerList();
     this.propertyChangeSupport = new PropertyChangeSupport( this );
+
+    this.annotationData = new AnnotationDataImpl();
 
     this.mode = 0;
 
@@ -351,6 +355,14 @@ public class SignalDiagramModel
 
     final AcquisitionData capturedData = getCapturedData();
     return capturedData.getAbsoluteLength();
+  }
+
+  /**
+   * @return the annotation data, never <code>null</code>.
+   */
+  public AnnotationData getAnnotationData()
+  {
+    return this.annotationData;
   }
 
   /**

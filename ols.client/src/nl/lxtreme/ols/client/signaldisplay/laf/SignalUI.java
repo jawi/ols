@@ -31,7 +31,7 @@ import nl.lxtreme.ols.client.signaldisplay.signalelement.*;
 import nl.lxtreme.ols.client.signaldisplay.util.*;
 import nl.lxtreme.ols.client.signaldisplay.view.*;
 import nl.lxtreme.ols.common.*;
-import nl.lxtreme.ols.common.acquisition.*;
+import nl.lxtreme.ols.common.annotation.*;
 
 
 /**
@@ -274,14 +274,15 @@ public class SignalUI extends ComponentUI
 
           if ( signalElement.isEnabled() )
           {
-            final AnnotationsHelper helper = new AnnotationsHelper( signalElement );
+            final AnnotationsHelper helper = new AnnotationsHelper( aModel.getAnnotationData(), signalElement
+                .getChannel().getIndex() );
 
             aCanvas.setFont( aModel.getAnnotationFont() );
 
             final FontMetrics fm = aCanvas.getFontMetrics();
             final int fontHeight = fm.getHeight();
 
-            for ( DataAnnotation<?> ann : helper.getAnnotations( DataAnnotation.class, startTimestamp, endTimestamp ) )
+            for ( DataAnnotation ann : helper.getDataAnnotations( startTimestamp, endTimestamp ) )
             {
               final long annStartTime = ann.getStartTimestamp();
               final long annEndTime = ann.getEndTimestamp();
@@ -292,7 +293,7 @@ public class SignalUI extends ComponentUI
               int y2 = y1 + signalElement.getSignalHeight();
               int midY = y1 + ( ( y2 - y1 ) / 2 );
 
-              final String annText = ann.getAnnotation().toString();
+              final String annText = helper.getText( ann );
 
               final int annotationWidth = ( x2 - x1 ) + 2;
 
@@ -427,6 +428,7 @@ public class SignalUI extends ComponentUI
   {
     final int[] values = aModel.getDataValues();
     final long[] timestamps = aModel.getTimestamps();
+    final long absLength = aModel.getAbsoluteLength();
 
     final Rectangle clip = aCanvas.getClipBounds();
 
@@ -530,14 +532,11 @@ public class SignalUI extends ComponentUI
             }
           }
 
-          if ( p > 0 )
-          {
-            x[p] = ( int )( zoomFactor * timestamps[endIdx] );
-            y[p] = ( values[endIdx] & mask ) == 0 ? signalHeight : 0;
-            p++;
+          x[p] = ( int )( zoomFactor * absLength );
+          y[p] = ( values[endIdx] & mask ) == 0 ? signalHeight : 0;
+          p++;
 
-            aCanvas.drawPolyline( x, y, p );
-          }
+          aCanvas.drawPolyline( x, y, p );
 
           lastP = ( int )( ( p * 0.1 ) + ( lastP * 0.9 ) );
         }

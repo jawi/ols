@@ -25,11 +25,10 @@ import java.util.*;
 
 import nl.lxtreme.ols.common.*;
 import nl.lxtreme.ols.common.acquisition.*;
-import nl.lxtreme.ols.common.acquisition.AcquisitionDataBuilder.*;
+import nl.lxtreme.ols.common.acquisition.AcquisitionDataBuilder.IncludeAnnotations;
+import nl.lxtreme.ols.common.acquisition.AcquisitionDataBuilder.IncludeSamples;
 import nl.lxtreme.ols.tool.api.*;
-import nl.lxtreme.ols.tool.base.annotation.*;
 import nl.lxtreme.ols.tool.linedecoder.*;
-
 
 
 /**
@@ -62,10 +61,11 @@ public class ManchesterLineDecoder implements LineDecoder
    */
   @SuppressWarnings( "boxing" )
   @Override
-  public AcquisitionData decode( final LineDecoderToolContext aContext, final AnnotationListener aAnnotationListener,
-      final ToolProgressListener aListener ) throws Exception
+  public AcquisitionData decode( final LineDecoderToolContext aContext, final ToolProgressListener aListener )
+      throws Exception
   {
     final AcquisitionData inputData = aContext.getData();
+    final ToolAnnotationHelper annHelper = new ToolAnnotationHelper( aContext );
 
     final int[] values = inputData.getValues();
     final long[] timestamps = inputData.getTimestamps();
@@ -76,8 +76,7 @@ public class ManchesterLineDecoder implements LineDecoder
     final int dataMask = ( 1 << dataIdx );
     final int clockMask = ( 1 << clockIdx );
 
-    aAnnotationListener.clearAnnotations( dataIdx );
-    aAnnotationListener.clearAnnotations( clockIdx );
+    annHelper.clearAnnotations( dataIdx, clockIdx );
 
     int startIdx = aContext.getStartSampleIndex();
     int endIdx = aContext.getEndSampleIndex();
@@ -173,7 +172,7 @@ public class ManchesterLineDecoder implements LineDecoder
 
         if ( bitCount == symbolSize )
         {
-          aAnnotationListener.onAnnotation( createAnnotation( dataIdx, symbolStartTime, clockEdge, symbol ) );
+          annHelper.addAnnotation( dataIdx, symbolStartTime, clockEdge, symbol );
 
           symbol = 0;
           bitCount = 0;
@@ -203,7 +202,7 @@ public class ManchesterLineDecoder implements LineDecoder
         }
       }
 
-      aAnnotationListener.onAnnotation( createAnnotation( dataIdx, symbolStartTime, lastTimestamp, symbol ) );
+      annHelper.addAnnotation( dataIdx, symbolStartTime, lastTimestamp, symbol );
     }
 
     lastTimestamp += halfCycle;
@@ -310,19 +309,5 @@ public class ManchesterLineDecoder implements LineDecoder
     }
 
     return ( ( k == 0 ) ? values[0] : values[k - 1] );
-  }
-
-  /**
-   * @param aIndex
-   * @param aStartTime
-   * @param aEndTime
-   * @param aSymbol
-   * @return
-   */
-  private SampleDataAnnotation createAnnotation( final int aIndex, final long aStartTime, final long aEndTime,
-      final int aSymbol )
-  {
-    return new SampleDataAnnotation( aIndex, aStartTime, aEndTime, String.format( "%1$c (%1$x)",
-        Integer.valueOf( aSymbol ) ) );
   }
 }

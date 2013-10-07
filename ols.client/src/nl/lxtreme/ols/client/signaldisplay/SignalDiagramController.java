@@ -656,4 +656,13 @@ public final class SignalDiagramController implements ZoomListener, PropertyChan
   {
     return this.signalDiagram.getModel().locationToTimestamp( aPoint );
   }
+
+  /**
+   * @param aResult
+   */
+  public void addAnnotationDataChangedListener( IAnnotationDataChangedListener aResult )
+  {
+    // TODO Auto-generated method stub
+
+  }
 }

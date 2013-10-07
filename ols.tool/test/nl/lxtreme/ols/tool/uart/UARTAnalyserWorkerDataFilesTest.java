@@ -126,9 +126,8 @@ public class UARTAnalyserWorkerDataFilesTest
     ToolContext toolContext = DataTestUtils.createToolContext( container );
 
     ToolProgressListener tpl = Mockito.mock( ToolProgressListener.class );
-    AnnotationListener al = Mockito.mock( AnnotationListener.class );
 
-    UARTAnalyserTask worker = new UARTAnalyserTask( toolContext, tpl, al );
+    UARTAnalyserTask worker = new UARTAnalyserTask( toolContext, tpl );
     worker.setStopBits( StopBits.ONE );
     worker.setBitCount( 8 );
     worker.setParity( this.parity );

@@ -23,7 +23,6 @@ package nl.lxtreme.ols.tool.linedecoder.impl.decoders;
 
 import nl.lxtreme.ols.common.acquisition.*;
 import nl.lxtreme.ols.tool.api.*;
-import nl.lxtreme.ols.tool.base.annotation.*;
 import nl.lxtreme.ols.tool.linedecoder.*;
 
 
@@ -57,10 +56,10 @@ public class NonReturnToZeroDecoder implements LineDecoder
    * {@inheritDoc}
    */
   @Override
-  public AcquisitionData decode( final LineDecoderToolContext aContext, final AnnotationListener aAnnotationListener,
-      final ToolProgressListener aListener ) throws Exception
+  public AcquisitionData decode( final LineDecoderToolContext aContext, final ToolProgressListener aListener ) throws Exception
   {
     final AcquisitionData inputData = aContext.getData();
+    final ToolAnnotationHelper annHelper = new ToolAnnotationHelper( aContext );
 
     final int[] values = inputData.getValues();
     final long[] timestamps = inputData.getTimestamps();
@@ -71,7 +70,7 @@ public class NonReturnToZeroDecoder implements LineDecoder
     final int dataMask = ( 1 << dataIdx );
     final int clockMask = ( 1 << clockIdx );
 
-    aAnnotationListener.clearAnnotations( dataIdx );
+    annHelper.clearAnnotations( dataIdx, clockIdx );
 
     int startIdx = aContext.getStartSampleIndex();
     int endIdx = aContext.getEndSampleIndex();
@@ -103,8 +102,8 @@ public class NonReturnToZeroDecoder implements LineDecoder
 
         if ( bitCount == symbolSize )
         {
-          aAnnotationListener.onAnnotation( createAnnotation( dataIdx, timestamps[symbolStartIdx], timestamps[i],
-              symbol ) );
+          annHelper.addAnnotation( dataIdx, timestamps[symbolStartIdx], timestamps[i],
+              String.format( "%1$c (%1$x)", Integer.valueOf( symbol ) ) );
 
           symbol = 0;
           bitCount = 0;
@@ -132,19 +131,5 @@ public class NonReturnToZeroDecoder implements LineDecoder
   public String getName()
   {
     return "Non-return to zero";
-  }
-
-  /**
-   * @param aIndex
-   * @param aStartTime
-   * @param aEndTime
-   * @param aSymbol
-   * @return
-   */
-  private SampleDataAnnotation createAnnotation( final int aIndex, final long aStartTime, final long aEndTime,
-      final int aSymbol )
-  {
-    return new SampleDataAnnotation( aIndex, aStartTime, aEndTime, String.format( "%1$c (%1$x)",
-        Integer.valueOf( aSymbol ) ) );
   }
 }

@@ -22,6 +22,7 @@ package nl.lxtreme.ols.tool.api;
 
 
 import nl.lxtreme.ols.common.acquisition.*;
+import nl.lxtreme.ols.common.annotation.*;
 
 
 /**
@@ -34,6 +35,24 @@ import nl.lxtreme.ols.common.acquisition.*;
 public interface ToolContext
 {
   // METHODS
+
+  /**
+   * Adds a given annotation to this tool context, notifying listeners about
+   * this event.
+   * 
+   * @param aAnnotation
+   *          the annotation to add, cannot be <code>null</code>.
+   */
+  void addAnnotation( Annotation aAnnotation );
+
+  /**
+   * Clears all annotations for a channel.
+   * 
+   * @param aChannelIdxs
+   *          the indexes of the channel to clear the annotations for, cannot be
+   *          <code>null</code>. Invalid channel indexes are silently ignored.
+   */
+  void clearAnnotations( int... aChannelIdxs );
 
   /**
    * Returns the number of channels in the sample data.

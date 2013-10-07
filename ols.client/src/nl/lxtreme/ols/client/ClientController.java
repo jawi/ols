@@ -40,9 +40,11 @@ import nl.lxtreme.ols.client.appcallback.*;
 import nl.lxtreme.ols.client.osgi.*;
 import nl.lxtreme.ols.client.project.*;
 import nl.lxtreme.ols.client.signaldisplay.*;
+import nl.lxtreme.ols.client.signaldisplay.model.*;
 import nl.lxtreme.ols.common.*;
 import nl.lxtreme.ols.common.acquisition.*;
 import nl.lxtreme.ols.common.acquisition.Cursor;
+import nl.lxtreme.ols.common.annotation.*;
 import nl.lxtreme.ols.device.api.*;
 import nl.lxtreme.ols.export.api.*;
 import nl.lxtreme.ols.tool.api.*;
@@ -61,7 +63,7 @@ import com.jidesoft.plaf.*;
  * Denotes a front-end controller for the client.
  */
 public final class ClientController implements ActionProvider, AcquisitionProgressListener, AcquisitionStatusListener,
-    AcquisitionDataListener, AnnotationListener, ApplicationCallback
+    AcquisitionDataListener, ApplicationCallback
 {
   // INNER TYPES
 
@@ -158,11 +160,12 @@ public final class ClientController implements ActionProvider, AcquisitionProgre
   /**
    * Provides a default tool context implementation.
    */
-  static final class DefaultToolContext implements ToolContext
+  final class DefaultToolContext implements ToolContext
   {
     // VARIABLES
 
     private final AcquisitionData data;
+    private final AnnotationData annotationData;
     private final int startSampleIdx;
     private final int endSampleIdx;
 
@@ -178,11 +181,47 @@ public final class ClientController implements ActionProvider, AcquisitionProgre
      * @param aData
      *          the acquisition result.
      */
-    public DefaultToolContext( final int aStartSampleIdx, final int aEndSampleIdx, final AcquisitionData aData )
+    public DefaultToolContext( final int aStartSampleIdx, final int aEndSampleIdx, final AcquisitionData aData,
+        final AnnotationData aAnnotationData )
     {
       this.startSampleIdx = aStartSampleIdx;
       this.endSampleIdx = aEndSampleIdx;
       this.data = aData;
+      this.annotationData = aAnnotationData;
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public void addAnnotation( Annotation aAnnotation )
+    {
+      if ( aAnnotation instanceof LabelAnnotation )
+      {
+        int idx = aAnnotation.getChannelIndex();
+        Channel channel = getData().getChannels()[idx];
+        channel.setLabel( ( String )aAnnotation.getData() );
+      }
+      else
+      {
+        this.annotationData.add( aAnnotation );
+      }
+
+      scheduleRepaintEvent();
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public void clearAnnotations( int... aChannelIdxs )
+    {
+      for ( int channelIdx : aChannelIdxs )
+      {
+        this.annotationData.clear( channelIdx );
+      }
+
+      scheduleRepaintEvent();
     }
 
     /**
@@ -543,32 +582,6 @@ public final class ClientController implements ActionProvider, AcquisitionProgre
   }
 
   /**
-   * {@inheritDoc}
-   */
-  @Override
-  public void clearAnnotations()
-  {
-    for ( Channel channel : getCurrentData().getChannels() )
-    {
-      channel.clearAnnotations();
-    }
-
-    repaintMainFrame();
-  }
-
-  /**
-   * {@inheritDoc}
-   */
-  @Override
-  public void clearAnnotations( final int aChannelIdx )
-  {
-    final Channel channel = getChannel( aChannelIdx );
-    channel.clearAnnotations();
-
-    repaintMainFrame();
-  }
-
-  /**
    * Creates a new project, causing all current data to be thrown away.
    */
   public void createNewProject()
@@ -581,6 +594,13 @@ public final class ClientController implements ActionProvider, AcquisitionProgre
     }
 
     updateActionsOnEDT();
+  }
+
+  public void clearAnnotations()
+  {
+    getSignalDiagramController().getSignalDiagramModel().getAnnotationData().clearAll();
+
+    scheduleRepaintEvent();
   }
 
   /**
@@ -938,19 +958,6 @@ public final class ClientController implements ActionProvider, AcquisitionProgre
       return false;
     }
     return currentProject.isChanged();
-  }
-
-  /**
-   * {@inheritDoc}
-   */
-  @Override
-  public void onAnnotation( final Annotation<?> aAnnotation )
-  {
-    final Channel channel = getChannel( aAnnotation.getChannel() );
-    channel.addAnnotation( aAnnotation );
-
-    // Accumulate repaint events to avoid an avalanche of events on the EDT...
-    this.repaintAccumulatingRunnable.add( ( Void )null );
   }
 
   /**
@@ -1813,6 +1820,7 @@ public final class ClientController implements ActionProvider, AcquisitionProgre
     int endOfDecode = -1;
 
     final AcquisitionData capturedData = getCurrentData();
+    final SignalDiagramModel model = getSignalDiagramController().getSignalDiagramModel();
 
     if ( capturedData != null )
     {
@@ -1845,34 +1853,12 @@ public final class ClientController implements ActionProvider, AcquisitionProgre
       }
     }
 
-    return new DefaultToolContext( startOfDecode, endOfDecode, capturedData );
+    return new DefaultToolContext( startOfDecode, endOfDecode, capturedData, model.getAnnotationData() );
   }
 
   private Bundle getBundle()
   {
     return FrameworkUtil.getBundle( getClass() );
-  }
-
-  /**
-   * Returns the {@link Channel} with the given index.
-   * 
-   * @param aChannelIdx
-   *          the index of the channel to return, >= 0.
-   * @return a {@link Channel} instance, never <code>null</code>.
-   */
-  private Channel getChannel( final int aChannelIdx )
-  {
-    final AcquisitionData currentDataSet = getCurrentData();
-    if ( currentDataSet == null )
-    {
-      return null;
-    }
-    Channel[] channels = currentDataSet.getChannels();
-    if ( aChannelIdx < 0 || aChannelIdx >= channels.length )
-    {
-      throw new IllegalArgumentException( "Invalid channel index!" );
-    }
-    return channels[aChannelIdx];
   }
 
   /**
@@ -2004,5 +1990,14 @@ public final class ClientController implements ActionProvider, AcquisitionProgre
     {
       LOG.log( Level.WARNING, "Failed to set look and feel to: " + lafName, exception );
     }
+  }
+
+  /**
+   * Schedules a repaint event for the entire window.
+   */
+  void scheduleRepaintEvent()
+  {
+    // Accumulate repaint events to avoid an avalanche of events on the EDT...
+    this.repaintAccumulatingRunnable.add( ( Void )null );
   }
 }

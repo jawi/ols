@@ -23,7 +23,6 @@ package nl.lxtreme.ols.tool.i2s;
 
 import java.awt.*;
 
-import nl.lxtreme.ols.common.acquisition.*;
 import nl.lxtreme.ols.tool.api.*;
 
 import org.osgi.framework.*;
@@ -44,10 +43,9 @@ public class I2SAnalyser implements Tool<I2SDataSet>
    * {@inheritDoc}
    */
   @Override
-  public ToolTask<I2SDataSet> createToolTask( final ToolContext aContext, final ToolProgressListener aProgressListener,
-      final AnnotationListener aAnnotationListener )
+  public ToolTask<I2SDataSet> createToolTask( final ToolContext aContext, final ToolProgressListener aProgressListener )
   {
-    return new I2SAnalyserTask( aContext, aProgressListener, aAnnotationListener );
+    return new I2SAnalyserTask( aContext, aProgressListener );
   }
 
   /**

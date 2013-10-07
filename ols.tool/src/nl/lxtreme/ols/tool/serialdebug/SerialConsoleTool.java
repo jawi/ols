@@ -25,7 +25,6 @@ import java.awt.*;
 
 import javax.swing.*;
 
-import nl.lxtreme.ols.common.acquisition.*;
 import nl.lxtreme.ols.tool.api.*;
 
 import org.apache.felix.dm.*;
@@ -48,8 +47,7 @@ public class SerialConsoleTool implements Tool<Void>
    * {@inheritDoc}
    */
   @Override
-  public ToolTask<Void> createToolTask( final ToolContext aContext, final ToolProgressListener aProgressListener,
-      final AnnotationListener aAnnotationListener )
+  public ToolTask<Void> createToolTask( final ToolContext aContext, final ToolProgressListener aProgressListener )
   {
     return null;
   }

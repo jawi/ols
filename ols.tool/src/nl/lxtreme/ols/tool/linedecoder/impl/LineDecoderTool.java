@@ -67,10 +67,9 @@ public class LineDecoderTool implements Tool<AcquisitionData>
    * {@inheritDoc}
    */
   @Override
-  public LineDecoderTask createToolTask( final ToolContext aContext, final ToolProgressListener aProgressListener,
-      final AnnotationListener aAnnotationListener )
+  public LineDecoderTask createToolTask( final ToolContext aContext, final ToolProgressListener aProgressListener )
   {
-    return new LineDecoderTask( aContext, aProgressListener, aAnnotationListener );
+    return new LineDecoderTask( aContext, aProgressListener );
   }
 
   /**

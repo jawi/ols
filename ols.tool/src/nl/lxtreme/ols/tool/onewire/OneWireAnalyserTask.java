@@ -28,7 +28,6 @@ import java.util.logging.*;
 import nl.lxtreme.ols.common.*;
 import nl.lxtreme.ols.common.acquisition.*;
 import nl.lxtreme.ols.tool.api.*;
-import nl.lxtreme.ols.tool.base.annotation.*;
 
 
 /**
@@ -46,7 +45,7 @@ public class OneWireAnalyserTask implements ToolTask<OneWireDataSet>
 
   private final ToolContext context;
   private final ToolProgressListener progressListener;
-  private final AnnotationListener annotationListener;
+  private final ToolAnnotationHelper annHelper;
 
   private int owLineIndex;
   private int owLineMask;
@@ -62,12 +61,11 @@ public class OneWireAnalyserTask implements ToolTask<OneWireDataSet>
    *          the progress listener to use for reporting the progress, cannot be
    *          <code>null</code>.
    */
-  public OneWireAnalyserTask( final ToolContext aContext, final ToolProgressListener aProgressListener,
-      final AnnotationListener aAnnotationListener )
+  public OneWireAnalyserTask( final ToolContext aContext, final ToolProgressListener aProgressListener )
   {
     this.context = aContext;
     this.progressListener = aProgressListener;
-    this.annotationListener = aAnnotationListener;
+    this.annHelper = new ToolAnnotationHelper( aContext );
     this.owTiming = new OneWireTiming( OneWireBusMode.STANDARD );
   }
 
@@ -328,8 +326,8 @@ public class OneWireAnalyserTask implements ToolTask<OneWireDataSet>
    */
   private void prepareResult( final String aLabel )
   {
-    this.annotationListener.clearAnnotations( this.owLineIndex );
-    this.annotationListener.onAnnotation( new ChannelLabelAnnotation( this.owLineIndex, aLabel ) );
+    this.annHelper.clearAnnotations( this.owLineIndex );
+    this.annHelper.addLabelAnnotation( this.owLineIndex, aLabel );
   }
 
   /**
@@ -346,8 +344,7 @@ public class OneWireAnalyserTask implements ToolTask<OneWireDataSet>
     final int startSampleIdx = Math.max( data.getSampleIndex( aStartTimestamp ), 0 );
     aDataSet.reportBusError( this.owLineIndex, startSampleIdx );
 
-    this.annotationListener.onAnnotation( new SampleDataAnnotation( this.owLineIndex, aStartTimestamp, aStartTimestamp,
-        OneWireDataSet.OW_BUS_ERROR ) );
+    this.annHelper.addErrorAnnotation( this.owLineIndex, aStartTimestamp, aStartTimestamp, OneWireDataSet.OW_BUS_ERROR );
   }
 
   /**
@@ -367,8 +364,7 @@ public class OneWireAnalyserTask implements ToolTask<OneWireDataSet>
     aDataSet.reportData( this.owLineIndex, startSampleIdx, endSampleIdx, aByteValue );
 
     final String annotation = String.format( "0x%X (%c)", Integer.valueOf( aByteValue ), Integer.valueOf( aByteValue ) );
-    this.annotationListener.onAnnotation( new SampleDataAnnotation( this.owLineIndex, aStartTimestamp, aEndTimestamp,
-        annotation ) );
+    this.annHelper.addAnnotation( this.owLineIndex, aStartTimestamp, aEndTimestamp, annotation );
   }
 
   /**
@@ -388,7 +384,6 @@ public class OneWireAnalyserTask implements ToolTask<OneWireDataSet>
     aDataSet.reportReset( this.owLineIndex, startSampleIdx, endSampleIdx, aSlaveIsPresent );
 
     final String annotation = String.format( "Master reset, slave %s present", aSlaveIsPresent ? "is" : "is NOT" );
-    this.annotationListener.onAnnotation( new SampleDataAnnotation( this.owLineIndex, aStartTimestamp, aEndTimestamp,
-        annotation ) );
+    this.annHelper.addAnnotation( this.owLineIndex, aStartTimestamp, aEndTimestamp, annotation );
   }
 }

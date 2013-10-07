@@ -774,6 +774,7 @@ public final class MainFrame extends DefaultDockableHolder implements Closeable,
   private AcquisitionDetailsView captureDetails;
   private CursorDetailsView cursorDetails;
   private MeasurementView measurementDetails;
+  private AnnotationOverview annotationOverview;
 
   private JMenu deviceMenu;
   private JMenu toolsMenu;
@@ -867,16 +868,16 @@ public final class MainFrame extends DefaultDockableHolder implements Closeable,
     }
 
     this.cursorDetails = CursorDetailsView.create( signalDiagramController );
-    registerToolWindow( this.cursorDetails );
+    registerToolWindow( this.cursorDetails, DockContext.DOCK_SIDE_EAST );
 
     this.captureDetails = AcquisitionDetailsView.create( signalDiagramController );
-    registerToolWindow( this.captureDetails );
+    registerToolWindow( this.captureDetails, DockContext.DOCK_SIDE_EAST );
 
     this.measurementDetails = MeasurementView.create( signalDiagramController );
-    registerToolWindow( this.measurementDetails );
+    registerToolWindow( this.measurementDetails, DockContext.DOCK_SIDE_EAST );
 
-    // this.annotationOverview = AnnotationOverview.create( aController );
-    // registerToolWindow( this.annotationOverview );
+    this.annotationOverview = AnnotationOverview.create( signalDiagramController );
+    registerToolWindow( this.annotationOverview, DockContext.DOCK_SIDE_SOUTH );
 
     Workspace workspace = dm.getWorkspace();
     workspace.add( new ZoomCapableScrollPane( signalDiagramController ) );
@@ -917,7 +918,7 @@ public final class MainFrame extends DefaultDockableHolder implements Closeable,
   /**
    * @param aToolWindow
    */
-  public final void registerToolWindow( final IToolWindow aToolWindow )
+  public final void registerToolWindow( final IToolWindow aToolWindow, final int aDockSide )
   {
     boolean defaultVisible = UIManager.getBoolean( UIManagerKeys.SHOW_TOOL_WINDOWS_DEFAULT );
 
@@ -929,7 +930,7 @@ public final class MainFrame extends DefaultDockableHolder implements Closeable,
 
     DockContext context = frame.getContext();
     context.setInitMode( DockContext.STATE_FRAMEDOCKED );
-    context.setInitSide( DockContext.DOCK_SIDE_EAST );
+    context.setInitSide( aDockSide );
 
     getDockingManager().addFrame( frame );
   }

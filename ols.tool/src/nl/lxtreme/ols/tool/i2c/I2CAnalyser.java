@@ -23,7 +23,6 @@ package nl.lxtreme.ols.tool.i2c;
 
 import java.awt.*;
 
-import nl.lxtreme.ols.common.acquisition.*;
 import nl.lxtreme.ols.tool.api.*;
 
 import org.osgi.framework.*;
@@ -44,10 +43,9 @@ public class I2CAnalyser implements Tool<I2CDataSet>
    * {@inheritDoc}
    */
   @Override
-  public ToolTask<I2CDataSet> createToolTask( final ToolContext aContext, final ToolProgressListener aProgressListener,
-      final AnnotationListener aAnnotationListener )
+  public ToolTask<I2CDataSet> createToolTask( final ToolContext aContext, final ToolProgressListener aProgressListener )
   {
-    return new I2CAnalyserTask( aContext, aProgressListener, aAnnotationListener );
+    return new I2CAnalyserTask( aContext, aProgressListener );
   }
 
   /**

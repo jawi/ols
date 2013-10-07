@@ -25,9 +25,8 @@ import static nl.lxtreme.ols.common.OlsConstants.*;
 
 import java.awt.*;
 import java.util.*;
-import java.util.List;
 import java.util.Map.Entry;
-import java.util.concurrent.*;
+import java.util.List;
 
 import nl.lxtreme.ols.common.*;
 
@@ -457,8 +456,6 @@ public final class AcquisitionDataBuilder
     private String label;
     private boolean enabled;
 
-    private final CopyOnWriteArrayList<Annotation<?>> annotations;
-
     // CONSTRUCTORS
 
     /**
@@ -476,8 +473,6 @@ public final class AcquisitionDataBuilder
       this.enabled = aEnabled;
       this.mask = 1 << aIndex;
       this.label = getDefaultLabel( aIndex );
-
-      this.annotations = new CopyOnWriteArrayList<Annotation<?>>();
     }
 
     // METHODS
@@ -492,42 +487,6 @@ public final class AcquisitionDataBuilder
     private static String getDefaultLabel( final int aIndex )
     {
       return String.format( "Channel %d", Integer.valueOf( aIndex ) );
-    }
-
-    /**
-     * {@inheritDoc}
-     */
-    @Override
-    public void addAnnotation( Annotation<?> aAnnotation )
-    {
-      if ( aAnnotation instanceof DataAnnotation )
-      {
-        this.annotations.add( aAnnotation );
-      }
-      else
-      {
-        if ( !hasName() )
-        {
-          setLabel( aAnnotation.toString() );
-        }
-      }
-    }
-
-    public void addAnnotations( List<Annotation<?>> aAnnotations )
-    {
-      for ( Annotation<?> ann : aAnnotations )
-      {
-        addAnnotation( ann );
-      }
-    }
-
-    /**
-     * {@inheritDoc}
-     */
-    @Override
-    public void clearAnnotations()
-    {
-      this.annotations.clear();
     }
 
     /**
@@ -565,15 +524,6 @@ public final class AcquisitionDataBuilder
       }
 
       return true;
-    }
-
-    /**
-     * {@inheritDoc}
-     */
-    @Override
-    public Collection<Annotation<?>> getAnnotations()
-    {
-      return this.annotations;
     }
 
     /**
@@ -668,7 +618,6 @@ public final class AcquisitionDataBuilder
     // VARIABLES
 
     String label;
-    final List<Annotation<?>> annotations;
 
     // CONSTRUCTORS
 
@@ -677,15 +626,7 @@ public final class AcquisitionDataBuilder
      */
     public ChannelInfo( String aName )
     {
-      this.annotations = new ArrayList<Annotation<?>>();
       this.label = aName;
-    }
-
-    // METHODS
-
-    void copyAnnotations( Channel aChannel )
-    {
-      this.annotations.addAll( aChannel.getAnnotations() );
     }
   }
 
@@ -1170,7 +1111,7 @@ public final class AcquisitionDataBuilder
 
       if ( aIncludeAnnotations == IncludeAnnotations.YES )
       {
-        channelDef.copyAnnotations( c );
+//        channelDef.copyAnnotations( c ); XXX
       }
     }
 
@@ -1574,7 +1515,7 @@ public final class AcquisitionDataBuilder
         if ( chDef != null )
         {
           channelImpl.setLabel( chDef.label );
-          channelImpl.addAnnotations( chDef.annotations );
+//          channelImpl.addAnnotations( chDef.annotations ); XXX
         }
 
         chIndex.put( idx, channelImpl );

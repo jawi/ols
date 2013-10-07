@@ -109,9 +109,8 @@ public class SPIAnalyserWorkerContentTest
     ToolContext toolContext = DataTestUtils.createToolContext( container, 0, container.getValues().length - 1 );
 
     ToolProgressListener tpl = Mockito.mock( ToolProgressListener.class );
-    AnnotationListener al = Mockito.mock( AnnotationListener.class );
 
-    SPIAnalyserTask worker = new SPIAnalyserTask( toolContext, tpl, al );
+    SPIAnalyserTask worker = new SPIAnalyserTask( toolContext, tpl );
     worker.setBitCount( aBitCount - 1 );
     worker.setHonourCS( aHonourCS );
     worker.setReportCS( false );

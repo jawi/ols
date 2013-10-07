@@ -23,7 +23,6 @@ package nl.lxtreme.ols.tool.onewire;
 
 import java.awt.*;
 
-import nl.lxtreme.ols.common.acquisition.*;
 import nl.lxtreme.ols.tool.api.*;
 
 import org.osgi.framework.*;
@@ -45,10 +44,9 @@ public class OneWireAnalyser implements Tool<OneWireDataSet>
    * {@inheritDoc}
    */
   @Override
-  public OneWireAnalyserTask createToolTask( final ToolContext aContext, final ToolProgressListener aProgressListener,
-      final AnnotationListener aAnnotationListener )
+  public OneWireAnalyserTask createToolTask( final ToolContext aContext, final ToolProgressListener aProgressListener )
   {
-    return new OneWireAnalyserTask( aContext, aProgressListener, aAnnotationListener );
+    return new OneWireAnalyserTask( aContext, aProgressListener );
   }
 
   /**

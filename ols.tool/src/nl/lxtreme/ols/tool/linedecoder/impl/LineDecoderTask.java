@@ -42,7 +42,6 @@ public class LineDecoderTask implements ToolTask<AcquisitionData>
   private volatile int clockSpeed;
 
   private final ToolContext context;
-  private final AnnotationListener annotationListener;
   private final ToolProgressListener progressListener;
 
   // CONSTRUCTORS
@@ -55,15 +54,10 @@ public class LineDecoderTask implements ToolTask<AcquisitionData>
    * @param aProgressListener
    *          the progress listener to use for reporting the progress, cannot be
    *          <code>null</code>;
-   * @param aAnnotationListener
-   *          the annotation listener to use for reporting annotations, cannot
-   *          be <code>null</code>.
    */
-  public LineDecoderTask( final ToolContext aContext, final ToolProgressListener aProgressListener,
-      final AnnotationListener aAnnotationListener )
+  public LineDecoderTask( final ToolContext aContext, final ToolProgressListener aProgressListener )
   {
     this.context = aContext;
-    this.annotationListener = aAnnotationListener;
     this.progressListener = aProgressListener;
   }
 
@@ -78,7 +72,7 @@ public class LineDecoderTask implements ToolTask<AcquisitionData>
     final LineDecoderToolContextImpl decoderContext = new LineDecoderToolContextImpl( this.context, this.lines,
         this.inverted, this.recoverClock, this.clockSpeed );
 
-    return this.decoder.decode( decoderContext, this.annotationListener, this.progressListener );
+    return this.decoder.decode( decoderContext, this.progressListener );
   }
 
   /**

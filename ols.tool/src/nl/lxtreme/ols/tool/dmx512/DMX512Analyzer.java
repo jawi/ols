@@ -23,7 +23,6 @@ package nl.lxtreme.ols.tool.dmx512;
 
 import java.awt.*;
 
-import nl.lxtreme.ols.common.acquisition.*;
 import nl.lxtreme.ols.tool.api.*;
 
 import org.osgi.framework.*;
@@ -46,9 +45,9 @@ public class DMX512Analyzer implements Tool<DMX512DataSet>
    */
   @Override
   public ToolTask<DMX512DataSet> createToolTask( final ToolContext aContext,
-      final ToolProgressListener aProgressListener, final AnnotationListener aAnnotationListener )
+      final ToolProgressListener aProgressListener )
   {
-    return new DMX512AnalyzerTask( aContext, aProgressListener, aAnnotationListener );
+    return new DMX512AnalyzerTask( aContext, aProgressListener );
   }
 
   /**

@@ -110,9 +110,8 @@ public class DMX512AnalyzerDataFilesTest
     ToolContext toolContext = DataTestUtils.createToolContext( container );
 
     ToolProgressListener tpl = Mockito.mock( ToolProgressListener.class );
-    AnnotationListener al = Mockito.mock( AnnotationListener.class );
 
-    DMX512AnalyzerTask worker = new DMX512AnalyzerTask( toolContext, tpl, al );
+    DMX512AnalyzerTask worker = new DMX512AnalyzerTask( toolContext, tpl );
     worker.setDataLine( this.channelIdx );
 
     DMX512DataSet result = worker.call();
