@@ -134,6 +134,8 @@ final class OneWireGenerator implements IDataGenerator
       
       aProgressListener.acquisitionInProgress( i * 100 / size );
     }
+    
+    this.data.clear();
   }
 
   /**

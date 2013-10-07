@@ -47,7 +47,7 @@ final class SawtoothDataGenerator implements IDataGenerator
   public void generate( int aChannelCount, int aSampleCount, AcquisitionDataBuilder aBuilder,
       AcquisitionProgressListener aProgressListener )
   {
-    int maxValue = ( 1 << aChannelCount );
+    int maxValue = ( int )( ( 1L << aChannelCount ) - 1L );
 
     aBuilder.setChannelCount( aChannelCount );
     aBuilder.setSampleRate( SR_10MHZ );

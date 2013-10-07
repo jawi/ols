@@ -73,7 +73,7 @@ final class I2CGenerator implements IDataGenerator
   {
     return "I2C demo-data";
   }
-  
+
   /**
    * {@inheritDoc}
    */
@@ -81,18 +81,20 @@ final class I2CGenerator implements IDataGenerator
   public void generate( int aChannelCount, int aSampleCount, AcquisitionDataBuilder aBuilder, AcquisitionProgressListener aProgressListener )
   {
     writeBitStream( "Hello World, this is a sample I2C bit stream!" );
-    
+
     aBuilder.setChannelCount( aChannelCount );
     aBuilder.setSampleRate( this.sampleRate );
     aBuilder.setTriggerPosition( this.trigger );
-    
+
     int size = this.data.size();
     for ( int i = 0; i < size; i++ )
     {
       aBuilder.addSample( i, this.data.get( i ).intValue() );
-      
+
       aProgressListener.acquisitionInProgress( i * 100 / size );
     }
+
+    this.data.clear();
   }
 
   /**

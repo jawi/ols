@@ -40,7 +40,7 @@ final class ManchesterEncoder implements IDataGenerator
   private final int clockSpeed;
   private final int bitBoundary;
   private final int setupPoint;
-  private final int trigger;
+  private int trigger;
 
   // CONSTRUCTORS
 
@@ -56,17 +56,6 @@ final class ManchesterEncoder implements IDataGenerator
 
     this.bitBoundary = ( int )( Math.rint( this.sampleRate / ( double )this.clockSpeed ) );
     this.setupPoint = this.bitBoundary / 2;
-
-    // Write some initial stuff bits...
-    for ( int i = 0; i < ( 5 * this.bitBoundary ); i++ )
-    {
-      this.data.add( Integer.valueOf( 1 << LINE_IDX ) );
-    }
-
-    this.trigger = this.data.size();
-
-    // Synchronize byte...
-    write( ( byte )0xaa );
   }
 
   // METHODS
@@ -87,6 +76,17 @@ final class ManchesterEncoder implements IDataGenerator
   public void generate( int aChannelCount, int aSampleCount, AcquisitionDataBuilder aBuilder,
       AcquisitionProgressListener aProgressListener )
   {
+    // Write some initial stuff bits...
+    for ( int i = 0; i < ( 5 * this.bitBoundary ); i++ )
+    {
+      this.data.add( Integer.valueOf( 1 << LINE_IDX ) );
+    }
+
+    this.trigger = this.data.size();
+
+    // Synchronize byte...
+    write( ( byte )0xaa );
+
     writeData( "Hello World of Manchester encoded data!" );
 
     aBuilder.setChannelCount( aChannelCount );
@@ -100,6 +100,8 @@ final class ManchesterEncoder implements IDataGenerator
 
       aProgressListener.acquisitionInProgress( i * 100 / size );
     }
+    
+    this.data.clear();
   }
 
   /**
