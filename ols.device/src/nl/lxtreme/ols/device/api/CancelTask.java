@@ -30,6 +30,7 @@ import nl.lxtreme.ols.task.execution.*;
  * if possible. If the device already finished its acquisition task, this task
  * should not lead to unpredictable results.
  */
+@Deprecated
 public interface CancelTask extends Task<Void>
 {
   // No additional methods

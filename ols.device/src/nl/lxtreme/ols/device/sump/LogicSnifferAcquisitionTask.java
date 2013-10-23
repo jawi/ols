@@ -27,17 +27,16 @@ import java.util.logging.*;
 import javax.microedition.io.*;
 
 import nl.lxtreme.ols.common.acquisition.*;
-import nl.lxtreme.ols.device.api.*;
-import nl.lxtreme.ols.device.sump.profile.*;
 import nl.lxtreme.ols.device.sump.protocol.*;
 import nl.lxtreme.ols.device.sump.sampleprocessor.*;
+import nl.lxtreme.ols.task.execution.*;
 
 
 /**
  * Provides an acquisition task that uses the SUMP protocol for talking with a
  * LogicSniffer device on a serial/USB port.
  */
-public class LogicSnifferAcquisitionTask implements SumpProtocolConstants, AcquisitionTask
+public class LogicSnifferAcquisitionTask implements SumpProtocolConstants, Task<AcquisitionData>
 {
   // CONSTANTS
 
@@ -45,9 +44,8 @@ public class LogicSnifferAcquisitionTask implements SumpProtocolConstants, Acqui
 
   // VARIABLES
 
-  private final DeviceProfileManager deviceProfileManager;
   private final AcquisitionProgressListener acquisitionProgressListener;
-  private final LogicSnifferConfig config;
+  private final SumpConfig config;
 
   private StreamConnection connection;
   private SumpResultReader inputStream;
@@ -59,12 +57,11 @@ public class LogicSnifferAcquisitionTask implements SumpProtocolConstants, Acqui
   /**
    * Creates a new LogicSnifferDevice instance.
    */
-  public LogicSnifferAcquisitionTask( final LogicSnifferConfig aConfig, final StreamConnection aConnection,
-      final DeviceProfileManager aDeviceProfileManager, final AcquisitionProgressListener aProgressListener )
+  public LogicSnifferAcquisitionTask( SumpConfig aConfig, StreamConnection aConnection,
+      AcquisitionProgressListener aProgressListener )
   {
     this.config = aConfig;
     this.connection = aConnection;
-    this.deviceProfileManager = aDeviceProfileManager;
     this.acquisitionProgressListener = aProgressListener;
   }
 
@@ -235,21 +232,9 @@ public class LogicSnifferAcquisitionTask implements SumpProtocolConstants, Acqui
    * 
    * @return a device configuration, never <code>null</code>.
    */
-  protected final LogicSnifferConfig getConfig()
+  protected final SumpConfig getConfig()
   {
     return this.config;
-  }
-
-  /**
-   * Finds the device profile manager.
-   * 
-   * @return a device profile manager instance, never <code>null</code>.
-   * @throws IllegalArgumentException
-   *           in case the device profile manager could not be found/obtained.
-   */
-  protected DeviceProfileManager getDeviceProfileManager()
-  {
-    return this.deviceProfileManager;
   }
 
   /**

@@ -27,62 +27,37 @@ import java.util.logging.*;
 
 import javax.microedition.io.*;
 
-import nl.lxtreme.ols.device.sump.profile.*;
 import nl.lxtreme.ols.device.sump.protocol.*;
-import nl.lxtreme.ols.task.execution.*;
 
 
 /**
  * Provides a task for detecting the current type of the attached logic sniffer
  * device.
  */
-public class LogicSnifferDetectionTask implements Task<LogicSnifferMetadata>, SumpProtocolConstants
+public class LogicSnifferDetectionTask implements SumpProtocolConstants
 {
   // CONSTANTS
 
   private static final Logger LOG = Logger.getLogger( LogicSnifferDetectionTask.class.getName() );
-
-  // VARIABLES
-
-  private final LogicSnifferDevice device;
-  private final String connectionURI;
-
-  // CONSTRUCTORS
-
-  /**
-   * Creates a new LogicSnifferDetectionTask instance.
-   * 
-   * @throws IOException
-   *           in case of I/O problems.
-   */
-  public LogicSnifferDetectionTask( final LogicSnifferDevice aDevice, final String aConnectionURI )
-  {
-    this.device = aDevice;
-    this.connectionURI = aConnectionURI;
-  }
 
   // METHODS
 
   /**
    * {@inheritDoc}
    */
-  @Override
-  public LogicSnifferMetadata call() throws IOException
+  public DeviceMetadata detect( StreamConnection aConnection ) throws IOException
   {
     DataInputStream inputStream = null;
     DataOutputStream outputStream = null;
-    StreamConnection connection = null;
 
     boolean gotResponse = false;
 
     try
     {
-      connection = this.device.createStreamConnection( this.connectionURI );
+      inputStream = aConnection.openDataInputStream();
+      outputStream = aConnection.openDataOutputStream();
 
-      inputStream = connection.openDataInputStream();
-      outputStream = connection.openDataOutputStream();
-
-      final LogicSnifferMetadata metadata = new LogicSnifferMetadata();
+      final DeviceMetadata metadata = new DeviceMetadata();
       int tries = 3;
 
       do
@@ -111,10 +86,6 @@ public class LogicSnifferDetectionTask implements Task<LogicSnifferMetadata>, Su
           // Log the read results...
           LOG.log( Level.INFO, "Found device type: {0}", metadata.getName() );
           LOG.log( Level.FINE, "Device metadata = \n{0}", metadata.toString() );
-
-          // Determine the device profile based on the information of the
-          // metadata; it will be placed in the given metadata object...
-          metadata.setDeviceProfile( getDeviceProfile( metadata.getName() ) );
         }
       }
       while ( !Thread.currentThread().isInterrupted() && !gotResponse && ( tries-- > 0 ) );
@@ -135,10 +106,7 @@ public class LogicSnifferDetectionTask implements Task<LogicSnifferMetadata>, Su
 
       try
       {
-        if ( connection != null )
-        {
-          connection.close();
-        }
+        aConnection.close();
       }
       catch ( IOException exception )
       {
@@ -164,41 +132,6 @@ public class LogicSnifferDetectionTask implements Task<LogicSnifferMetadata>, Su
       {
       }
     }
-  }
-
-  /**
-   * Determines the device profile for the current attached device. The device
-   * profile provides us with detailed information about the capabilities of a
-   * certain SUMP-compatible device.
-   * 
-   * @param aName
-   *          the name of the device, can be <code>null</code>.
-   * @return a device profile, or <code>null</code> if no such profile could be
-   *         determined.
-   */
-  private DeviceProfile getDeviceProfile( final String aName )
-  {
-    DeviceProfile profile = null;
-
-    if ( aName != null )
-    {
-      profile = this.device.getDeviceProfileManager().findProfile( aName );
-
-      if ( profile != null )
-      {
-        LOG.log( Level.INFO, "Using device profile: {0}", profile.getDescription() );
-      }
-      else
-      {
-        LOG.log( Level.SEVERE, "No device profile found matching: {0}", aName );
-      }
-    }
-    else
-    {
-      LOG.log( Level.SEVERE, "No device name provided by metadata! Cannot determine device profile..." );
-    }
-
-    return profile;
   }
 
   /**
@@ -229,8 +162,7 @@ public class LogicSnifferDetectionTask implements Task<LogicSnifferMetadata>, Su
    * @param aMetadata
    * @throws IOException
    */
-  private boolean readMetadata( final DataInputStream aInputStream, final LogicSnifferMetadata aMetadata )
-      throws IOException
+  private boolean readMetadata( final DataInputStream aInputStream, final DeviceMetadata aMetadata ) throws IOException
   {
     boolean gotResponse = false;
     int result = -1;

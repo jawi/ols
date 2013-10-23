@@ -32,9 +32,11 @@ import nl.lxtreme.ols.client.project.*;
 import nl.lxtreme.ols.common.acquisition.*;
 import nl.lxtreme.ols.device.api.*;
 import nl.lxtreme.ols.export.api.*;
+import nl.lxtreme.ols.task.execution.*;
 import nl.lxtreme.ols.tool.api.*;
 
 import org.apache.felix.dm.*;
+import org.apache.felix.dm.Component;
 import org.osgi.framework.*;
 import org.osgi.framework.Constants;
 import org.osgi.service.cm.*;
@@ -71,6 +73,16 @@ public class Activator extends DependencyActivatorBase
     public DeviceBundleAdapter()
     {
       super( Device.class, OLS_DEVICE_CLASS_KEY );
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    protected void configureComponent( Component aComponent )
+    {
+      DependencyManager dm = aComponent.getDependencyManager();
+      aComponent.add( dm.createServiceDependency().setService( TaskExecutionService.class ).setRequired( true ) );
     }
   }
 

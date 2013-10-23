@@ -8,4 +8,4 @@ Private-Package: nl.lxtreme.ols.device.sump,\
 	nl.lxtreme.ols.device.sump.protocol,\
 	nl.lxtreme.ols.device.sump.sampleprocessor
 OLS-Device: 1.0
-OLS-DeviceClass: nl.lxtreme.ols.device.sump.LogicSnifferDevice
+OLS-DeviceClass: nl.lxtreme.ols.device.sump.SumpDevice

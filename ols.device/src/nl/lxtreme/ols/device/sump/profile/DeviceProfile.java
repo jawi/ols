@@ -97,10 +97,10 @@ public final class DeviceProfile implements Cloneable, Comparable<DeviceProfile>
   private static final List<String> KNOWN_KEYS = Arrays.asList( new String[] { DEVICE_TYPE, DEVICE_DESCRIPTION,
       DEVICE_INTERFACE, DEVICE_CLOCKSPEED, DEVICE_SUPPORTS_DDR, DEVICE_SAMPLERATES, DEVICE_CAPTURECLOCK,
       DEVICE_CAPTURESIZES, DEVICE_FEATURE_NOISEFILTER, DEVICE_FEATURE_RLE, DEVICE_FEATURE_TEST_MODE,
-      DEVICE_FEATURE_TRIGGERS, DEVICE_TRIGGER_STAGES, DEVICE_TRIGGER_COMPLEX, DEVICE_CHANNEL_COUNT,
-      DEVICE_CHANNEL_GROUPS, DEVICE_CAPTURESIZE_BOUND, DEVICE_CHANNEL_NUMBERING_SCHEMES, DEVICE_OPEN_PORT_DELAY,
-      DEVICE_METADATA_KEYS, DEVICE_SAMPLE_REVERSE_ORDER, DEVICE_OPEN_PORT_DTR, DEVICE_RECEIVE_TIMEOUT,
-      DEVICE_DIVIDER_CLOCKSPEED } );
+      DEVICE_FEATURE_TRIGGERS, DEVICE_TRIGGER_STAGES, DEVICE_TRIGGER_COMPLEX, DEVICE_TRIGGER_HP165XX,
+      DEVICE_CHANNEL_COUNT, DEVICE_CHANNEL_GROUPS, DEVICE_CAPTURESIZE_BOUND, DEVICE_CHANNEL_NUMBERING_SCHEMES,
+      DEVICE_OPEN_PORT_DELAY, DEVICE_METADATA_KEYS, DEVICE_SAMPLE_REVERSE_ORDER, DEVICE_OPEN_PORT_DTR,
+      DEVICE_RECEIVE_TIMEOUT, DEVICE_DIVIDER_CLOCKSPEED } );
   private static final List<String> IGNORED_KEYS = Arrays.asList( new String[] { FELIX_SERVICE_PID,
       FELIX_SERVICE_FACTORY_PID } );
 
@@ -120,20 +120,15 @@ public final class DeviceProfile implements Cloneable, Comparable<DeviceProfile>
     this.properties = new ConcurrentHashMap<String, String>();
   }
 
-  // METHODS
-
   /**
-   * @param aFilename
-   * @return
+   * Creates a new DeviceProfile.
    */
-  static final File createFile( final String aFilename )
+  public DeviceProfile( Map<String, String> aConfig )
   {
-    if ( aFilename == null )
-    {
-      throw new IllegalArgumentException( "Filename cannot be null!" );
-    }
-    return new File( aFilename.replaceAll( "^file:", "" ) );
+    this.properties = new ConcurrentHashMap<String, String>( aConfig );
   }
+
+  // METHODS
 
   /**
    * Returns a deep copy of this device profile, including all properties.

@@ -63,6 +63,8 @@ public interface Constants
   public static final String DEVICE_TRIGGER_STAGES = "device.trigger.stages";
   /** Whether or not "complex" triggers are supported */
   public static final String DEVICE_TRIGGER_COMPLEX = "device.trigger.complex";
+  /** Whether or not "HP165xx"-style triggers are supported. */
+  public static final String DEVICE_TRIGGER_HP165XX = "device.trigger.hp165xx";
   /** The total number of channels usable for capturing */
   public static final String DEVICE_CHANNEL_COUNT = "device.channel.count";
   /**

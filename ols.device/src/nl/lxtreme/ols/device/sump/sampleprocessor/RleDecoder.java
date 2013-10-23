@@ -37,7 +37,7 @@ public final class RleDecoder implements SampleProcessor
 
   // VARIABLES
 
-  private final LogicSnifferConfig config;
+  private final SumpConfig config;
   private final int[] buffer;
   private final int trigCount;
   private final SampleProcessorCallback callback;
@@ -55,7 +55,7 @@ public final class RleDecoder implements SampleProcessor
    * @param aTrigCount
    * @param aCallback
    */
-  public RleDecoder( final LogicSnifferConfig aConfig, final int[] aBuffer, final int aTrigCount,
+  public RleDecoder( final SumpConfig aConfig, final int[] aBuffer, final int aTrigCount,
       final SampleProcessorCallback aCallback )
   {
     if ( aBuffer == null )

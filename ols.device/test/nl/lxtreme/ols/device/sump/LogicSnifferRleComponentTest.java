@@ -258,7 +258,7 @@ public class LogicSnifferRleComponentTest
   @Before
   public void setupDevice() throws IOException, ConfigurationException
   {
-    final LogicSnifferConfig config = new LogicSnifferConfig();
+    final SumpConfig config = new SumpConfig();
     this.device = new VirtualLogicSnifferDevice( config, this.provider );
 
     final DeviceProfile deviceProfile = this.device.addDeviceProfile( "VirtualLS", "\"Virtual LogicSniffer\"" );

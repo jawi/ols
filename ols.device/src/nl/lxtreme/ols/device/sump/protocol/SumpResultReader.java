@@ -112,7 +112,7 @@ public class SumpResultReader implements Closeable, SumpProtocolConstants
    * @throws IllegalStateException
    *           in case we're not attached to the OLS device.
    */
-  public boolean readMetadata( final LogicSnifferMetadata aMetadata ) throws IOException, IllegalStateException
+  public boolean readMetadata( final DeviceMetadata aMetadata ) throws IOException, IllegalStateException
   {
     boolean gotResponse = false;
 

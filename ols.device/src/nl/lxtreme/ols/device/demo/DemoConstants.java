@@ -16,23 +16,32 @@
  * 51 Franklin St, Fifth Floor, Boston, MA 02110, USA
  *
  * Copyright (C) 2006-2010 Michael Poppitz, www.sump.org
- * Copyright (C) 2010 J.W. Janssen, www.lxtreme.nl
+ * Copyright (C) 2010-2013 J.W. Janssen, www.lxtreme.nl
  */
-package nl.lxtreme.ols.device.api;
-
-
-import nl.lxtreme.ols.common.acquisition.*;
-import nl.lxtreme.ols.task.execution.*;
+package nl.lxtreme.ols.device.demo;
 
 
 /**
- * Denotes an acquisition task that we can talk to by calling {@link #call()} on
- * it. The implementation of that method should do all necessary tasks to
- * acquire data from the device and return that data in the form of an
- * {@link AcquisitionData} object.
+ * Constants used by the demo device.
  */
-@Deprecated
-public interface AcquisitionTask extends Task<AcquisitionData>
+public interface DemoConstants
 {
-  // No additional methods
+  // CONSTANTS
+
+  /**
+   * The number of channels to return. The value should represent a positive,
+   * non-zero, {@link Integer} value.
+   */
+  String KEY_CHANNEL_COUNT = "demo.channelCount";
+  /**
+   * The number of samples to return. The value should represent a positive,
+   * non-zero, {@link Integer} value.
+   */
+  String KEY_SAMPLE_COUNT = "demo.sampleCount";
+  /**
+   * The name of the generator to use to generate the sample data. The value
+   * should represent a {@link String} value.
+   */
+  String KEY_GENERATOR_NAME = "demo.generatorName";
+
 }

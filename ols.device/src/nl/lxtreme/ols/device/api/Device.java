@@ -22,6 +22,8 @@ package nl.lxtreme.ols.device.api;
 
 
 import java.io.*;
+import java.util.*;
+import java.util.concurrent.*;
 
 import nl.lxtreme.ols.common.acquisition.*;
 
@@ -30,41 +32,36 @@ import nl.lxtreme.ols.common.acquisition.*;
  * Interface for implementing device controllers. Each supported device must
  * implement at least this interface.
  */
-public interface Device extends Closeable
+public interface Device
 {
   // METHODS
 
   /**
-   * Creates a new {@link AcquisitionTask} for acquiring data from the device.
+   * Starts the acquisition of data from the device and yields a promise that
+   * will yield the {@link AcquisitionData}.
    * 
+   * @param aConfig
+   *          the device configuration to use, cannot be <code>null</code>;
    * @param aProgressListener
-   *          the acquisition progress listener the acquisition task can use to
-   *          report its progress, cannot be <code>null</code>.
-   * @return a new acquisition task, never <code>null</code>.
+   *          the progress listener to use, can be <code>null</code> in case of
+   *          no interest in progress updates.
+   * @return a promise (future) to the acquired data, never <code>null</code>.
+   * @throws IllegalArgumentException
+   *           in case the given device config was <code>null</code> or not
+   *           valid.
    * @throws IOException
-   *           in case of I/O problems during the creation of the acquisition
-   *           task.
+   *           in case the acquisition failed, for example, due to an
+   *           inaccessible device.
    */
-  public AcquisitionTask createAcquisitionTask( AcquisitionProgressListener aProgressListener ) throws IOException;
-
-  /**
-   * Creates a new {@link CancelTask} for canceling the current acquisition from
-   * the device, if the device needs something special to do this.
-   * 
-   * @return a new cancel task, if <code>null</code> the running acquisition is
-   *         simply cancelled.
-   * @throws IOException
-   *           in case of I/O problems during the creating of the cancellation
-   *           task.
-   */
-  public CancelTask createCancelTask() throws IOException;
+  Future<AcquisitionData> acquireData( Map<String, ? extends Serializable> aConfig,
+      AcquisitionProgressListener aProgressListener ) throws IOException;
 
   /**
    * Returns a descriptive name of this device controller.
    * 
    * @return name of the controller, cannot be <code>null</code>.
    */
-  public String getName();
+  String getName();
 
   /**
    * Returns whether this device is already set up or not.
@@ -72,18 +69,14 @@ public interface Device extends Closeable
    * @return <code>true</code> if there is a "valid" setup for this device,
    *         <code>false</code> otherwise.
    */
-  public boolean isSetup();
+  boolean isSetup();
 
   /**
    * Allows this device controller to set up the device by means of presenting
    * an UI.
    * 
-   * @param aParent
-   *          the parent window that can be used to display (modal) dialogs, can
-   *          be <code>null</code>.
-   * @return <code>true</code> if the setup is successfully completed (the user
-   *         acknowledged the setup), <code>false</code> if the setup is aborted
-   *         by the user.
+   * @return the device configuration, or <code>null</code> if the user
+   *         cancelled or disapproved the configuration.
    */
-  public boolean setupCapture( final java.awt.Window aParent );
+  Map<String, ? extends Serializable> setupDevice();
 }

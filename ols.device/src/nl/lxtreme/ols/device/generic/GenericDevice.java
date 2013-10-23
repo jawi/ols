@@ -21,11 +21,20 @@
 package nl.lxtreme.ols.device.generic;
 
 
+import static nl.lxtreme.ols.device.generic.GenericConstants.*;
+
 import java.awt.*;
 import java.io.*;
+import java.util.*;
+import java.util.concurrent.*;
 
+import org.apache.felix.dm.Component;
+
+import nl.lxtreme.ols.common.*;
 import nl.lxtreme.ols.common.acquisition.*;
 import nl.lxtreme.ols.device.api.*;
+import nl.lxtreme.ols.task.execution.*;
+import nl.lxtreme.ols.util.swing.*;
 
 
 /**
@@ -40,8 +49,10 @@ public class GenericDevice implements Device
 
   // VARIABLES
 
-  private GenericDeviceConfigDialog deviceConfig = null;
-  private boolean setup = false;
+  private Map<String, ? extends Serializable> lastConfig = null;
+  private GenericDeviceConfigDialog configDialog = null;
+
+  private volatile TaskExecutionService taskExecutionService;
 
   // METHODS
 
@@ -49,33 +60,26 @@ public class GenericDevice implements Device
    * {@inheritDoc}
    */
   @Override
-  public void close() throws IOException
+  public Future<AcquisitionData> acquireData( Map<String, ? extends Serializable> aConfig,
+      AcquisitionProgressListener aProgressListener )
   {
-    // No-op...
+    if ( ( aConfig == null ) || !isValid( aConfig ) )
+    {
+      throw new IllegalArgumentException( "Invalid device configuration!" );
+    }
+
+    String devicePath = ( String )aConfig.get( KEY_DEVICE_PATH );
+    int channelCount = ( ( Number )aConfig.get( KEY_CHANNEL_COUNT ) ).intValue();
+    int sampleRate = ( ( Number )aConfig.get( KEY_SAMPLE_RATE ) ).intValue();
+    int sampleCount = ( ( Number )aConfig.get( KEY_SAMPLE_COUNT ) ).intValue();
+    int sampleWidth = ( ( Number )aConfig.get( KEY_SAMPLE_WIDTH ) ).intValue();
+
+    return this.taskExecutionService.execute( new GenericDeviceAcquisitionTask( devicePath, channelCount, sampleRate,
+        sampleCount, sampleWidth, aProgressListener ) );
   }
 
   /**
    * {@inheritDoc}
-   */
-  @Override
-  public AcquisitionTask createAcquisitionTask( final AcquisitionProgressListener aProgressListener )
-      throws IOException
-  {
-    return new GenericDeviceAcquisitionTask( this.deviceConfig, aProgressListener );
-  }
-
-  /**
-   * {@inheritDoc}
-   */
-  @Override
-  public CancelTask createCancelTask() throws IOException
-  {
-    // Nothing special is needed...
-    return null;
-  }
-
-  /**
-   * @see nl.lxtreme.ols.api.devices.Device#getName()
    */
   @Override
   public String getName()
@@ -84,32 +88,111 @@ public class GenericDevice implements Device
   }
 
   /**
-   * @see nl.lxtreme.ols.api.devices.Device#isSetup()
+   * {@inheritDoc}
    */
   @Override
   public boolean isSetup()
   {
-    return this.setup;
+    return this.lastConfig != null;
   }
 
   /**
-   * @see nl.lxtreme.ols.api.devices.Device#setupCapture(java.awt.Window)
+   * {@inheritDoc}
    */
   @Override
-  public boolean setupCapture( final Window aParent )
+  public Map<String, ? extends Serializable> setupDevice()
   {
-    // check if dialog exists with different owner and dispose if so
-    if ( ( this.deviceConfig != null ) && ( this.deviceConfig.getOwner() != aParent ) )
+    final Window currentWindow = SwingComponentUtils.getCurrentWindow();
+
+    disposeConfigDialog();
+
+    this.configDialog = new GenericDeviceConfigDialog( currentWindow );
+
+    Map<String, ? extends Serializable> config = this.lastConfig;
+
+    if ( this.configDialog.showDialog() )
     {
-      this.deviceConfig.dispose();
-      this.deviceConfig = null;
-    }
-    // if no valid dialog exists, create one
-    if ( this.deviceConfig == null )
-    {
-      this.deviceConfig = new GenericDeviceConfigDialog( aParent );
+      config = this.lastConfig = this.configDialog.getConfig();
     }
 
-    return ( this.setup = this.deviceConfig.showDialog() );
+    return config;
+  }
+
+  /**
+   * Called when this class is unregistered as OSGi service.
+   */
+  protected void destroy( final Component aComponent )
+  {
+    disposeConfigDialog();
+  }
+
+  /**
+   * Disposes the current configuration dialog, if one is still visible on
+   * screen. If no configuration dialog is visible, this method does nothing.
+   */
+  private void disposeConfigDialog()
+  {
+    SwingComponentUtils.dispose( this.configDialog );
+    this.configDialog = null;
+  }
+
+  private boolean isPositiveNumber( Object value )
+  {
+    int num;
+    if ( value == null || !( value instanceof Number ) )
+    {
+      return false;
+    }
+    num = ( ( Number )value ).intValue();
+    if ( num < 1 )
+    {
+      return false;
+    }
+    return true;
+  }
+
+  /**
+   * Validates the given device configuration.
+   * 
+   * @param aConfig
+   *          the configuration to validate, cannot be <code>null</code>.
+   * @return <code>true</code> if the given configuration was valid,
+   *         <code>false</code> otherwise.
+   */
+  private boolean isValid( Map<String, ? extends Serializable> aConfig )
+  {
+    Object value = aConfig.get( KEY_CHANNEL_COUNT );
+    if ( value == null || !( value instanceof Number ) )
+    {
+      return false;
+    }
+    int num = ( ( Number )value ).intValue();
+    if ( num < 1 || num > OlsConstants.MAX_CHANNELS )
+    {
+      return false;
+    }
+
+    if ( !isPositiveNumber( aConfig.get( KEY_SAMPLE_COUNT ) ) )
+    {
+      return false;
+    }
+
+    if ( !isPositiveNumber( aConfig.get( KEY_SAMPLE_RATE ) ) )
+    {
+      return false;
+    }
+
+    if ( !isPositiveNumber( aConfig.get( KEY_SAMPLE_WIDTH ) ) )
+    {
+      return false;
+    }
+
+    value = aConfig.get( KEY_DEVICE_PATH );
+    if ( value == null || !( value instanceof String ) )
+    {
+      return false;
+    }
+
+    return new File( ( String )value ).exists();
   }
 }

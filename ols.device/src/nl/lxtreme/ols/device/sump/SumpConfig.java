@@ -21,6 +21,9 @@
 package nl.lxtreme.ols.device.sump;
 
 
+import java.io.*;
+import java.util.*;
+
 import nl.lxtreme.ols.common.*;
 import nl.lxtreme.ols.device.sump.profile.*;
 import nl.lxtreme.ols.device.sump.profile.DeviceProfile.CaptureClockSource;
@@ -30,9 +33,11 @@ import nl.lxtreme.ols.device.sump.protocol.*;
 /**
  * Provides the configuration options for the LogicSniffer device.
  */
-public final class LogicSnifferConfig
+public final class SumpConfig extends HashMap<String, Serializable>
 {
   // CONSTANTS
+
+  private static final long serialVersionUID = 1L;
 
   // mask for delay value
   private final static int TRIGGER_DELAYMASK = 0x0000ffff;
@@ -73,10 +78,33 @@ public final class LogicSnifferConfig
   // CONSTRUCTORS
 
   /**
-   * Creates a new LogicSnifferConfig instance with all default settings.
+   * Creates a new {@link SumpConfig} instance with all default
+   * settings.
    */
-  public LogicSnifferConfig()
+  public SumpConfig()
   {
+    this.triggerMask = new int[4];
+    this.triggerValue = new int[4];
+    this.triggerConfig = new int[4];
+    for ( int i = 0; i < TRIGGER_STAGES; i++ )
+    {
+      this.triggerMask[i] = 0;
+      this.triggerValue[i] = 0;
+      this.triggerConfig[i] = 0;
+    }
+    this.triggerEnabled = false;
+    this.filterEnabled = false;
+    setClockSource( CaptureClockSource.INTERNAL );
+    this.ratio = 0.5;
+    this.size = 512;
+    this.enabledGroups = new boolean[] { true, true, true, true };
+  }
+
+  public SumpConfig( Map<String, ? extends Serializable> aConfig )
+  {
+    // TODO
+    super( aConfig );
+
     this.triggerMask = new int[4];
     this.triggerValue = new int[4];
     this.triggerConfig = new int[4];
@@ -589,6 +617,11 @@ public final class LogicSnifferConfig
   public boolean isTriggerEnabled()
   {
     return this.triggerEnabled;
+  }
+
+  public boolean isValid()
+  {
+    return true; // XXX
   }
 
   /**

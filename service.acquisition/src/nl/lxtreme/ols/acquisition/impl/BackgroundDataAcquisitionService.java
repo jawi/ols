@@ -48,10 +48,9 @@ public class BackgroundDataAcquisitionService implements DataAcquisitionService,
   private final List<AcquisitionProgressListener> acquisitionProgressListeners;
   private final List<AcquisitionStatusListener> acquisitionStatusListeners;
   private final List<AcquisitionDataListener> acquisitionDataListeners;
+  private final Map<String, Map<String, ? extends Serializable>> deviceConfigs;
 
-  private volatile TaskExecutionService taskExecutionService;
   private volatile Future<?> acquisitionFutureTask;
-  private volatile Task<AcquisitionData> acquisitionTask;
 
   // CONSTRUCTORS
 
@@ -63,6 +62,8 @@ public class BackgroundDataAcquisitionService implements DataAcquisitionService,
     this.acquisitionProgressListeners = new CopyOnWriteArrayList<AcquisitionProgressListener>();
     this.acquisitionStatusListeners = new CopyOnWriteArrayList<AcquisitionStatusListener>();
     this.acquisitionDataListeners = new CopyOnWriteArrayList<AcquisitionDataListener>();
+
+    this.deviceConfigs = new HashMap<String, Map<String, ? extends Serializable>>();
   }
 
   // METHODS
@@ -71,9 +72,45 @@ public class BackgroundDataAcquisitionService implements DataAcquisitionService,
    * {@inheritDoc}
    */
   @Override
-  public void acquireData( final Device aDevice ) throws IOException
+  public void acquireData( Device aDevice ) throws IOException
   {
-    final AcquisitionTask innerTask = aDevice.createAcquisitionTask( new AcquisitionProgressListener()
+    if ( aDevice == null )
+    {
+      throw new IllegalArgumentException( "Device cannot be null!" );
+    }
+
+    Map<String, ? extends Serializable> config = this.deviceConfigs.get( aDevice.getName() );
+    if ( config == null )
+    {
+      throw new IllegalStateException( "No configuration present for " + aDevice.getName() );
+    }
+
+    acquireData( config, aDevice );
+  }
+
+  /**
+   * {@inheritDoc}
+   */
+  @Override
+  public void acquireData( Map<String, ? extends Serializable> aConfig, Device aDevice ) throws IOException
+  {
+    if ( aConfig == null )
+    {
+      throw new IllegalArgumentException( "Config cannot be null!" );
+    }
+    if ( aDevice == null )
+    {
+      throw new IllegalArgumentException( "Device cannot be null!" );
+    }
+    if ( isAcquiring() )
+    {
+      throw new IllegalStateException( "Acquisition still in progress!" );
+    }
+
+    // Keep this configuration for later use...
+    this.deviceConfigs.put( aDevice.getName(), aConfig );
+
+    this.acquisitionFutureTask = aDevice.acquireData( aConfig, new AcquisitionProgressListener()
     {
       @Override
       public void acquisitionInProgress( final int aPercentage )
@@ -81,26 +118,6 @@ public class BackgroundDataAcquisitionService implements DataAcquisitionService,
         fireAcquisitionInProgressEvent( aPercentage );
       }
     } );
-
-    // Wrap the actual acquisition task in order to get a kind of "auto"
-    // closable behavior...
-    this.acquisitionTask = new Task<AcquisitionData>()
-    {
-      @Override
-      public AcquisitionData call() throws Exception
-      {
-        try
-        {
-          return innerTask.call();
-        }
-        finally
-        {
-          aDevice.close();
-        }
-      }
-    };
-
-    this.acquisitionFutureTask = this.taskExecutionService.execute( this.acquisitionTask );
   }
 
   /**
@@ -156,14 +173,12 @@ public class BackgroundDataAcquisitionService implements DataAcquisitionService,
       throw new IllegalStateException( "No acquisition in progress!" );
     }
 
-    final CancelTask cancelTask = aDevice.createCancelTask();
-    if ( cancelTask != null )
-    {
-      this.taskExecutionService.execute( cancelTask );
-    }
-    else
+    try
     {
       this.acquisitionFutureTask.cancel( true /* mayInterruptIfRunning */);
+    }
+    finally
+    {
       this.acquisitionFutureTask = null;
     }
   }
@@ -242,19 +257,15 @@ public class BackgroundDataAcquisitionService implements DataAcquisitionService,
   @Override
   public <RT> void taskEnded( final Task<RT> aTask, final RT aResult )
   {
-    if ( aTask == this.acquisitionTask )
-    {
-      this.acquisitionTask = null;
-      this.acquisitionFutureTask = null;
+    this.acquisitionFutureTask = null;
 
-      final AcquisitionData result = ( AcquisitionData )aResult;
-      fireAcquisitionCompleteEvent( result );
+    final AcquisitionData result = ( AcquisitionData )aResult;
+    fireAcquisitionCompleteEvent( result );
 
-      final AcquisitionResultStatus status = new AcquisitionResultStatus( ResultStatus.NORMAL );
-      fireAcquisitionEndedEvent( status );
+    final AcquisitionResultStatus status = new AcquisitionResultStatus( ResultStatus.NORMAL );
+    fireAcquisitionEndedEvent( status );
 
-      LOG.log( Level.INFO, "Acquisition successful!" );
-    }
+    LOG.log( Level.INFO, "Acquisition successful!" );
   }
 
   /**
@@ -263,16 +274,12 @@ public class BackgroundDataAcquisitionService implements DataAcquisitionService,
   @Override
   public <RT> void taskFailed( final Task<RT> aTask, final Exception aException )
   {
-    if ( aTask == this.acquisitionTask )
-    {
-      this.acquisitionTask = null;
-      this.acquisitionFutureTask = null;
+    this.acquisitionFutureTask = null;
 
-      final AcquisitionResultStatus status = AcquisitionResultStatus.create( aException );
-      fireAcquisitionEndedEvent( status );
+    final AcquisitionResultStatus status = AcquisitionResultStatus.create( aException );
+    fireAcquisitionEndedEvent( status );
 
-      LOG.log( Level.WARNING, "Acquisition failed!", aException );
-    }
+    LOG.log( Level.WARNING, "Acquisition failed!", aException );
   }
 
   /**
@@ -281,10 +288,7 @@ public class BackgroundDataAcquisitionService implements DataAcquisitionService,
   @Override
   public <RT> void taskStarted( final Task<RT> aTask )
   {
-    if ( this.acquisitionTask == aTask )
-    {
-      fireAcquisitionStartedEvent();
-    }
+    fireAcquisitionStartedEvent();
   }
 
   /**

@@ -21,8 +21,12 @@
 package nl.lxtreme.ols.device.demo;
 
 
+import static nl.lxtreme.ols.device.demo.DemoDevice.*;
+import static nl.lxtreme.ols.device.demo.DemoConstants.*;
+
 import java.awt.*;
 import java.awt.event.*;
+import java.io.*;
 import java.util.*;
 
 import javax.swing.*;
@@ -44,27 +48,6 @@ public class DemoDeviceDialog extends JDialog implements Configurable, Closeable
   static final Integer[] CHANNELS = new Integer[] { 1, 4, 8, 16, 32 };
   static final Integer[] DATA_LENGTH = new Integer[] { 16, 256, 1024, 4096, 8192, 16384, 32768, 65536, 131072, 262144,
       524288, 1048576, 2097152, 4194304, 8388608, 16777216 };
-  static final Map<String, IDataGenerator> GENERATORS = new LinkedHashMap<String, IDataGenerator>();
-
-  static
-  {
-    final Class<?>[] generators = { SawtoothDataGenerator.class, ZeroDataGenerator.class, SineDataGenerator.class,
-        OddEvenGenerator.class, RandomDataGenerator.class, I2CGenerator.class, OneWireGenerator.class,
-        ManchesterEncoder.class, ClockedCounterGenerator.class, StateDataGenerator.class, BurstGenerator.class };
-
-    for ( Class<?> generator : generators )
-    {
-      try
-      {
-        IDataGenerator inst = ( IDataGenerator )generator.newInstance();
-        GENERATORS.put( inst.getName(), inst );
-      }
-      catch ( Exception exception )
-      {
-        exception.printStackTrace();
-      }
-    }
-  }
 
   // VARIABLES
 
@@ -104,27 +87,15 @@ public class DemoDeviceDialog extends JDialog implements Configurable, Closeable
   }
 
   /**
-   * @return the channels
+   * @return the device configuration, as configured in this dialog.
    */
-  public int getChannels()
+  public Map<String, ? extends Serializable> getConfig()
   {
-    return this.channels;
-  }
-
-  /**
-   * @return the dataFunction
-   */
-  public IDataGenerator getDataGenerator()
-  {
-    return GENERATORS.get( this.dataFunction );
-  }
-
-  /**
-   * @return the dataLength
-   */
-  public int getDataLength()
-  {
-    return this.dataLength;
+    Map<String, Serializable> result = new HashMap<String, Serializable>();
+    result.put( KEY_CHANNEL_COUNT, this.channels );
+    result.put( KEY_SAMPLE_COUNT, this.dataLength );
+    result.put( KEY_GENERATOR_NAME, this.dataFunction );
+    return result;
   }
 
   /**

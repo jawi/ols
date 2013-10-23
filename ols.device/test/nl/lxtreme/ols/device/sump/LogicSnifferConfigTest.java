@@ -28,13 +28,13 @@ import org.junit.*;
 
 
 /**
- * Test cases for {@link LogicSnifferConfig}.
+ * Test cases for {@link SumpConfig}.
  */
 public class LogicSnifferConfigTest
 {
   // VARIABLES
 
-  private LogicSnifferConfig config;
+  private SumpConfig config;
   private DeviceProfile profile;
 
   // METHODS
@@ -45,7 +45,7 @@ public class LogicSnifferConfigTest
   @Before
   public void setUp() throws Exception
   {
-    this.config = new LogicSnifferConfig();
+    this.config = new SumpConfig();
 
     VirtualLogicSnifferDevice device = new VirtualLogicSnifferDevice( this.config );
 
@@ -56,7 +56,7 @@ public class LogicSnifferConfigTest
   }
 
   /**
-   * Test method for {@link LogicSnifferConfig#getChannelCount()}.
+   * Test method for {@link SumpConfig#getChannelCount()}.
    */
   @Test
   public void testGetChannelCount()
@@ -72,7 +72,7 @@ public class LogicSnifferConfigTest
   }
 
   /**
-   * Test method for {@link LogicSnifferConfig#getClockspeed()}.
+   * Test method for {@link SumpConfig#getClockspeed()}.
    */
   @Test
   public void testGetClockspeed()
@@ -81,7 +81,7 @@ public class LogicSnifferConfigTest
   }
 
   /**
-   * Test method for {@link LogicSnifferConfig#getDeviceProfile()}.
+   * Test method for {@link SumpConfig#getDeviceProfile()}.
    */
   @Test
   public void testGetDeviceProfile()
@@ -90,7 +90,7 @@ public class LogicSnifferConfigTest
   }
 
   /**
-   * Test method for {@link LogicSnifferConfig#getDivider()}.
+   * Test method for {@link SumpConfig#getDivider()}.
    */
   @Test
   public void testGetDivider()
@@ -109,7 +109,7 @@ public class LogicSnifferConfigTest
   }
 
   /**
-   * Test method for {@link LogicSnifferConfig#getEnabledGroupCount()}.
+   * Test method for {@link SumpConfig#getEnabledGroupCount()}.
    */
   @Test
   public void testGetEnabledGroupCountWithDDR()
@@ -134,7 +134,7 @@ public class LogicSnifferConfigTest
   }
 
   /**
-   * Test method for {@link LogicSnifferConfig#getEnabledGroupCount()}.
+   * Test method for {@link SumpConfig#getEnabledGroupCount()}.
    */
   @Test
   public void testGetEnabledGroupCountWithoutDDR()
@@ -159,7 +159,7 @@ public class LogicSnifferConfigTest
   }
 
   /**
-   * Test method for {@link LogicSnifferConfig#getGroupCount()}.
+   * Test method for {@link SumpConfig#getGroupCount()}.
    */
   @Test
   public void testGetGroupCountWithDDR()
@@ -171,7 +171,7 @@ public class LogicSnifferConfigTest
   }
 
   /**
-   * Test method for {@link LogicSnifferConfig#getGroupCount()}.
+   * Test method for {@link SumpConfig#getGroupCount()}.
    */
   @Test
   public void testGetGroupCountWithoutDDR()
@@ -183,7 +183,7 @@ public class LogicSnifferConfigTest
   }
 
   /**
-   * Test method for {@link LogicSnifferConfig#getRLEDataWidth()}.
+   * Test method for {@link SumpConfig#getRLEDataWidth()}.
    */
   @Test
   public void testGetRLEDataWidthWithDDR()
@@ -208,7 +208,7 @@ public class LogicSnifferConfigTest
   }
 
   /**
-   * Test method for {@link LogicSnifferConfig#getRLEDataWidth()}.
+   * Test method for {@link SumpConfig#getRLEDataWidth()}.
    */
   @Test
   public void testGetRLEDataWidthWithoutDDR()
@@ -233,7 +233,7 @@ public class LogicSnifferConfigTest
   }
 
   /**
-   * Test method for {@link LogicSnifferConfig#getSampleCount()}.
+   * Test method for {@link SumpConfig#getSampleCount()}.
    */
   @Test
   public void testGetSampleCountWithDDR()
@@ -258,7 +258,7 @@ public class LogicSnifferConfigTest
   }
 
   /**
-   * Test method for {@link LogicSnifferConfig#getSampleCount()}.
+   * Test method for {@link SumpConfig#getSampleCount()}.
    */
   @Test
   public void testGetSampleCountWithoutDDR()
@@ -283,7 +283,7 @@ public class LogicSnifferConfigTest
   }
 
   /**
-   * Test method for {@link LogicSnifferConfig#getSampleRate()}.
+   * Test method for {@link SumpConfig#getSampleRate()}.
    */
   @Test
   public void testGetSampleRate()
@@ -302,7 +302,7 @@ public class LogicSnifferConfigTest
   }
 
   /**
-   * Test method for {@link LogicSnifferConfig#getStopCounter()}.
+   * Test method for {@link SumpConfig#getStopCounter()}.
    */
   @Test
   public void testGetStopCounter()
@@ -323,7 +323,7 @@ public class LogicSnifferConfigTest
   }
 
   /**
-   * Test method for {@link LogicSnifferConfig#isDoubleDataRateEnabled()}.
+   * Test method for {@link SumpConfig#isDoubleDataRateEnabled()}.
    */
   @Test
   public void testIsDoubleDataRateEnabled()
@@ -339,7 +339,7 @@ public class LogicSnifferConfigTest
   }
 
   /**
-   * Test method for {@link LogicSnifferConfig#isFilterAvailable()}.
+   * Test method for {@link SumpConfig#isFilterAvailable()}.
    */
   @Test
   public void testIsFilterAvailableWithDDR()
@@ -351,7 +351,7 @@ public class LogicSnifferConfigTest
   }
 
   /**
-   * Test method for {@link LogicSnifferConfig#isFilterAvailable()}.
+   * Test method for {@link SumpConfig#isFilterAvailable()}.
    */
   @Test
   public void testIsFilterAvailableWithoutDDR()
@@ -363,7 +363,7 @@ public class LogicSnifferConfigTest
   }
 
   /**
-   * Test method for {@link LogicSnifferConfig#isGroupEnabled(int)}.
+   * Test method for {@link SumpConfig#isGroupEnabled(int)}.
    */
   @Test
   public void testIsGroupEnabledWithDDR()
@@ -467,7 +467,7 @@ public class LogicSnifferConfigTest
   }
 
   /**
-   * Test method for {@link LogicSnifferConfig#isGroupEnabled(int)}.
+   * Test method for {@link SumpConfig#isGroupEnabled(int)}.
    */
   @Test
   public void testIsGroupEnabledWithoutDDR()
@@ -571,7 +571,7 @@ public class LogicSnifferConfigTest
   }
 
   /**
-   * Test method for {@link LogicSnifferConfig#setEnabledChannels(int)}.
+   * Test method for {@link SumpConfig#setEnabledChannels(int)}.
    */
   @Test
   public void testSetEnabledChannels()
@@ -587,7 +587,7 @@ public class LogicSnifferConfigTest
   }
 
   /**
-   * Test method for {@link LogicSnifferConfig#setRatio(double)}.
+   * Test method for {@link SumpConfig#setRatio(double)}.
    */
   @Test( expected = IllegalArgumentException.class )
   public void testSetNegativeRatioFail()
@@ -596,7 +596,7 @@ public class LogicSnifferConfigTest
   }
 
   /**
-   * Test method for {@link LogicSnifferConfig#setRatio(double)}.
+   * Test method for {@link SumpConfig#setRatio(double)}.
    */
   @Test
   public void testSetRatioOk()
@@ -609,7 +609,7 @@ public class LogicSnifferConfigTest
   }
 
   /**
-   * Test method for {@link LogicSnifferConfig#setRatio(double)}.
+   * Test method for {@link SumpConfig#setRatio(double)}.
    */
   @Test( expected = IllegalArgumentException.class )
   public void testSetTooGreatRatioFail()
@@ -618,7 +618,7 @@ public class LogicSnifferConfigTest
   }
 
   /**
-   * Test method for {@link LogicSnifferConfig#setSampleCount(int)}.
+   * Test method for {@link SumpConfig#setSampleCount(int)}.
    */
   @Test( expected = IllegalArgumentException.class )
   public void testSetZeroSampleCountFail()
@@ -627,7 +627,7 @@ public class LogicSnifferConfigTest
   }
 
   /**
-   * Test method for {@link LogicSnifferConfig#setSampleRate(int)}.
+   * Test method for {@link SumpConfig#setSampleRate(int)}.
    */
   @Test( expected = IllegalArgumentException.class )
   public void testSetZeroSampleRateFail()
@@ -636,7 +636,7 @@ public class LogicSnifferConfigTest
   }
 
   /**
-   * Test method for {@link LogicSnifferConfig#setSampleRate(int)}.
+   * Test method for {@link SumpConfig#setSampleRate(int)}.
    */
   @Test( expected = IllegalArgumentException.class )
   public void testSetZeroSampleRateFails()

@@ -24,6 +24,9 @@ package nl.lxtreme.ols.device.sump.profile;
 import java.util.*;
 import java.util.concurrent.*;
 
+import nl.lxtreme.ols.device.sump.*;
+
+import org.osgi.framework.*;
 import org.osgi.service.cm.*;
 
 
@@ -33,6 +36,87 @@ import org.osgi.service.cm.*;
 public class DeviceProfileManager implements ManagedServiceFactory
 {
   // CONSTANTS
+
+  /**
+   * Order the candidates based on their match-logic: first the ones with
+   * filters, followed by the ones without wildcards, and the ones with
+   * wildcards lastly...
+   */
+  private final class ProfileFilterWildcardComparator implements Comparator<DeviceProfile>
+  {
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public int compare( DeviceProfile aDP1, DeviceProfile aDP2 )
+    {
+      String[] keys1 = aDP1.getDeviceMetadataKeys();
+      String[] keys2 = aDP2.getDeviceMetadataKeys();
+
+      boolean containsFilter1 = containsFilter( keys1 );
+      boolean containsFilter2 = containsFilter( keys2 );
+
+      if ( containsFilter1 )
+      {
+        if ( !containsFilter2 )
+        {
+          return -1;
+        }
+      }
+      else
+      {
+        if ( containsFilter2 )
+        {
+          return 1;
+        }
+      }
+
+      boolean containsWildcard1 = containsWildcard( keys1 );
+      boolean containsWildcard2 = containsWildcard( keys2 );
+
+      if ( !containsWildcard1 )
+      {
+        if ( containsWildcard2 )
+        {
+          return -1;
+        }
+      }
+      else
+      {
+        if ( !containsWildcard2 )
+        {
+          return 1;
+        }
+      }
+
+      // Ensure proper (fixed) order...
+      return aDP1.getType().compareTo( aDP2.getType() );
+    }
+
+    private boolean containsFilter( String... aKeys )
+    {
+      for ( String key : aKeys )
+      {
+        if ( key.length() > 2 && key.startsWith( "(" ) && key.endsWith( ")" ) )
+        {
+          return true;
+        }
+      }
+      return false;
+    }
+
+    private boolean containsWildcard( String... aKeys )
+    {
+      for ( String key : aKeys )
+      {
+        if ( "*".equals( key ) )
+        {
+          return true;
+        }
+      }
+      return false;
+    }
+  }
 
   public static final String SERVICE_PID = "ols.profile";
 
@@ -77,27 +161,35 @@ public class DeviceProfileManager implements ManagedServiceFactory
    *          the identifier as string, cannot be <code>null</code>.
    * @return the device profile matching the given identifier, or
    *         <code>null</code> if none is found.
+   * @throws InvalidSyntaxException
+   *           in case an invalid filter was used.
    */
-  public DeviceProfile findProfile( final String aIdentifier )
+  public DeviceProfile findProfile( DeviceMetadata aMetadata ) throws InvalidSyntaxException
   {
-    final Collection<DeviceProfile> allProfiles = getProfiles();
+    Collection<DeviceProfile> allProfiles = getProfiles();
+    SortedSet<DeviceProfile> candidates = new TreeSet<DeviceProfile>( new ProfileFilterWildcardComparator() );
 
     boolean allowWildcardMatch = false;
     for ( int tries = 0; tries < 2; tries++ )
     {
       for ( DeviceProfile profile : allProfiles )
       {
-        final String[] metadataKeys = profile.getDeviceMetadataKeys();
-        if ( matches( aIdentifier, allowWildcardMatch, metadataKeys ) )
+        if ( matches( profile, aMetadata, allowWildcardMatch ) )
         {
-          return profile;
+          candidates.add( profile );
         }
+      }
+      // If we've already found something, we do not look any further...
+      if ( !candidates.isEmpty() )
+      {
+        break;
       }
       // None of the device profiles matched exactly, so try with wildcards...
       allowWildcardMatch = true;
     }
 
-    return null;
+    // Pick the highest one...
+    return candidates.iterator().next();
   }
 
   /**
@@ -184,7 +276,7 @@ public class DeviceProfileManager implements ManagedServiceFactory
     {
       DeviceProfile profile = new DeviceProfile();
       profile.setProperties( aProperties );
-      
+
       this.profiles.put( aPid, profile );
     }
     catch ( IllegalArgumentException exception )
@@ -202,12 +294,24 @@ public class DeviceProfileManager implements ManagedServiceFactory
    *          the metadata keys to search in.
    * @return <code>true</code> if the given identifier is found,
    *         <code>false</code> otherwise.
+   * @throws InvalidSyntaxException
+   *           in case an invalid filter was found.
    */
-  private boolean matches( final String aIdentifier, final boolean aAllowWildcard, final String... aMetadataKeys )
+  private boolean matches( final DeviceProfile aProfile, final DeviceMetadata aMetadata, final boolean aAllowWildcard )
+      throws InvalidSyntaxException
   {
-    for ( String metadataKey : aMetadataKeys )
+    for ( String metadataKey : aProfile.getDeviceMetadataKeys() )
     {
-      if ( aIdentifier.startsWith( metadataKey ) )
+      // Determine whether we're dealing with an OSGi/LDAP-filter or not...
+      if ( metadataKey.startsWith( "(" ) && metadataKey.endsWith( ")" ) && metadataKey.length() > 2 )
+      {
+        Filter filter = FrameworkUtil.createFilter( metadataKey );
+        if ( filter.match( aMetadata.asDictionary() ) )
+        {
+          return true;
+        }
+      }
+      else if ( aMetadata.getName().startsWith( metadataKey ) )
       {
         return true;
       }

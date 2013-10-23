@@ -22,49 +22,49 @@ package nl.lxtreme.ols.device.demo;
 
 
 import nl.lxtreme.ols.common.acquisition.*;
-import nl.lxtreme.ols.device.api.*;
+import nl.lxtreme.ols.task.execution.*;
 
 
 /**
  * Denotes an acquisition task for a testing device that outputs static
  * (generated) data.
  */
-public class DemoAcquisitionTask implements AcquisitionTask
+public class DemoAcquisitionTask implements Task<AcquisitionData>
 {
   // VARIABLES
 
-  private final DemoDeviceDialog configDialog;
+  private final int channelCount;
+  private final int sampleCount;
+  private final IDataGenerator generator;
   private final AcquisitionProgressListener progressListener;
 
   // CONSTRUCTORS
 
   /**
-   * Creates a new TestDevice instance.
+   * Creates a new {@link DemoAcquisitionTask} instance.
    * 
-   * @param aConfigDialog
+   * @param aChannelCount
+   * @param aSampleCount
+   * @param aGenerator
    * @param aProgressListener
    */
-  public DemoAcquisitionTask( final DemoDeviceDialog aConfigDialog, final AcquisitionProgressListener aProgressListener )
+  public DemoAcquisitionTask( int aChannelCount, int aSampleCount, IDataGenerator aGenerator,
+      AcquisitionProgressListener aProgressListener )
   {
-    this.configDialog = aConfigDialog;
+    this.channelCount = aChannelCount;
+    this.sampleCount = aSampleCount;
+    this.generator = aGenerator;
     this.progressListener = aProgressListener;
   }
 
   // METHODS
 
-  /**
-   * {@inheritDoc}
-   */
   @Override
   public AcquisitionData call() throws Exception
   {
     AcquisitionDataBuilder builder = new AcquisitionDataBuilder();
-    
-    final int dataLength = this.configDialog.getDataLength();
-    final int channels = this.configDialog.getChannels();
-    final IDataGenerator generator = this.configDialog.getDataGenerator();
 
-    generator.generate( channels, dataLength, builder, this.progressListener );
+    this.generator.generate( this.channelCount, this.sampleCount, builder, this.progressListener );
 
     return builder.build();
   }

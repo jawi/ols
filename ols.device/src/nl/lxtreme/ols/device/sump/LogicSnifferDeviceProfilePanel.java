@@ -24,16 +24,17 @@ package nl.lxtreme.ols.device.sump;
 import java.awt.*;
 import java.awt.event.*;
 import java.io.*;
-import java.util.*;
 import java.util.List;
 import java.util.logging.*;
 
 import javax.swing.*;
 import javax.swing.plaf.basic.*;
 
-import nl.lxtreme.ols.device.api.*;
+import org.osgi.framework.*;
+
 import nl.lxtreme.ols.device.sump.profile.*;
 import nl.lxtreme.ols.util.swing.*;
+import nl.lxtreme.ols.util.swing.Configurable;
 
 
 /**
@@ -54,15 +55,15 @@ public abstract class LogicSnifferDeviceProfilePanel implements Configurable
 
     // VARIABLES
 
-    private final DeviceProfileManager deviceProfileManager;
+    private final List<DeviceProfile> profiles;
     private volatile Object selected = null;
 
     /**
      * Creates a new {@link DeviceProfileTypeComboBoxModel} instance.
      */
-    public DeviceProfileTypeComboBoxModel( final DeviceProfileManager aDeviceProfileManager )
+    public DeviceProfileTypeComboBoxModel( List<DeviceProfile> aProfiles )
     {
-      this.deviceProfileManager = aDeviceProfileManager;
+      this.profiles = aProfiles;
     }
 
     // METHODS
@@ -77,7 +78,14 @@ public abstract class LogicSnifferDeviceProfilePanel implements Configurable
      */
     public Object findElementByType( final String aType )
     {
-      return this.deviceProfileManager.getProfile( aType );
+      for ( DeviceProfile profile : this.profiles )
+      {
+        if ( aType.equals( profile.getType() ) )
+        {
+          return profile;
+        }
+      }
+      return null;
     }
 
     /**
@@ -86,12 +94,11 @@ public abstract class LogicSnifferDeviceProfilePanel implements Configurable
     @Override
     public Object getElementAt( final int aIndex )
     {
-      final List<DeviceProfile> profiles = this.deviceProfileManager.getProfiles();
-      if ( profiles.isEmpty() )
+      if ( this.profiles.isEmpty() )
       {
         return null;
       }
-      return profiles.get( aIndex );
+      return this.profiles.get( aIndex );
     }
 
     /**
@@ -109,7 +116,7 @@ public abstract class LogicSnifferDeviceProfilePanel implements Configurable
     @Override
     public int getSize()
     {
-      return this.deviceProfileManager.getSize();
+      return this.profiles.size();
     }
 
     /**
@@ -148,67 +155,6 @@ public abstract class LogicSnifferDeviceProfilePanel implements Configurable
   }
 
   /**
-   * Provides a {@link DeviceMetadata} implementation that doesn't return any
-   * information.
-   */
-  static final class EmptyDeviceMetadata implements DeviceMetadata
-  {
-    @Override
-    public String getAncillaryVersion()
-    {
-      return null;
-    }
-
-    @Override
-    public Integer getDynamicMemoryDepth()
-    {
-      return null;
-    }
-
-    @Override
-    public String getFpgaVersion()
-    {
-      return null;
-    }
-
-    @Override
-    public Integer getMaxSampleRate()
-    {
-      return null;
-    }
-
-    @Override
-    public String getName()
-    {
-      return null;
-    }
-
-    @Override
-    public Integer getProbeCount()
-    {
-      return null;
-    }
-
-    @Override
-    public Integer getProtocolVersion()
-    {
-      return null;
-    }
-
-    @Override
-    public Integer getSampleMemoryDepth()
-    {
-      return null;
-    }
-
-    @Override
-    public Iterator<Object> iterator()
-    {
-      return null;
-    }
-  }
-
-  /**
    * Provides an action to invoke the detect device type.
    */
   final class ShowDeviceMetadataAction extends AbstractAction
@@ -240,6 +186,10 @@ public abstract class LogicSnifferDeviceProfilePanel implements Configurable
       {
         obtainDeviceMetadata();
       }
+      catch ( InvalidSyntaxException exception )
+      {
+        LOG.log( Level.WARNING, "Failed to show device metadata due to an invalid filter!", exception );
+      }
       finally
       {
         setEnabled( true );
@@ -269,14 +219,14 @@ public abstract class LogicSnifferDeviceProfilePanel implements Configurable
 
   // VARIABLES
 
-  private final LogicSnifferDevice device;
+  private final SumpDevice device;
 
   // CONSTRUCTORS
 
   /**
    * Creates a new LogicSnifferDeviceProfilePanel instance.
    */
-  public LogicSnifferDeviceProfilePanel( final LogicSnifferDevice aDevice )
+  public LogicSnifferDeviceProfilePanel( final SumpDevice aDevice )
   {
     super();
 
@@ -326,29 +276,30 @@ public abstract class LogicSnifferDeviceProfilePanel implements Configurable
   @Override
   public final void writePreferences( final UserSettings aSettings )
   {
-    aSettings.put( "deviceType", String.valueOf( this.deviceTypeSelect.getSelectedItem() ) );
+    DeviceProfile selectedProfile = ( DeviceProfile )this.deviceTypeSelect.getSelectedItem();
+    aSettings.put( "deviceType", selectedProfile.getType() );
   }
 
   /**
    * Detects the device type.
    * 
-   * @throws IOException
-   *           in case of I/O problems.
+   * @throws InvalidSyntaxException
+   *           in case of an invalid filter.
    */
-  final void obtainDeviceMetadata()
+  final void obtainDeviceMetadata() throws InvalidSyntaxException
   {
     SwingComponentUtils.getCurrentWindow().setCursor( Cursor.getPredefinedCursor( Cursor.WAIT_CURSOR ) );
 
-    LogicSnifferDetectionTask detectTask = new LogicSnifferDetectionTask( this.device, getConnectionURI() );
+    LogicSnifferDetectionTask detectTask = new LogicSnifferDetectionTask();
 
     try
     {
-      LogicSnifferMetadata metadata = null;
+      DeviceMetadata metadata = null;
       String details = getEmtpyMetadataDetails();
 
       try
       {
-        metadata = detectTask.call();
+        metadata = detectTask.detect( this.device.createStreamConnection( getConnectionURI() ) );
       }
       catch ( IOException exception )
       {
@@ -358,7 +309,7 @@ public abstract class LogicSnifferDeviceProfilePanel implements Configurable
 
       if ( metadata != null )
       {
-        final DeviceProfile deviceProfile = metadata.getDeviceProfile();
+        final DeviceProfile deviceProfile = getDeviceProfile( metadata );
         if ( deviceProfile == null )
         {
           LOG.info( "No device profile obtained from metadata!" );
@@ -381,6 +332,43 @@ public abstract class LogicSnifferDeviceProfilePanel implements Configurable
   }
 
   /**
+   * Determines the device profile for the current attached device. The device
+   * profile provides us with detailed information about the capabilities of a
+   * certain SUMP-compatible device.
+   * 
+   * @param aName
+   *          the name of the device, can be <code>null</code>.
+   * @return a device profile, or <code>null</code> if no such profile could be
+   *         determined.
+   * @throws InvalidSyntaxException
+   *           in case the given metadata contains an invalid filter clause.
+   */
+  private DeviceProfile getDeviceProfile( DeviceMetadata aMetadata ) throws InvalidSyntaxException
+  {
+    DeviceProfile profile = null;
+
+    if ( aMetadata != null )
+    {
+      profile = this.device.findDeviceProfile( aMetadata );
+
+      if ( profile != null )
+      {
+        LOG.log( Level.INFO, "Using device profile: {0}", profile.getDescription() );
+      }
+      else
+      {
+        LOG.log( Level.SEVERE, "No device profile found matching: {0}", aMetadata.getName() );
+      }
+    }
+    else
+    {
+      LOG.log( Level.SEVERE, "No metadata provided! Cannot determine device profile..." );
+    }
+
+    return profile;
+  }
+
+  /**
    * @return
    */
   protected abstract String getConnectionURI();
@@ -397,7 +385,7 @@ public abstract class LogicSnifferDeviceProfilePanel implements Configurable
    */
   private String getEmtpyMetadataDetails()
   {
-    return getMetadataDetailsAsText( new EmptyDeviceMetadata() );
+    return getMetadataDetailsAsText( new DeviceMetadata() );
   }
 
   /**
@@ -455,7 +443,7 @@ public abstract class LogicSnifferDeviceProfilePanel implements Configurable
 
     // NOTE: create this component as last component, as it will fire an event
     // that uses all other components!!!
-    this.deviceTypeSelect = new JComboBox( new DeviceProfileTypeComboBoxModel( this.device.getDeviceProfileManager() ) );
+    this.deviceTypeSelect = new JComboBox( new DeviceProfileTypeComboBoxModel( this.device.getDeviceProfiles() ) );
 
     this.deviceTypeSelect.setRenderer( new DeviceProfileTypeComboBoxRenderer() );
     this.deviceTypeSelect.addActionListener( new ActionListener()

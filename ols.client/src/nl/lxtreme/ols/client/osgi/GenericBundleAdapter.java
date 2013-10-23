@@ -91,7 +91,17 @@ public class GenericBundleAdapter<TYPE>
             .setService( LogService.class ) //
             .setRequired( false ) //
         );
+    configureComponent( this.serviceComponent );
     this.manager.add( this.serviceComponent );
+  }
+
+  /**
+   * @param aComponent
+   *          the component to configure, cannot be <code>null</code>.
+   */
+  protected void configureComponent( Component aComponent )
+  {
+    // Nop
   }
 
   /**

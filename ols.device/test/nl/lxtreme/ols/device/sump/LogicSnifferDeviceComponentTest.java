@@ -119,7 +119,7 @@ public class LogicSnifferDeviceComponentTest
   @Before
   public void setUp() throws Exception
   {
-    LogicSnifferConfig config = new LogicSnifferConfig();
+    SumpConfig config = new SumpConfig();
     this.device = new VirtualLogicSnifferDevice( config );
 
     final DeviceProfile deviceProfile = this.device.addDeviceProfile( "VirtualLS", "\"Virtual LogicSniffer\"" );

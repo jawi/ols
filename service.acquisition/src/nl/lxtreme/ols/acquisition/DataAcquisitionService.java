@@ -22,6 +22,7 @@ package nl.lxtreme.ols.acquisition;
 
 
 import java.io.*;
+import java.util.*;
 
 import nl.lxtreme.ols.device.api.*;
 
@@ -34,6 +35,36 @@ public interface DataAcquisitionService
   // METHODS
 
   /**
+   * Acquires data from the given device using the last known configuration.
+   * 
+   * @param aDevice
+   *          the device from which data should be acquired, cannot be
+   *          <code>null</code>;
+   * @throws IOException
+   *           in case of I/O problems during the acquisition of data;
+   * @throws IllegalArgumentException
+   *           in case the given device was <code>null</code>.
+   * @throws IllegalStateException
+   *           in case no configuration was known for the given device.
+   */
+  void acquireData( Device aDevice ) throws IOException;
+
+  /**
+   * Acquires data from the given device using the given configuration.
+   * 
+   * @param aConfig
+   *          the device configuration to use, cannot be <code>null</code>;
+   * @param aDevice
+   *          the device from which data should be acquired, cannot be
+   *          <code>null</code>;
+   * @throws IOException
+   *           in case of I/O problems during the acquisition of data;
+   * @throws IllegalArgumentException
+   *           in case the given configuration or device was <code>null</code>.
+   */
+  void acquireData( Map<String, ? extends Serializable> aConfig, Device aDevice ) throws IOException;
+
+  /**
    * Signals that the current acquisition should be cancelled.
    * 
    * @param aDevice
@@ -44,7 +75,7 @@ public interface DataAcquisitionService
    * @throws IllegalStateException
    *           in case no acquisition is in progress.
    */
-  public void cancelAcquisition( Device aDevice ) throws IOException, IllegalStateException;
+  void cancelAcquisition( Device aDevice ) throws IOException, IllegalStateException;
 
   /**
    * Returns whether or not this device controller is acquiring data.
@@ -53,18 +84,5 @@ public interface DataAcquisitionService
    *         data (or waiting to start capturing due to a trigger),
    *         <code>false</code> otherwise.
    */
-  public boolean isAcquiring();
-
-  /**
-   * Acquires data from the given device.
-   * 
-   * @param aDevice
-   *          the device from which data should be acquired, cannot be
-   *          <code>null</code>;
-   * @throws IOException
-   *           in case of I/O problems during the acquisition of data;
-   * @throws IllegalArgumentException
-   *           in case the given device was <code>null</code>.
-   */
-  void acquireData( Device aDevice ) throws IOException;
+  boolean isAcquiring();
 }

@@ -374,7 +374,7 @@ public class VirtualLogicSnifferDevice extends LogicSnifferAcquisitionTask
   /**
    * Creates a new VirtualLogicSnifferDevice instance.
    */
-  public VirtualLogicSnifferDevice( final LogicSnifferConfig aConfig ) throws IOException
+  public VirtualLogicSnifferDevice( final SumpConfig aConfig ) throws IOException
   {
     this( aConfig, new SimpleSampleProvider() );
   }
@@ -382,10 +382,9 @@ public class VirtualLogicSnifferDevice extends LogicSnifferAcquisitionTask
   /**
    * Creates a new VirtualLogicSnifferDevice instance.
    */
-  public VirtualLogicSnifferDevice( final LogicSnifferConfig aConfig, final SampleProvider aSampleProvider )
-      throws IOException
+  public VirtualLogicSnifferDevice( final SumpConfig aConfig, final SampleProvider aSampleProvider ) throws IOException
   {
-    super( aConfig, null /* aConnection */, new DeviceProfileManager(), new NullAcquisitionProgressListener() );
+    super( aConfig, null /* aConnection */, new NullAcquisitionProgressListener() );
 
     // Quite a lot of data can be pumped from this device, so we need some room
     // for it to store it all...
@@ -407,9 +406,8 @@ public class VirtualLogicSnifferDevice extends LogicSnifferAcquisitionTask
    * @return
    */
   public DeviceProfile addDeviceProfile( final String aType, final String aMetadataKeys )
-      throws org.osgi.service.cm.ConfigurationException
   {
-    Properties properties = new Properties();
+    Map<String, String> properties = new HashMap<String, String>();
     properties.put( DEVICE_CAPTURECLOCK, "INTERNAL" );
     properties.put( DEVICE_CAPTURESIZE_BOUND, "false" );
     properties.put( DEVICE_CAPTURESIZES, "4096,2048,1024,512,256,128,64,32,16" );
@@ -434,10 +432,8 @@ public class VirtualLogicSnifferDevice extends LogicSnifferAcquisitionTask
     properties.put( DEVICE_TRIGGER_COMPLEX, "true" );
     properties.put( DEVICE_TRIGGER_STAGES, "4" );
     properties.put( DEVICE_TYPE, aType );
-    // Update the properties of a 'virtual' PID...
-    getDeviceProfileManager().updated( "PID-" + aType, properties );
 
-    return getDeviceProfileManager().getProfile( aType );
+    return new DeviceProfile( properties );
   }
 
   /**
@@ -488,7 +484,7 @@ public class VirtualLogicSnifferDevice extends LogicSnifferAcquisitionTask
    */
   public void assertSampleRate( final int aExpectedSampleRate )
   {
-    final LogicSnifferConfig config = getConfig();
+    final SumpConfig config = getConfig();
 
     int clock = config.getClockspeed();
     if ( config.isDoubleDataRateEnabled() )

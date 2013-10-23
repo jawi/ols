@@ -23,6 +23,9 @@ package nl.lxtreme.ols.device.sump;
 
 import java.awt.*;
 import java.io.*;
+import java.util.*;
+import java.util.List;
+import java.util.concurrent.*;
 import java.util.logging.*;
 
 import javax.microedition.io.*;
@@ -30,10 +33,12 @@ import javax.microedition.io.*;
 import nl.lxtreme.ols.common.acquisition.*;
 import nl.lxtreme.ols.device.api.*;
 import nl.lxtreme.ols.device.sump.profile.*;
+import nl.lxtreme.ols.task.execution.*;
 import nl.lxtreme.ols.util.swing.*;
 
 import org.apache.felix.dm.*;
 import org.apache.felix.dm.Component;
+import org.osgi.framework.*;
 import org.osgi.service.cm.*;
 import org.osgi.service.io.*;
 
@@ -43,23 +48,23 @@ import org.osgi.service.io.*;
  * 
  * @author J.W. Janssen
  */
-public class LogicSnifferDevice implements Device
+public class SumpDevice implements Device
 {
   // CONSTANTS
 
   private static final String NAME = "OpenBench LogicSniffer";
 
-  private static final Logger LOG = Logger.getLogger( LogicSnifferDevice.class.getName() );
+  private static final Logger LOG = Logger.getLogger( SumpDevice.class.getName() );
 
   // VARIABLES
 
-  private LogicSnifferConfig config;
+  private SumpConfig config = null;
+  private SumpConfigDialog configDialog;
 
   private volatile DependencyManager dependencyManager;
   private volatile ManagedServiceFactory deviceProfileManagerServiceFactory;
   private volatile ConnectorService connectorService;
-  private volatile StreamConnection connection;
-  private volatile LogicSnifferConfigDialog configDialog;
+  private volatile TaskExecutionService taskExecutionService;
 
   // METHODS
 
@@ -67,38 +72,22 @@ public class LogicSnifferDevice implements Device
    * {@inheritDoc}
    */
   @Override
-  public void close() throws IOException
+  public Future<AcquisitionData> acquireData( Map<String, ? extends Serializable> aConfig,
+      AcquisitionProgressListener aProgressListener ) throws IOException
   {
-    if ( this.connection != null )
+    if ( aConfig == null )
     {
-      this.connection.close();
-      this.connection = null;
+      throw new IllegalArgumentException( "Invalid device configuration!" );
     }
-  }
 
-  /**
-   * {@inheritDoc}
-   */
-  @Override
-  public AcquisitionTask createAcquisitionTask( final AcquisitionProgressListener aProgressListener )
-      throws IOException
-  {
-    return new LogicSnifferAcquisitionTask( this.config, getStreamConnection(), getDeviceProfileManager(),
-        aProgressListener );
-  }
-
-  /**
-   * {@inheritDoc}
-   */
-  @Override
-  public CancelTask createCancelTask() throws IOException
-  {
-    if ( this.config.isRleEnabled() )
+    SumpConfig config = new SumpConfig( aConfig );
+    if ( !config.isValid() )
     {
-      return new LogicSnifferCancelTask( getStreamConnection() );
+      throw new IllegalArgumentException( "Invalid device configuration!" );
     }
-    // Simply use the default behaviour...
-    return null;
+
+    return this.taskExecutionService.execute( new LogicSnifferAcquisitionTask( config, getStreamConnection(),
+        aProgressListener ) );
   }
 
   /**
@@ -119,33 +108,25 @@ public class LogicSnifferDevice implements Device
   }
 
   /**
-   * Displays the device controller dialog with enabled configuration portion
-   * and waits for user input.
-   * 
-   * @see nl.lxtreme.ols.api.devices.Device#setupCapture()
+   * {@inheritDoc}
    */
   @Override
-  public boolean setupCapture( final Window aOwner )
+  public Map<String, ? extends Serializable> setupDevice()
   {
-    // Just to be sure...
+    final Window currentWindow = SwingComponentUtils.getCurrentWindow();
+
     disposeConfigDialog();
 
-    this.configDialog = new LogicSnifferConfigDialog( aOwner, this );
+    this.configDialog = new SumpConfigDialog( currentWindow, this );
 
-    try
+    Map<String, ? extends Serializable> result = this.config;
+
+    if ( this.configDialog.showDialog() )
     {
-      boolean configConfirmed = this.configDialog.showDialog();
-      if ( configConfirmed )
-      {
-        this.config = this.configDialog.getConfiguration();
-      }
-      return configConfirmed;
+      result = this.config = this.configDialog.getConfiguration();
     }
-    finally
-    {
-      this.configDialog.dispose();
-      this.configDialog = null;
-    }
+
+    return result;
   }
 
   /**
@@ -169,11 +150,29 @@ public class LogicSnifferDevice implements Device
   }
 
   /**
+   * @param aMetadata
+   * @return
+   * @throws InvalidSyntaxException
+   */
+  final DeviceProfile findDeviceProfile( DeviceMetadata aMetadata ) throws InvalidSyntaxException
+  {
+    return getDeviceProfileManager().findProfile( aMetadata );
+  }
+
+  /**
+   * @return
+   */
+  final List<DeviceProfile> getDeviceProfiles()
+  {
+    return getDeviceProfileManager().getProfiles();
+  }
+
+  /**
    * Returns the current device profile manager.
    * 
    * @return a device profile manager, never <code>null</code>.
    */
-  final DeviceProfileManager getDeviceProfileManager()
+  private DeviceProfileManager getDeviceProfileManager()
   {
     return ( DeviceProfileManager )this.deviceProfileManagerServiceFactory;
   }
@@ -194,7 +193,8 @@ public class LogicSnifferDevice implements Device
    */
   protected void init( final Component aComponent )
   {
-    final String pmFilter = String.format( "(%s=%s)", org.osgi.framework.Constants.SERVICE_PID, DeviceProfileManager.SERVICE_PID );
+    final String pmFilter = String.format( "(%s=%s)", org.osgi.framework.Constants.SERVICE_PID,
+        DeviceProfileManager.SERVICE_PID );
 
     aComponent //
         .add( this.dependencyManager.createServiceDependency() //
@@ -216,11 +216,8 @@ public class LogicSnifferDevice implements Device
    */
   private void disposeConfigDialog()
   {
-    if ( this.configDialog != null )
-    {
-      SwingComponentUtils.dispose( this.configDialog );
-      this.configDialog = null;
-    }
+    SwingComponentUtils.dispose( this.configDialog );
+    this.configDialog = null;
   }
 
   /**
@@ -232,17 +229,13 @@ public class LogicSnifferDevice implements Device
    */
   private StreamConnection getStreamConnection() throws IOException
   {
-    if ( this.connection == null )
+    final String uri = this.config.getConnectionURI();
+
+    if ( LOG.isLoggable( Level.INFO ) )
     {
-      final String uri = this.config.getConnectionURI();
-
-      if ( LOG.isLoggable( Level.INFO ) )
-      {
-        LOG.info( "Connecting to " + uri );
-      }
-
-      this.connection = createStreamConnection( uri );
+      LOG.info( "Connecting to " + uri );
     }
-    return this.connection;
+
+    return createStreamConnection( uri );
   }
 }

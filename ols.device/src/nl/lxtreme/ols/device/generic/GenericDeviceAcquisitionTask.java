@@ -25,13 +25,13 @@ import java.io.*;
 import java.util.logging.*;
 
 import nl.lxtreme.ols.common.acquisition.*;
-import nl.lxtreme.ols.device.api.*;
+import nl.lxtreme.ols.task.execution.*;
 
 
 /**
  * Provides a generic acquisition task that can read from any file-based source.
  */
-public final class GenericDeviceAcquisitionTask implements AcquisitionTask
+public final class GenericDeviceAcquisitionTask implements Task<AcquisitionData>
 {
   // CONSTANTS
 
@@ -39,10 +39,14 @@ public final class GenericDeviceAcquisitionTask implements AcquisitionTask
 
   // VARIABLES
 
+  private final String devicePath;
+  private final int channelCount;
+  private final int sampleRate;
+  private final int sampleCount;
+  private final int sampleWidth;
   private final AcquisitionProgressListener progressListener;
-  private final GenericDeviceConfigDialog deviceConfig;
 
-  private InputStream inputStream;
+  private volatile InputStream inputStream;
 
   // CONSTRUCTORS
 
@@ -54,12 +58,15 @@ public final class GenericDeviceAcquisitionTask implements AcquisitionTask
    * @param aDeviceConfig
    *          the device configuration to use.
    */
-  public GenericDeviceAcquisitionTask( final GenericDeviceConfigDialog aDeviceConfig,
-      final AcquisitionProgressListener aProgressListener )
+  public GenericDeviceAcquisitionTask( String aDevicePath, int aChannelCount, int aSampleRate, int aSampleCount,
+      int aSampleWidth, final AcquisitionProgressListener aProgressListener )
   {
-    this.deviceConfig = aDeviceConfig;
+    this.devicePath = aDevicePath;
+    this.channelCount = aChannelCount;
+    this.sampleRate = aSampleRate;
+    this.sampleCount = aSampleCount;
+    this.sampleWidth = aSampleWidth;
     this.progressListener = aProgressListener;
-
   }
 
   // METHODS
@@ -70,27 +77,23 @@ public final class GenericDeviceAcquisitionTask implements AcquisitionTask
   @Override
   public AcquisitionData call() throws IOException
   {
-    final int width = this.deviceConfig.getSampleWidth();
-    final int depth = this.deviceConfig.getSampleDepth();
-    final int rate = this.deviceConfig.getSampleRate();
-    final int channels = this.deviceConfig.getChannelCount();
-    final int enabledChannels = ( 1 << channels ) - 1;
+    final int enabledChannels = ( int )( ( 1L << this.channelCount ) - 1L );
 
-    final int count = depth * width;
+    final int count = this.sampleCount * this.sampleWidth;
 
     AcquisitionDataBuilder builder = new AcquisitionDataBuilder();
     builder.setEnabledChannelMask( enabledChannels );
-    builder.setChannelCount( channels );
-    builder.setSampleRate( rate );
+    builder.setChannelCount( this.channelCount );
+    builder.setSampleRate( this.sampleRate );
 
-    this.inputStream = new FileInputStream( this.deviceConfig.getDevicePath() );
+    this.inputStream = new FileInputStream( this.devicePath );
 
     try
     {
       int idx = 0;
       while ( !Thread.currentThread().isInterrupted() && ( idx < count ) )
       {
-        final int sample = readSample( width );
+        final int sample = readSample( this.sampleWidth );
 
         if ( LOG.isLoggable( Level.FINE ) )
         {

@@ -21,10 +21,13 @@
 package nl.lxtreme.ols.device.generic;
 
 
+import static nl.lxtreme.ols.device.generic.GenericConstants.*;
 import static nl.lxtreme.ols.util.swing.SwingComponentUtils.*;
 
 import java.awt.*;
 import java.awt.event.*;
+import java.io.*;
+import java.util.*;
 
 import javax.swing.*;
 
@@ -80,66 +83,16 @@ public class GenericDeviceConfigDialog extends JDialog implements Configurable, 
   }
 
   /**
-   * Returns the number of channels in each sample.
-   * 
-   * @return the channel count, >= 0.
+   * @return the device configuration, as configured in this dialog.
    */
-  public int getChannelCount()
+  public Map<String, ? extends Serializable> getConfig()
   {
-    final int result = safeParseInt( this.channelCount.getText(), 8 );
-    return result;
-  }
-
-  /**
-   * Returns the path to the device, like <tt>/dev/ttyS0</tt> or similar.
-   * 
-   * @return the device path, never <code>null</code>.
-   */
-  public String getDevicePath()
-  {
-    return this.devicePath.getText();
-  }
-
-  /**
-   * @return
-   */
-  public int getEnabledChannelsMask()
-  {
-    final int bits = 8 * getSampleWidth();
-    final int width = ( int )( ( 1L << bits ) - 1 );
-    return width;
-  }
-
-  /**
-   * Returns the number of samples to take.
-   * 
-   * @return the sample depth, >= 0.
-   */
-  public int getSampleDepth()
-  {
-    final int result = safeParseInt( this.sampleDepth.getText(), 1024 );
-    return result;
-  }
-
-  /**
-   * Returns the sample rate of the generic device.
-   * 
-   * @return the sample rate in Hertz (Hz).
-   */
-  public int getSampleRate()
-  {
-    final int result = safeParseInt( this.sampleRate.getText(), 1000000 );
-    return result;
-  }
-
-  /**
-   * Returns the width (in bytes) of each sample.
-   * 
-   * @return the sample width, in bytes, >= 0.
-   */
-  public int getSampleWidth()
-  {
-    final int result = safeParseInt( this.sampleWidth.getText(), 1 );
+    Map<String, Serializable> result = new HashMap<String, Serializable>();
+    result.put( KEY_DEVICE_PATH, this.devicePath.getText() );
+    result.put( KEY_CHANNEL_COUNT, safeParseInt( this.channelCount.getText(), 8 ) );
+    result.put( KEY_SAMPLE_COUNT, safeParseInt( this.sampleDepth.getText(), 1024 ) );
+    result.put( KEY_SAMPLE_RATE, safeParseInt( this.sampleRate.getText(), 1000000 ) );
+    result.put( KEY_SAMPLE_WIDTH, safeParseInt( this.sampleWidth.getText(), 1 ) );
     return result;
   }
 

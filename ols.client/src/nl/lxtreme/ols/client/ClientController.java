@@ -544,11 +544,12 @@ public final class ClientController implements ActionProvider, AcquisitionProgre
 
     try
     {
-      if ( device.setupCapture( aParent ) )
+      Map<String, ? extends Serializable> config = device.setupDevice();
+      if ( config != null )
       {
         setStatusOnEDT( "Capture from {0} started at {1,date,medium} {1,time,medium} ...", device.getName(), new Date() );
 
-        acquisitionService.acquireData( device );
+        acquisitionService.acquireData( config, device );
         return true;
       }
 

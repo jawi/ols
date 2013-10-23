@@ -21,11 +21,20 @@
 package nl.lxtreme.ols.device.demo;
 
 
+import static nl.lxtreme.ols.device.demo.DemoConstants.*;
+
 import java.awt.*;
 import java.io.*;
+import java.util.*;
+import java.util.concurrent.*;
 
+import org.apache.felix.dm.Component;
+
+import nl.lxtreme.ols.common.*;
 import nl.lxtreme.ols.common.acquisition.*;
 import nl.lxtreme.ols.device.api.*;
+import nl.lxtreme.ols.task.execution.*;
+import nl.lxtreme.ols.util.swing.*;
 
 
 /**
@@ -33,20 +42,36 @@ import nl.lxtreme.ols.device.api.*;
  */
 public class DemoDevice implements Device
 {
+  // CONSTANTS
+
+  static final Map<String, IDataGenerator> GENERATORS = new LinkedHashMap<String, IDataGenerator>();
+
+  static
+  {
+    final Class<?>[] generators = { SawtoothDataGenerator.class, ZeroDataGenerator.class, SineDataGenerator.class,
+        OddEvenGenerator.class, RandomDataGenerator.class, I2CGenerator.class, OneWireGenerator.class,
+        ManchesterEncoder.class, ClockedCounterGenerator.class, StateDataGenerator.class, BurstGenerator.class };
+
+    for ( Class<?> generator : generators )
+    {
+      try
+      {
+        IDataGenerator inst = ( IDataGenerator )generator.newInstance();
+        GENERATORS.put( inst.getName(), inst );
+      }
+      catch ( Exception exception )
+      {
+        exception.printStackTrace();
+      }
+    }
+  }
+
   // VARIABLES
 
-  private DemoDeviceDialog configDialog;
-  private boolean setup = false;
+  private Map<String, ? extends Serializable> lastConfig = null;
+  private DemoDeviceDialog configDialog = null;
 
-  // CONSTRUCTORS
-
-  /**
-   * 
-   */
-  public DemoDevice()
-  {
-    super();
-  }
+  private volatile TaskExecutionService taskExecutionService;
 
   // METHODS
 
@@ -54,68 +79,125 @@ public class DemoDevice implements Device
    * {@inheritDoc}
    */
   @Override
-  public void close() throws IOException
+  public Future<AcquisitionData> acquireData( Map<String, ? extends Serializable> aConfig,
+      AcquisitionProgressListener aProgressListener )
   {
-    // No-op...
+    if ( ( aConfig == null ) || !isValid( aConfig ) )
+    {
+      throw new IllegalArgumentException( "Invalid device configuration!" );
+    }
+
+    int channelCount = ( ( Number )aConfig.get( KEY_CHANNEL_COUNT ) ).intValue();
+    int sampleCount = ( ( Number )aConfig.get( KEY_SAMPLE_COUNT ) ).intValue();
+    String generatorName = ( String )aConfig.get( KEY_GENERATOR_NAME );
+
+    IDataGenerator generator = GENERATORS.get( generatorName );
+    if ( generator == null )
+    {
+      throw new IllegalArgumentException( "Invalid device configuration!" );
+    }
+
+    return this.taskExecutionService.execute( new DemoAcquisitionTask( channelCount, sampleCount, generator,
+        aProgressListener ) );
   }
 
   /**
    * {@inheritDoc}
-   */
-  @Override
-  public AcquisitionTask createAcquisitionTask( final AcquisitionProgressListener aProgressListener )
-      throws IOException
-  {
-    return new DemoAcquisitionTask( this.configDialog, aProgressListener );
-  }
-
-  /**
-   * {@inheritDoc}
-   */
-  @Override
-  public CancelTask createCancelTask() throws IOException
-  {
-    // Nothing special is needed...
-    return null;
-  }
-
-  /**
-   * @see nl.lxtreme.ols.api.devices.Device#getName()
    */
   @Override
   public String getName()
   {
-    return "Test Device";
+    return "Demo Device";
   }
 
   /**
-   * @see nl.lxtreme.ols.api.devices.Device#isSetup()
+   * {@inheritDoc}
    */
   @Override
   public boolean isSetup()
   {
-    return this.setup;
+    return this.lastConfig != null;
   }
 
   /**
-   * @see nl.lxtreme.ols.api.devices.Device#setupCapture()
+   * {@inheritDoc}
    */
   @Override
-  public boolean setupCapture( final Window aOwner )
+  public Map<String, ? extends Serializable> setupDevice()
   {
-    // check if dialog exists with different owner and dispose if so
-    if ( ( this.configDialog != null ) && ( this.configDialog.getOwner() != aOwner ) )
+    final Window currentWindow = SwingComponentUtils.getCurrentWindow();
+
+    disposeConfigDialog();
+
+    this.configDialog = new DemoDeviceDialog( currentWindow );
+
+    Map<String, ? extends Serializable> config = this.lastConfig;
+
+    if ( this.configDialog.showDialog() )
     {
-      this.configDialog.dispose();
-      this.configDialog = null;
-    }
-    // if no valid dialog exists, create one
-    if ( this.configDialog == null )
-    {
-      this.configDialog = new DemoDeviceDialog( aOwner );
+      config = this.lastConfig = this.configDialog.getConfig();
     }
 
-    return ( this.setup = this.configDialog.showDialog() );
+    return config;
+  }
+
+  /**
+   * Called when this class is unregistered as OSGi service.
+   */
+  protected void destroy( final Component aComponent )
+  {
+    disposeConfigDialog();
+  }
+
+  /**
+   * Disposes the current configuration dialog, if one is still visible on
+   * screen. If no configuration dialog is visible, this method does nothing.
+   */
+  private void disposeConfigDialog()
+  {
+    SwingComponentUtils.dispose( this.configDialog );
+    this.configDialog = null;
+  }
+
+  /**
+   * Validates the given device configuration.
+   * 
+   * @param aConfig
+   *          the configuration to validate, cannot be <code>null</code>.
+   * @return <code>true</code> if the given configuration was valid,
+   *         <code>false</code> otherwise.
+   */
+  private boolean isValid( Map<String, ? extends Serializable> aConfig )
+  {
+    Object value = aConfig.get( KEY_CHANNEL_COUNT );
+    if ( value == null || !( value instanceof Number ) )
+    {
+      return false;
+    }
+    int num = ( ( Number )value ).intValue();
+    if ( num < 1 || num > OlsConstants.MAX_CHANNELS )
+    {
+      return false;
+    }
+
+    value = aConfig.get( KEY_SAMPLE_COUNT );
+    if ( value == null || !( value instanceof Number ) )
+    {
+      return false;
+    }
+    num = ( ( Number )value ).intValue();
+    if ( num < 1 )
+    {
+      return false;
+    }
+
+    value = aConfig.get( KEY_GENERATOR_NAME );
+    if ( value == null || !GENERATORS.containsKey( value ) )
+    {
+      return false;
+    }
+
+    return true;
   }
 }
 
