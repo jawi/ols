@@ -127,8 +127,10 @@ public class DMX512AnalyzerTask implements ToolTask<DMX512DataSet>
     annotationHelper.clearAnnotations( this.dataLine );
     annotationHelper.addLabelAnnotation( this.dataLine, DMX512_DATA_LABEL );
 
+    // Issue #196: DMX512 is sent with least-significant bit first, see 9.2 of
+    // DMX512-A spec...
     final SerialConfiguration config = new SerialConfiguration( BAUDRATE, DATABITS, STOPBITS, PARITY,
-        BitEncoding.HIGH_IS_MARK, BitOrder.MSB_FIRST, BitLevel.HIGH );
+        BitEncoding.HIGH_IS_MARK, BitOrder.LSB_FIRST, BitLevel.HIGH );
 
     final DMX512SerialDataDecoder decoder = new DMX512SerialDataDecoder( config, this.context );
     decoder.setProgressListener( this.progressListener );
