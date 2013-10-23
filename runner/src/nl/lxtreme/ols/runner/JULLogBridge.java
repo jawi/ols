@@ -177,7 +177,7 @@ public class JULLogBridge extends Handler
     }
 
     return name.startsWith( "java.awt." ) || name.startsWith( "sun.awt." ) || name.startsWith( "sun.lwawt." )
-        || name.startsWith( "javax.swing." );
+        || name.startsWith( "javax.swing." ) || name.startsWith( "com.jidesoft." );
   }
 
   /**
