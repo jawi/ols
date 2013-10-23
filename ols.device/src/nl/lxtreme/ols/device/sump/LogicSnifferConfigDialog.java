@@ -1536,18 +1536,6 @@ public final class LogicSnifferConfigDialog extends JDialog implements Configura
     }
   }
 
-  private int smartParseInt( String aText, int aDefault )
-  {
-    try
-    {
-      return Integer.parseInt( aText );
-    }
-    catch ( NumberFormatException exception )
-    {
-      return aDefault;
-    }
-  }
-
   /**
    * Verifies whether the current configuration settings are correct.
    * 

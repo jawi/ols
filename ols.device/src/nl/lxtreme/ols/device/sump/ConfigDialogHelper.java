@@ -22,6 +22,7 @@ package nl.lxtreme.ols.device.sump;
 
 
 import java.util.*;
+import java.util.regex.*;
 
 import javax.swing.*;
 
@@ -35,6 +36,10 @@ import nl.lxtreme.ols.device.sump.profile.DeviceProfile.TriggerType;
  */
 final class ConfigDialogHelper
 {
+  // CONSTANTS
+
+  private static final Pattern SMART_INT_PATTERN = Pattern.compile( "^([-+]?\\d+)(?:\\s*([kKM]))?.*$" );
+
   // METHODS
 
   /**
@@ -74,7 +79,7 @@ final class ConfigDialogHelper
     {
       return null;
     }
-    return safeParseInteger( value );
+    return Integer.valueOf( smartParseInt( value, 0 ) );
   }
 
   /**
@@ -92,7 +97,7 @@ final class ConfigDialogHelper
     {
       return null;
     }
-    return safeParseInteger( value );
+    return Integer.valueOf( smartParseInt( value, 0 ) );
   }
 
   /**
@@ -220,15 +225,60 @@ final class ConfigDialogHelper
     aComboBox.setEnabled( aProfile.isTriggerSupported() );
   }
 
-  private static Integer safeParseInteger( Object value )
+  /**
+   * @param aDefault
+   * @param aText
+   * @return
+   */
+  static int smartParseInt( Object aValue, int aDefault )
   {
-    try
+    // Avoid NPEs when given a null argument; also when an empty
+    // string is given, we can be fairly quick in our conclusion...
+    if ( aValue == null )
     {
-      return Integer.valueOf( String.valueOf( value ) );
+      return aDefault;
     }
-    catch ( NumberFormatException exception )
+
+    final String text = String.valueOf( aValue );
+    final Matcher matcher = SMART_INT_PATTERN.matcher( text );
+    if ( matcher.matches() )
     {
-      return null;
+      final String number = matcher.group( 1 );
+      final String unit = matcher.group( 2 );
+
+      int result = Integer.parseInt( number );
+      if ( unit != null )
+      {
+        result *= parseUnit( unit );
+      }
+      return result;
     }
+    return aDefault;
+  }
+
+  /**
+   * Parses a given unit-character using the given unit-definition.
+   * 
+   * @param aUnit
+   *          the unit character (k, M, G) to parse;
+   * @param aSiUnit
+   *          the definition of the unit characters (units of 1000 or 1024).
+   * @return a multiplier for the given unit-character, defaults to 1.
+   */
+  static long parseUnit( final String aUnit )
+  {
+    if ( "k".equalsIgnoreCase( aUnit ) )
+    {
+      return 1000L;
+    }
+    else if ( "m".equalsIgnoreCase( aUnit ) )
+    {
+      return 1000000L;
+    }
+    else if ( "g".equalsIgnoreCase( aUnit ) )
+    {
+      return 1000000000L;
+    }
+    return 1L;
   }
 }
