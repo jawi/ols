@@ -1050,7 +1050,7 @@ public final class AcquisitionDataBuilder
     Sample sample = new Sample( aTimestamp, aValue );
     // Keep track of the last seen timestamp, for determining the absolute
     // length (in case it is not defined)...
-    this.lastSeenTimestamp = aTimestamp;
+    this.lastSeenTimestamp = Math.max( aTimestamp, this.lastSeenTimestamp );
 
     // Peek to the latest available sample...
     if ( this.sampleData.isEmpty() )
@@ -1111,7 +1111,7 @@ public final class AcquisitionDataBuilder
 
       if ( aIncludeAnnotations == IncludeAnnotations.YES )
       {
-//        channelDef.copyAnnotations( c ); XXX
+        // channelDef.copyAnnotations( c ); XXX
       }
     }
 
@@ -1515,7 +1515,7 @@ public final class AcquisitionDataBuilder
         if ( chDef != null )
         {
           channelImpl.setLabel( chDef.label );
-//          channelImpl.addAnnotations( chDef.annotations ); XXX
+          // channelImpl.addAnnotations( chDef.annotations ); XXX
         }
 
         chIndex.put( idx, channelImpl );
