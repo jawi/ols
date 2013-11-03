@@ -25,7 +25,6 @@ import java.io.*;
 import java.util.logging.*;
 
 import nl.lxtreme.ols.device.sump.*;
-import nl.lxtreme.ols.device.sump.profile.DeviceProfile.CaptureClockSource;
 
 
 /**
@@ -47,6 +46,10 @@ public class SumpCommandWriter implements SumpProtocolConstants, Closeable
   private static final int SETSIZE = 0x81;
   /** set flags */
   private static final int SETFLAGS = 0x82;
+  /** read count, used by Pipistrello. */
+  private static final int READ_COUNT = 0x83;
+  /** delay count, used by Pipistrello. */
+  private static final int DELAY_COUNT = 0x84;
 
   /** demultiplex */
   public static final int FLAG_DEMUX = 0x00000001;
@@ -101,30 +104,6 @@ public class SumpCommandWriter implements SumpProtocolConstants, Closeable
   }
 
   // METHODS
-
-  /**
-   * Determines which RLE-mode to use. There are up to four different RLE-modes
-   * present in 'dogsbody' Verilog firmware.
-   * <p>
-   * The RLE-Encoding modes are:
-   * </p>
-   * <ol start="0">
-   * <li>Issue {values} & {RLE-count} as pairs. Count inclusive of value
-   * (<strike>backwards compatible</strike>);</li>
-   * <li>Issue {values} & {RLE-count} as pairs. Count is <em>exclusive</em> of
-   * value. Compatible with all clients;</li>
-   * <li>Periodic. {values} reissued approximately every 256 {RLE-count} fields;
-   * </li>
-   * <li>Unlimited. {values} can be followed by unlimited numbers of
-   * {RLE-counts}.</li>
-   * </ol>
-   * 
-   * @return a RLE-mode, defaults to 1.
-   */
-  private static int determineRleMode()
-  {
-    return Integer.getInteger( "nl.lxtreme.ols.rle.mode", 1 ).intValue();
-  }
 
   /**
    * {@inheritDoc}
@@ -196,120 +175,31 @@ public class SumpCommandWriter implements SumpProtocolConstants, Closeable
    * @param aConfiguration
    * @throws IOException
    */
-  public int writeDeviceConfiguration() throws IOException
+  public void writeDeviceConfiguration() throws IOException
   {
-    int trigcount;
-
     // set the sampling frequency...
     sendCommand( SETDIVIDER, this.config.getDivider() );
 
-    final int stopCounter = configureTriggers();
-    final int readCounter = this.config.getReadCounter();
+    configureTriggers();
 
-    final int size;
-    if ( this.config.isDoubleDataRateEnabled() )
+    final int delayCount = this.config.getDelayCount();
+    final int readCount = this.config.getReadCount();
+
+    if ( this.config.isReadDelayCountValueCombined() )
     {
-      // 0x7fff8 = 511Kb = the maximum size supported by the original SUMP
-      // device when using the demultiplexer...
-      final int maxSize = 0x7fff8;
-      size = ( ( stopCounter & maxSize ) << 13 ) | ( ( ( readCounter & maxSize ) >> 3 ) - 1 );
-      // A better approximation of "(readCounter - stopCounter) - 2". This also
-      // solves issue #31...
-      trigcount = ( ( ( size & 0xffff ) << 3 ) - ( ( ( size >> 16 ) & 0xffff ) << 3 ) );
+      // set the capture size...
+      sendCommand( SETSIZE, this.config.getCombinedReadDelayCount() );
     }
     else
     {
-      // 0x3fffc = 255Kb = the maximum size supported by the original SUMP
-      // device...
-      final int maxSize = 0x3fffc;
-      size = ( ( stopCounter & maxSize ) << 14 ) | ( ( ( readCounter & maxSize ) >> 2 ) - 1 );
-      // A better approximation of "(readCounter - stopCounter) - 2". This also
-      // solves issue #31...
-      trigcount = ( ( ( size & 0xffff ) << 2 ) - ( ( ( size >> 16 ) & 0xffff ) << 2 ) );
+      sendCommand( READ_COUNT, readCount );
+      sendCommand( DELAY_COUNT, delayCount );
     }
 
-    // set the capture size...
-    sendCommand( SETSIZE, size );
-
-    int flags = 0;
-    if ( this.config.isExternalClock() )
-    {
-      flags |= FLAG_EXTERNAL;
-      if ( CaptureClockSource.EXTERNAL_FALLING == this.config.getClockSource() )
-      {
-        flags |= FLAG_INVERTED;
-      }
-    }
-
-    // determine which channel groups are to be disabled...
-    int enabledChannelGroups = 0;
-    for ( int i = 0; i < this.config.getGroupCount(); i++ )
-    {
-      if ( this.config.isGroupEnabled( i ) )
-      {
-        enabledChannelGroups |= ( 1 << i );
-      }
-    }
-
-    if ( this.config.isDoubleDataRateEnabled() )
-    {
-      // when DDR is selected, the groups selected in the upper two channel
-      // groups must be the same as those selected in the lower two groups
-      enabledChannelGroups |= ( ( enabledChannelGroups & 0x03 ) << 2 ) & 0x0c;
-
-      flags |= FLAG_DEMUX;
-      // if the demux bit is set, the filter flag *must* be cleared...
-      flags &= ~FLAG_FILTER;
-    }
-
-    flags |= ~( enabledChannelGroups << 2 ) & 0x3c;
-
-    if ( this.config.isFilterEnabled() && this.config.isFilterAvailable() )
-    {
-      flags |= FLAG_FILTER;
-      // if the filter bit is set, the demux flag *must* be cleared...
-      flags &= ~FLAG_DEMUX;
-    }
-
-    if ( this.config.isRleEnabled() )
-    {
-      flags |= FLAG_RLE;
-
-      // Ian 'dogsbody''s Verilog understands four different RLE-modes...
-      final int rleMode = determineRleMode();
-      switch ( rleMode )
-      {
-        case 3:
-          flags |= FLAG_RLE_MODE_3;
-          break;
-        case 2:
-          flags |= FLAG_RLE_MODE_2;
-          break;
-        case 0:
-          flags |= FLAG_RLE_MODE_0;
-          break;
-        default:
-          flags |= FLAG_RLE_MODE_1;
-          break;
-      }
-    }
-
-    if ( this.config.isAltNumberSchemeEnabled() )
-    {
-      flags |= FLAG_NUMBER_SCHEME;
-    }
-
-    if ( this.config.isTestModeEnabled() )
-    {
-      flags |= FLAG_EXTERNAL_TEST_MODE;
-    }
-
-    LOG.log( Level.FINE, "Flags: 0b{0}", Integer.toBinaryString( flags ) );
+    int flags = this.config.getFlags();
 
     // finally set the device flags...
     sendCommand( SETFLAGS, flags );
-
-    return trigcount;
   }
 
   /**
@@ -324,10 +214,7 @@ public class SumpCommandWriter implements SumpProtocolConstants, Closeable
    */
   protected final void sendCommand( final int aOpcode ) throws IOException
   {
-    if ( LOG.isLoggable( Level.ALL ) || LOG.isLoggable( Level.FINE ) )
-    {
-      LOG.log( Level.FINE, String.format( "Sending short command: 0x%02x", Integer.valueOf( aOpcode & 0xFF ) ) );
-    }
+    LOG.log( Level.INFO, "Sending short command: 0x{0}", new Object[] { Integer.toHexString( aOpcode & 0xFF ) } );
 
     this.outputStream.writeByte( aOpcode );
     this.outputStream.flush();
@@ -357,11 +244,8 @@ public class SumpCommandWriter implements SumpProtocolConstants, Closeable
       shift += 8;
     }
 
-    if ( LOG.isLoggable( Level.ALL ) || LOG.isLoggable( Level.FINE ) )
-    {
-      LOG.log( Level.FINE, String.format( "Sending long command: 0x%02x with data 0x%08x", //
-          Integer.valueOf( aOpcode & 0xFF ), Integer.valueOf( aData ) ) );
-    }
+    LOG.log( Level.INFO, "Sending long command: 0x{0} with data 0x{1}",
+        new Object[] { Integer.toHexString( aOpcode & 0xFF ), Integer.toHexString( aData ) } );
 
     this.outputStream.write( raw );
     this.outputStream.flush();
@@ -370,32 +254,26 @@ public class SumpCommandWriter implements SumpProtocolConstants, Closeable
   /**
    * Sends the trigger mask, value and configuration to the OLS device.
    * 
-   * @return the stop counter that is used for the trigger configuration.
    * @throws IOException
    *           in case of I/O problems.
    */
-  private int configureTriggers() throws IOException
+  private void configureTriggers() throws IOException
   {
-    final int effectiveStopCounter;
     if ( this.config.isTriggerEnabled() )
     {
-      for ( int i = 0; i < this.config.getMaxTriggerStages(); i++ )
+      for ( int i = 0; i < this.config.getTriggerStageCount(); i++ )
       {
         final int indexMask = 4 * i;
         sendCommand( SETTRIGMASK | indexMask, this.config.getTriggerMask( i ) );
         sendCommand( SETTRIGVAL | indexMask, this.config.getTriggerValue( i ) );
         sendCommand( SETTRIGCFG | indexMask, this.config.getTriggerConfig( i ) );
       }
-      effectiveStopCounter = this.config.getStopCounter();
     }
     else
     {
       sendCommand( SETTRIGMASK, 0 );
       sendCommand( SETTRIGVAL, 0 );
-      sendCommand( SETTRIGCFG, SumpConfig.TRIGGER_CAPTURE );
-      effectiveStopCounter = this.config.getReadCounter();
+      sendCommand( SETTRIGCFG, SumpConfigBuilder.TRIGGER_CAPTURE );
     }
-
-    return effectiveStopCounter;
   }
 }

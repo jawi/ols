@@ -133,7 +133,7 @@ public class SumpResultReader implements Closeable, SumpProtocolConstants
           {
             // key value is a null-terminated string...
             final String value = readString();
-            aMetadata.put( result, value );
+            aMetadata.add( result, value );
           }
           else if ( type == 0x01 )
           {
@@ -141,13 +141,13 @@ public class SumpResultReader implements Closeable, SumpProtocolConstants
             // final Integer value = NumberUtils.convertByteOrder(
             // this.inputStream.readInt(), 32, ByteOrder.LITTLE_ENDIAN );
             final int value = this.inputStream.readInt();
-            aMetadata.put( result, Integer.valueOf( value ) );
+            aMetadata.add( result, Integer.valueOf( value ) );
           }
           else if ( type == 0x02 )
           {
             // key value is a 8-bit integer...
             final int value = this.inputStream.read();
-            aMetadata.put( result, Integer.valueOf( value ) );
+            aMetadata.add( result, Integer.valueOf( value ) );
           }
           else
           {

@@ -27,14 +27,13 @@ import nl.lxtreme.ols.device.sump.*;
 /**
  * Processes all samples and only returns the actual changed sample values.
  */
-public final class EqualityFilter implements SampleProcessor
+public final class EqualityFilter
 {
   // VARIABLES
 
   private final SumpConfig config;
   private final int[] buffer;
   private final int trigCount;
-  private final SampleProcessorCallback callback;
 
   // CONSTRUCTORS
 
@@ -49,7 +48,7 @@ public final class EqualityFilter implements SampleProcessor
    *          the callback to use.
    */
   public EqualityFilter( final SumpConfig aConfig, final int[] aBuffer, final int aTrigCount,
-      final SampleProcessorCallback aCallback )
+      final Object aCallback )
   {
     if ( aBuffer == null )
     {
@@ -59,15 +58,10 @@ public final class EqualityFilter implements SampleProcessor
     this.config = aConfig;
     this.buffer = aBuffer;
     this.trigCount = aTrigCount;
-    this.callback = aCallback;
   }
 
   // METHODS
 
-  /**
-   * @see org.sump.device.logicsniffer.sampleprocessor.SampleProcessor#process()
-   */
-  @Override
   public final void process()
   {
     long time = 0;
@@ -82,7 +76,7 @@ public final class EqualityFilter implements SampleProcessor
       if ( ( i == 0 ) || ( lastSample != newSample ) )
       {
         // add the read sample & add a timestamp value as well...
-        this.callback.addValue( newSample, time );
+//        this.callback.addValue( newSample, time );
       }
 
       lastSample = newSample;
@@ -92,16 +86,17 @@ public final class EqualityFilter implements SampleProcessor
     // Ensure the last sample is shown as well (even if there was a lot of time
     // between the last real sample and the end of the capture; i.e., constant
     // data)...
-    this.callback.addValue( lastSample, time );
+//    this.callback.addValue( lastSample, time );
 
     // XXX JaWi: why is this correction needed?
-    int correction = 2;
-    if ( this.config.getDivider() <= 3 )
-    {
-      correction = 1;
-    }
+    int correction = 0;
+//    int correction = 2;
+//    if ( this.config.getDivider() <= 3 )
+//    {
+//      correction = 1;
+//    }
 
     // Take the last seen time value as "absolete" length of this trace...
-    this.callback.ready( time, ( this.trigCount - correction ) );
+//    this.callback.ready( time, ( this.trigCount - correction ) );
   }
 }

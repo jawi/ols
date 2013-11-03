@@ -99,12 +99,12 @@ public class DeviceProfileManagerTest
   private DeviceMetadata createMockedMetadata( String aName, Object... aAdditionalProps )
   {
     DeviceMetadata result = new DeviceMetadata();
-    result.put( SumpConstants.KEY_DEVICE_NAME, aName );
+    result.add( SumpConstants.KEY_DEVICE_NAME, aName );
     for ( int i = 0; i < aAdditionalProps.length; i += 2 )
     {
       Integer key = ( Integer )aAdditionalProps[i];
       Object value = aAdditionalProps[i + 1];
-      result.put( key, value );
+      result.add( key, value );
     }
     return result;
   }

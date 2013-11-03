@@ -57,6 +57,8 @@ public interface Constants
   public static final String DEVICE_FEATURE_RLE = "device.feature.rle";
   /** Whether or not a testing mode is supported. */
   public static final String DEVICE_FEATURE_TEST_MODE = "device.feature.testmode";
+  /** Whether or not the read/delay counters are combined into one value. */
+  public static final String DEVICE_FEATURE_COMBINED_READDELAY_COUNT = "device.feature.combinedReadDelayCount";
   /** Whether or not triggers are supported */
   public static final String DEVICE_FEATURE_TRIGGERS = "device.feature.triggers";
   /** The number of trigger stages */

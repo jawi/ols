@@ -20,7 +20,7 @@
  */
 package nl.lxtreme.ols.device.sump;
 
-
+import static nl.lxtreme.ols.device.sump.SumpConstants.*;
 import static nl.lxtreme.ols.common.OlsConstants.*;
 import static nl.lxtreme.ols.device.sump.ConfigDialogHelper.*;
 import static nl.lxtreme.ols.util.swing.SwingComponentUtils.*;
@@ -383,16 +383,13 @@ public final class SumpConfigDialog extends JDialog implements Configurable, Clo
    */
   public SumpConfig getConfiguration()
   {
-    final SumpConfig config = new SumpConfig();
-
-    // the current device profile...
-    config.setDeviceProfile( this.deviceProfile );
+    SumpConfigBuilder builder = new SumpConfigBuilder( this.deviceProfile );
 
     // how should we connect to our device?
-    config.setConnectionURI( getConnectionURI() );
+    builder.setConnectionURI( getConnectionURI() );
 
     // set clock source
-    config.setClockSource( ( CaptureClockSource )this.sourceSelect.getSelectedItem() );
+    builder.setClockSource( ( CaptureClockSource )this.sourceSelect.getSelectedItem() );
 
     // set enabled channel groups
     int enabledChannels = 0;
@@ -403,38 +400,38 @@ public final class SumpConfigDialog extends JDialog implements Configurable, Clo
         enabledChannels |= 0xff << ( 8 * i );
       }
     }
-    config.setEnabledChannels( enabledChannels );
+    builder.setEnabledChannels( enabledChannels );
 
     // set sample rate; use a default to ensure the internal state remains
     // correct...
-    config.setSampleRate( getSelectedSampleRate() );
+    builder.setSampleRate( getSelectedSampleRate() );
 
     // set sample count
-    config.setSampleCount( getSelectedSampleCount() );
+    builder.setSampleCount( getSelectedSampleCount() );
 
     // set before / after ratio
     double r = 1.0 - ( this.ratioSlider.getValue() / ( double )this.ratioSlider.getMaximum() );
-    config.setRatio( r );
+    builder.setRatio( r );
 
     // set filter
-    config.setFilterEnabled( this.filterEnable.isEnabled() && this.filterEnable.isSelected() );
-    config.setRleEnabled( this.rleEnable.isEnabled() && this.rleEnable.isSelected() );
+    builder.setFilterEnabled( this.filterEnable.isEnabled() && this.filterEnable.isSelected() );
+    builder.setRleEnabled( this.rleEnable.isEnabled() && this.rleEnable.isSelected() );
 
     // set number scheme
     NumberingScheme scheme = ( NumberingScheme )this.numberSchemeSelect.getSelectedItem();
-    config.setAltNumberSchemeEnabled( NumberingScheme.OUTSIDE.equals( scheme ) );
+    builder.setAltNumberSchemeEnabled( NumberingScheme.OUTSIDE.equals( scheme ) );
 
     // set testing mode
-    config.setTestModeEnabled( this.testModeEnable.isEnabled() && this.testModeEnable.isSelected() );
+    builder.setTestModeEnabled( this.testModeEnable.isEnabled() && this.testModeEnable.isSelected() );
 
     // set trigger
     final boolean triggerEnabled = this.triggerEnable.isEnabled() && this.triggerEnable.isSelected();
-    config.setTriggerEnabled( triggerEnabled );
+    builder.setTriggerEnabled( triggerEnabled );
 
     if ( triggerEnabled )
     {
       final boolean complex = TriggerType.COMPLEX.equals( this.triggerTypeSelect.getSelectedItem() );
-      for ( int stage = 0; stage < SumpConfig.TRIGGER_STAGES; stage++ )
+      for ( int stage = 0; stage < MAX_COMPLEX_TRIGGER_STAGES; stage++ )
       {
         int m = 0;
         int v = 0;
@@ -460,11 +457,11 @@ public final class SumpConfigDialog extends JDialog implements Configurable, Clo
         {
           if ( parallelTriggerStage )
           {
-            config.setParallelTrigger( stage, m, v, level, delay, startCapture );
+            builder.setParallelTrigger( stage, m, v, level, delay, startCapture );
           }
           else
           {
-            config.setSerialTrigger( stage, channel, m, v, level, delay, startCapture );
+            builder.setSerialTrigger( stage, channel, m, v, level, delay, startCapture );
           }
         }
         else
@@ -473,23 +470,23 @@ public final class SumpConfigDialog extends JDialog implements Configurable, Clo
           {
             if ( parallelTriggerStage )
             {
-              config.setParallelTrigger( stage, m, v, 0, delay, true );
+              builder.setParallelTrigger( stage, m, v, 0, delay, true );
             }
             else
             {
-              config.setSerialTrigger( stage, channel, m, v, 0, delay, true );
+              builder.setSerialTrigger( stage, channel, m, v, 0, delay, true );
             }
           }
           else
           {
             // make sure stages > 0 will not interfere
-            config.setParallelTrigger( stage, 0, 0, 3, 0, false );
+            builder.setParallelTrigger( stage, 0, 0, 3, 0, false );
           }
         }
       }
     }
 
-    return config;
+    return builder.build();
   }
 
   /**
@@ -537,7 +534,7 @@ public final class SumpConfigDialog extends JDialog implements Configurable, Clo
     this.triggerTypeSelect
         .setSelectedIndex( aSettings.getInt( "triggerType", this.triggerTypeSelect.getSelectedIndex() ) );
 
-    for ( int stage = 0; stage < SumpConfig.TRIGGER_STAGES; stage++ )
+    for ( int stage = 0; stage < MAX_COMPLEX_TRIGGER_STAGES; stage++ )
     {
       final String prefix = "triggerStage." + stage;
 
@@ -618,7 +615,7 @@ public final class SumpConfigDialog extends JDialog implements Configurable, Clo
     aSettings.putBoolean( "trigger", this.triggerEnable.isSelected() );
     aSettings.putInt( "triggerType", this.triggerTypeSelect.getSelectedIndex() );
 
-    for ( int stage = 0; stage < SumpConfig.TRIGGER_STAGES; stage++ )
+    for ( int stage = 0; stage < MAX_COMPLEX_TRIGGER_STAGES; stage++ )
     {
       final String prefix = "triggerStage." + stage;
 
@@ -1305,22 +1302,22 @@ public final class SumpConfigDialog extends JDialog implements Configurable, Clo
     this.triggerTypeSelect.addActionListener( fieldUpdater );
 
     this.triggerStageTabs = new JTabbedPane();
-    this.triggerMask = new JCheckBox[SumpConfig.TRIGGER_STAGES][];
-    this.triggerValue = new JCheckBox[SumpConfig.TRIGGER_STAGES][];
-    this.triggerLevel = new JComboBox[SumpConfig.TRIGGER_STAGES];
-    this.triggerDelay = new JTextField[SumpConfig.TRIGGER_STAGES];
-    this.triggerMode = new JComboBox[SumpConfig.TRIGGER_STAGES];
-    this.triggerChannel = new JComboBox[SumpConfig.TRIGGER_STAGES];
-    this.triggerStart = new JCheckBox[SumpConfig.TRIGGER_STAGES];
+    this.triggerMask = new JCheckBox[MAX_COMPLEX_TRIGGER_STAGES][];
+    this.triggerValue = new JCheckBox[MAX_COMPLEX_TRIGGER_STAGES][];
+    this.triggerLevel = new JComboBox[MAX_COMPLEX_TRIGGER_STAGES];
+    this.triggerDelay = new JTextField[MAX_COMPLEX_TRIGGER_STAGES];
+    this.triggerMode = new JComboBox[MAX_COMPLEX_TRIGGER_STAGES];
+    this.triggerChannel = new JComboBox[MAX_COMPLEX_TRIGGER_STAGES];
+    this.triggerStart = new JCheckBox[MAX_COMPLEX_TRIGGER_STAGES];
 
     // @@@
-    this.triggerHexMask = new JTextField[SumpConfig.TRIGGER_STAGES];
-    this.triggerHexValue = new JTextField[SumpConfig.TRIGGER_STAGES];
-    this.applyHexMaskButton = new JButton[SumpConfig.TRIGGER_STAGES];
-    this.applyHexValueButton = new JButton[SumpConfig.TRIGGER_STAGES];
-    this.invertHexValue = new JCheckBox[SumpConfig.TRIGGER_STAGES];
+    this.triggerHexMask = new JTextField[MAX_COMPLEX_TRIGGER_STAGES];
+    this.triggerHexValue = new JTextField[MAX_COMPLEX_TRIGGER_STAGES];
+    this.applyHexMaskButton = new JButton[MAX_COMPLEX_TRIGGER_STAGES];
+    this.applyHexValueButton = new JButton[MAX_COMPLEX_TRIGGER_STAGES];
+    this.invertHexValue = new JCheckBox[MAX_COMPLEX_TRIGGER_STAGES];
 
-    for ( int i = 0; i < SumpConfig.TRIGGER_STAGES; i++ )
+    for ( int i = 0; i < MAX_COMPLEX_TRIGGER_STAGES; i++ )
     {
       final JPanel stagePane = new JPanel( new GridBagLayout() );
       stagePane.setBorder( BorderFactory.createEmptyBorder( 5, 5, 5, 5 ) );
@@ -1506,7 +1503,7 @@ public final class SumpConfigDialog extends JDialog implements Configurable, Clo
     this.triggerTypeSelect.setEnabled( aEnable );
     this.ratioSlider.setEnabled( aEnable );
 
-    for ( int stage = 0; stage < SumpConfig.TRIGGER_STAGES; stage++ )
+    for ( int stage = 0; stage < MAX_COMPLEX_TRIGGER_STAGES; stage++ )
     {
       final boolean stageEnabled = aEnable && ( stage < aAvailableTriggerStages );
       for ( int i = 0; i < MAX_CHANNELS; i++ )
@@ -1570,7 +1567,7 @@ public final class SumpConfigDialog extends JDialog implements Configurable, Clo
     final boolean triggerEnabled = this.triggerEnable.isSelected();
     if ( triggerEnabled )
     {
-      for ( int stage = 0; result && ( stage < SumpConfig.TRIGGER_STAGES ); stage++ )
+      for ( int stage = 0; result && ( stage < MAX_COMPLEX_TRIGGER_STAGES ); stage++ )
       {
         final Integer delay = getNumericValue( this.triggerDelay[stage] );
 

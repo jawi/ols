@@ -28,7 +28,6 @@ import javax.microedition.io.*;
 
 import nl.lxtreme.ols.common.acquisition.*;
 import nl.lxtreme.ols.device.sump.protocol.*;
-import nl.lxtreme.ols.device.sump.sampleprocessor.*;
 import nl.lxtreme.ols.task.execution.*;
 
 
@@ -50,7 +49,6 @@ public class LogicSnifferAcquisitionTask implements SumpProtocolConstants, Task<
   private StreamConnection connection;
   private SumpResultReader inputStream;
   private SumpCommandWriter outputStream;
-  private int trigcount;
 
   // CONSTRUCTORS
 
@@ -82,73 +80,31 @@ public class LogicSnifferAcquisitionTask implements SumpProtocolConstants, Task<
   @Override
   public AcquisitionData call() throws IOException, InterruptedException
   {
-    LOG.info( "Starting capture ..." );
-
-    // Opens the device...
-    open();
-
-    // First try to find the logic sniffer itself...
-    detectDevice();
-
-    // check if data needs to be multiplexed
-    final int channelCount = this.config.getChannelCount();
-    if ( channelCount <= 0 )
+    try
     {
-      throw new InternalError( "Internal error: did not obtain correct number of channels (" + channelCount + ")?!" );
-    }
+      // Opens the device...
+      open();
 
-    final int sampleCount = this.config.getSampleCount();
-    if ( sampleCount <= 0 )
-    {
-      throw new InternalError( "Internal error: did not obtain correct number of samples (" + sampleCount + ")?!" );
-    }
+      // First try to find the logic sniffer itself...
+      detectDevice();
 
-    // Setup/configure the device with the UI-settings...
-    configureAndArmDevice();
-
-    // read all samples
-    int[] samples = readSamples( this.config.getEnabledGroupCount(), sampleCount );
-
-    if ( samples.length < sampleCount )
-    {
-      LOG.log( Level.INFO, "Only {0} samples read!", Integer.valueOf( samples.length ) );
-    }
-    else
-    {
-      LOG.log( Level.FINE, "{0} samples read. Starting post processing...", Integer.valueOf( sampleCount ) );
-    }
-
-    final AcquisitionDataBuilder builder = new AcquisitionDataBuilder();
-    builder.setSampleRate( this.config.getSampleRate() );
-    // Issue #98: use the *enabled* channel count, not the total channel
-    // count...
-    builder.setChannelCount( this.config.getEnabledChannelsCount() );
-    builder.setEnabledChannelMask( this.config.getEnabledChannelsMask() );
-
-    final SampleProcessorCallback callback = new SampleProcessorCallback()
-    {
-      public void addValue( final int aSampleValue, final long aTimestamp )
+      final int sampleCount = this.config.getSampleCount();
+      if ( sampleCount <= 0 )
       {
-        builder.addSample( aTimestamp, aSampleValue );
+        throw new InternalError( "Internal error: did not obtain correct number of samples (" + sampleCount + ")?!" );
       }
 
-      public void ready( final long aAbsoluteLength, final long aTriggerPosition )
-      {
-        builder.setAbsoluteLength( aAbsoluteLength );
+      // Setup/configure the device with the UI-settings...
+      configureAndArmDevice();
 
-        if ( LogicSnifferAcquisitionTask.this.config.isTriggerEnabled() )
-        {
-          builder.setTriggerPosition( aTriggerPosition );
-        }
-      }
-    };
-    // Process the actual samples...
-    createSampleProcessor( sampleCount, samples, callback ).process();
-
-    // Close the connection...
-    close();
-
-    return builder.build();
+      // read all samples
+      return readSampleData( this.config.getEnabledGroupCount(), sampleCount );
+    }
+    finally
+    {
+      // Close the connection...
+      close();
+    }
   }
 
   /**
@@ -163,7 +119,11 @@ public class LogicSnifferAcquisitionTask implements SumpProtocolConstants, Task<
    */
   void configureAndArmDevice() throws IOException
   {
-    this.trigcount = this.outputStream.writeDeviceConfiguration();
+    LOG.info( "Configuring device ..." );
+
+    this.outputStream.writeDeviceConfiguration();
+
+    LOG.info( "Arming device and starting capture ..." );
 
     // We're ready to process the samples from the device...
     this.outputStream.writeCmdRun();
@@ -186,6 +146,13 @@ public class LogicSnifferAcquisitionTask implements SumpProtocolConstants, Task<
     {
       try
       {
+        // Make sure to flush any pending information we did not read for some
+        // reason...
+        if ( this.inputStream != null )
+        {
+          this.inputStream.flush();
+        }
+
         // try to make sure device is reset...
         if ( this.outputStream != null )
         {
@@ -201,7 +168,7 @@ public class LogicSnifferAcquisitionTask implements SumpProtocolConstants, Task<
         // Make sure to handle IO-interrupted exceptions properly!
         if ( !handleInterruptedException( exception ) )
         {
-          LOG.log( Level.WARNING, "Detaching failed!", exception );
+          LOG.log( Level.WARNING, "Closing of device failed!", exception );
         }
       }
       finally
@@ -263,6 +230,8 @@ public class LogicSnifferAcquisitionTask implements SumpProtocolConstants, Task<
 
     try
     {
+      LOG.fine( "Opening connection to device ..." );
+
       if ( conn == null )
       {
         throw new IOException( "Failed to open a valid connection!" );
@@ -304,32 +273,6 @@ public class LogicSnifferAcquisitionTask implements SumpProtocolConstants, Task<
   }
 
   /**
-   * @param aSampleCount
-   *          the actual number of samples to process;
-   * @param aSampleValues
-   *          the sample values to process;
-   * @param aCallback
-   *          the processor callback to use.
-   * @return a sample processor instance, never <code>null</code>.
-   */
-  private SampleProcessor createSampleProcessor( final int aSampleCount, final int[] aSampleValues,
-      final SampleProcessorCallback aCallback )
-  {
-    final SampleProcessor processor;
-    if ( this.config.isRleEnabled() )
-    {
-      LOG.log( Level.INFO, "Decoding Run Length Encoded data, sample count: {0}", Integer.valueOf( aSampleCount ) );
-      processor = new RleDecoder( this.config, aSampleValues, this.trigcount, aCallback );
-    }
-    else
-    {
-      LOG.log( Level.INFO, "Decoding unencoded data, sample count: {0}", Integer.valueOf( aSampleCount ) );
-      processor = new EqualityFilter( this.config, aSampleValues, this.trigcount, aCallback );
-    }
-    return processor;
-  }
-
-  /**
    * Tries to detect the LogicSniffer device.
    * 
    * @return the device's metadata, never <code>null</code>.
@@ -339,6 +282,8 @@ public class LogicSnifferAcquisitionTask implements SumpProtocolConstants, Task<
    */
   private void detectDevice() throws IOException
   {
+    LOG.fine( "Detecting device ..." );
+
     int tries = 3;
     int id = -1;
     do
@@ -379,12 +324,18 @@ public class LogicSnifferAcquisitionTask implements SumpProtocolConstants, Task<
 
     if ( id == SLA_V0 )
     { // SLA0
+      LOG.fine( "Obsolete device 'SLA0' found ..." );
+
       throw new IOException( "Device is obsolete. Please upgrade firmware." );
     }
     else if ( id != SLA_V1 )
     { // SLA1
+      LOG.fine( "Unknown device (" + Integer.toHexString( id ) + ") found ..." );
+
       throw new IOException( "Device not found!" );
     }
+
+    LOG.fine( "Device 'SLA1' found ..." );
   }
 
   private boolean handleInterruptedException( Exception aException )
@@ -412,14 +363,18 @@ public class LogicSnifferAcquisitionTask implements SumpProtocolConstants, Task<
    * @throws InterruptedException
    *           in case the current thread was interrupted.
    */
-  private int[] readSamples( final int aEnabledGroupCount, int aSampleCount ) throws IOException, InterruptedException
+  private AcquisitionData readSampleData( final int aEnabledGroupCount, int aSampleCount ) throws IOException,
+      InterruptedException
   {
+    LOG.fine( "Awaiting data and processing sample information ..." );
+
     final int length = aEnabledGroupCount * aSampleCount;
     final byte[] rawData = new byte[length];
 
     try
     {
       int offset = 0;
+      int zerosRead = 0;
       int count = length;
       while ( !Thread.currentThread().isInterrupted() && ( offset >= 0 ) && ( offset < length ) )
       {
@@ -428,8 +383,17 @@ public class LogicSnifferAcquisitionTask implements SumpProtocolConstants, Task<
         {
           throw new EOFException();
         }
+        else if ( read == 0 )
+        {
+          System.out.printf("Read zero bytes?! Stats = [%d/%d/%d]%n", offset, count, zerosRead);
+          if ( ++zerosRead == 10000 )
+          {
+            throw new IOException( "Device did not respond with any data within valid time bound!" );
+          }
+        }
         else
         {
+          zerosRead = 0;
           count -= read;
           offset += read;
         }
@@ -447,9 +411,6 @@ public class LogicSnifferAcquisitionTask implements SumpProtocolConstants, Task<
     }
     finally
     {
-      // Make sure we leave the device in a correct state...
-      this.outputStream.writeCmdReset();
-
       this.acquisitionProgressListener.acquisitionInProgress( 100 );
     }
 
@@ -459,34 +420,6 @@ public class LogicSnifferAcquisitionTask implements SumpProtocolConstants, Task<
       throw new InterruptedException();
     }
 
-    final int groupCount = this.config.getGroupCount();
-
-    // Normalize the raw data into the sample data, as expected...
-    int[] samples = new int[aSampleCount];
-    for ( int i = samples.length - 1, j = 0; i >= 0; i-- )
-    {
-      for ( int g = 0; g < groupCount; g++ )
-      {
-        if ( this.config.isGroupEnabled( g ) )
-        {
-          samples[i] |= ( ( rawData[j++] & 0xff ) << ( 8 * g ) );
-        }
-      }
-    }
-
-    // In case the device sends its samples in "reverse" order, we need to
-    // revert it now, before processing them further...
-    if ( this.config.isSamplesInReverseOrder() )
-    {
-      for ( int left = 0, right = samples.length - 1; left < right; left++, right-- )
-      {
-        // exchange the first and last
-        int temp = samples[left];
-        samples[left] = samples[right];
-        samples[right] = temp;
-      }
-    }
-
-    return samples;
+    return new SumpAcquisitionDataBuilder( this.config ).build( rawData, this.acquisitionProgressListener );
   }
 }

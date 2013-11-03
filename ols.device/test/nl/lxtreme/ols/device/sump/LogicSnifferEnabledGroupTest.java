@@ -115,22 +115,23 @@ public class LogicSnifferEnabledGroupTest
   @Before
   public void setUp() throws Exception
   {
-    this.config = new SumpConfig();
+    final DeviceProfile deviceProfile = VirtualLogicSnifferDevice.createDeviceProfile( "VirtualLS",
+        "\"Virtual LogicSniffer\"" );
+
+    SumpConfigBuilder builder = new SumpConfigBuilder( deviceProfile );
+    builder.setAltNumberSchemeEnabled( false ); // don't care
+    builder.setClockSource( CaptureClockSource.INTERNAL ); // don't care
+    builder.setFilterEnabled( false ); // don't care
+    builder.setTestModeEnabled( false ); // don't care
+    builder.setRatio( 0.5 );
+    builder.setRleEnabled( true );
+    builder.setSampleCount( 4096 );
+    builder.setTriggerEnabled( false );
+    builder.setSampleRate( this.enableDdrMode ? 200000000 : 100000000 );
+    builder.setEnabledChannels( this.enabledGroupMask );
+
+    this.config = builder.build();
     this.device = new VirtualLogicSnifferDevice( this.config );
-
-    final DeviceProfile deviceProfile = this.device.addDeviceProfile( "VirtualLS", "\"Virtual LogicSniffer\"" );
-    this.config.setDeviceProfile( deviceProfile );
-
-    this.config.setAltNumberSchemeEnabled( false ); // don't care
-    this.config.setClockSource( CaptureClockSource.INTERNAL ); // don't care
-    this.config.setFilterEnabled( false ); // don't care
-    this.config.setTestModeEnabled( false ); // don't care
-    this.config.setRatio( 0.5 );
-    this.config.setRleEnabled( true );
-    this.config.setSampleCount( 4096 );
-    this.config.setTriggerEnabled( false );
-    this.config.setSampleRate( this.enableDdrMode ? 200000000 : 100000000 );
-    this.config.setEnabledChannels( this.enabledGroupMask );
 
     this.device.open();
     this.device.configureAndArmDevice();

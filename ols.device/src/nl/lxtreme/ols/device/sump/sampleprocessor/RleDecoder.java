@@ -21,6 +21,7 @@
 package nl.lxtreme.ols.device.sump.sampleprocessor;
 
 
+import static nl.lxtreme.ols.device.sump.SumpConstants.*;
 import java.util.logging.*;
 
 import nl.lxtreme.ols.device.sump.*;
@@ -29,7 +30,7 @@ import nl.lxtreme.ols.device.sump.*;
 /**
  * Provides a RLE decoder.
  */
-public final class RleDecoder implements SampleProcessor
+public final class RleDecoder
 {
   // CONSTANTS
 
@@ -40,7 +41,6 @@ public final class RleDecoder implements SampleProcessor
   private final SumpConfig config;
   private final int[] buffer;
   private final int trigCount;
-  private final SampleProcessorCallback callback;
 
   private final int rleCountValue;
   private final int rleCountMask;
@@ -56,7 +56,7 @@ public final class RleDecoder implements SampleProcessor
    * @param aCallback
    */
   public RleDecoder( final SumpConfig aConfig, final int[] aBuffer, final int aTrigCount,
-      final SampleProcessorCallback aCallback )
+      final Object aCallback )
   {
     if ( aBuffer == null )
     {
@@ -66,10 +66,9 @@ public final class RleDecoder implements SampleProcessor
     this.config = aConfig;
     this.buffer = aBuffer;
     this.trigCount = aTrigCount;
-    this.callback = aCallback;
 
     // enabled group count is "automatically" corrected for DDR/Demux mode...
-    final int width = this.config.getRLEDataWidth();
+    final int width = getRLEDataWidth();
     switch ( width )
     {
       case 32:
@@ -111,7 +110,7 @@ public final class RleDecoder implements SampleProcessor
     final int samples = this.buffer.length;
 
     // shiftBits needs to be 8 if 8 bit selected and 16 if 16 bit selected
-    final int rleShiftBits = this.config.getRLEDataWidth();
+    final int rleShiftBits = getRLEDataWidth();
     final boolean ddrMode = this.config.isDoubleDataRateEnabled();
 
     for ( int i = 0; i < samples; i++ )
@@ -157,7 +156,7 @@ public final class RleDecoder implements SampleProcessor
           }
 
           // add the read sample & add a timestamp value as well...
-          this.callback.addValue( sampleValue, time );
+//          this.callback.addValue( sampleValue, time );
           lastSample = sampleValue;
         }
         time++;
@@ -167,10 +166,23 @@ public final class RleDecoder implements SampleProcessor
     // Ensure the last sample is shown as well (even if there was a lot of time
     // between the last real sample and the end of the capture; i.e., constant
     // data)...
-    this.callback.addValue( lastSample, time );
+//    this.callback.addValue( lastSample, time );
 
     // Take the last seen time value as "absolete" length of this trace...
-    this.callback.ready( time, rleTrigPos - 1 );
+//    this.callback.ready( time, rleTrigPos - 1 );
+  }
+
+  /**
+   * @return the data width, in bits.
+   */
+  private int getRLEDataWidth()
+  {
+    int enabledGroups = this.config.getEnabledGroupCount();
+    if ( this.config.isDoubleDataRateEnabled() )
+    {
+      Math.min( MAX_CHANNEL_GROUPS_DDR, enabledGroups );
+    }
+    return enabledGroups * 8;
   }
 
   /**

@@ -301,6 +301,8 @@ public class VirtualLogicSnifferDevice extends LogicSnifferAcquisitionTask
         delayCount = ( ( this.sizeValue >> 16 ) & 0xFFFF ) << 2;
       }
       setReadAndDelay( readCount, delayCount );
+      
+      System.out.printf("Writing %d samples...%n", readCount);
 
       this.sampleProvider.write( this.os, this.sampleWidth, readCount, this.rleMode, this.ddrMode );
     }
@@ -405,7 +407,7 @@ public class VirtualLogicSnifferDevice extends LogicSnifferAcquisitionTask
   /**
    * @return
    */
-  public DeviceProfile addDeviceProfile( final String aType, final String aMetadataKeys )
+  public static DeviceProfile createDeviceProfile( final String aType, final String aMetadataKeys )
   {
     Map<String, String> properties = new HashMap<String, String>();
     properties.put( DEVICE_CAPTURECLOCK, "INTERNAL" );
@@ -486,7 +488,7 @@ public class VirtualLogicSnifferDevice extends LogicSnifferAcquisitionTask
   {
     final SumpConfig config = getConfig();
 
-    int clock = config.getClockspeed();
+    int clock = 100000000;
     if ( config.isDoubleDataRateEnabled() )
     {
       clock *= 2;

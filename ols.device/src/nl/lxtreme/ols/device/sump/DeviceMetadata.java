@@ -43,6 +43,18 @@ public class DeviceMetadata
   // METHODS
 
   /**
+   * Convenience method to put a numeric value.
+   * 
+   * @param aKey the key to add;
+   * @param aValue the value to add.
+   * @return 
+   */
+  public void add( int aKey, Object aValue )
+  {
+    this.metadata.put( Integer.valueOf( aKey ), aValue );
+  }
+
+  /**
    * @return this metadata as {@link Dictionary}, never <code>null</code>.
    */
   public Dictionary<String, Object> asDictionary()
@@ -155,18 +167,6 @@ public class DeviceMetadata
   public Integer getSampleMemoryDepth()
   {
     return ( Integer )get( KEY_SAMPLE_MEMORY_DEPTH );
-  }
-
-  /**
-   * Convenience method to put a numeric value.
-   * 
-   * @param aKey
-   * @param aValue
-   * @return
-   */
-  public Object put( int aKey, Object aValue )
-  {
-    return this.metadata.put( Integer.valueOf( aKey ), aValue );
   }
 
   /**

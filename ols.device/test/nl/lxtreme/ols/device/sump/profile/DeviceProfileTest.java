@@ -491,6 +491,7 @@ public class DeviceProfileTest
     properties.put( DEVICE_SAMPLERATES, "5,6,7" );
     properties.put( DEVICE_SUPPORTS_DDR, "true" );
     properties.put( DEVICE_TRIGGER_COMPLEX, "true" );
+    properties.put( DEVICE_TRIGGER_HP165XX, "false" );
     properties.put( DEVICE_TRIGGER_STAGES, "0" );
     properties.put( DEVICE_TYPE, "MOCK" );
     return properties;

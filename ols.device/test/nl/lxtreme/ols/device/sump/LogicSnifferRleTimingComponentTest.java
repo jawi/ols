@@ -243,22 +243,23 @@ public class LogicSnifferRleTimingComponentTest
   @Before
   public void setupDevice() throws IOException, ConfigurationException
   {
-    final SumpConfig config = new SumpConfig();
-    this.device = new VirtualLogicSnifferDevice( config, this.provider );
+    final DeviceProfile deviceProfile = VirtualLogicSnifferDevice.createDeviceProfile( "VirtualLS",
+        "\"Virtual LogicSniffer\"" );
 
-    final DeviceProfile deviceProfile = this.device.addDeviceProfile( "VirtualLS", "\"Virtual LogicSniffer\"" );
-    config.setDeviceProfile( deviceProfile );
+    SumpConfigBuilder builder = new SumpConfigBuilder( deviceProfile );
 
-    config.setAltNumberSchemeEnabled( false ); // don't care
-    config.setClockSource( CaptureClockSource.INTERNAL ); // don't care
-    config.setFilterEnabled( false ); // don't care
-    config.setTestModeEnabled( false ); // don't care
-    config.setEnabledChannels( this.enabledChannelMask );
-    config.setRatio( 0.5 );
-    config.setRleEnabled( true );
-    config.setSampleCount( this.sampleCount );
-    config.setSampleRate( this.ddrMode ? 200000000 : 100000000 );
-    config.setTriggerEnabled( false );
+    builder.setAltNumberSchemeEnabled( false ); // don't care
+    builder.setClockSource( CaptureClockSource.INTERNAL ); // don't care
+    builder.setFilterEnabled( false ); // don't care
+    builder.setTestModeEnabled( false ); // don't care
+    builder.setEnabledChannels( this.enabledChannelMask );
+    builder.setRatio( 0.5 );
+    builder.setRleEnabled( true );
+    builder.setSampleCount( this.sampleCount );
+    builder.setSampleRate( this.ddrMode ? 200000000 : 100000000 );
+    builder.setTriggerEnabled( false );
+
+    this.device = new VirtualLogicSnifferDevice( builder.build(), this.provider );
   }
 
   /**

@@ -97,10 +97,10 @@ public final class DeviceProfile implements Cloneable, Comparable<DeviceProfile>
   private static final List<String> KNOWN_KEYS = Arrays.asList( new String[] { DEVICE_TYPE, DEVICE_DESCRIPTION,
       DEVICE_INTERFACE, DEVICE_CLOCKSPEED, DEVICE_SUPPORTS_DDR, DEVICE_SAMPLERATES, DEVICE_CAPTURECLOCK,
       DEVICE_CAPTURESIZES, DEVICE_FEATURE_NOISEFILTER, DEVICE_FEATURE_RLE, DEVICE_FEATURE_TEST_MODE,
-      DEVICE_FEATURE_TRIGGERS, DEVICE_TRIGGER_STAGES, DEVICE_TRIGGER_COMPLEX, DEVICE_TRIGGER_HP165XX,
-      DEVICE_CHANNEL_COUNT, DEVICE_CHANNEL_GROUPS, DEVICE_CAPTURESIZE_BOUND, DEVICE_CHANNEL_NUMBERING_SCHEMES,
-      DEVICE_OPEN_PORT_DELAY, DEVICE_METADATA_KEYS, DEVICE_SAMPLE_REVERSE_ORDER, DEVICE_OPEN_PORT_DTR,
-      DEVICE_RECEIVE_TIMEOUT, DEVICE_DIVIDER_CLOCKSPEED } );
+      DEVICE_FEATURE_COMBINED_READDELAY_COUNT, DEVICE_FEATURE_TRIGGERS, DEVICE_TRIGGER_STAGES, DEVICE_TRIGGER_COMPLEX,
+      DEVICE_TRIGGER_HP165XX, DEVICE_CHANNEL_COUNT, DEVICE_CHANNEL_GROUPS, DEVICE_CAPTURESIZE_BOUND,
+      DEVICE_CHANNEL_NUMBERING_SCHEMES, DEVICE_OPEN_PORT_DELAY, DEVICE_METADATA_KEYS, DEVICE_SAMPLE_REVERSE_ORDER,
+      DEVICE_OPEN_PORT_DTR, DEVICE_RECEIVE_TIMEOUT, DEVICE_DIVIDER_CLOCKSPEED } );
   private static final List<String> IGNORED_KEYS = Arrays.asList( new String[] { FELIX_SERVICE_PID,
       FELIX_SERVICE_FACTORY_PID } );
 
@@ -516,6 +516,20 @@ public final class DeviceProfile implements Cloneable, Comparable<DeviceProfile>
   public boolean isOpenPortDtr()
   {
     final String value = this.properties.get( DEVICE_OPEN_PORT_DTR );
+    return Boolean.parseBoolean( value );
+  }
+
+  /**
+   * Returns whether or not the read/delay counters are sent as single value.
+   * 
+   * @return <code>true</code> if the read/delay count values are combined into
+   *         one single value (sent as command 0x81), <code>false</code> if the
+   *         read and delay count are sent as separate values (commands 0x83 and
+   *         0x84).
+   */
+  public boolean isReadDelayCountCombined()
+  {
+    final String value = this.properties.get( DEVICE_FEATURE_COMBINED_READDELAY_COUNT );
     return Boolean.parseBoolean( value );
   }
 

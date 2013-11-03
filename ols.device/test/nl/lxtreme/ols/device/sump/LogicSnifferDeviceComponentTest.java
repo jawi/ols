@@ -119,22 +119,21 @@ public class LogicSnifferDeviceComponentTest
   @Before
   public void setUp() throws Exception
   {
-    SumpConfig config = new SumpConfig();
-    this.device = new VirtualLogicSnifferDevice( config );
-
-    final DeviceProfile deviceProfile = this.device.addDeviceProfile( "VirtualLS", "\"Virtual LogicSniffer\"" );
-    config.setDeviceProfile( deviceProfile );
-
-    config.setAltNumberSchemeEnabled( false ); // don't care
-    config.setClockSource( CaptureClockSource.INTERNAL ); // don't care
-    config.setFilterEnabled( true ); // don't care
-    config.setTestModeEnabled( false ); // don't care
-    config.setEnabledChannels( this.enabledChannelsMask );
-    config.setRatio( this.ratio );
-    config.setRleEnabled( this.useRLE );
-    config.setSampleCount( this.readCounter );
-    config.setSampleRate( this.sampleRate );
-    config.setTriggerEnabled( this.triggerEnabled );
+    final DeviceProfile deviceProfile = VirtualLogicSnifferDevice.createDeviceProfile( "VirtualLS", "\"Virtual LogicSniffer\"" );
+    
+    SumpConfigBuilder builder = new SumpConfigBuilder( deviceProfile );
+    builder.setAltNumberSchemeEnabled( false ); // don't care
+    builder.setClockSource( CaptureClockSource.INTERNAL ); // don't care
+    builder.setFilterEnabled( false );
+    builder.setTestModeEnabled( false );
+    builder.setEnabledChannels( this.enabledChannelsMask );
+    builder.setRatio( this.ratio );
+    builder.setRleEnabled( this.useRLE );
+    builder.setSampleCount( this.readCounter );
+    builder.setSampleRate( this.sampleRate );
+    builder.setTriggerEnabled( this.triggerEnabled );
+    
+    this.device = new VirtualLogicSnifferDevice( builder.build() );
   }
 
   /**
@@ -151,10 +150,10 @@ public class LogicSnifferDeviceComponentTest
    * {@link org.sump.device.logicsniffer.LogicSnifferAcquisitionTask#doInBackground()}
    * .
    */
-  @Test( timeout = 1000000 )
+  @Test( timeout = 1000 )
   public void testVerifyFlagsAndSentData() throws Exception
   {
-    final boolean ddrMode = ( this.sampleRate > this.device.getConfig().getClockspeed() );
+    final boolean ddrMode = this.device.getConfig().isDoubleDataRateEnabled();
     final boolean isGroup1disabled = ( this.enabledChannelsMask & 0x000000FF ) == 0;
     final boolean isGroup2disabled = ( this.enabledChannelsMask & 0x0000FF00 ) == 0;
     final boolean isGroup3disabled = ( ( this.enabledChannelsMask & 0x00FF0000 ) == 0 )
@@ -176,7 +175,7 @@ public class LogicSnifferDeviceComponentTest
     this.device.assertFlagState( SumpCommandWriter.FLAG_EXTERNAL_TEST_MODE, false );
     this.device.assertFlagState( SumpCommandWriter.FLAG_INTERNAL_TEST_MODE, false );
     this.device.assertFlagState( SumpCommandWriter.FLAG_NUMBER_SCHEME, false );
-    this.device.assertFlagState( SumpCommandWriter.FLAG_FILTER, !ddrMode );
+    this.device.assertFlagState( SumpCommandWriter.FLAG_FILTER, false );
 
     this.device.assertSampleRate( this.sampleRate );
     this.device.assertReadAndDelayCount( this.readCounter, this.delayCounter );
