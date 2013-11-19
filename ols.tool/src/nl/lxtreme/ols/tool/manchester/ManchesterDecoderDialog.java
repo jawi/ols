@@ -1,0 +1,214 @@
+/*
+ * OpenBench LogicSniffer / SUMP project 
+ *
+ * This program is free software; you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation; either version 2 of the License, or (at
+ * your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful, but
+ * WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
+ * General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License along
+ * with this program; if not, write to the Free Software Foundation, Inc.,
+ * 51 Franklin St, Fifth Floor, Boston, MA 02110, USA
+ *
+ * Copyright (C) 2006-2010 Michael Poppitz, www.sump.org
+ * Copyright (C) 2010-2012 J.W. Janssen, www.lxtreme.nl
+ */
+package nl.lxtreme.ols.tool.manchester;
+
+
+import static nl.lxtreme.ols.util.swing.SwingComponentUtils.*;
+
+import java.awt.*;
+
+import javax.swing.*;
+
+import nl.lxtreme.ols.common.acquisition.*;
+import nl.lxtreme.ols.tool.api.*;
+import nl.lxtreme.ols.tool.base.*;
+import nl.lxtreme.ols.tool.base.ToolUtils.RestorableAction;
+import nl.lxtreme.ols.util.swing.*;
+
+import org.osgi.framework.*;
+import org.osgi.util.tracker.*;
+
+
+/**
+ * Denotes the configuration dialog for the manchester line decoder tool.
+ */
+public class ManchesterDecoderDialog extends BaseToolDialog<AcquisitionData>
+{
+  // CONSTANTS
+
+  private static final long serialVersionUID = 1L;
+
+  // VARIABLES
+
+  private final ServiceTracker acquisitionDataListenerHelper;
+
+  private JComboBox dataLine;
+  private JCheckBox inverted;
+
+  private Action closeAction;
+  private RestorableAction runAnalysisAction;
+
+  // CONSTRUCTORS
+
+  /**
+   * Creates a new LineDecoderToolDialog instance.
+   * 
+   * @param aOwner
+   * @param aContext
+   * @param aBundleContext
+   * @param aTool
+   */
+  public ManchesterDecoderDialog( final Window aOwner, final ToolContext aContext, final BundleContext aBundleContext,
+      final Tool<AcquisitionData> aTool )
+  {
+    super( aOwner, aContext, aBundleContext, aTool );
+
+    this.acquisitionDataListenerHelper = new ServiceTracker( aBundleContext, AcquisitionDataListener.class.getName(),
+        null );
+
+    initDialog();
+
+    setLocationRelativeTo( getOwner() );
+  }
+
+  // METHODS
+
+  /**
+   * {@inheritDoc}
+   */
+  @Override
+  public void readPreferences( final UserSettings aSettings )
+  {
+    this.dataLine.setSelectedIndex( aSettings.getInt( "dataLine", this.dataLine.getSelectedIndex() ) );
+    this.inverted.setSelected( aSettings.getBoolean( "inverted", this.inverted.isSelected() ) );
+  }
+
+  /**
+   * {@inheritDoc}
+   */
+  @Override
+  public void reset()
+  {
+    this.runAnalysisAction.restore();
+  }
+
+  /**
+   * {@inheritDoc}
+   */
+  @Override
+  public void writePreferences( final UserSettings aSettings )
+  {
+    aSettings.putInt( "dataLine", this.dataLine.getSelectedIndex() );
+    aSettings.putBoolean( "inverted", this.inverted.isSelected() );
+  }
+
+  /**
+   * {@inheritDoc}
+   */
+  @Override
+  protected void onToolEnded( final AcquisitionData aResult )
+  {
+    Object[] services = this.acquisitionDataListenerHelper.getServices();
+    if ( services != null )
+    {
+      for ( Object service : services )
+      {
+        ( ( AcquisitionDataListener )service ).acquisitionComplete( aResult );
+      }
+    }
+    this.closeAction.setEnabled( true );
+    this.runAnalysisAction.restore();
+
+    this.acquisitionDataListenerHelper.close();
+  }
+
+  /**
+   * {@inheritDoc}
+   */
+  @Override
+  protected void onToolStarted()
+  {
+    this.closeAction.setEnabled( false );
+    this.acquisitionDataListenerHelper.open();
+  }
+
+  /**
+   * {@inheritDoc}
+   */
+  @Override
+  protected void prepareToolTask( final ToolTask<AcquisitionData> aToolTask )
+  {
+    final ManchesterDecoderTask toolTask = ( ManchesterDecoderTask )aToolTask;
+    toolTask.setDataIdx( this.dataLine.getSelectedIndex() ); // XXX
+    toolTask.setInverted( this.inverted.isSelected() );
+  }
+
+  /**
+   * Creates the settings pane.
+   * 
+   * @return a settings pane, never <code>null</code>.
+   */
+  private JComponent createSettingsPane( final JPanel aSubSettingsPanel )
+  {
+    final JPanel panel = new JPanel( new SpringLayout() );
+
+    SpringLayoutUtils.addSeparator( panel, "General settings" );
+
+    final int channelCount = getData().getChannelCount();
+
+    this.inverted = new JCheckBox( "", false /* selected */);
+
+    panel.add( createRightAlignedLabel( "Inverted?" ) );
+    panel.add( this.inverted );
+
+    this.dataLine = SwingComponentUtils.createChannelSelector( channelCount );
+
+    panel.add( createRightAlignedLabel( "Data line" ) );
+    panel.add( this.dataLine );
+
+    SpringLayoutUtils.makeEditorGrid( panel, 10, 4 );
+
+    return panel;
+  }
+
+  /**
+   * Initializes this dialog.
+   */
+  private void initDialog()
+  {
+    setMinimumSize( new Dimension( 640, 480 ) );
+
+    final JPanel subSettingsPane = new JPanel( new SpringLayout() );
+    final JComponent settingsPane = createSettingsPane( subSettingsPane );
+
+    final JPanel contentPane = new JPanel( new GridBagLayout() );
+    contentPane.add( settingsPane, //
+        new GridBagConstraints( 0, 0, 1, 1, 0.0, 0.0, GridBagConstraints.NORTH, GridBagConstraints.NONE, //
+            new Insets( 2, 0, 2, 0 ), 0, 0 ) );
+
+    contentPane.add( subSettingsPane, //
+        new GridBagConstraints( 0, 1, 1, 1, 1.0, 1.0, GridBagConstraints.NORTH, GridBagConstraints.NONE, //
+            new Insets( 2, 0, 2, 0 ), 0, 0 ) );
+
+    final JButton runAnalysisButton = ToolUtils.createRunAnalysisButton( this );
+    this.runAnalysisAction = ( RestorableAction )runAnalysisButton.getAction();
+
+    final JButton closeButton = ToolUtils.createCloseButton();
+    this.closeAction = closeButton.getAction();
+
+    final JComponent buttonPane = SwingComponentUtils.createButtonPane( runAnalysisButton, closeButton );
+
+    SwingComponentUtils.setupWindowContentPane( this, contentPane, buttonPane, runAnalysisButton );
+
+    pack();
+  }
+
+}

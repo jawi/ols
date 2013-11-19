@@ -1,0 +1,7 @@
+Bundle-Name: OLS manchester line decoder
+Bundle-Description: A manchester line decoder tool for the OLS client.
+Bundle-Copyright: J.W. Janssen (lxtreme.nl) (C) 2012-2013
+Bundle-License: GPLv2;link=http://www.gnu.org/licenses/gpl-2.0.html
+Private-Package: nl.lxtreme.ols.tool.base.*, nl.lxtreme.ols.tool.manchester
+OLS-Tool: 1.0
+OLS-ToolClass: nl.lxtreme.ols.tool.manchester.ManchesterDecoder
