@@ -126,11 +126,6 @@ public class SumpCommandWriter implements SumpProtocolConstants, Closeable
       LOG.info( "Prematurely finishing RLE-enabled capture ..." );
       sendCommand( CMD_RLE_FINISH_NOW );
     }
-    else
-    {
-      LOG.info( "Prematurely finishing normal capture ..." );
-      writeCmdReset();
-    }
   }
 
   /**
@@ -244,8 +239,9 @@ public class SumpCommandWriter implements SumpProtocolConstants, Closeable
       shift += 8;
     }
 
-    LOG.log( Level.INFO, "Sending long command: 0x{0} with data 0x{1}",
-        new Object[] { Integer.toHexString( aOpcode & 0xFF ), Integer.toHexString( aData ) } );
+    LOG.log( Level.INFO, "Sending long command: 0x{0} with data 0x{1} 0x{2} 0x{3} 0x{4}",
+        new Object[] { Integer.toHexString( raw[0] & 0xFF ), String.format( "%02x", raw[1] ),
+            String.format( "%02x", raw[2] ), String.format( "%02x", raw[3] ), String.format( "%02x", raw[4] ) } );
 
     this.outputStream.write( raw );
     this.outputStream.flush();

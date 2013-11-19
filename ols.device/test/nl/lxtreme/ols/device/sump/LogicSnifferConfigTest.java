@@ -168,20 +168,20 @@ public class LogicSnifferConfigTest
     // With DDR...
     this.builder.setSampleRate( LogicSnifferAcquisitionTask.CLOCK + 1 );
 
-//    this.builder.setEnabledChannels( 0 );
-//    assertEquals( 0, this.builder.getRLEDataWidth() );
-//
-//    this.builder.setEnabledChannels( 0x000000FF );
-//    assertEquals( 8, this.builder.getRLEDataWidth() );
-//
-//    this.builder.setEnabledChannels( 0x0000FFFF );
-//    assertEquals( 16, this.builder.getRLEDataWidth() );
-//
-//    this.builder.setEnabledChannels( 0x00FFFFFF );
-//    assertEquals( 16, this.builder.getRLEDataWidth() );
-//
-//    this.builder.setEnabledChannels( 0xFFFFFFFF );
-//    assertEquals( 16, this.builder.getRLEDataWidth() );
+    // this.builder.setEnabledChannels( 0 );
+    // assertEquals( 0, this.builder.getRLEDataWidth() );
+    //
+    // this.builder.setEnabledChannels( 0x000000FF );
+    // assertEquals( 8, this.builder.getRLEDataWidth() );
+    //
+    // this.builder.setEnabledChannels( 0x0000FFFF );
+    // assertEquals( 16, this.builder.getRLEDataWidth() );
+    //
+    // this.builder.setEnabledChannels( 0x00FFFFFF );
+    // assertEquals( 16, this.builder.getRLEDataWidth() );
+    //
+    // this.builder.setEnabledChannels( 0xFFFFFFFF );
+    // assertEquals( 16, this.builder.getRLEDataWidth() );
   }
 
   /**
@@ -193,20 +193,20 @@ public class LogicSnifferConfigTest
     // Without DDR...
     this.builder.setSampleRate( 1 );
 
-//    this.builder.setEnabledChannels( 0 );
-//    assertEquals( 0, this.builder.getRLEDataWidth() );
-//
-//    this.builder.setEnabledChannels( 0x000000FF );
-//    assertEquals( 8, this.builder.getRLEDataWidth() );
-//
-//    this.builder.setEnabledChannels( 0x0000FFFF );
-//    assertEquals( 16, this.builder.getRLEDataWidth() );
-//
-//    this.builder.setEnabledChannels( 0x00FFFFFF );
-//    assertEquals( 24, this.builder.getRLEDataWidth() );
-//
-//    this.builder.setEnabledChannels( 0xFFFFFFFF );
-//    assertEquals( 32, this.builder.getRLEDataWidth() );
+    // this.builder.setEnabledChannels( 0 );
+    // assertEquals( 0, this.builder.getRLEDataWidth() );
+    //
+    // this.builder.setEnabledChannels( 0x000000FF );
+    // assertEquals( 8, this.builder.getRLEDataWidth() );
+    //
+    // this.builder.setEnabledChannels( 0x0000FFFF );
+    // assertEquals( 16, this.builder.getRLEDataWidth() );
+    //
+    // this.builder.setEnabledChannels( 0x00FFFFFF );
+    // assertEquals( 24, this.builder.getRLEDataWidth() );
+    //
+    // this.builder.setEnabledChannels( 0xFFFFFFFF );
+    // assertEquals( 32, this.builder.getRLEDataWidth() );
   }
 
   /**
@@ -285,35 +285,36 @@ public class LogicSnifferConfigTest
   public void testGetStopCounter()
   {
     this.builder.setSampleCount( 1000 );
-    // with a trigger, the delay count equals to the read count times the ratio...
+    // with a trigger, the delay count equals to the read count times the
+    // ratio...
     this.builder.setTriggerEnabled( true );
 
     this.builder.setRatio( 1.0 );
-    assertEquals( 1000, this.builder.build().getDelayCount() );
+    assertEquals( 249, this.builder.build().getDelayCount() );
 
     this.builder.setRatio( 0.5 );
-    assertEquals( 500, this.builder.build().getDelayCount() );
+    assertEquals( 124, this.builder.build().getDelayCount() );
 
     this.builder.setRatio( 0.1 );
-    assertEquals( 100, this.builder.build().getDelayCount() );
+    assertEquals( 24, this.builder.build().getDelayCount() );
 
     this.builder.setRatio( 0.0 );
-    assertEquals( 0, this.builder.build().getDelayCount() );
-    
+    assertEquals( 0xFFFFFFF, this.builder.build().getDelayCount() );
+
     // without a trigger, the delay count equals to the read count...
     this.builder.setTriggerEnabled( false );
 
     this.builder.setRatio( 1.0 );
-    assertEquals( 1000, this.builder.build().getDelayCount() );
+    assertEquals( 249, this.builder.build().getDelayCount() );
 
     this.builder.setRatio( 0.5 );
-    assertEquals( 1000, this.builder.build().getDelayCount() );
+    assertEquals( 249, this.builder.build().getDelayCount() );
 
     this.builder.setRatio( 0.1 );
-    assertEquals( 1000, this.builder.build().getDelayCount() );
+    assertEquals( 249, this.builder.build().getDelayCount() );
 
     this.builder.setRatio( 0.0 );
-    assertEquals( 1000, this.builder.build().getDelayCount() );
+    assertEquals( 249, this.builder.build().getDelayCount() );
   }
 
   /**
@@ -354,17 +355,17 @@ public class LogicSnifferConfigTest
     assertFalse( this.builder.build().isGroupEnabled( 2 ) );
     assertFalse( this.builder.build().isGroupEnabled( 3 ) );
 
-//    this.builder.setEnabledChannels( 0x00FF0000 );
-//    assertFalse( this.builder.build().isGroupEnabled( 0 ) );
-//    assertFalse( this.builder.build().isGroupEnabled( 1 ) );
-//    assertTrue( this.builder.build().isGroupEnabled( 2 ) );
-//    assertFalse( this.builder.build().isGroupEnabled( 3 ) );
-//
-//    this.builder.setEnabledChannels( 0xFF000000 );
-//    assertFalse( this.builder.build().isGroupEnabled( 0 ) );
-//    assertFalse( this.builder.build().isGroupEnabled( 1 ) );
-//    assertFalse( this.builder.build().isGroupEnabled( 2 ) );
-//    assertTrue( this.builder.build().isGroupEnabled( 3 ) );
+    // this.builder.setEnabledChannels( 0x00FF0000 );
+    // assertFalse( this.builder.build().isGroupEnabled( 0 ) );
+    // assertFalse( this.builder.build().isGroupEnabled( 1 ) );
+    // assertTrue( this.builder.build().isGroupEnabled( 2 ) );
+    // assertFalse( this.builder.build().isGroupEnabled( 3 ) );
+    //
+    // this.builder.setEnabledChannels( 0xFF000000 );
+    // assertFalse( this.builder.build().isGroupEnabled( 0 ) );
+    // assertFalse( this.builder.build().isGroupEnabled( 1 ) );
+    // assertFalse( this.builder.build().isGroupEnabled( 2 ) );
+    // assertTrue( this.builder.build().isGroupEnabled( 3 ) );
 
     // Two channel groups...
     this.builder.setEnabledChannels( 0x0000FFFF );
@@ -373,67 +374,67 @@ public class LogicSnifferConfigTest
     assertFalse( this.builder.build().isGroupEnabled( 2 ) );
     assertFalse( this.builder.build().isGroupEnabled( 3 ) );
 
-//    this.builder.setEnabledChannels( 0x00FFFF00 );
-//    assertFalse( this.builder.build().isGroupEnabled( 0 ) );
-//    assertTrue( this.builder.build().isGroupEnabled( 1 ) );
-//    assertTrue( this.builder.build().isGroupEnabled( 2 ) );
-//    assertFalse( this.builder.build().isGroupEnabled( 3 ) );
-//
-//    this.builder.setEnabledChannels( 0xFFFF0000 );
-//    assertFalse( this.builder.build().isGroupEnabled( 0 ) );
-//    assertFalse( this.builder.build().isGroupEnabled( 1 ) );
-//    assertTrue( this.builder.build().isGroupEnabled( 2 ) );
-//    assertTrue( this.builder.build().isGroupEnabled( 3 ) );
+    // this.builder.setEnabledChannels( 0x00FFFF00 );
+    // assertFalse( this.builder.build().isGroupEnabled( 0 ) );
+    // assertTrue( this.builder.build().isGroupEnabled( 1 ) );
+    // assertTrue( this.builder.build().isGroupEnabled( 2 ) );
+    // assertFalse( this.builder.build().isGroupEnabled( 3 ) );
+    //
+    // this.builder.setEnabledChannels( 0xFFFF0000 );
+    // assertFalse( this.builder.build().isGroupEnabled( 0 ) );
+    // assertFalse( this.builder.build().isGroupEnabled( 1 ) );
+    // assertTrue( this.builder.build().isGroupEnabled( 2 ) );
+    // assertTrue( this.builder.build().isGroupEnabled( 3 ) );
 
-//    this.builder.setEnabledChannels( 0xFF00FF00 );
-//    assertFalse( this.builder.build().isGroupEnabled( 0 ) );
-//    assertTrue( this.builder.build().isGroupEnabled( 1 ) );
-//    assertFalse( this.builder.build().isGroupEnabled( 2 ) );
-//    assertTrue( this.builder.build().isGroupEnabled( 3 ) );
-//
-//    this.builder.setEnabledChannels( 0x00FF00FF );
-//    assertTrue( this.builder.build().isGroupEnabled( 0 ) );
-//    assertFalse( this.builder.build().isGroupEnabled( 1 ) );
-//    assertTrue( this.builder.build().isGroupEnabled( 2 ) );
-//    assertFalse( this.builder.build().isGroupEnabled( 3 ) );
-//
-//    this.builder.setEnabledChannels( 0xFF0000FF );
-//    assertTrue( this.builder.build().isGroupEnabled( 0 ) );
-//    assertFalse( this.builder.build().isGroupEnabled( 1 ) );
-//    assertFalse( this.builder.build().isGroupEnabled( 2 ) );
-//    assertTrue( this.builder.build().isGroupEnabled( 3 ) );
+    // this.builder.setEnabledChannels( 0xFF00FF00 );
+    // assertFalse( this.builder.build().isGroupEnabled( 0 ) );
+    // assertTrue( this.builder.build().isGroupEnabled( 1 ) );
+    // assertFalse( this.builder.build().isGroupEnabled( 2 ) );
+    // assertTrue( this.builder.build().isGroupEnabled( 3 ) );
+    //
+    // this.builder.setEnabledChannels( 0x00FF00FF );
+    // assertTrue( this.builder.build().isGroupEnabled( 0 ) );
+    // assertFalse( this.builder.build().isGroupEnabled( 1 ) );
+    // assertTrue( this.builder.build().isGroupEnabled( 2 ) );
+    // assertFalse( this.builder.build().isGroupEnabled( 3 ) );
+    //
+    // this.builder.setEnabledChannels( 0xFF0000FF );
+    // assertTrue( this.builder.build().isGroupEnabled( 0 ) );
+    // assertFalse( this.builder.build().isGroupEnabled( 1 ) );
+    // assertFalse( this.builder.build().isGroupEnabled( 2 ) );
+    // assertTrue( this.builder.build().isGroupEnabled( 3 ) );
 
     // Three channel groups...
-//    this.builder.setEnabledChannels( 0x00FFFFFF );
-//    assertTrue( this.builder.build().isGroupEnabled( 0 ) );
-//    assertTrue( this.builder.build().isGroupEnabled( 1 ) );
-//    assertTrue( this.builder.build().isGroupEnabled( 2 ) );
-//    assertFalse( this.builder.build().isGroupEnabled( 3 ) );
-//
-//    this.builder.setEnabledChannels( 0xFFFFFF00 );
-//    assertFalse( this.builder.build().isGroupEnabled( 0 ) );
-//    assertTrue( this.builder.build().isGroupEnabled( 1 ) );
-//    assertTrue( this.builder.build().isGroupEnabled( 2 ) );
-//    assertTrue( this.builder.build().isGroupEnabled( 3 ) );
-//
-//    this.builder.setEnabledChannels( 0xFFFF00FF );
-//    assertTrue( this.builder.build().isGroupEnabled( 0 ) );
-//    assertFalse( this.builder.build().isGroupEnabled( 1 ) );
-//    assertTrue( this.builder.build().isGroupEnabled( 2 ) );
-//    assertTrue( this.builder.build().isGroupEnabled( 3 ) );
-//
-//    this.builder.setEnabledChannels( 0xFF00FFFF );
-//    assertTrue( this.builder.build().isGroupEnabled( 0 ) );
-//    assertTrue( this.builder.build().isGroupEnabled( 1 ) );
-//    assertFalse( this.builder.build().isGroupEnabled( 2 ) );
-//    assertTrue( this.builder.build().isGroupEnabled( 3 ) );
-//
-//    // Four channel groups...
-//    this.builder.setEnabledChannels( 0xFFFFFFFF );
-//    assertTrue( this.builder.build().isGroupEnabled( 0 ) );
-//    assertTrue( this.builder.build().isGroupEnabled( 1 ) );
-//    assertTrue( this.builder.build().isGroupEnabled( 2 ) );
-//    assertTrue( this.builder.build().isGroupEnabled( 3 ) );
+    // this.builder.setEnabledChannels( 0x00FFFFFF );
+    // assertTrue( this.builder.build().isGroupEnabled( 0 ) );
+    // assertTrue( this.builder.build().isGroupEnabled( 1 ) );
+    // assertTrue( this.builder.build().isGroupEnabled( 2 ) );
+    // assertFalse( this.builder.build().isGroupEnabled( 3 ) );
+    //
+    // this.builder.setEnabledChannels( 0xFFFFFF00 );
+    // assertFalse( this.builder.build().isGroupEnabled( 0 ) );
+    // assertTrue( this.builder.build().isGroupEnabled( 1 ) );
+    // assertTrue( this.builder.build().isGroupEnabled( 2 ) );
+    // assertTrue( this.builder.build().isGroupEnabled( 3 ) );
+    //
+    // this.builder.setEnabledChannels( 0xFFFF00FF );
+    // assertTrue( this.builder.build().isGroupEnabled( 0 ) );
+    // assertFalse( this.builder.build().isGroupEnabled( 1 ) );
+    // assertTrue( this.builder.build().isGroupEnabled( 2 ) );
+    // assertTrue( this.builder.build().isGroupEnabled( 3 ) );
+    //
+    // this.builder.setEnabledChannels( 0xFF00FFFF );
+    // assertTrue( this.builder.build().isGroupEnabled( 0 ) );
+    // assertTrue( this.builder.build().isGroupEnabled( 1 ) );
+    // assertFalse( this.builder.build().isGroupEnabled( 2 ) );
+    // assertTrue( this.builder.build().isGroupEnabled( 3 ) );
+    //
+    // // Four channel groups...
+    // this.builder.setEnabledChannels( 0xFFFFFFFF );
+    // assertTrue( this.builder.build().isGroupEnabled( 0 ) );
+    // assertTrue( this.builder.build().isGroupEnabled( 1 ) );
+    // assertTrue( this.builder.build().isGroupEnabled( 2 ) );
+    // assertTrue( this.builder.build().isGroupEnabled( 3 ) );
   }
 
   /**

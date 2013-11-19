@@ -88,17 +88,11 @@ public class LogicSnifferAcquisitionTask implements SumpProtocolConstants, Task<
       // First try to find the logic sniffer itself...
       detectDevice();
 
-      final int sampleCount = this.config.getSampleCount();
-      if ( sampleCount <= 0 )
-      {
-        throw new InternalError( "Internal error: did not obtain correct number of samples (" + sampleCount + ")?!" );
-      }
-
       // Setup/configure the device with the UI-settings...
       configureAndArmDevice();
 
       // read all samples
-      return readSampleData( this.config.getEnabledGroupCount(), sampleCount );
+      return readSampleData();
     }
     finally
     {
@@ -156,20 +150,17 @@ public class LogicSnifferAcquisitionTask implements SumpProtocolConstants, Task<
         // try to make sure device is reset...
         if ( this.outputStream != null )
         {
-          // XXX it seems that after a RLE abort command, the OLS device no
-          // longer is able to process a full 5x reset command. However, we're
-          // also resetting the thing right after we've started an acquisition,
-          // so it might not be that bad...
           this.outputStream.writeCmdReset();
         }
       }
-      catch ( final IOException exception )
+      catch ( InterruptedIOException exception )
       {
-        // Make sure to handle IO-interrupted exceptions properly!
-        if ( !handleInterruptedException( exception ) )
-        {
-          LOG.log( Level.WARNING, "Closing of device failed!", exception );
-        }
+        // Ok; we're closing anyway, so lets continue for now...
+        LOG.log( Level.WARNING, "Closing of device was interrupted!", exception );
+      }
+      catch ( IOException exception )
+      {
+        LOG.log( Level.WARNING, "Closing of device failed!", exception );
       }
       finally
       {
@@ -199,7 +190,7 @@ public class LogicSnifferAcquisitionTask implements SumpProtocolConstants, Task<
    * 
    * @return a device configuration, never <code>null</code>.
    */
-  protected final SumpConfig getConfig()
+  protected SumpConfig getConfig()
   {
     return this.config;
   }
@@ -244,16 +235,12 @@ public class LogicSnifferAcquisitionTask implements SumpProtocolConstants, Task<
       // input stream. See issue #34.
       this.inputStream.flush();
     }
-    catch ( final Exception exception )
+    catch ( InterruptedIOException exception )
     {
-      LOG.log( Level.WARNING, "Failed to open connection! Possible reason: " + exception.getMessage() );
+      LOG.log( Level.WARNING, "Failed to open connection! I/O was interrupted!" );
       LOG.log( Level.FINE, "Detailed stack trace:", exception );
 
-      // Make sure to handle IO-interrupted exceptions properly!
-      if ( !handleInterruptedException( exception ) )
-      {
-        throw new IOException( "Failed to open connection! Possible reason: " + exception.getMessage() );
-      }
+      Thread.currentThread().interrupt();
     }
   }
 
@@ -308,16 +295,10 @@ public class LogicSnifferAcquisitionTask implements SumpProtocolConstants, Task<
         id = -1;
         tries = -1;
       }
-      catch ( IOException exception )
+      catch ( InterruptedIOException exception )
       {
-        /* don't care */
-        id = -1;
-
         // Make sure to handle IO-interrupted exceptions properly!
-        if ( !handleInterruptedException( exception ) )
-        {
-          LOG.log( Level.INFO, "I/O exception!", exception );
-        }
+        Thread.currentThread().interrupt();
       }
     }
     while ( !Thread.currentThread().isInterrupted() && ( tries-- > 0 ) && ( id < 0 ) );
@@ -335,57 +316,71 @@ public class LogicSnifferAcquisitionTask implements SumpProtocolConstants, Task<
       throw new IOException( "Device not found!" );
     }
 
-    LOG.fine( "Device 'SLA1' found ..." );
-  }
-
-  private boolean handleInterruptedException( Exception aException )
-  {
-    if ( aException instanceof InterruptedIOException )
-    {
-      Thread.currentThread().interrupt();
-      return true;
-    }
-    return false;
+    LOG.fine( "SUMP-compatible device 'SLA1' found ..." );
   }
 
   /**
    * Reads all (or as many as possible) samples from the OLS device.
    * 
-   * @param aEnabledGroupCount
-   *          the number of enabled groups (denotes the number of bytes for one
-   *          sample);
-   * @param aSampleCount
-   *          the number of samples to read.
-   * @return the read samples, normalized to match the layout of the enabled
-   *         groups.
+   * @return the read sample data, never <code>null</code>.
    * @throws IOException
    *           in case of I/O problems;
    * @throws InterruptedException
    *           in case the current thread was interrupted.
    */
-  private AcquisitionData readSampleData( final int aEnabledGroupCount, int aSampleCount ) throws IOException,
-      InterruptedException
+  private AcquisitionData readSampleData() throws IOException, InterruptedException
   {
     LOG.fine( "Awaiting data and processing sample information ..." );
 
-    final int length = aEnabledGroupCount * aSampleCount;
+    final int length = this.config.getEnabledGroupCount() * this.config.getSampleCount();
     final byte[] rawData = new byte[length];
+
+    boolean cancelled = false;
 
     try
     {
       int offset = 0;
       int zerosRead = 0;
       int count = length;
-      while ( !Thread.currentThread().isInterrupted() && ( offset >= 0 ) && ( offset < length ) )
+
+      while ( ( offset >= 0 ) && ( offset < length ) )
       {
         int read = this.inputStream.readRawData( rawData, offset, count );
+        // check whether we're interrupted, and let the interrupted state be
+        // cleared...
+        if ( Thread.interrupted() )
+        {
+          // Check what we need to do...
+          if ( cancelled )
+          {
+            // Already cancelled, break out the loop...
+            Thread.currentThread().interrupt();
+            break;
+          }
+          else
+          {
+            if ( this.config.isRleEnabled() )
+            {
+              this.outputStream.writeCmdFinishNow();
+            }
+            else
+            {
+              // Restore the interrupted flag...
+              Thread.currentThread().interrupt();
+              break;
+            }
+            cancelled = true;
+          }
+        }
+
         if ( read < 0 )
         {
           throw new EOFException();
         }
         else if ( read == 0 )
         {
-          System.out.printf("Read zero bytes?! Stats = [%d/%d/%d]%n", offset, count, zerosRead);
+          LOG.log( Level.INFO, "Read zero bytes?! Stats = [{0}/{1}/{2}].", new Object[] { offset, count, zerosRead } );
+
           if ( ++zerosRead == 10000 )
           {
             throw new IOException( "Device did not respond with any data within valid time bound!" );
@@ -401,13 +396,9 @@ public class LogicSnifferAcquisitionTask implements SumpProtocolConstants, Task<
         this.acquisitionProgressListener.acquisitionInProgress( ( 100 * offset ) / length );
       }
     }
-    catch ( IOException exception )
+    catch ( InterruptedIOException exception )
     {
-      // Make sure to handle IO-interrupted exceptions properly!
-      if ( !handleInterruptedException( exception ) )
-      {
-        throw exception;
-      }
+      Thread.currentThread().interrupt();
     }
     finally
     {

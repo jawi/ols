@@ -20,6 +20,7 @@
  */
 package nl.lxtreme.ols.device.sump;
 
+
 import static nl.lxtreme.ols.device.sump.SumpConstants.*;
 import static nl.lxtreme.ols.common.OlsConstants.*;
 import static nl.lxtreme.ols.device.sump.ConfigDialogHelper.*;
@@ -69,20 +70,11 @@ public final class SumpConfigDialog extends JDialog implements Configurable, Clo
       if ( value instanceof Integer )
       {
         double size = ( ( Integer )value ).doubleValue();
+        double sampleRate = getSelectedSampleRate();
+        double time = size / sampleRate;
 
-        int enabledGroups = getEnabledChannelGroups();
-        if ( enabledGroups > 0 )
-        {
-          int sampleRate = getSelectedSampleRate();
-          double time = ( enabledGroups != 0 ) ? size / ( sampleRate * enabledGroups ) : 0.0;
-
-          value = String.format( "<html>%s&nbsp;&nbsp;<span style='color:gray;font-size:0.85em;'>(%s)</span></html>",
-              Unit.SizeSI.format( size ), Unit.Time.format( time ) );
-        }
-        else
-        {
-          value = String.format( "%s", Unit.SizeSI.format( size ) );
-        }
+        value = String.format( "<html>%s&nbsp;&nbsp;<span style='color:gray;font-size:0.85em;'>(%s)</span></html>",
+            Unit.SizeSI.format( size ), Unit.Time.format( time ) );
       }
       return super.getListCellRendererComponent( aList, value, aIndex, aIsSelected, aCellHasFocus );
     }

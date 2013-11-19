@@ -99,7 +99,7 @@ public final class DeviceProfile implements Cloneable, Comparable<DeviceProfile>
       DEVICE_CAPTURESIZES, DEVICE_FEATURE_NOISEFILTER, DEVICE_FEATURE_RLE, DEVICE_FEATURE_TEST_MODE,
       DEVICE_FEATURE_COMBINED_READDELAY_COUNT, DEVICE_FEATURE_TRIGGERS, DEVICE_TRIGGER_STAGES, DEVICE_TRIGGER_COMPLEX,
       DEVICE_TRIGGER_HP165XX, DEVICE_CHANNEL_COUNT, DEVICE_CHANNEL_GROUPS, DEVICE_CAPTURESIZE_BOUND,
-      DEVICE_CHANNEL_NUMBERING_SCHEMES, DEVICE_OPEN_PORT_DELAY, DEVICE_METADATA_KEYS, DEVICE_SAMPLE_REVERSE_ORDER,
+      DEVICE_CHANNEL_NUMBERING_SCHEMES, DEVICE_OPEN_PORT_DELAY, DEVICE_METADATA_KEYS, DEVICE_LAST_SAMPLE_FIRST,
       DEVICE_OPEN_PORT_DTR, DEVICE_RECEIVE_TIMEOUT, DEVICE_DIVIDER_CLOCKSPEED } );
   private static final List<String> IGNORED_KEYS = Arrays.asList( new String[] { FELIX_SERVICE_PID,
       FELIX_SERVICE_FACTORY_PID } );
@@ -490,6 +490,18 @@ public final class DeviceProfile implements Cloneable, Comparable<DeviceProfile>
   }
 
   /**
+   * Returns whether the device send its samples in "reverse" order.
+   * 
+   * @return <code>true</code> if samples are send in reverse order (= last
+   *         sample first), <code>false</code> otherwise.
+   */
+  public boolean isLastSampleSentFirst()
+  {
+    final String rawValue = this.properties.get( DEVICE_LAST_SAMPLE_FIRST );
+    return Boolean.parseBoolean( rawValue );
+  }
+
+  /**
    * Returns whether or not the device supports a noise filter.
    * 
    * @return <code>true</code> if a noise filter is present in the device,
@@ -543,18 +555,6 @@ public final class DeviceProfile implements Cloneable, Comparable<DeviceProfile>
   {
     final String value = this.properties.get( DEVICE_FEATURE_RLE );
     return Boolean.parseBoolean( value );
-  }
-
-  /**
-   * Returns whether the device send its samples in "reverse" order.
-   * 
-   * @return <code>true</code> if samples are send in reverse order (= last
-   *         sample first), <code>false</code> otherwise.
-   */
-  public boolean isSamplesInReverseOrder()
-  {
-    final String rawValue = this.properties.get( DEVICE_SAMPLE_REVERSE_ORDER );
-    return Boolean.parseBoolean( rawValue );
   }
 
   /**

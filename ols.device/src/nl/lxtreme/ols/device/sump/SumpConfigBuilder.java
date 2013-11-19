@@ -114,7 +114,7 @@ public final class SumpConfigBuilder
    * 
    * @return a RLE-mode, defaults to 1.
    */
-  private static int determineRleMode()
+  static final int determineRleMode()
   {
     return Integer.getInteger( "nl.lxtreme.ols.rle.mode", 1 ).intValue();
   }
@@ -169,13 +169,12 @@ public final class SumpConfigBuilder
       flags &= ~FLAG_DEMUX;
     }
 
-    if ( this.rleEnabled )
+    if ( this.profile.isRleSupported() && this.rleEnabled )
     {
       flags |= FLAG_RLE;
 
       // Ian 'dogsbody''s Verilog understands four different RLE-modes...
-      final int rleMode = determineRleMode();
-      switch ( rleMode )
+      switch ( determineRleMode() )
       {
         case 3:
           flags |= FLAG_RLE_MODE_3;
@@ -213,7 +212,7 @@ public final class SumpConfigBuilder
     result.put( KEY_CHANNEL_COUNT, channelCount );
     result.put( KEY_ENABLED_CHANNELS, this.enabledChannels );
     result.put( KEY_SAMPLE_RATE, this.sampleRate );
-    result.put( KEY_SAMPLES_READ_BACKWARD, this.profile.isSamplesInReverseOrder() );
+    result.put( KEY_LAST_SAMPLE_SENT_FIRST, this.profile.isLastSampleSentFirst() );
     result.put( KEY_READ_DELAY_COUNT_COMBINED, this.profile.isReadDelayCountCombined() );
     result.put( KEY_DIVIDER, ( int )Math.max( 0.0, ( ( clock / this.sampleRate ) - 1.0 ) ) );
     result.put( KEY_READ_COUNT, readCount );

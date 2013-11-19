@@ -97,7 +97,7 @@ public interface SumpConstants
   String KEY_DELAY_COUNT = "sump.delayCount";
   String KEY_FLAGS = "sump.flags";
   String KEY_SAMPLE_RATE = "sump.sampleRate";
-  String KEY_SAMPLES_READ_BACKWARD = "sump.sampleReadBackward";
+  String KEY_LAST_SAMPLE_SENT_FIRST = "sump.lastSampleSentFirst";
   String KEY_READ_DELAY_COUNT_COMBINED = "sump.readDelayCountCombined";
   String KEY_TRIGGER_ENABLED = "sump.triggerEnabled";
   String KEY_TRIGGER_STAGES = "sump.triggerStages";

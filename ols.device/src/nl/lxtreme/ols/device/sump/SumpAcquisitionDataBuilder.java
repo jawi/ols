@@ -23,9 +23,8 @@ package nl.lxtreme.ols.device.sump;
 
 import static nl.lxtreme.ols.device.sump.SumpConstants.*;
 
-import java.util.*;
+import java.util.logging.*;
 
-import nl.lxtreme.ols.common.*;
 import nl.lxtreme.ols.common.acquisition.*;
 
 
@@ -35,6 +34,10 @@ import nl.lxtreme.ols.common.acquisition.*;
  */
 public class SumpAcquisitionDataBuilder
 {
+  // CONSTANTS
+
+  private static final Logger LOG = Logger.getLogger( SumpAcquisitionDataBuilder.class.getName() );
+
   // VARIABLES
 
   private final SumpConfig config;
@@ -71,13 +74,12 @@ public class SumpAcquisitionDataBuilder
     builder.setChannelCount( this.config.getEnabledChannelCount() );
     builder.setEnabledChannelMask( this.config.getEnabledChannelMask() );
 
-    final int groupCount = this.config.getGroupCount();
-    final int sampleCount = this.config.getSampleCount();
-    final boolean samplesInReverseOrder = this.config.isSamplesInReverseOrder();
+    if ( this.config.isTriggerEnabled() )
+    {
+      builder.setTriggerPosition( this.config.getTriggerPosition() );
+    }
 
-    // get the "raw" value of the enabled groups, in case of DDR-mode, this will
-    // provide us with the correct groups...
-    final int enabledGroups = ( ~this.config.getFlags() >> 2 ) & 0xF;
+    final int groupCount = this.config.getGroupCount();
 
     // Restart the progress bar...
     aListener.acquisitionInProgress( 0 );
@@ -88,39 +90,53 @@ public class SumpAcquisitionDataBuilder
     int rleCountMask = rleCountValue - 1;
 
     // Normalize the raw data into the sample data, as expected...
-    int j = 0;
-    int lastSampleValue = 0;
-    long time = 0L;
-    for ( Integer idxValue : getIterator( sampleCount, samplesInReverseOrder ) )
+    int[] samples = new int[this.config.getSampleCount()];
+    for ( int i = 0, j = 0; i < samples.length; i++ )
     {
-      int i = idxValue.intValue();
-      if ( j == sampleCount )
-      {
-        break; // XXX
-      }
-
-      int sampleValue = 0;
       for ( int g = 0; g < groupCount; g++ )
       {
-        if ( ( enabledGroups & ( 1 << g ) ) != 0 )
+        if ( this.config.isGroupEnabled( g ) )
         {
-          sampleValue |= ( aSampleData[j++] & 0xff ) << ( g * 8 );
+          samples[i] |= ( ( aSampleData[j++] & 0xff ) << ( 8 * g ) );
         }
       }
+    }
 
-      if ( this.config.isTriggerEnabled() && ( j == this.config.getTriggerPosition() ) )
+    if ( this.config.isLastSampleSentFirst() )
+    {
+      // Reverse all samples, as they are send backwards (original SUMP
+      // protocol)...
+      for ( int left = 0, right = samples.length - 1; left < right; left++, right-- )
       {
-        builder.setTriggerPosition( time + 1 );
+        // exchange the first and last
+        int temp = samples[left];
+        samples[left] = samples[right];
+        samples[right] = temp;
       }
+    }
 
-      if ( this.config.isRleEnabled() )
+    // Normalize the raw data into the sample data, as expected...
+    long lastTime = 0L;
+    long time = 0L;
+
+    for ( int i = 0; i < samples.length; i++ )
+    {
+      int sampleValue = samples[i];
+
+      if ( !this.config.isRleEnabled() )
       {
-        if ( ( sampleValue & rleCountValue ) != 0 )
-        {
-          long count = ( sampleValue & rleCountMask );
-          sampleValue = lastSampleValue;
+        builder.addSample( time++, sampleValue );
+      }
+      else
+      {
+        int normalSampleValue = normalizeSampleValue( sampleValue );
 
-          if ( this.config.isDoubleDataRateEnabled() && ( i < ( sampleCount - 1 ) ) )
+        long count = 0;
+        if ( ( normalSampleValue & rleCountValue ) != 0 )
+        {
+          count = ( normalSampleValue & rleCountMask );
+
+          if ( this.config.isDoubleDataRateEnabled() )
           {
             // In case of "double data rate", the RLE-counts are encoded as 16-
             // resp. 32-bit values, so we need to take two samples for each
@@ -129,74 +145,37 @@ public class SumpAcquisitionDataBuilder
 
             // Issue #55: double the RLE-count as we're using DDR mode which
             // takes two samples in one time period...
-            long ddrCount = ( count << width ); /*
-                                                 * | normalizeSampleValue(
-                                                 * this.buffer[++i] ) );
-                                                 */// XXX
+            long ddrCount = ( count << width ) | normalizeSampleValue( samples[++i] );
             count = 2L * ddrCount;
           }
-
-          time += count;
+        }
+        else
+        {
+          // TODO this code needs some additional TLC...
+          if ( lastTime > 0 && ( lastTime == time ) )
+          {
+            LOG.warning( String.format( "SPURIOUS SAMPLE @ %d (%d) : %d.%n", i, time, sampleValue ) );
+            builder.addSample( ++time, sampleValue );
+          }
+          else
+          {
+            if ( time > 0 && lastTime == 0 )
+            {
+              // ensure we always start at time 0...
+              builder.addSample( lastTime, sampleValue );
+            }
+            builder.addSample( time, sampleValue );
+          }
+          lastTime = time;
         }
 
-        builder.addSample( time++, sampleValue );
-        lastSampleValue = sampleValue;
-      }
-      else
-      {
-        builder.addSample( time++, sampleValue );
+        time += count;
       }
 
-      aListener.acquisitionInProgress( ( j * 100 ) / aSampleData.length );
+      aListener.acquisitionInProgress( ( i * 100 ) / aSampleData.length );
     }
 
     return builder.build();
-  }
-
-  /**
-   * Creates an {@link Iterator} that can either count forward from zero to a
-   * given maximum, or backward from a given maximum to zero.
-   * 
-   * @param aMax
-   * @param aCountForward
-   * @return an {@link Iterable}, never <code>null</code>.
-   */
-  final Iterable<Integer> getIterator( final int aMax, final boolean aCountForward )
-  {
-    return new Iterable<Integer>()
-    {
-      final int start = aCountForward ? 0 : aMax;
-      final int end = aCountForward ? aMax : 0;
-
-      @Override
-      public Iterator<Integer> iterator()
-      {
-        return new Iterator<Integer>()
-        {
-          private volatile int idx = start;
-
-          @Override
-          public boolean hasNext()
-          {
-            return aCountForward ? ( idx < end ) : ( idx > end );
-          }
-
-          @Override
-          public Integer next()
-          {
-            Integer result = Integer.valueOf( idx );
-            idx += aCountForward ? 1 : -1;
-            return result;
-          }
-
-          @Override
-          public void remove()
-          {
-            throw new UnsupportedOperationException();
-          }
-        };
-      }
-    };
   }
 
   /**
@@ -210,5 +189,32 @@ public class SumpAcquisitionDataBuilder
       Math.min( MAX_CHANNEL_GROUPS_DDR, enabledGroups );
     }
     return enabledGroups * 8;
+  }
+
+  /**
+   * Normalizes the given sample value to mask out the unused channel groups and
+   * get a sample value in the correct width.
+   * 
+   * @param aSampleValue
+   *          the original sample to normalize.
+   * @return the normalized sample value.
+   */
+  private int normalizeSampleValue( final int aSampleValue )
+  {
+    int groupCount = this.config.getGroupCount();
+    int compdata = 0;
+
+    // to enable non contiguous channel groups
+    // need to remove zero data from unused groups
+    int indata = aSampleValue;
+    for ( int j = 0, outcount = 0; j < groupCount; j++ )
+    {
+      if ( this.config.isGroupEnabled( j ) )
+      {
+        compdata |= ( ( indata & 0xff ) << ( 8 * outcount++ ) );
+      }
+      indata >>= 8;
+    }
+    return compdata;
   }
 }

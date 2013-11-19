@@ -94,7 +94,7 @@ public interface Constants
    * In which order are samples sent back from the device? If <code>true</code>
    * then last sample first, if <code>false</code> then first sample first.
    */
-  public static final String DEVICE_SAMPLE_REVERSE_ORDER = "device.samples.reverseOrder";
+  public static final String DEVICE_LAST_SAMPLE_FIRST = "device.samples.lastSampleFirst";
   /**
    * In case of a serial port, does the DTR-line need to be high (= true) or low
    * (= false)?

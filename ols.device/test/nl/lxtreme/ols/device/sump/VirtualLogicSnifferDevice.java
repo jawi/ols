@@ -423,14 +423,16 @@ public class VirtualLogicSnifferDevice extends LogicSnifferAcquisitionTask
     properties.put( DEVICE_FEATURE_RLE, "true" );
     properties.put( DEVICE_FEATURE_TEST_MODE, "true" );
     properties.put( DEVICE_FEATURE_TRIGGERS, "true" );
+    properties.put( DEVICE_FEATURE_COMBINED_READDELAY_COUNT, "true" );
     properties.put( DEVICE_INTERFACE, "SERIAL" );
     properties.put( DEVICE_METADATA_KEYS, aMetadataKeys );
     properties.put( DEVICE_OPEN_PORT_DELAY, "0" );
     properties.put( DEVICE_OPEN_PORT_DTR, "false" );
     properties.put( DEVICE_RECEIVE_TIMEOUT, "12" );
-    properties.put( DEVICE_SAMPLE_REVERSE_ORDER, "true" );
+    properties.put( DEVICE_LAST_SAMPLE_FIRST, "true" );
     properties.put( DEVICE_SAMPLERATES, "1000000" );
     properties.put( DEVICE_SUPPORTS_DDR, "true" );
+    properties.put( DEVICE_TRIGGER_HP165XX, "false" );
     properties.put( DEVICE_TRIGGER_COMPLEX, "true" );
     properties.put( DEVICE_TRIGGER_STAGES, "4" );
     properties.put( DEVICE_TYPE, aType );

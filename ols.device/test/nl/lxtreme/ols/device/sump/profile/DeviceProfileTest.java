@@ -375,12 +375,12 @@ public class DeviceProfileTest
   }
 
   /**
-   * Test method for {@link DeviceProfile#isSamplesInReverseOrder()}.
+   * Test method for {@link DeviceProfile#isLastSampleSentFirst()}.
    */
   @Test
-  public void testIsSamplesInReverseOrderOk()
+  public void testLastSampleSentFirstOk()
   {
-    assertFalse( this.profile.isSamplesInReverseOrder() );
+    assertTrue( this.profile.isLastSampleSentFirst() );
   }
 
   /**
@@ -482,12 +482,13 @@ public class DeviceProfileTest
     properties.put( DEVICE_FEATURE_RLE, "false" );
     properties.put( DEVICE_FEATURE_TEST_MODE, "true" );
     properties.put( DEVICE_FEATURE_TRIGGERS, "false" );
+    properties.put( DEVICE_FEATURE_COMBINED_READDELAY_COUNT, "false" );
     properties.put( DEVICE_INTERFACE, "SERIAL" );
     properties.put( DEVICE_METADATA_KEYS, "a,b,\"a b c\"" );
     properties.put( DEVICE_OPEN_PORT_DELAY, "10" );
     properties.put( DEVICE_OPEN_PORT_DTR, "true" );
     properties.put( DEVICE_RECEIVE_TIMEOUT, "12" );
-    properties.put( DEVICE_SAMPLE_REVERSE_ORDER, "false" );
+    properties.put( DEVICE_LAST_SAMPLE_FIRST, "true" );
     properties.put( DEVICE_SAMPLERATES, "5,6,7" );
     properties.put( DEVICE_SUPPORTS_DDR, "true" );
     properties.put( DEVICE_TRIGGER_COMPLEX, "true" );

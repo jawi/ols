@@ -83,7 +83,7 @@ public class SumpDevice implements Device
     SumpConfig config = new SumpConfig( aConfig );
     if ( !config.isValid() )
     {
-      throw new IllegalArgumentException( "Invalid device configuration!" );
+//      throw new IllegalArgumentException( "Invalid device configuration!" );
     }
 
     return this.taskExecutionService.execute( new LogicSnifferAcquisitionTask( config, getStreamConnection(),
