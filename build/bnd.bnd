@@ -1,13 +1,14 @@
+-nosrc=true
 -nobundles=true
 -dependson: \
 	purejavacomm,\
 	lib.swing,\
-	ols.common,\
-	ols.client,\
-	ols.device,\
-	ols.export,\
-	ols.tool,\
 	service.acquisition,\
 	service.io,\
 	service.taskexecution,\
-	runner
+	ols.common,\
+	ols.device,\
+	ols.export,\
+	ols.tool,\
+	runner,\
+	ols.client

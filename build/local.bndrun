@@ -7,7 +7,7 @@
 	osgi.identity;filter:='(osgi.identity=org.apache.felix.prefs)',\
 	osgi.identity;filter:='(osgi.identity=org.apache.felix.log)',\
 	osgi.identity;filter:='(&(osgi.identity=jvt220)(version>=1.1.1))',\
-	osgi.identity;filter:='(&(osgi.identity=purejavacomm)(version>=0.0.17))',\
+	osgi.identity;filter:='(&(osgi.identity=purejavacomm)(version>=0.0.18))',\
 	osgi.identity;filter:='(osgi.identity=lib.swing)',\
 	osgi.identity;filter:='(osgi.identity=service.acquisition.api)',\
 	osgi.identity;filter:='(osgi.identity=service.acquisition.impl)',\
@@ -31,7 +31,8 @@
 	osgi.identity;filter:='(osgi.identity=ols.tool.i2c)',\
 	osgi.identity;filter:='(osgi.identity=ols.tool.i2s)',\
 	osgi.identity;filter:='(osgi.identity=ols.tool.jtag)',\
-	osgi.identity;filter:='(osgi.identity=ols.tool.linedecoder)',\
+	osgi.identity;filter:='(osgi.identity=ols.tool.manchester)',\
+	osgi.identity;filter:='(osgi.identity=ols.tool.nrza)',\
 	osgi.identity;filter:='(osgi.identity=ols.tool.serialconsole)',\
 	osgi.identity;filter:='(osgi.identity=ols.tool.spi)',\
 	osgi.identity;filter:='(osgi.identity=ols.tool.state)',\
@@ -67,7 +68,8 @@
 	ols.tool.i2c;version=latest,\
 	ols.tool.i2s;version=latest,\
 	ols.tool.jtag;version=latest,\
-	ols.tool.linedecoder;version=latest,\
+	ols.tool.manchester;version=latest,\
+	ols.tool.nrza;version=latest,\
 	ols.tool.serialconsole;version=latest,\
 	ols.tool.spi;version=latest,\
 	ols.tool.state;version=latest,\
@@ -89,4 +91,4 @@
     org.apache.felix.log.maxSize=-1,\
     org.osgi.framework.bootdelegation="com.yourkit.*,com.sun.*,sun.*,apple.*,com.apple.*"
 -runvm: \
-	-Xdock:name=LogicSniffer -Xmx2048m -Dnl.lxtreme.ols.client.debug=true
+	-Xdock:name=LogicSniffer -Xmx2048m -Dnl.lxtreme.ols.client.debug=true -Dnl.lxtreme.ols.filterJdkUiLog=true 
