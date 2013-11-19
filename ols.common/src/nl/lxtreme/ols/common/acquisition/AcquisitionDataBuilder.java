@@ -933,6 +933,15 @@ public final class AcquisitionDataBuilder
       result = ( prime * result ) + this.value;
       return result;
     }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public String toString()
+    {
+      return String.format( "%08x@%d", this.value, this.timestamp );
+    }
   }
 
   // VARIABLES
@@ -941,7 +950,7 @@ public final class AcquisitionDataBuilder
   private long absoluteLength;
   private int channelCount;
   private int enabledChannelMask;
-  private final List<Sample> sampleData;
+  private final SortedSet<Sample> sampleData;
   private final Map<Integer, ChannelInfo> channelDefs;
   private final Map<Integer, ChannelGroupInfo> channelGroupDefs;
   private final Cursor[] cursors;
@@ -956,7 +965,7 @@ public final class AcquisitionDataBuilder
    */
   public AcquisitionDataBuilder()
   {
-    this.sampleData = new ArrayList<Sample>();
+    this.sampleData = new TreeSet<Sample>();
     this.channelDefs = new HashMap<Integer, ChannelInfo>();
     this.channelGroupDefs = new HashMap<Integer, ChannelGroupInfo>();
     this.cursors = new Cursor[OlsConstants.MAX_CURSORS];
@@ -1052,20 +1061,7 @@ public final class AcquisitionDataBuilder
     // length (in case it is not defined)...
     this.lastSeenTimestamp = Math.max( aTimestamp, this.lastSeenTimestamp );
 
-    // Peek to the latest available sample...
-    if ( this.sampleData.isEmpty() )
-    {
-      this.sampleData.add( sample );
-    }
-    else
-    {
-      // Try to add only unique samples...
-      Sample lastSample = this.sampleData.get( this.sampleData.size() - 1 );
-      if ( lastSample.compareValueTo( sample ) != 0 )
-      {
-        this.sampleData.add( sample );
-      }
-    }
+    this.sampleData.add( sample );
 
     return this;
   }
@@ -1176,9 +1172,6 @@ public final class AcquisitionDataBuilder
 
     if ( !this.sampleData.isEmpty() )
     {
-      // Just to be sure...
-      Collections.sort( this.sampleData );
-
       int sampleCount = this.sampleData.size();
 
       // Issue #167: make sure the absolute length is *always* present...
@@ -1191,23 +1184,12 @@ public final class AcquisitionDataBuilder
       values = new int[sampleCount];
       timestamps = new long[values.length];
 
-      Sample sample = this.sampleData.get( 0 );
-      int oldValue = sample.value;
-
-      values[0] = oldValue;
-      timestamps[0] = sample.timestamp;
-
-      for ( int i = 1, j = 1; i < this.sampleData.size(); i++ )
+      int i = 0;
+      for ( Sample sample : this.sampleData )
       {
-        sample = this.sampleData.get( i );
-        int value = sample.value;
-        if ( oldValue != value )
-        {
-          values[j] = ( sample.value & this.enabledChannelMask );
-          timestamps[j] = sample.timestamp;
-          j++;
-        }
-        oldValue = value;
+        values[i] = ( sample.value & this.enabledChannelMask );
+        timestamps[i] = sample.timestamp;
+        i++;
       }
 
       // Issue #167: make sure the absolute length is *always* present...
