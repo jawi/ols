@@ -8,6 +8,6 @@
 	ols.common;version=latest,\
 	ols.device.api;version=latest,\
 	service.taskexecution.api;version=latest,\
-	rxtx;version=0.0.17,\
+	purejavacomm,\
 	lib.swing;version=latest,\
 	jvt220-1.1.1.jar;version=file
