@@ -1,12 +1,14 @@
+X-PJC-Version: 0.0.21
+X-JNA-Version: 4.0.0
 -buildpath: \
-	purejavacomm-0.0.17.jar;version=file,\
-	jna-3.5.1.jar;version=file
+	purejavacomm-${X-PJC-Version}.jar;version=file,\
+	jna-${X-JNA-Version}.jar;version=file
 Bundle-Name: A serial port device driver for the OLS client.
 Bundle-Copyright: Kustaa Nyholm (sparetimelabs.com) (C) 2010-2013
 Bundle-License: Simplified BSD License
 Bundle-DocURL: http://www.sparetimelabs.com/purejavacomm/purejavacomm.php
-Bundle-Version: 0.0.17
+Bundle-Version: ${X-PJC-Version}
 Export-Package: \
-	com.sun.jna.*,\
-	jtermios.*,\
-	purejavacomm.*
+	com.sun.jna.*;version=${X-JNA-Version},\
+	jtermios.*;version=${X-PJC-Version},\
+	purejavacomm;version=${X-PJC-Version}
