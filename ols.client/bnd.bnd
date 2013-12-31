@@ -9,6 +9,7 @@
 	ols.export.api;version=latest,\
 	ols.tool.api;version=latest,\
 	service.acquisition.api;version=latest,\
+	service.taskexecution.api;version=latest,\
 	junit.osgi;version=4.11.0,\
 	org.mockito.mockito-all;version=1.9.0
 -sub: *.bnd
