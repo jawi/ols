@@ -131,12 +131,11 @@ public class SumpAcquisitionDataBuilder
       {
         int normalSampleValue = normalizeSampleValue( sampleValue );
 
-        long count = 0;
         if ( ( normalSampleValue & rleCountValue ) != 0 )
         {
-          count = ( normalSampleValue & rleCountMask );
+          long count = ( normalSampleValue & rleCountMask );
 
-          if ( this.config.isDoubleDataRateEnabled() )
+          if ( this.config.isDoubleDataRateEnabled() && ( i < ( samples.length - 1 ) ) )
           {
             // In case of "double data rate", the RLE-counts are encoded as 16-
             // resp. 32-bit values, so we need to take two samples for each
@@ -147,6 +146,11 @@ public class SumpAcquisitionDataBuilder
             // takes two samples in one time period...
             long ddrCount = ( count << width ) | normalizeSampleValue( samples[++i] );
             count = 2L * ddrCount;
+          }
+
+          if ( time > 0 )
+          {
+            time += count;
           }
         }
         else
@@ -169,7 +173,7 @@ public class SumpAcquisitionDataBuilder
           lastTime = time;
         }
 
-        time += count;
+        time++;
       }
 
       aListener.acquisitionInProgress( ( i * 100 ) / aSampleData.length );

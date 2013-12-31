@@ -45,7 +45,7 @@ public class LogicSnifferConfigTest
   @Before
   public void setUp() throws Exception
   {
-    this.profile = VirtualLogicSnifferDevice.createDeviceProfile( "MOCK", "MockedDevice" );
+    this.profile = VirtualLogicSnifferDevice.createDeviceProfile( "MOCK", "MockedDevice", true );
 
     this.builder = new SumpConfigBuilder( this.profile );
   }
@@ -94,9 +94,6 @@ public class LogicSnifferConfigTest
     // With DDR...
     this.builder.setSampleRate( LogicSnifferAcquisitionTask.CLOCK + 1 );
 
-    this.builder.setEnabledChannels( 0 );
-    assertEquals( 0, this.builder.build().getEnabledGroupCount() );
-
     this.builder.setEnabledChannels( 0x000000FF );
     assertEquals( 1, this.builder.build().getEnabledGroupCount() );
 
@@ -119,8 +116,15 @@ public class LogicSnifferConfigTest
     // Without DDR...
     this.builder.setSampleRate( 1 );
 
-    this.builder.setEnabledChannels( 0 );
-    assertEquals( 0, this.builder.build().getEnabledGroupCount() );
+    try
+    {
+      this.builder.setEnabledChannels( 0 );
+      this.builder.build();
+    }
+    catch ( IllegalArgumentException exception )
+    {
+      // Ok; expected...
+    }
 
     this.builder.setEnabledChannels( 0x000000FF );
     assertEquals( 1, this.builder.build().getEnabledGroupCount() );
@@ -547,9 +551,6 @@ public class LogicSnifferConfigTest
   @Test
   public void testSetEnabledChannels()
   {
-    this.builder.setEnabledChannels( 0x00 );
-    assertEquals( 0, this.builder.build().getEnabledChannelMask() );
-
     this.builder.setEnabledChannels( 0xFFFFFFFF );
     assertEquals( 0xFFFFFFFF, this.builder.build().getEnabledChannelMask() );
 

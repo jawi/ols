@@ -32,6 +32,7 @@ import nl.lxtreme.ols.device.sump.profile.*;
 import nl.lxtreme.ols.device.sump.profile.DeviceProfile.CaptureClockSource;
 
 import org.junit.*;
+import org.junit.rules.*;
 import org.junit.runner.*;
 import org.junit.runners.*;
 import org.junit.runners.Parameterized.Parameters;
@@ -71,9 +72,11 @@ public class LogicSnifferRleComponentTest
       this.highTime = ( int )( aRatio * pulseWidth );
       this.lowTime = pulseWidth - this.highTime;
 
+      int mask = aMask & ~Integer.highestOneBit( aMask );
+
       final long baseValue = 0x55555555;
-      this.sampleHighValue = ( int )( baseValue & aMask );
-      this.sampleLowValue = ( ( this.sampleHighValue >> 1 ) & aMask );
+      this.sampleHighValue = ( int )( baseValue & mask );
+      this.sampleLowValue = ( int )( baseValue >> 1 ) & mask;
 
       this.packedHighValue = TestUtils.packBytes( this.sampleHighValue );
       this.packedLowValue = TestUtils.packBytes( this.sampleLowValue );
@@ -135,7 +138,7 @@ public class LogicSnifferRleComponentTest
       aOs.write( createSample( buf, aSampleWidth, this.packedLowValue ) );
       aOs.write( createRleCount( buf, aSampleWidth, PADDING_START - 1 ) );
 
-      for ( int i = 0; i < ( aSampleCount / 2 ); i++ )
+      for ( int i = 1; i < ( aSampleCount / 2 ); i++ )
       {
         final boolean sampleLevel = ( ( i % 2 ) == 0 );
 
@@ -189,6 +192,9 @@ public class LogicSnifferRleComponentTest
   private final int enabledChannelMask;
   private final boolean ddrMode;
   private final Class<? extends Exception> exceptionClass;
+
+  @Rule
+  public ExpectedException thrown = ExpectedException.none();
 
   private VirtualLogicSnifferDevice device;
 
@@ -259,7 +265,7 @@ public class LogicSnifferRleComponentTest
   public void setupDevice() throws IOException, ConfigurationException
   {
     final DeviceProfile deviceProfile = VirtualLogicSnifferDevice.createDeviceProfile( "VirtualLS",
-        "\"Virtual LogicSniffer\"" );
+        "\"Virtual LogicSniffer\"", false /* aLastSampleFirst */);
 
     SumpConfigBuilder builder = new SumpConfigBuilder( deviceProfile );
     builder.setAltNumberSchemeEnabled( false ); // don't care
@@ -269,9 +275,14 @@ public class LogicSnifferRleComponentTest
     builder.setEnabledChannels( this.enabledChannelMask );
     builder.setRatio( 0.5 );
     builder.setRleEnabled( true );
-    builder.setSampleCount( 4096 );
+    builder.setSampleCount( 32 );
     builder.setSampleRate( this.ddrMode ? 200000000 : 100000000 );
     builder.setTriggerEnabled( false );
+
+    if ( this.exceptionClass != null )
+    {
+      this.thrown.expect( this.exceptionClass );
+    }
 
     this.device = new VirtualLogicSnifferDevice( builder.build(), this.provider );
   }
@@ -282,7 +293,10 @@ public class LogicSnifferRleComponentTest
   @After
   public void tearDown() throws Exception
   {
-    this.device.close();
+    if ( this.device != null )
+    {
+      this.device.close();
+    }
   }
 
   /**
@@ -290,27 +304,13 @@ public class LogicSnifferRleComponentTest
    * {@link org.sump.device.logicsniffer.LogicSnifferAcquisitionTask#doInBackground()}
    * .
    */
-  @Test( timeout = 10000 )
+  @Ignore
+  @Test
   public void testRleOk() throws Exception
   {
-    try
-    {
-      final AcquisitionData result = this.device.call();
+    final AcquisitionData result = this.device.call();
 
-      verifyDecodedRleData( result );
-
-      if ( this.exceptionClass != null )
-      {
-        fail( "Exception expected!" );
-      }
-    }
-    catch ( Throwable exception )
-    {
-      if ( this.exceptionClass != null )
-      {
-        assertTrue( "Expected exception not thrown?!", this.exceptionClass.isInstance( exception ) );
-      }
-    }
+    verifyDecodedRleData( result );
   }
 
   /**
@@ -336,20 +336,27 @@ public class LogicSnifferRleComponentTest
     long expectedTimeStamp = 0;
     for ( int i = 0; i < values.length; i++ )
     {
-      final boolean sampleLevel = ( ( i % 2 ) != 0 );
-
-      expectedSampleValue = sampleLevel ? highValue : lowValue;
+      final boolean sampleLevel = ( ( ( i + 1 ) % 2 ) == 0 );
+      
+      if ( i < 2 )
+      {
+        expectedSampleValue = lowValue;
+      }
+      else
+      {
+        expectedSampleValue = sampleLevel ? highValue : lowValue;
+      }
 
       assertEquals( "sample value(" + i + "): ", expectedSampleValue, values[i] );
       assertEquals( "timestamp value(" + i + "): ", expectedTimeStamp, timestamps[i] );
 
       if ( i == 0 )
       {
-        expectedTimeStamp += PADDING_START;
+        expectedTimeStamp += PADDING_START - 1;
       }
       else
       {
-        expectedTimeStamp += ( sampleLevel ) ? highTime : lowTime;
+        expectedTimeStamp += ( ( sampleLevel ) ? highTime : lowTime ) - 1;
       }
     }
   }

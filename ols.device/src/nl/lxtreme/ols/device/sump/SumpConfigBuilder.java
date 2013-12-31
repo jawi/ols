@@ -149,6 +149,11 @@ public final class SumpConfigBuilder
       }
     }
 
+    if ( enabledChannelGroups == 0 )
+    {
+      throw new IllegalArgumentException( "No channels enabled?!" );
+    }
+
     if ( isDoubleDataRateEnabled() )
     {
       // when DDR is selected, the groups selected in the upper two channel

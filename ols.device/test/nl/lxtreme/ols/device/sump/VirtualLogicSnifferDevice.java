@@ -407,7 +407,7 @@ public class VirtualLogicSnifferDevice extends LogicSnifferAcquisitionTask
   /**
    * @return
    */
-  public static DeviceProfile createDeviceProfile( final String aType, final String aMetadataKeys )
+  public static DeviceProfile createDeviceProfile( final String aType, final String aMetadataKeys, final boolean aLastSampleFirst )
   {
     Map<String, String> properties = new HashMap<String, String>();
     properties.put( DEVICE_CAPTURECLOCK, "INTERNAL" );
@@ -429,7 +429,7 @@ public class VirtualLogicSnifferDevice extends LogicSnifferAcquisitionTask
     properties.put( DEVICE_OPEN_PORT_DELAY, "0" );
     properties.put( DEVICE_OPEN_PORT_DTR, "false" );
     properties.put( DEVICE_RECEIVE_TIMEOUT, "12" );
-    properties.put( DEVICE_LAST_SAMPLE_FIRST, "true" );
+    properties.put( DEVICE_LAST_SAMPLE_FIRST, Boolean.toString( aLastSampleFirst ) );
     properties.put( DEVICE_SAMPLERATES, "1000000" );
     properties.put( DEVICE_SUPPORTS_DDR, "true" );
     properties.put( DEVICE_TRIGGER_HP165XX, "false" );
@@ -454,13 +454,13 @@ public class VirtualLogicSnifferDevice extends LogicSnifferAcquisitionTask
     final int[] actualValues = aResult.getValues();
     Assert.assertArrayEquals( "Sample values not as expected?!", expectedValues, actualValues );
 
-    final long[] expectedTimestamps = new long[] { 0L, aExpectedLength };
+    final long[] expectedTimestamps = new long[] { 0L, aExpectedLength - 1 };
     // Arrays.fill( expectedTimestamps, 0L );
 
     final long[] actualTimestamps = aResult.getTimestamps();
     Assert.assertArrayEquals( "Timestamps not as expected?!", expectedTimestamps, actualTimestamps );
 
-    assertEquals( "Absolute length not equal?!", aExpectedLength, aResult.getAbsoluteLength() );
+    assertEquals( "Absolute length not equal?!", aExpectedLength - 1, aResult.getAbsoluteLength() );
   }
 
   /**
