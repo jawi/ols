@@ -1057,11 +1057,13 @@ public final class AcquisitionDataBuilder
     }
 
     Sample sample = new Sample( aTimestamp, aValue );
-    // Keep track of the last seen timestamp, for determining the absolute
-    // length (in case it is not defined)...
-    this.lastSeenTimestamp = Math.max( aTimestamp, this.lastSeenTimestamp );
 
-    this.sampleData.add( sample );
+    if ( this.sampleData.add( sample ) )
+    {
+      // Keep track of the last seen timestamp, for determining the absolute
+      // length (in case it is not defined)...
+      this.lastSeenTimestamp = this.sampleData.last().timestamp;
+    }
 
     return this;
   }
@@ -1172,7 +1174,21 @@ public final class AcquisitionDataBuilder
 
     if ( !this.sampleData.isEmpty() )
     {
-      int sampleCount = this.sampleData.size();
+      Iterator<Sample> iter = this.sampleData.iterator();
+      Sample lastSample;
+
+      int sampleCount = 1;
+      int lastValue = iter.next().value & this.enabledChannelMask;
+      while ( iter.hasNext() )
+      {
+        lastSample = iter.next();
+        int value = ( lastSample.value & this.enabledChannelMask );
+        if ( lastValue != value )
+        {
+          sampleCount++;
+          lastValue = value;
+        }
+      }
 
       // Issue #167: make sure the absolute length is *always* present...
       boolean addExtraSample = ( this.lastSeenTimestamp != absLength ) || ( sampleCount < 2 );
@@ -1184,12 +1200,30 @@ public final class AcquisitionDataBuilder
       values = new int[sampleCount];
       timestamps = new long[values.length];
 
-      int i = 0;
-      for ( Sample sample : this.sampleData )
+      iter = this.sampleData.iterator();
+      lastSample = iter.next();
+
+      values[0] = lastSample.value & this.enabledChannelMask;
+      timestamps[0] = lastSample.timestamp;
+      lastValue = values[0];
+
+      int i = 1;
+      while ( iter.hasNext() )
       {
-        values[i] = ( sample.value & this.enabledChannelMask );
-        timestamps[i] = sample.timestamp;
-        i++;
+        lastSample = iter.next();
+        int value = ( lastSample.value & this.enabledChannelMask );
+
+        if ( lastValue != value )
+        {
+          values[i] = value;
+          timestamps[i] = lastSample.timestamp;
+          lastValue = value;
+          i++;
+        }
+        else if ( i > 1 )
+        {
+          timestamps[i - 1] = lastSample.timestamp;
+        }
       }
 
       // Issue #167: make sure the absolute length is *always* present...

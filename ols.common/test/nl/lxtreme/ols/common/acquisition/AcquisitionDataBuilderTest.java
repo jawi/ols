@@ -69,6 +69,24 @@ public class AcquisitionDataBuilderTest
     }
   }
 
+  private static void assertValues( int[] aValues, int... aExpected )
+  {
+    assertEquals( aExpected.length, aValues.length );
+    for ( int i = 0; i < aExpected.length; i++ )
+    {
+      assertEquals( "Value @ " + i, aExpected[i], aValues[i] );
+    }
+  }
+
+  private static void assertTimestamps( long[] aTimestamps, long... aExpected )
+  {
+    assertEquals( aExpected.length, aTimestamps.length );
+    for ( int i = 0; i < aExpected.length; i++ )
+    {
+      assertEquals( "Timestamp @ " + i, aExpected[i], aTimestamps[i] );
+    }
+  }
+
   /**
    * Tests that we cannot add a channel to an unknown group.
    */
@@ -116,44 +134,102 @@ public class AcquisitionDataBuilderTest
   }
 
   /**
-   * Tests that we can add a sample.
+   * Tests that we can add samples starting at timestamp 0L.
    */
   @Test
-  public void testAddSampleOk()
+  public void testAddSamplesStartingAtTimeZeroOk()
   {
     AcquisitionDataBuilder builder = new AcquisitionDataBuilder();
+    builder.setChannelCount( 8 );
     builder.addSample( 0L, 1 );
+    builder.addSample( 1L, 1 );
+    builder.addSample( 2L, 1 );
+    builder.addSample( 3L, 1 );
+
+    AcquisitionData data = builder.build();
+    assertValues( data.getValues(), 1, 1 );
+    assertTimestamps( data.getTimestamps(), 0L, 3L );
+    assertEquals( 3L, data.getAbsoluteLength() );
+  }
+
+  /**
+   * Tests that we can add samples starting at timestamp 0L.
+   */
+  @Test
+  public void testAddSamplesWithDuplicatesOk()
+  {
+    AcquisitionDataBuilder builder = new AcquisitionDataBuilder();
+    builder.setChannelCount( 8 );
     builder.addSample( 0L, 1 );
-    builder.addSample( 1L, 2 );
+    builder.addSample( 1L, 1 );
+    builder.addSample( 2L, 1 );
+    builder.addSample( 3L, 0 );
+    builder.addSample( 4L, 1 );
+    builder.addSample( 5L, 1 );
+    builder.addSample( 6L, 1 );
+    builder.addSample( 7L, 1 );
+    builder.addSample( 8L, 0 );
+
+    AcquisitionData data = builder.build();
+    assertValues( data.getValues(), 1, 0, 1, 0 );
+    assertTimestamps( data.getTimestamps(), 0L, 3L, 7L, 8L );
+    assertEquals( 8L, data.getAbsoluteLength() );
+  }
+
+  /**
+   * Tests that we can add samples starting at timestamp 1L.
+   */
+  @Test
+  public void testAddSamplesStartingAtTimeOneOk()
+  {
+    AcquisitionDataBuilder builder = new AcquisitionDataBuilder();
+    builder.setChannelCount( 8 );
+    builder.addSample( 1L, 1 );
+    builder.addSample( 2L, 1 );
+    builder.addSample( 3L, 1 );
+    builder.addSample( 4L, 1 );
+
+    AcquisitionData data = builder.build();
+    assertEquals( 4L, data.getAbsoluteLength() );
+    assertValues( data.getValues(), 1, 1 );
+    assertTimestamps( data.getTimestamps(), 1L, 4L );
   }
 
   /**
    * Tests that the builder correctly tracks the "last" timestamp.
    */
+  @Test
   public void testAddSamplesCorrectlyPicksUpLastTimestamp()
   {
     AcquisitionDataBuilder builder = new AcquisitionDataBuilder();
+    builder.setChannelCount( 8 );
     builder.addSample( 1, 1 );
     builder.addSample( 2, 0 );
     builder.addSample( 3, 1 );
 
     AcquisitionData data = builder.build();
     assertEquals( 3L, data.getAbsoluteLength() );
+    assertValues( data.getValues(), 1, 0, 1 );
+    assertTimestamps( data.getTimestamps(), 1, 2, 3 );
   }
 
   /**
    * Tests that the builder correctly tracks the "last" timestamp, even when
    * samples are added in reverse order.
    */
+  @Test
   public void testAddSamplesInReverseCorrectlyPicksUpLastTimestamp()
   {
     AcquisitionDataBuilder builder = new AcquisitionDataBuilder();
+    builder.setChannelCount( 8 );
     builder.addSample( 3, 1 );
     builder.addSample( 2, 0 );
     builder.addSample( 1, 1 );
 
     AcquisitionData data = builder.build();
     assertEquals( 3L, data.getAbsoluteLength() );
+    assertValues( data.getValues(), 1, 0, 1 );
+    assertTimestamps( data.getTimestamps(), 1, 2, 3 );
   }
 
   /**

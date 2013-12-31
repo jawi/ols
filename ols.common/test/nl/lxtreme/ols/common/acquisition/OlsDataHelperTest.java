@@ -491,22 +491,6 @@ public class OlsDataHelperTest
    * Test method for {@link OlsDataHelper#write(Project, Writer)}.
    */
   @Test
-  public void testWriteInvalidSampleValueOk() throws Exception
-  {
-    AcquisitionDataBuilder builder = new AcquisitionDataBuilder().addSample( 1L, -1 ).setSampleRate( 100 )
-        .setChannelCount( 2 ).setEnabledChannelMask( 3 );
-
-    final StringWriter writer = new StringWriter();
-    OlsDataHelper.write( writer, builder.build() );
-
-    final String snippet = writer.toString();
-    assertTrue( snippet.contains( "ffffffff@1" ) );
-  }
-
-  /**
-   * Test method for {@link OlsDataHelper#write(Project, Writer)}.
-   */
-  @Test
   public void testWriteInvalidTimestampOk() throws Exception
   {
     AcquisitionDataBuilder builder = new AcquisitionDataBuilder().addSample( Long.MAX_VALUE, 1 ).setSampleRate( 100 )
@@ -517,6 +501,23 @@ public class OlsDataHelperTest
 
     final String snippet = writer.toString();
     assertTrue( snippet.contains( "1@" + Long.MAX_VALUE ) );
+  }
+
+  /**
+   * Test method for {@link OlsDataHelper#write(Project, Writer)}.
+   */
+  @Test
+  public void testWriteMaskedSampleValueOk() throws Exception
+  {
+    // -1 as sample value will be OR-ed by the enabled channels mask...
+    AcquisitionDataBuilder builder = new AcquisitionDataBuilder().addSample( 1L, -1 ).setSampleRate( 100 )
+        .setChannelCount( 2 ).setEnabledChannelMask( 3 );
+
+    final StringWriter writer = new StringWriter();
+    OlsDataHelper.write( writer, builder.build() );
+
+    final String snippet = writer.toString();
+    assertTrue( snippet.contains( "00000003@1" ) );
   }
 
   /**
