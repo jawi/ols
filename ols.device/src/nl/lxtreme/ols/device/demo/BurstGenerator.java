@@ -68,17 +68,18 @@ final class BurstGenerator implements IDataGenerator
     aBuilder.setTriggerPosition( 0 );
 
     // Make a single group with all channels...
-    aBuilder.addChannelGroup( 0, "Demo burst" );
+    ChannelGroupBuilder group = aBuilder.createChannelGroup().setIndex( 0 ).setName( "Demo burst" );
     for ( int i = 0; i < aChannelCount; i++ )
     {
-      aBuilder.addChannelToGroup( i, 0 );
+      group.addChannel( i );
     }
+    aBuilder.add( group );
 
     int burstLength = ( aSampleCount / 5 );
 
     int value = 0, counter = 0, dir = -1, cursor = 0;
     long ts = 0;
-    
+
     for ( int i = 0; i < aSampleCount; i++, ts++ )
     {
       if ( ( value & clockMask ) == 0 )

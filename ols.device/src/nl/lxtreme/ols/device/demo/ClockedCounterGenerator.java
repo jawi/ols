@@ -68,11 +68,12 @@ final class ClockedCounterGenerator implements IDataGenerator
     aBuilder.setTriggerPosition( 0 );
 
     // Make a single group with all channels...
-    aBuilder.addChannelGroup( 0, "Demo counter" );
+    ChannelGroupBuilder group = aBuilder.createChannelGroup().setIndex( 0 ).setName( "Demo counter" );
     for ( int i = 0; i < aChannelCount; i++ )
     {
-      aBuilder.addChannelToGroup( i, 0 );
+      group.addChannel( i );
     }
+    aBuilder.add( group );
 
     int value = 0, counter = 0, dir = -1;
     for ( int i = 0; i < aSampleCount; i++ )

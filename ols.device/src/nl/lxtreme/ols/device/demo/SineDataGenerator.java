@@ -54,11 +54,12 @@ final class SineDataGenerator implements IDataGenerator
     aBuilder.setTriggerPosition( ( int )( aSampleCount * 0.25 ) );
 
     // Make a single group with all channels...
-    aBuilder.addChannelGroup( 0, "Demo counter" );
+    ChannelGroupBuilder group = aBuilder.createChannelGroup().setIndex( 0 ).setName( "Sinus" );
     for ( int i = 0; i < aChannelCount; i++ )
     {
-      aBuilder.addChannelToGroup( i, 0 );
+      group.addChannel( i );
     }
+    aBuilder.add( group );
 
     final double max = ( ( ( 1L << channelCount ) - 1L ) & 0xFFFFFFFFL );
     final double half = ( max / 2.0 );

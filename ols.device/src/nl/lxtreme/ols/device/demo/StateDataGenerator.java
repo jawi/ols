@@ -21,6 +21,8 @@
 package nl.lxtreme.ols.device.demo;
 
 
+import java.util.*;
+
 import nl.lxtreme.ols.common.*;
 import nl.lxtreme.ols.common.acquisition.*;
 
@@ -30,10 +32,6 @@ import nl.lxtreme.ols.common.acquisition.*;
  */
 final class StateDataGenerator implements IDataGenerator
 {
-  // CONSTANTS
-
-  private static final int CLOCK = 0x01;
-
   // CONSTRUCTORS
 
   /**
@@ -61,28 +59,24 @@ final class StateDataGenerator implements IDataGenerator
   public void generate( int aChannelCount, int aSampleCount, AcquisitionDataBuilder aBuilder,
       AcquisitionProgressListener aProgressListener )
   {
-    int channelCount = Math.max( 4, aChannelCount );
+    int channelCount = Math.max( 16, aChannelCount );
 
     aBuilder.setChannelCount( channelCount );
     aBuilder.setSampleRate( OlsConstants.NOT_AVAILABLE );
     aBuilder.setTriggerPosition( 0 );
 
-    int value = 0, x = 0;
+    aBuilder.add( aBuilder.createChannelGroup().setIndex( 1 ).setName( "Data" ).addChannel( 0, 1, 2, 3 ) )
+        .add( aBuilder.createChannelGroup().setIndex( 0 ).setName( "Addr" ).addChannel( 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15 ) );
+
+    Random rnd = new Random();
+    
+    int data = 0, addr = 0;
     for ( int i = 0; i < aSampleCount; i++ )
     {
-      if ( ( i % ( channelCount - 1 ) ) == 0 )
-      {
-        if ( ( value & CLOCK ) == 0 )
-        {
-          value = CLOCK | ( x++ << 1 );
-        }
-        else
-        {
-          value = ( x << 1 );
-        }
-      }
-
-      aBuilder.addSample( i, value );
+      aBuilder.addSample( i, ( addr << 4 ) | data );
+      
+      addr = ( addr + 1 ) % 4096; 
+      data = rnd.nextInt( 16 );
 
       aProgressListener.acquisitionInProgress( i * 100 / aSampleCount );
     }
