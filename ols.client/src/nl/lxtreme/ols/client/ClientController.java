@@ -41,6 +41,7 @@ import nl.lxtreme.ols.client.osgi.*;
 import nl.lxtreme.ols.client.project.*;
 import nl.lxtreme.ols.client.signaldisplay.*;
 import nl.lxtreme.ols.client.signaldisplay.model.*;
+import nl.lxtreme.ols.client.view.*;
 import nl.lxtreme.ols.common.*;
 import nl.lxtreme.ols.common.acquisition.*;
 import nl.lxtreme.ols.common.acquisition.Cursor;
@@ -334,17 +335,6 @@ public final class ClientController implements ActionProvider, AcquisitionProgre
 
     this.signalDiagramController = new SignalDiagramController( this.actionManager );
 
-    Runnable runner = new Runnable()
-    {
-      public void run()
-      {
-        ClientController.this.signalDiagramController.initialize();
-
-        ActionManagerFactory.fillActionManager( ClientController.this.actionManager, ClientController.this );
-      }
-    };
-    SwingComponentUtils.invokeOnEDT( runner );
-
     this.progressAccumulatingRunnable = new ProgressUpdatingRunnable();
     this.repaintAccumulatingRunnable = new AccumulatingRepaintingRunnable();
   }
@@ -360,6 +350,11 @@ public final class ClientController implements ActionProvider, AcquisitionProgre
     try
     {
       getCurrentProject().setCapturedData( aData );
+
+      if ( this.mainFrame != null )
+      {
+        this.mainFrame.initialize( aData );
+      }
     }
     catch ( Exception exception )
     {
@@ -1360,6 +1355,10 @@ public final class ClientController implements ActionProvider, AcquisitionProgre
       @Override
       public void run()
       {
+        ClientController.this.signalDiagramController.initialize();
+
+        ActionManagerFactory.fillActionManager( ClientController.this.actionManager, ClientController.this );
+
         // Cause exceptions to be shown in a more user-friendly way...
         JErrorDialog.installSwingExceptionHandler();
 

@@ -1115,7 +1115,14 @@ public class AnnotationOverview extends AbstractToolWindow implements ExportAnno
       // Swap...
       setDataHolder( new DataHolder( newData, columns ) );
 
-      fireTableStructureChanged();
+      SwingComponentUtils.invokeOnEDT( new Runnable()
+      {
+        @Override
+        public void run()
+        {
+          fireTableStructureChanged();
+        }
+      } );
     }
 
     /**

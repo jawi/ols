@@ -294,7 +294,7 @@ public class ProjectManagerImpl implements PropertyChangeListener, ProjectManage
     int idx = 0;
     while ( ( ( label = reader.readLine() ) != null ) && ( idx < OlsConstants.MAX_CHANNELS ) )
     {
-      aBuilder.setChannelLabel( idx++, label );
+      aBuilder.add( aBuilder.createChannel().setIndex( idx++ ).setLabel( label ) );
     }
   }
 

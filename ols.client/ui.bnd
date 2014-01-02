@@ -22,6 +22,9 @@ Private-Package: nl.lxtreme.ols.client,\
 	nl.lxtreme.ols.client.signaldisplay.signalelement,\
 	nl.lxtreme.ols.client.signaldisplay.util,\
 	nl.lxtreme.ols.client.signaldisplay.view,\
-	nl.lxtreme.ols.client.signaldisplay.view.renderer
+	nl.lxtreme.ols.client.signaldisplay.view.renderer,\
+	nl.lxtreme.ols.client.view,\
+	nl.lxtreme.ols.client.view.state,\
+	nl.lxtreme.ols.client.view.waveform
 X-ClientVersion = ${ols.version}
 X-ClientIncidentAddress = info+v${ols.version}@lxtreme.nl

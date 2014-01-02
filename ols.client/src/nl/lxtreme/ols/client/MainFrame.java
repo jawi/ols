@@ -42,7 +42,9 @@ import nl.lxtreme.ols.client.project.*;
 import nl.lxtreme.ols.client.signaldisplay.*;
 import nl.lxtreme.ols.client.signaldisplay.laf.*;
 import nl.lxtreme.ols.client.signaldisplay.view.*;
+import nl.lxtreme.ols.client.view.*;
 import nl.lxtreme.ols.common.*;
+import nl.lxtreme.ols.common.acquisition.*;
 import nl.lxtreme.ols.common.acquisition.Cursor;
 import nl.lxtreme.ols.util.swing.*;
 import nl.lxtreme.ols.util.swing.StandardActionFactory.CloseAction.Closeable;
@@ -766,9 +768,9 @@ public final class MainFrame extends DefaultDockableHolder implements Closeable,
 
   // VARIABLES
 
-  private final SignalDiagramComponent signalDiagram;
   private final JTextStatusBar status;
   private final ClientController controller;
+  private final ViewController viewController;
   private final File dataStorage;
 
   private AcquisitionDetailsView acquisitionDetails;
@@ -799,6 +801,8 @@ public final class MainFrame extends DefaultDockableHolder implements Closeable,
     this.dataStorage = aDataStorage;
     this.controller = aController;
 
+    this.viewController = new ViewController();
+
     // Let the host platform determine where this diagram should be displayed;
     // gives it more or less a native feel...
     setLocationByPlatform( true );
@@ -811,7 +815,6 @@ public final class MainFrame extends DefaultDockableHolder implements Closeable,
 
     SignalDiagramController signalDiagramController = this.controller.getSignalDiagramController();
 
-    this.signalDiagram = signalDiagramController.getSignalDiagram();
     this.status = new JTextStatusBar();
 
     final JToolBar tools = createMenuBars();
@@ -882,7 +885,7 @@ public final class MainFrame extends DefaultDockableHolder implements Closeable,
 
     Workspace workspace = dm.getWorkspace();
     workspace.setAcceptDockableFrame( false );
-    workspace.add( new ZoomCapableScrollPane( signalDiagramController ) );
+    // workspace.add( new ZoomCapableScrollPane( signalDiagramController ) );
 
     Container contentPane = getContentPane();
     contentPane.add( tools, BorderLayout.PAGE_START );
@@ -910,28 +913,6 @@ public final class MainFrame extends DefaultDockableHolder implements Closeable,
 
     // Support closing of this window on Windows/Linux platforms...
     addWindowListener( new MainFrameListener() );
-
-    RepaintManager.setCurrentManager( new RepaintManager()
-    {
-      /**
-       * {@inheritDoc}
-       */
-      @Override
-      public void addDirtyRegion( JComponent aC, int aX, int aY, int aW, int aH )
-      {
-        // if ( aC instanceof ZoomCapableScrollPane )
-        // {
-        // return;
-        // }
-        // Class<? extends JComponent> type = aC.getClass();
-        // if ( type.getName().startsWith( "nl.lxtreme.ols" ) )
-        // {
-        // System.out.println( "Add dirty region for " + type.getSimpleName() +
-        // " [" + aX + ", " + aY + ", " + aW + ", " + aH + "]" );
-        // }
-        super.addDirtyRegion( aC, aX, aY, aW, aH );
-      }
-    } );
   }
 
   // METHODS
@@ -982,7 +963,30 @@ public final class MainFrame extends DefaultDockableHolder implements Closeable,
    */
   public void gotoPosition( final int aChannelIdx, final long aSamplePos )
   {
-    this.signalDiagram.scrollToTimestamp( aSamplePos );
+    SignalDiagramComponent signalDiagram = this.controller.getSignalDiagramController().getSignalDiagram();
+    signalDiagram.scrollToTimestamp( aSamplePos );
+  }
+
+  /**
+   * Initializes the view controller, its view and model.
+   */
+  public void initialize( final AcquisitionData aData )
+  {
+    SwingComponentUtils.invokeOnEDT( new Runnable()
+    {
+      @Override
+      public void run()
+      {
+        MainFrame.this.viewController.initialize( aData );
+
+        Workspace workspace = getDockingManager().getWorkspace();
+        if ( workspace.getComponentCount() > 0 )
+        {
+          workspace.remove( 0 );
+        }
+        workspace.add( MainFrame.this.viewController.getView(), 0 );
+      }
+    } );
   }
 
   /**
@@ -1073,7 +1077,8 @@ public final class MainFrame extends DefaultDockableHolder implements Closeable,
    */
   final void diagramSettingsUpdated()
   {
-    this.signalDiagram.revalidate();
+    SignalDiagramComponent signalDiagram = this.controller.getSignalDiagramController().getSignalDiagram();
+    signalDiagram.revalidate();
   }
 
   /**
@@ -1083,7 +1088,8 @@ public final class MainFrame extends DefaultDockableHolder implements Closeable,
    */
   final JComponent getDiagramScrollPane()
   {
-    final Container viewport = this.signalDiagram.getParent();
+    SignalDiagramComponent signalDiagram = this.controller.getSignalDiagramController().getSignalDiagram();
+    final Container viewport = signalDiagram.getParent();
     return ( JComponent )viewport.getParent();
   }
 
