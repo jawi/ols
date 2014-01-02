@@ -25,10 +25,11 @@ import static nl.lxtreme.ols.common.OlsConstants.*;
 
 import java.awt.*;
 import java.util.*;
-import java.util.Map.Entry;
 import java.util.List;
 
 import nl.lxtreme.ols.common.*;
+import nl.lxtreme.ols.common.acquisition.ChannelBuilder.ChannelImpl;
+import nl.lxtreme.ols.common.acquisition.ChannelGroupBuilder.ChannelGroupImpl;
 
 
 /**
@@ -81,7 +82,7 @@ public final class AcquisitionDataBuilder
     AcquisitionDataImpl( final int[] aValues, final long[] aTimestamps, final long aTriggerPosition,
         final int aSampleRate, final int aChannelCount, final int aEnabledChannels, final long aAbsoluteLength,
         final Cursor[] aCursors, final boolean aCursorsVisible, final Channel[] aChannels,
-        final ChannelGroup[] aChannelGroups )
+        final ChannelGroupImpl[] aChannelGroups )
     {
       this.values = aValues;
       this.timestamps = aTimestamps;
@@ -282,125 +283,6 @@ public final class AcquisitionDataBuilder
   }
 
   /**
-   * Provides a default implementation of {@link ChannelGroup}.
-   */
-  static final class ChannelGroupImpl implements ChannelGroup
-  {
-    // VARIABLES
-
-    private final int index;
-    private String name;
-    private final List<Channel> channels;
-
-    /**
-     * Creates a new {@link ChannelGroupImpl} instance.
-     */
-    public ChannelGroupImpl( int aIndex, String aName, List<Channel> aChannels )
-    {
-      this.index = aIndex;
-      this.name = aName;
-      this.channels = new ArrayList<Channel>( aChannels );
-    }
-
-    // METHODS
-
-    public void addChannel( Channel aChannel )
-    {
-      this.channels.add( aChannel );
-    }
-
-    /**
-     * {@inheritDoc}
-     */
-    @Override
-    public int compareTo( ChannelGroup aGroup )
-    {
-      return this.index - aGroup.getIndex();
-    }
-
-    /**
-     * {@inheritDoc}
-     */
-    @Override
-    public boolean equals( Object aObject )
-    {
-      if ( this == aObject )
-      {
-        return true;
-      }
-      if ( aObject == null || getClass() != aObject.getClass() )
-      {
-        return false;
-      }
-
-      ChannelGroupImpl other = ( ChannelGroupImpl )aObject;
-      if ( this.index != other.index )
-        return false;
-      if ( this.name == null )
-      {
-        if ( other.name != null )
-          return false;
-      }
-      else if ( !this.name.equals( other.name ) )
-        return false;
-      return true;
-    }
-
-    /**
-     * {@inheritDoc}
-     */
-    @Override
-    public Channel[] getChannels()
-    {
-      return this.channels.toArray( new Channel[this.channels.size()] );
-    }
-
-    /**
-     * {@inheritDoc}
-     */
-    @Override
-    public int getIndex()
-    {
-      return this.index;
-    }
-
-    /**
-     * {@inheritDoc}
-     */
-    @Override
-    public String getName()
-    {
-      return this.name;
-    }
-
-    /**
-     * {@inheritDoc}
-     */
-    @Override
-    public int hashCode()
-    {
-      final int prime = 31;
-      int result = 1;
-      result = prime * result + this.index;
-      result = prime * result + ( ( this.name == null ) ? 0 : this.name.hashCode() );
-      return result;
-    }
-
-    /**
-     * {@inheritDoc}
-     */
-    @Override
-    public void setName( String aName )
-    {
-      if ( aName == null )
-      {
-        throw new IllegalArgumentException( "Name cannot be null!" );
-      }
-      this.name = aName;
-    }
-  }
-
-  /**
    * Container for keeping channel group-related information together.
    */
   static final class ChannelGroupInfo
@@ -439,173 +321,6 @@ public final class AcquisitionDataBuilder
       for ( Channel c : aChannelGroup.getChannels() )
       {
         this.channelIndices.add( Integer.valueOf( c.getIndex() ) );
-      }
-    }
-  }
-
-  /**
-   * Provides a default implementation of {@link Channel}.
-   */
-  static final class ChannelImpl implements Channel
-  {
-    // VARIABLES
-
-    private final int index;
-    private final int mask;
-
-    private String label;
-    private boolean enabled;
-
-    // CONSTRUCTORS
-
-    /**
-     * Creates a new {@link ChannelImpl} instance.
-     * 
-     * @param aIndex
-     *          the index of the channel to represent;
-     * @param aEnabled
-     *          <code>true</code> if the channel is enabled, <code>false</code>
-     *          otherwise.
-     */
-    public ChannelImpl( final int aIndex, final boolean aEnabled )
-    {
-      this.index = aIndex;
-      this.enabled = aEnabled;
-      this.mask = 1 << aIndex;
-      this.label = getDefaultLabel( aIndex );
-    }
-
-    // METHODS
-
-    /**
-     * Returns the default label for a channel.
-     * 
-     * @param aIndex
-     *          the index of the channel to create the label for.
-     * @return a default label, never <code>null</code>.
-     */
-    private static String getDefaultLabel( final int aIndex )
-    {
-      return String.format( "Channel %d", Integer.valueOf( aIndex ) );
-    }
-
-    /**
-     * {@inheritDoc}
-     */
-    @Override
-    public int compareTo( final Channel aOther )
-    {
-      return getIndex() - aOther.getIndex();
-    }
-
-    /**
-     * {@inheritDoc}
-     */
-    @Override
-    public boolean equals( final Object aObject )
-    {
-      if ( this == aObject )
-      {
-        return true;
-      }
-      if ( ( aObject == null ) || !( aObject instanceof ChannelImpl ) )
-      {
-        return false;
-      }
-
-      ChannelImpl other = ( ChannelImpl )aObject;
-      if ( this.index != other.index )
-      {
-        return false;
-      }
-      if ( this.mask != other.mask )
-      {
-        return false;
-      }
-
-      return true;
-    }
-
-    /**
-     * {@inheritDoc}
-     */
-    @Override
-    public int getIndex()
-    {
-      return this.index;
-    }
-
-    /**
-     * {@inheritDoc}
-     */
-    @Override
-    public String getLabel()
-    {
-      return this.label;
-    }
-
-    /**
-     * {@inheritDoc}
-     */
-    @Override
-    public int getMask()
-    {
-      return this.mask;
-    }
-
-    /**
-     * {@inheritDoc}
-     */
-    @Override
-    public int hashCode()
-    {
-      final int prime = 31;
-      int result = 1;
-      result = ( prime * result ) + this.index;
-      result = ( prime * result ) + this.mask;
-      return result;
-    }
-
-    /**
-     * {@inheritDoc}
-     */
-    @Override
-    public boolean hasName()
-    {
-      return ( this.label != null ) && !"".equals( this.label.trim() );
-    }
-
-    /**
-     * {@inheritDoc}
-     */
-    @Override
-    public boolean isEnabled()
-    {
-      return this.enabled;
-    }
-
-    /**
-     * {@inheritDoc}
-     */
-    @Override
-    public void setEnabled( final boolean aEnabled )
-    {
-      this.enabled = aEnabled;
-    }
-
-    /**
-     * {@inheritDoc}
-     */
-    @Override
-    public void setLabel( final String aName )
-    {
-      if ( ( aName == null ) || "".equals( aName.trim() ) )
-      {
-        this.label = getDefaultLabel( this.index );
-      }
-      else
-      {
-        this.label = aName.trim();
       }
     }
   }
@@ -951,8 +666,8 @@ public final class AcquisitionDataBuilder
   private int channelCount;
   private int enabledChannelMask;
   private final SortedSet<Sample> sampleData;
-  private final Map<Integer, ChannelInfo> channelDefs;
-  private final Map<Integer, ChannelGroupInfo> channelGroupDefs;
+  private final SortedSet<ChannelImpl> channels;
+  private final SortedSet<ChannelGroupImpl> channelGroups;
   private final Cursor[] cursors;
   private int sampleRate;
   private long triggerPosition;
@@ -966,8 +681,8 @@ public final class AcquisitionDataBuilder
   public AcquisitionDataBuilder()
   {
     this.sampleData = new TreeSet<Sample>();
-    this.channelDefs = new HashMap<Integer, ChannelInfo>();
-    this.channelGroupDefs = new HashMap<Integer, ChannelGroupInfo>();
+    this.channels = new TreeSet<ChannelImpl>();
+    this.channelGroups = new TreeSet<ChannelGroupImpl>();
     this.cursors = new Cursor[OlsConstants.MAX_CURSORS];
     this.absoluteLength = NOT_AVAILABLE;
     this.lastSeenTimestamp = NOT_AVAILABLE;
@@ -988,53 +703,28 @@ public final class AcquisitionDataBuilder
   /**
    * Adds a new channel group to this builder.
    * 
-   * @param aIndex
-   *          the index of the channel group to add (zero-based);
-   * @param aName
-   *          the name of the new channel group, cannot be <code>null</code>.
-   * @return this builder.
+   * @return a new {@link ChannelBuilder} instance to define the channel, never
+   *         <code>null</code>.
    * @throws IllegalArgumentException
-   *           in case a channel group with the given index already exists.
+   *           in case a channel with the given index already exists.
    */
-  public AcquisitionDataBuilder addChannelGroup( final int aIndex, final String aName )
+  public AcquisitionDataBuilder add( ChannelBuilder aBuilder )
   {
-    Integer idx = Integer.valueOf( aIndex );
-    if ( this.channelGroupDefs.containsKey( idx ) )
-    {
-      throw new IllegalArgumentException( "Channel group with index " + aIndex + " already defined!" );
-    }
-    this.channelGroupDefs.put( idx, new ChannelGroupInfo( aName ) );
+    add( aBuilder.build( this ) );
     return this;
   }
 
   /**
-   * Adds a channel to a group.
+   * Adds a new channel group to this builder.
    * 
-   * @param aChannelIndex
-   *          the channel index to add to a group (zero-based);
-   * @param aGroupIndex
-   *          the group index to add the channel to (zero-based).
-   * @return this builder.
+   * @return a new {@link ChannelGroupBuilder} instance to define the channel
+   *         group, never <code>null</code>.
    * @throws IllegalArgumentException
-   *           in case no channel, or channel group with the given index exists.
+   *           in case a channel group with the given index already exists.
    */
-  public AcquisitionDataBuilder addChannelToGroup( final int aChannelIndex, final int aGroupIndex )
+  public AcquisitionDataBuilder add( ChannelGroupBuilder aBuilder )
   {
-    for ( ChannelGroupInfo _cgDef : this.channelGroupDefs.values() )
-    {
-      if ( _cgDef.containsChannel( aChannelIndex ) )
-      {
-        throw new IllegalArgumentException( "Channel already contained in group!" );
-      }
-    }
-
-    ChannelGroupInfo channelGroupDef = this.channelGroupDefs.get( Integer.valueOf( aGroupIndex ) );
-    if ( channelGroupDef == null )
-    {
-      throw new IllegalArgumentException( "No such channel group defined with index #" + aGroupIndex );
-    }
-
-    channelGroupDef.addChannelIndex( aChannelIndex );
+    add( aBuilder.build( this ) );
     return this;
   }
 
@@ -1098,14 +788,10 @@ public final class AcquisitionDataBuilder
     // Copy channel names...
     for ( Channel c : aData.getChannels() )
     {
-      Integer chIdx = Integer.valueOf( c.getIndex() );
-
-      ChannelInfo channelDef = this.channelDefs.get( chIdx );
-      if ( channelDef == null )
-      {
-        channelDef = new ChannelInfo( c.getLabel() );
-        this.channelDefs.put( chIdx, channelDef );
-      }
+      add( createChannel() //
+          .setEnabled( c.isEnabled() ) //
+          .setIndex( c.getIndex() ) //
+          .setLabel( c.getLabel() ) );
 
       if ( aIncludeAnnotations == IncludeAnnotations.YES )
       {
@@ -1116,16 +802,11 @@ public final class AcquisitionDataBuilder
     // Copy channel groups...
     for ( ChannelGroup cg : aData.getChannelGroups() )
     {
-      Integer cgIndex = Integer.valueOf( cg.getIndex() );
-
-      ChannelGroupInfo cgDef = this.channelGroupDefs.get( cgIndex );
-      if ( cgDef == null )
-      {
-        cgDef = new ChannelGroupInfo( cg.getName() );
-        this.channelGroupDefs.put( cgIndex, cgDef );
-      }
-
-      cgDef.copyChannelIndices( cg );
+      add( createChannelGroup() //
+          .setIndex( cg.getIndex() ) //
+          .setName( cg.getName() ) //
+          .addChannel( cg.getChannels() ) //
+          .setChannelCount( cg.getChannels().length ) );
     }
 
     if ( aIncludeSamples == IncludeSamples.YES )
@@ -1157,6 +838,10 @@ public final class AcquisitionDataBuilder
     {
       throw new IllegalArgumentException( "No channel count defined!" );
     }
+
+    // Ensure a consistent model...
+    ensureChannelGroupPresent();
+    ensureConsistentModel();
 
     // Ensure we've got an absolute length available...
     long absLength;
@@ -1241,11 +926,8 @@ public final class AcquisitionDataBuilder
       absLength = 0L;
     }
 
-    LinkedHashMap<Integer, Channel> channelIndex = createChannels();
-    List<ChannelGroup> channelGroups = createChannelGroups( channelIndex );
-
-    Channel[] _channels = channelIndex.values().toArray( new Channel[channelIndex.size()] );
-    ChannelGroup[] _channelGroups = channelGroups.toArray( new ChannelGroup[channelGroups.size()] );
+    Channel[] _channels = this.channels.toArray( new Channel[this.channels.size()] );
+    ChannelGroupImpl[] _channelGroups = this.channelGroups.toArray( new ChannelGroupImpl[this.channelGroups.size()] );
 
     return new AcquisitionDataImpl( values, timestamps, this.triggerPosition, this.sampleRate, this.channelCount,
         this.enabledChannelMask, absLength, this.cursors, this.cursorsVisible, _channels, _channelGroups );
@@ -1283,6 +965,26 @@ public final class AcquisitionDataBuilder
   {
     this.triggerPosition = NOT_AVAILABLE;
     return this;
+  }
+
+  /**
+   * @return a new {@link ChannelBuilder} to define a new channel, never
+   *         <code>null</code>.
+   * @see #add(ChannelBuilder)
+   */
+  public ChannelBuilder createChannel()
+  {
+    return new ChannelBuilder();
+  }
+
+  /**
+   * @return a new {@link ChannelGroupBuilder} to define a new channel group,
+   *         never <code>null</code>.
+   * @see #add(ChannelGroupBuilder)
+   */
+  public ChannelGroupBuilder createChannelGroup()
+  {
+    return new ChannelGroupBuilder();
   }
 
   /**
@@ -1325,37 +1027,6 @@ public final class AcquisitionDataBuilder
     }
     this.channelCount = aChannelCount;
     this.enabledChannelMask = ( int )( ( 1L << aChannelCount ) - 1L );
-    return this;
-  }
-
-  /**
-   * Sets the label for a particular channel.
-   * 
-   * @param aIndex
-   *          the index of the channel to set, >= 0 && <
-   *          {@value OlsConstants#MAX_CHANNELS};
-   * @param aLabel
-   *          the label of the channel to set.
-   * @throws IllegalArgumentException
-   *           in case of an invalid channel index.
-   */
-  public AcquisitionDataBuilder setChannelLabel( final int aIndex, final String aLabel )
-  {
-    if ( ( aIndex < 0 ) || ( aIndex >= OlsConstants.MAX_CHANNELS ) )
-    {
-      throw new IllegalArgumentException( "Invalid channel index!" );
-    }
-
-    ChannelInfo chDef = this.channelDefs.get( Integer.valueOf( aIndex ) );
-    if ( chDef == null )
-    {
-      chDef = new ChannelInfo( aLabel );
-      this.channelDefs.put( Integer.valueOf( aIndex ), chDef );
-    }
-    else
-    {
-      chDef.label = aLabel;
-    }
     return this;
   }
 
@@ -1464,107 +1135,236 @@ public final class AcquisitionDataBuilder
     return this;
   }
 
-  /**
-   * @param aChannelIndex
-   * @return
-   */
-  private List<ChannelGroup> createChannelGroups( LinkedHashMap<Integer, Channel> aChannelIndex )
+  ChannelGroupImpl add( ChannelGroupImpl aGroup )
   {
-    // Use defaults for the situation when no channel groups are defined...
-    ensureChannelGroupsAreDefined( aChannelIndex );
-
-    int cgSize = this.channelGroupDefs.size();
-    List<ChannelGroup> channelGroups = new ArrayList<ChannelGroup>( cgSize );
-    List<Channel> allChannels = new ArrayList<Channel>( aChannelIndex.values() );
-
-    for ( Entry<Integer, ChannelGroupInfo> entry : this.channelGroupDefs.entrySet() )
+    for ( ChannelGroupImpl g : this.channelGroups )
     {
-      int groupIdx = entry.getKey().intValue();
-      ChannelGroupInfo groupDef = entry.getValue();
-
-      List<Integer> channelIndices = groupDef.channelIndices;
-      List<Channel> channelRefs = new ArrayList<Channel>( channelIndices.size() );
-      for ( Integer channelIdx : channelIndices )
+      if ( g.getIndex() == aGroup.getIndex() )
       {
-        Channel channel = aChannelIndex.get( channelIdx );
-        if ( channel == null )
-        {
-          // probably masked out...
-          continue;
-        }
-        channelRefs.add( channel );
-        allChannels.remove( channel );
+        throw new IllegalArgumentException( "Channel group with index " + aGroup.getIndex() + " already defined!" );
       }
-
-      channelGroups.add( new ChannelGroupImpl( groupIdx, groupDef.name, channelRefs ) );
     }
+    this.channelGroups.add( aGroup );
+    return aGroup;
+  }
 
-    if ( !allChannels.isEmpty() )
+  ChannelImpl add( ChannelImpl aChannel )
+  {
+    for ( ChannelImpl c : this.channels )
     {
-      // Add all remaining channels...
-      Integer groupIdx = Integer.valueOf( channelGroups.size() );
-      String name = String.format( "Group %d", groupIdx );
+      if ( c.getIndex() == aChannel.getIndex() )
+      {
+        throw new IllegalArgumentException( "Channel with index " + aChannel.getIndex() + " already defined!" );
+      }
+    }
+    this.channels.add( aChannel );
+    return aChannel;
+  }
 
-      channelGroups.add( new ChannelGroupImpl( groupIdx.intValue(), name, allChannels ) );
+  ChannelImpl getChannel( int aIndex )
+  {
+    for ( ChannelImpl channel : this.channels )
+    {
+      if ( channel.getIndex() == aIndex )
+      {
+        return channel;
+      }
+    }
+    return null;
+  }
+
+  private void ensureConsistentModel()
+  {
+    int realChannelCount = 0;
+    List<ChannelImpl> remove = new ArrayList<ChannelImpl>();
+
+    for ( ChannelImpl ch : this.channels )
+    {
+      if ( ( this.enabledChannelMask & ch.getMask() ) != 0 )
+      {
+        // Channel is present...
+        realChannelCount++;
+      }
+      else
+      {
+        // Channel is masked out, remove it...
+        remove.add( ch );
+      }
     }
 
-    return channelGroups;
+    for ( ChannelImpl ch : remove )
+    {
+      if ( this.channels.remove( ch ) )
+      {
+        ch.removeFromGroup();
+      }
+    }
+
+    if ( realChannelCount == 0 )
+    {
+      throw new IllegalArgumentException( "No channel count defined!" );
+    }
+
+    this.channelCount = realChannelCount;
   }
 
   /**
-   * @return
+   * Ensures that at least one channel group is present containing all channels.
    */
-  private LinkedHashMap<Integer, Channel> createChannels()
+  private void ensureChannelGroupPresent()
   {
-    LinkedHashMap<Integer, Channel> chIndex = new LinkedHashMap<Integer, Channel>( this.channelCount );
-    // The enabledChannels only tells us _which_ channels are to be enabled,
-    // but we still need to keep track of how many channels we have...
-    for ( int i = 0, _channelCount = 0; ( _channelCount < this.channelCount ) && ( i < OlsConstants.MAX_CHANNELS ); i++ )
+    if ( this.channelGroups.isEmpty() )
     {
-      final int mask = ( 1 << i );
-      if ( ( this.enabledChannelMask & mask ) != 0 )
-      {
-        Integer idx = Integer.valueOf( i );
-        ChannelImpl channelImpl = new ChannelImpl( i, true /* enabled */);
+      // Add all channels to one channel group, which indirectly will define the
+      // channels as well...
+      int channelCount = 0;
+      int groupCount = 0;
 
-        ChannelInfo chDef = this.channelDefs.get( idx );
-        if ( chDef != null )
+      ChannelGroupBuilder cgBuilder = null;
+      for ( int i = 0; channelCount < this.channelCount && i < OlsConstants.MAX_CHANNELS; i++ )
+      {
+        int mask = ( 1 << i );
+        if ( ( this.enabledChannelMask & mask ) != 0 )
         {
-          channelImpl.setLabel( chDef.label );
-          // channelImpl.addAnnotations( chDef.annotations ); XXX
+          if ( cgBuilder == null )
+          {
+            cgBuilder = createChannelGroup().setIndex( groupCount++ );
+          }
+
+          cgBuilder.addChannel( i );
+          channelCount++;
         }
 
-        chIndex.put( idx, channelImpl );
-        _channelCount++;
+        if ( ( cgBuilder != null ) && ( channelCount % OlsConstants.CHANNELS_PER_BLOCK ) == 0 )
+        {
+          add( cgBuilder );
+          cgBuilder = null;
+        }
       }
-    }
-    return chIndex;
-  }
 
-  /**
-   * @param aChannelIndex
-   */
-  private void ensureChannelGroupsAreDefined( LinkedHashMap<Integer, Channel> aChannelIndex )
-  {
-    if ( this.channelGroupDefs.isEmpty() )
-    {
-      List<Channel> channels = new ArrayList<Channel>( aChannelIndex.values() );
-
-      int groupCount = Math.max( 1, channels.size() / OlsConstants.CHANNELS_PER_BLOCK );
-      for ( int g = 0, groupOffset = 0; g < groupCount; g++, groupOffset += OlsConstants.CHANNELS_PER_BLOCK )
+      if ( cgBuilder != null )
       {
-        Integer groupIdx = Integer.valueOf( g );
-        ChannelGroupInfo cgDef = new ChannelGroupInfo( String.format( "Group %d", groupIdx ) );
-
-        int from = groupOffset;
-        int to = Math.min( this.channelCount, groupOffset + OlsConstants.CHANNELS_PER_BLOCK );
-        for ( Channel ch : channels.subList( from, to ) )
-        {
-          cgDef.channelIndices.add( Integer.valueOf( ch.getIndex() ) );
-        }
-
-        this.channelGroupDefs.put( groupIdx, cgDef );
+        add( cgBuilder );
       }
     }
   }
+
+  //
+  // /**
+  // * @param aChannelIndex
+  // * @return
+  // */
+  // private List<ChannelGroupImpl> createChannelGroups( LinkedHashMap<Integer,
+  // Channel> aChannelIndex )
+  // {
+  // // Use defaults for the situation when no channel groups are defined...
+  // ensureChannelGroupsAreDefined( aChannelIndex );
+  //
+  // int cgSize = this.channelGroups.size();
+  // List<ChannelGroupImpl> channelGroups = new ArrayList<ChannelGroupImpl>(
+  // cgSize );
+  // List<Channel> allChannels = new ArrayList<Channel>( aChannelIndex.values()
+  // );
+  //
+  // for ( Entry<Integer, ChannelGroupInfo> entry :
+  // this.channelGroupDefs.entrySet() )
+  // {
+  // int groupIdx = entry.getKey().intValue();
+  // ChannelGroupInfo groupDef = entry.getValue();
+  //
+  // List<Integer> channelIndices = groupDef.channelIndices;
+  // List<Channel> channelRefs = new ArrayList<Channel>( channelIndices.size()
+  // );
+  // for ( Integer channelIdx : channelIndices )
+  // {
+  // Channel channel = aChannelIndex.get( channelIdx );
+  // if ( channel == null )
+  // {
+  // // probably masked out...
+  // continue;
+  // }
+  // channelRefs.add( channel );
+  // allChannels.remove( channel );
+  // }
+  //
+  // channelGroups.add( new ChannelGroupImpl( groupIdx, groupDef.name,
+  // channelRefs ) );
+  // }
+  //
+  // if ( !allChannels.isEmpty() )
+  // {
+  // // Add all remaining channels...
+  // Integer groupIdx = Integer.valueOf( channelGroups.size() );
+  // String name = String.format( "Group %d", groupIdx );
+  //
+  // channelGroups.add( new ChannelGroupImpl( groupIdx.intValue(), name,
+  // allChannels ) );
+  // }
+  //
+  // return channelGroups;
+  // }
+  //
+  // /**
+  // * @return
+  // */
+  // private LinkedHashMap<Integer, Channel> createChannels( boolean foo )
+  // {
+  // LinkedHashMap<Integer, Channel> chIndex = new LinkedHashMap<Integer,
+  // Channel>( this.channelCount );
+  // // The enabledChannels only tells us _which_ channels are to be enabled,
+  // // but we still need to keep track of how many channels we have...
+  // for ( int i = 0, _channelCount = 0; ( _channelCount < this.channelCount )
+  // && ( i < OlsConstants.MAX_CHANNELS ); i++ )
+  // {
+  // final int mask = ( 1 << i );
+  // if ( ( this.enabledChannelMask & mask ) != 0 )
+  // {
+  // Integer idx = Integer.valueOf( i );
+  // ChannelImpl channelImpl = new ChannelImpl( i, true /* enabled */);
+  //
+  // ChannelInfo chDef = this.channelDefs.get( idx );
+  // if ( chDef != null )
+  // {
+  // channelImpl.setLabel( chDef.label );
+  // // channelImpl.addAnnotations( chDef.annotations ); XXX
+  // }
+  //
+  // chIndex.put( idx, channelImpl );
+  // _channelCount++;
+  // }
+  // }
+  // return chIndex;
+  // }
+  //
+  // /**
+  // * @param aChannelIndex
+  // */
+  // private void ensureChannelGroupsAreDefined( LinkedHashMap<Integer, Channel>
+  // aChannelIndex )
+  // {
+  // if ( this.channelGroups.isEmpty() )
+  // {
+  // List<Channel> channels = new ArrayList<Channel>( aChannelIndex.values() );
+  //
+  // int groupCount = Math.max( 1, channels.size() /
+  // OlsConstants.CHANNELS_PER_BLOCK );
+  // for ( int g = 0, groupOffset = 0; g < groupCount; g++, groupOffset +=
+  // OlsConstants.CHANNELS_PER_BLOCK )
+  // {
+  // Integer groupIdx = Integer.valueOf( g );
+  // ChannelGroupInfo cgDef = new ChannelGroupInfo( String.format( "Group %d",
+  // groupIdx ) );
+  //
+  // int from = groupOffset;
+  // int to = Math.min( this.channelCount, groupOffset +
+  // OlsConstants.CHANNELS_PER_BLOCK );
+  // for ( Channel ch : channels.subList( from, to ) )
+  // {
+  // cgDef.channelIndices.add( Integer.valueOf( ch.getIndex() ) );
+  // }
+  //
+  // this.channelGroups.put( groupIdx, cgDef );
+  // }
+  // }
+  // }
 }

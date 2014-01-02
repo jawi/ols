@@ -21,14 +21,18 @@
 package nl.lxtreme.ols.common.acquisition;
 
 
-
-
 /**
  * Denotes a single channel in the data set.
  */
 public interface Channel extends Comparable<Channel>
 {
   // METHODS
+
+  /**
+   * @return the channel group this channel belongs to, cannot be
+   *         <code>null</code> (all channels belong to a channel group).
+   */
+  ChannelGroup getGroup();
 
   /**
    * Returns the index of this channel.
