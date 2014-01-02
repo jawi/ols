@@ -25,6 +25,7 @@ import java.awt.*;
 import java.awt.datatransfer.*;
 import java.io.*;
 import java.util.*;
+
 import javax.swing.*;
 import javax.swing.plaf.*;
 import javax.swing.table.*;
@@ -303,6 +304,18 @@ public class JLxTable extends JTable
   }
 
   /**
+   * Resets the column header to the value from the contained {@link TableModel}
+   * .
+   * 
+   * @param aColumnIndex
+   *          the index of the column to reset the header value for.
+   */
+  public void resetColumnHeader( int aColumnIndex )
+  {
+    setColumnHeader( aColumnIndex, getModel().getColumnName( aColumnIndex ) );
+  }
+
+  /**
    * Sets the cell renderer adapter.
    * 
    * @param aCellRendererAdapter
@@ -315,6 +328,22 @@ public class JLxTable extends JTable
       throw new IllegalArgumentException( "CellRendererAdapter cannot be null!" );
     }
     this.cellRendererAdapter = aCellRendererAdapter;
+  }
+
+  /**
+   * Sets the column header to a given value.
+   * 
+   * @param aColumnIndex
+   *          the index of the column to reset the header value for;
+   * @param aValue
+   *          the new value of the column header to set, can be
+   *          <code>null</code>.
+   */
+  public void setColumnHeader( int aColumnIndex, Object aValue )
+  {
+    TableColumn column = getColumnModel().getColumn( aColumnIndex );
+    column.setHeaderValue( aValue );
+    getTableHeader().repaint( 50L );
   }
 
   /**
@@ -348,14 +377,6 @@ public class JLxTable extends JTable
   }
 
   /**
-   * @return the data flavors supported by this table.
-   */
-  protected DataFlavor[] getTableDataFlavors()
-  {
-    return null;
-  }
-
-  /**
    * @param aFlavor
    *          the data flavor to get the table data for, cannot be
    *          <code>null</code>.
@@ -367,6 +388,14 @@ public class JLxTable extends JTable
    *           in case of I/O problems getting or formatting the table data.
    */
   protected Object getTableData( final DataFlavor aFlavor ) throws UnsupportedFlavorException, IOException
+  {
+    return null;
+  }
+
+  /**
+   * @return the data flavors supported by this table.
+   */
+  protected DataFlavor[] getTableDataFlavors()
   {
     return null;
   }
