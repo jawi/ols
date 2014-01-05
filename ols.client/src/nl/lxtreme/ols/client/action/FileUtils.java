@@ -29,7 +29,7 @@ import javax.swing.*;
 /**
  * Some utility methods used by the various {@link Action}s.
  */
-class FileUtils
+public class FileUtils
 {
 
   /**

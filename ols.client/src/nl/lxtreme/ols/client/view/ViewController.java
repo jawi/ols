@@ -23,6 +23,8 @@ package nl.lxtreme.ols.client.view;
 
 import javax.swing.*;
 
+import nl.lxtreme.ols.client.actionmanager.*;
+import nl.lxtreme.ols.client.signaldisplay.*;
 import nl.lxtreme.ols.client.view.state.*;
 import nl.lxtreme.ols.client.view.waveform.*;
 import nl.lxtreme.ols.common.acquisition.*;
@@ -36,6 +38,8 @@ public class ViewController
 {
   // VARIABLES
 
+  private final IActionManager actionManager;
+
   private BaseView view;
   private ViewModel model;
 
@@ -44,19 +48,19 @@ public class ViewController
   /**
    * Creates a new, uninitialized, {@link ViewController} instance.
    */
-  public ViewController()
+  public ViewController( IActionManager aActionManager )
   {
-    // Nop
+    this.actionManager = aActionManager;
   }
 
   // METHODS
 
-  private static BaseView createView( ViewController aController, ViewModel aModel )
+  private static BaseView createView( ViewController aController, ViewModel aModel, SignalDiagramController aDiagramController /* TODO REMOVE */ )
   {
     BaseView view;
     if ( aModel.hasTimingData() )
     {
-      view = new WaveformView( aController, aModel );
+      view = new WaveformView( aDiagramController, aController, aModel );
     }
     else
     {
@@ -74,6 +78,16 @@ public class ViewController
   public void addMarkerChangeListener( IMarkerChangeListener aListener )
   {
     this.model.addMarkerChangeListener( aListener );
+  }
+
+  /**
+   * Returns the current value of actionManager.
+   * 
+   * @return the actionManager
+   */
+  public IActionManager getActionManager()
+  {
+    return this.actionManager;
   }
 
   /**
@@ -100,15 +114,15 @@ public class ViewController
    * Initializes this controller, its view and model. Should be called from the
    * Event-Dispatch thread (EDT).
    */
-  public void initialize( AcquisitionData aData )
+  public void initialize( AcquisitionData aData, SignalDiagramController aController /* TODO REMOVE */ )
   {
     if ( !SwingUtilities.isEventDispatchThread() )
     {
       throw new IllegalStateException( "Can only be called from EDT!?" );
     }
-
+    
     ViewModel model = new ViewModel( aData );
-    BaseView view = createView( this, model );
+    BaseView view = createView( this, model, aController );
 
     setView( view );
     setModel( model );

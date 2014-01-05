@@ -15,7 +15,7 @@
  * with this program; if not, write to the Free Software Foundation, Inc.,
  * 51 Franklin St, Fifth Floor, Boston, MA 02110, USA
  *
- * 
+ *
  * Copyright (C) 2010-2011 - J.W. Janssen, http://www.lxtreme.nl
  */
 package nl.lxtreme.ols.tool.uart.impl;
@@ -181,6 +181,9 @@ public class UARTAnalyserTask implements ToolTask<UARTDataSet>
   private final ToolProgressListener progressListener;
   private final ToolAnnotationHelper annHelper;
 
+  private int startOfDecode;
+  private int endOfDecode;
+
   private int rxdIndex;
   private int txdIndex;
   private int ctsIndex;
@@ -239,32 +242,29 @@ public class UARTAnalyserTask implements ToolTask<UARTDataSet>
 
     final int[] values = data.getValues();
 
-    int startOfDecode = this.context.getStartSampleIndex();
-    final int endOfDecode = this.context.getEndSampleIndex();
-
     // find first state change on the selected lines
     final int mask = getBitMask();
 
-    final int value = values[startOfDecode] & mask;
-    for ( int i = startOfDecode + 1; i < endOfDecode; i++ )
+    final int value = values[this.startOfDecode] & mask;
+    for ( int i = this.startOfDecode + 1; i < this.endOfDecode; i++ )
     {
       if ( value != ( values[i] & mask ) )
       {
-        startOfDecode = i;
+        this.startOfDecode = i;
         break;
       }
     }
 
-    startOfDecode = Math.max( 0, startOfDecode - 10 );
+    this.startOfDecode = Math.max( 0, this.startOfDecode - 10 );
 
     // Make sure we've got a valid range to decode..
-    if ( startOfDecode >= endOfDecode )
+    if ( this.startOfDecode >= this.endOfDecode )
     {
       LOG.log( Level.WARNING, "No valid data range found for UART analysis! Analysis aborted..." );
       throw new IllegalStateException( "No valid data range found for UART analysis!" );
     }
 
-    final UARTDataSet decodedData = new UARTDataSet( startOfDecode, endOfDecode, data );
+    final UARTDataSet decodedData = new UARTDataSet( this.startOfDecode, this.endOfDecode, data );
 
     // decode RxD/TxD data lines...
     if ( this.rxdIndex >= 0 )
@@ -359,6 +359,20 @@ public class UARTAnalyserTask implements ToolTask<UARTDataSet>
   public void setDcdIndex( final int aDcdIndex )
   {
     this.dcdIndex = aDcdIndex;
+  }
+
+  /**
+   * Sets the decoding area.
+   * 
+   * @param aStartOfDecode
+   *          a start sample index, >= 0;
+   * @param aEndOfDecode
+   *          a ending sample index, >= 0.
+   */
+  public void setDecodingArea( final int aStartOfDecode, final int aEndOfDecode )
+  {
+    this.startOfDecode = aStartOfDecode;
+    this.endOfDecode = aEndOfDecode;
   }
 
   /**
@@ -519,9 +533,9 @@ public class UARTAnalyserTask implements ToolTask<UARTDataSet>
 
     this.context.addAnnotation( new BaudrateAnnotation( aChannelIndex, baudRateAnalyzer ) );
 
-    LOG.log( Level.FINE, "Baudrate = {0}bps", Integer.valueOf( baudRate ) );
+    LOG.log( Level.FINE, "Baudrate = {0}bps", Integer.valueOf( this.baudRate ) );
 
-    if ( baudRate <= 0 )
+    if ( this.baudRate <= 0 )
     {
       LOG.log( Level.INFO, "No (usable) {0}-data found for determining bitlength/baudrate ...",
           aChannelIndex == this.rxdIndex ? UART_RXD : UART_TXD );
@@ -529,7 +543,7 @@ public class UARTAnalyserTask implements ToolTask<UARTDataSet>
     else
     {
 
-      SerialConfiguration config = new SerialConfiguration( baudRate, this.bitCount, this.stopBits, this.parity,
+      SerialConfiguration config = new SerialConfiguration( this.baudRate, this.bitCount, this.stopBits, this.parity,
           this.bitEncoding, this.bitOrder, this.idleLevel );
 
       AsyncSerialDataDecoder decoder = new AsyncSerialDataDecoder( config, this.context );
@@ -548,18 +562,18 @@ public class UARTAnalyserTask implements ToolTask<UARTDataSet>
           switch ( aType )
           {
             case FRAME:
-              annHelper.addErrorAnnotation( aChannelIdx, aTime, aTime + 1, "Frame error", KEY_COLOR, "#ff6600",
-                  KEY_EVENT_TYPE, Integer.valueOf( aEventType ) );
+              UARTAnalyserTask.this.annHelper.addErrorAnnotation( aChannelIdx, aTime, aTime + 1, "Frame error",
+                  KEY_COLOR, "#ff6600", KEY_EVENT_TYPE, Integer.valueOf( aEventType ) );
               break;
 
             case PARITY:
-              annHelper.addErrorAnnotation( aChannelIdx, aTime, aTime + 1, "Parity error", KEY_COLOR, "#ff9900",
-                  KEY_EVENT_TYPE, Integer.valueOf( aEventType ) );
+              UARTAnalyserTask.this.annHelper.addErrorAnnotation( aChannelIdx, aTime, aTime + 1, "Parity error",
+                  KEY_COLOR, "#ff9900", KEY_EVENT_TYPE, Integer.valueOf( aEventType ) );
               break;
 
             case START:
-              annHelper.addErrorAnnotation( aChannelIdx, aTime, aTime + 1, "Start error", KEY_COLOR, "#ffcc00",
-                  KEY_EVENT_TYPE, Integer.valueOf( aEventType ) );
+              UARTAnalyserTask.this.annHelper.addErrorAnnotation( aChannelIdx, aTime, aTime + 1, "Start error",
+                  KEY_COLOR, "#ffcc00", KEY_EVENT_TYPE, Integer.valueOf( aEventType ) );
               break;
           }
         }
@@ -578,11 +592,14 @@ public class UARTAnalyserTask implements ToolTask<UARTDataSet>
 
           aDataSet.reportData( aChannelIndex, startSampleIdx, endSampleIdx, aSymbol, aEventType );
 
-          annHelper.addSymbolAnnotation( aChannelIdx, aStartTime, aEndTime, aSymbol );
+          UARTAnalyserTask.this.annHelper.addSymbolAnnotation( aChannelIdx, aStartTime, aEndTime, aSymbol );
         }
       } );
+      
+      final long startTime = data.getTimestamps()[this.startOfDecode];
+      final long endTime = data.getTimestamps()[this.endOfDecode];
 
-      final double sampledBitLength = decoder.decodeDataLine( aChannelIndex );
+      final double sampledBitLength = decoder.decodeDataLine( aChannelIndex, startTime, endTime );
       // Set the actual bit length used, so UARTDataSet can calculate
       // the actual baud rate used.
       aDataSet.setSampledBitLength( sampledBitLength );

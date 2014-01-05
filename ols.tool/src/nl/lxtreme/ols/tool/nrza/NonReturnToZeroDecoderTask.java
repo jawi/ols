@@ -36,6 +36,9 @@ public class NonReturnToZeroDecoderTask implements ToolTask<AcquisitionData>
   private final ToolProgressListener progressListener;
   private final ToolAnnotationHelper annHelper;
 
+  private int startOfDecode;
+  private int endOfDecode;
+  
   private int dataIdx;
   private int clockIdx;
   private boolean inverted;
@@ -70,15 +73,12 @@ public class NonReturnToZeroDecoderTask implements ToolTask<AcquisitionData>
 
     this.annHelper.clearAnnotations( this.dataIdx, this.clockIdx );
 
-    int startIdx = this.context.getStartSampleIndex();
-    int endIdx = this.context.getEndSampleIndex();
-
     int symbolStartIdx = -1;
     int symbolSize = 8;
     int bitCount = 0;
     int symbol = 0;
 
-    for ( int i = startIdx; i < endIdx; i++ )
+    for ( int i = this.startOfDecode; i < this.endOfDecode; i++ )
     {
       int clockValue = values[i] & clockMask;
 
@@ -121,6 +121,20 @@ public class NonReturnToZeroDecoderTask implements ToolTask<AcquisitionData>
   public void setDataIdx( int aDataIdx )
   {
     this.dataIdx = aDataIdx;
+  }
+
+  /**
+   * Sets the decoding area.
+   *
+   * @param aStartOfDecode
+   *          a start sample index, >= 0;
+   * @param aEndOfDecode
+   *          a ending sample index, >= 0.
+   */
+  public void setDecodingArea( final int aStartOfDecode, final int aEndOfDecode )
+  {
+    this.startOfDecode = aStartOfDecode;
+    this.endOfDecode = aEndOfDecode;
   }
 
   public void setInverted( boolean aInverted )

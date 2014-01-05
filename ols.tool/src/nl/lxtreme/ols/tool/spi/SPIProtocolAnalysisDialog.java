@@ -442,6 +442,7 @@ public final class SPIProtocolAnalysisDialog extends BaseToolDialog<SPIDataSet> 
     toolTask.setInvertCS( this.invertCS.isSelected() );
     toolTask.setOrder( ( BitOrder )this.order.getSelectedItem() );
     toolTask.setSPIMode( ( SPIMode )this.mode.getSelectedItem() );
+    toolTask.setDecodingArea( getMarkerAIndex(), getMarkerBIndex() );
 
     // Register ourselves as property change listener...
     toolTask.addPropertyChangeListener( this );
@@ -626,6 +627,8 @@ public final class SPIProtocolAnalysisDialog extends BaseToolDialog<SPIDataSet> 
     final int channelCount = getData().getChannelCount();
 
     final JPanel settings = new JPanel( new SpringLayout() );
+    
+    addDecoderAreaPane( settings );
 
     SpringLayoutUtils.addSeparator( settings, "Settings" );
 

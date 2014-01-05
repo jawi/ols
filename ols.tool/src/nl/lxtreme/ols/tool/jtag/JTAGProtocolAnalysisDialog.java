@@ -206,6 +206,7 @@ public final class JTAGProtocolAnalysisDialog extends BaseToolDialog<JTAGDataSet
     toolTask.setTckIndex( this.tck.getSelectedIndex() );
     toolTask.setTdoIndex( this.tdo.getSelectedIndex() - 1 );
     toolTask.setTdiIndex( this.tdi.getSelectedIndex() - 1 );
+    toolTask.setDecodingArea( getMarkerAIndex(), getMarkerBIndex() );
   }
 
   /**
@@ -309,6 +310,8 @@ public final class JTAGProtocolAnalysisDialog extends BaseToolDialog<JTAGDataSet
     final int channelCount = getData().getChannelCount();
 
     final JPanel settings = new JPanel( new SpringLayout() );
+    
+    addDecoderAreaPane( settings );
 
     SpringLayoutUtils.addSeparator( settings, "Settings" );
 

@@ -58,6 +58,9 @@ public class OneWireAnalyserTask implements ToolTask<OneWireDataSet>
   private final ToolProgressListener progressListener;
   private final ToolAnnotationHelper annHelper;
 
+  private int startOfDecode;
+  private int endOfDecode;
+
   private int owLineIndex;
   private int owLineMask;
   private OneWireTiming owTiming;
@@ -94,7 +97,6 @@ public class OneWireAnalyserTask implements ToolTask<OneWireDataSet>
     int sampleIdx;
 
     final int dataMask = this.owLineMask;
-    final int sampleCount = values.length;
 
     if ( LOG.isLoggable( Level.FINE ) )
     {
@@ -102,7 +104,7 @@ public class OneWireAnalyserTask implements ToolTask<OneWireDataSet>
     }
 
     // Search the moment on which the 1-wire line is idle (= high)...
-    for ( sampleIdx = 0; sampleIdx < sampleCount; sampleIdx++ )
+    for ( sampleIdx = this.startOfDecode; sampleIdx < this.endOfDecode; sampleIdx++ )
     {
       final int dataValue = values[sampleIdx];
 
@@ -113,14 +115,14 @@ public class OneWireAnalyserTask implements ToolTask<OneWireDataSet>
       }
     }
 
-    if ( sampleIdx == sampleCount )
+    if ( sampleIdx >= this.endOfDecode )
     {
       // no idle state could be found
       LOG.log( Level.WARNING, "No IDLE state found in data; aborting analysis..." );
       throw new IllegalStateException( "No IDLE state found!" );
     }
 
-    final OneWireDataSet decodedData = new OneWireDataSet( sampleIdx, sampleCount, data );
+    final OneWireDataSet decodedData = new OneWireDataSet( sampleIdx, this.endOfDecode, data );
 
     // Update the channel label and clear any existing annotations on the
     // channel...
@@ -129,6 +131,20 @@ public class OneWireAnalyserTask implements ToolTask<OneWireDataSet>
     decodeData( data, decodedData );
 
     return decodedData;
+  }
+
+  /**
+   * Sets the decoding area.
+   * 
+   * @param aStartOfDecode
+   *          a start sample index, >= 0;
+   * @param aEndOfDecode
+   *          a ending sample index, >= 0.
+   */
+  public void setDecodingArea( final int aStartOfDecode, final int aEndOfDecode )
+  {
+    this.startOfDecode = aStartOfDecode;
+    this.endOfDecode = aEndOfDecode;
   }
 
   /**
@@ -258,7 +274,7 @@ public class OneWireAnalyserTask implements ToolTask<OneWireDataSet>
         {
           // Report the complete byte value...
           reportData( aDataSet, byteStartTime, time, byteValue );
-          
+
           byteValue = 0;
           bitCount = 8;
         }
@@ -378,7 +394,7 @@ public class OneWireAnalyserTask implements ToolTask<OneWireDataSet>
     final int endSampleIdx = Math.min( data.getSampleIndex( aEndTimestamp ) - 1, data.getTimestamps().length - 1 );
 
     aDataSet.reportData( this.owLineIndex, startSampleIdx, endSampleIdx, aByteValue );
-    
+
     this.annHelper.addSymbolAnnotation( this.owLineIndex, aStartTimestamp, aEndTimestamp, aByteValue );
   }
 

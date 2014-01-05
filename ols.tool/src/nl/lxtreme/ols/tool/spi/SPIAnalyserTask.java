@@ -15,7 +15,7 @@
  * with this program; if not, write to the Free Software Foundation, Inc.,
  * 51 Franklin St, Fifth Floor, Boston, MA 02110, USA
  *
- * 
+ *
  * Copyright (C) 2010-2011 - J.W. Janssen, http://www.lxtreme.nl
  */
 package nl.lxtreme.ols.tool.spi;
@@ -60,6 +60,9 @@ public class SPIAnalyserTask implements ToolTask<SPIDataSet>
   private final ToolAnnotationHelper annHelper;
   private final PropertyChangeSupport pcs;
 
+  private int startOfDecode;
+  private int endOfDecode;
+
   private int csIdx;
   private int sckIdx;
   private SPIFIMode protocol;
@@ -78,7 +81,7 @@ public class SPIAnalyserTask implements ToolTask<SPIDataSet>
 
   /**
    * Creates a new {@link SPIAnalyserTask} instance.
-   * 
+   *
    * @param aContext
    * @param aProgressListener
    */
@@ -100,7 +103,7 @@ public class SPIAnalyserTask implements ToolTask<SPIDataSet>
 
   /**
    * Adds the given property change listener.
-   * 
+   *
    * @param aListener
    *          the listener to add, cannot be <code>null</code>.
    */
@@ -114,7 +117,7 @@ public class SPIAnalyserTask implements ToolTask<SPIDataSet>
    * event like CS high to low edge or the trigger of the captured data. After
    * this the decoder starts to decode the data by the selected mode, number of
    * bits and bit order. The decoded data are put to a JTable object directly.
-   * 
+   *
    * @see javax.swing.SwingWorker#doInBackground()
    */
   @Override
@@ -128,11 +131,9 @@ public class SPIAnalyserTask implements ToolTask<SPIDataSet>
       LOG.fine( "mosimask = 0x" + Integer.toHexString( 1 << this.mosiIdx ) );
     }
 
-    final int startOfDecode = this.context.getStartSampleIndex();
-    final int endOfDecode = this.context.getEndSampleIndex();
-    final int slaveSelected = slaveSelected( startOfDecode, endOfDecode );
+    final int slaveSelected = slaveSelected( this.startOfDecode, this.endOfDecode );
 
-    if ( ( this.honourCS && ( slaveSelected < 0 ) ) || ( startOfDecode >= endOfDecode ) )
+    if ( ( this.honourCS && ( slaveSelected < 0 ) ) || ( this.startOfDecode >= this.endOfDecode ) )
     {
       // no CS edge found, look for trigger
       LOG.log( Level.WARNING, "No CS start-condition found! Analysis aborted..." );
@@ -145,13 +146,13 @@ public class SPIAnalyserTask implements ToolTask<SPIDataSet>
     if ( ( this.spiMode == null ) || ( this.spiMode == SPIMode.AUTODETECT ) )
     {
       LOG.log( Level.INFO, "Detecting which SPI mode is most probably used..." );
-      this.spiMode = detectSPIMode( startOfDecode, endOfDecode );
+      this.spiMode = detectSPIMode( this.startOfDecode, this.endOfDecode );
     }
 
     // Notify any listeners of the detected mode...
     this.pcs.firePropertyChange( PROPERTY_AUTO_DETECT_MODE, null, this.spiMode );
 
-    final SPIDataSet decodedData = new SPIDataSet( startOfDecode, endOfDecode, this.context.getData() );
+    final SPIDataSet decodedData = new SPIDataSet( this.startOfDecode, this.endOfDecode, this.context.getData() );
     if ( slaveSelected >= 0 )
     {
       // now the trigger is in b, add trigger event to table
@@ -166,7 +167,7 @@ public class SPIAnalyserTask implements ToolTask<SPIDataSet>
 
   /**
    * Removes the given property change listener.
-   * 
+   *
    * @param aListener
    *          the listener to remove, cannot be <code>null</code>.
    */
@@ -177,7 +178,7 @@ public class SPIAnalyserTask implements ToolTask<SPIDataSet>
 
   /**
    * Sets the number of bits an SPI datagram should consist of.
-   * 
+   *
    * @param aBitCount
    *          the number of bits in a SPI datagram, >= 8.
    */
@@ -188,7 +189,7 @@ public class SPIAnalyserTask implements ToolTask<SPIDataSet>
 
   /**
    * Sets the chip-select channel index.
-   * 
+   *
    * @param aCsMask
    *          the index of the chip-select channel.
    */
@@ -198,8 +199,22 @@ public class SPIAnalyserTask implements ToolTask<SPIDataSet>
   }
 
   /**
-   * Sets whether or not chip-select should be honoured in the analysis.
+   * Sets the decoding area.
    * 
+   * @param aStartOfDecode
+   *          a start sample index, >= 0;
+   * @param aEndOfDecode
+   *          a ending sample index, >= 0.
+   */
+  public void setDecodingArea( final int aStartOfDecode, final int aEndOfDecode )
+  {
+    this.startOfDecode = aStartOfDecode;
+    this.endOfDecode = aEndOfDecode;
+  }
+
+  /**
+   * Sets whether or not chip-select should be honoured in the analysis.
+   *
    * @param aHonourCS
    *          <code>true</code> to only decode data when the chip-select line is
    *          low, <code>false</code> to decode all data.
@@ -211,7 +226,7 @@ public class SPIAnalyserTask implements ToolTask<SPIDataSet>
 
   /**
    * Sets whether CS is default high, or default low.
-   * 
+   *
    * @param aInvertCS
    *          <code>true</code> if CS is default low, <code>false</code> if CS
    *          is default high.
@@ -223,7 +238,7 @@ public class SPIAnalyserTask implements ToolTask<SPIDataSet>
 
   /**
    * Sets the MOSI/IO0 channel index.
-   * 
+   *
    * @param aIndex
    *          the index of the "master-out slave-in"/IO0 channel.
    */
@@ -234,7 +249,7 @@ public class SPIAnalyserTask implements ToolTask<SPIDataSet>
 
   /**
    * Sets the MISO/IO1 channel index.
-   * 
+   *
    * @param aIndex
    *          the index of the "master-in slave-out"/IO1 channel.
    */
@@ -245,7 +260,7 @@ public class SPIAnalyserTask implements ToolTask<SPIDataSet>
 
   /**
    * Sets the channel index for IO2 (used in QUAD SPI).
-   * 
+   *
    * @param aIndex
    *          the index of the IO2 channel.
    */
@@ -256,7 +271,7 @@ public class SPIAnalyserTask implements ToolTask<SPIDataSet>
 
   /**
    * Sets the channel index for IO3 (used in QUAD SPI).
-   * 
+   *
    * @param aIndex
    *          the index of the IO3 channel.
    */
@@ -267,7 +282,7 @@ public class SPIAnalyserTask implements ToolTask<SPIDataSet>
 
   /**
    * Sets the order in which bits in a SPI datagram are transmitted.
-   * 
+   *
    * @param aOrder
    *          the bit order to use, cannot be <code>null</code>.
    */
@@ -278,7 +293,7 @@ public class SPIAnalyserTask implements ToolTask<SPIDataSet>
 
   /**
    * Sets which SPI protocol (i.e., standard, dual or quad) should be used.
-   * 
+   *
    * @param aProtocol
    *          the protocol to set, cannot be <code>null</code>.
    */
@@ -289,7 +304,7 @@ public class SPIAnalyserTask implements ToolTask<SPIDataSet>
 
   /**
    * Sets whether or not chip-select events should be reported.
-   * 
+   *
    * @param aReportCS
    *          <code>true</code> to include chip-select events in the analysis
    *          result, <code>false</code> to exclude them.
@@ -302,7 +317,7 @@ public class SPIAnalyserTask implements ToolTask<SPIDataSet>
 
   /**
    * Sets the serial-clock channel index.
-   * 
+   *
    * @param aSckIndex
    *          the index of the "serial-clock" channel.
    */
@@ -313,7 +328,7 @@ public class SPIAnalyserTask implements ToolTask<SPIDataSet>
 
   /**
    * Sets which SPI mode should be used for the analysis process.
-   * 
+   *
    * @param aMode
    *          the SPI mode to set, cannot be <code>null</code>.
    */
@@ -324,7 +339,7 @@ public class SPIAnalyserTask implements ToolTask<SPIDataSet>
 
   /**
    * Decodes the SPI-data on a given clock edge.
-   * 
+   *
    * @param aDataSet
    *          the decoded data to fill;
    * @param aMode
@@ -520,7 +535,7 @@ public class SPIAnalyserTask implements ToolTask<SPIDataSet>
    * determined from the data. Hence, we can only determine the clock polarity
    * (CPOL), which also provides a good idea on what mode the SPI-data is.
    * </p>
-   * 
+   *
    * @param aStartIndex
    *          the starting sample index to use;
    * @param aEndIndex
@@ -540,7 +555,7 @@ public class SPIAnalyserTask implements ToolTask<SPIDataSet>
     for ( int i = aStartIndex; i < aEndIndex; i++ )
     {
       final int newValue = ( values[i] & sckMask ) >> this.sckIdx;
-      valueStats.addValue( Integer.valueOf( newValue ) );
+    valueStats.addValue( Integer.valueOf( newValue ) );
     }
 
     SPIMode result;
@@ -604,7 +619,7 @@ public class SPIAnalyserTask implements ToolTask<SPIDataSet>
   /**
    * Reports a slave-select low->high transition, effectively causing the slave
    * to be no longer selected.
-   * 
+   *
    * @param aDecodedData
    *          the data set to add the event to;
    * @param aIndex
@@ -623,7 +638,7 @@ public class SPIAnalyserTask implements ToolTask<SPIDataSet>
   /**
    * Reports a slave-select high->low transition, effectively causing the slave
    * to be selected.
-   * 
+   *
    * @param aDecodedData
    *          the data set to add the event to;
    * @param aIndex
@@ -641,7 +656,7 @@ public class SPIAnalyserTask implements ToolTask<SPIDataSet>
 
   /**
    * Reports a set of data-bytes (both MISO and MOSI).
-   * 
+   *
    * @param aDecodedData
    *          the data set to add the data event(s) to;
    * @param aStartIdx
@@ -653,8 +668,8 @@ public class SPIAnalyserTask implements ToolTask<SPIDataSet>
    * @param aMisoValue
    *          the MISO data value.
    */
-  private void reportData( SPIDataSet aDecodedData, int aStartIdx, int aEndIdx, long aStartTimestamp,
-      long aEndTimestamp, int aMosiValue, int aMisoValue )
+  private void reportData( final SPIDataSet aDecodedData, final int aStartIdx, final int aEndIdx, final long aStartTimestamp,
+      final long aEndTimestamp, final int aMosiValue, final int aMisoValue )
   {
     long[] timestamps = this.context.getData().getTimestamps();
 
@@ -734,7 +749,7 @@ public class SPIAnalyserTask implements ToolTask<SPIDataSet>
       final int csValue = values[i] & csMask;
       Edge edge = Edge.toEdge( oldCsValue, csValue );
 
-      if ( this.invertCS && edge.isRising() || !this.invertCS && edge.isFalling() )
+      if ( ( this.invertCS && edge.isRising() ) || ( !this.invertCS && edge.isFalling() ) )
       {
         // found first falling edge; start decoding from here...
         if ( LOG.isLoggable( Level.FINE ) )
@@ -753,7 +768,7 @@ public class SPIAnalyserTask implements ToolTask<SPIDataSet>
   /**
    * Tries to find whether the SPI-slave is actually selected due to CS going
    * low (defaults to high).
-   * 
+   *
    * @param aStartIndex
    *          the starting sample index to use;
    * @param aEndIndex

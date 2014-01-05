@@ -23,7 +23,9 @@ package nl.lxtreme.ols.client.action;
 
 import java.awt.event.*;
 
-import nl.lxtreme.ols.client.*;
+import javax.swing.*;
+
+import nl.lxtreme.ols.client.actionmanager.*;
 import nl.lxtreme.ols.client.signaldisplay.*;
 import nl.lxtreme.ols.client.signaldisplay.model.*;
 
@@ -32,7 +34,7 @@ import nl.lxtreme.ols.client.signaldisplay.model.*;
  * Provides a "smart jump" action, allowing to navigate to the next/previous
  * edge, cursor or annotation.
  */
-public class SmartJumpAction extends BaseAction
+public class SmartJumpAction extends AbstractAction implements IManagedAction
 {
   // INNER TYPES
 
@@ -68,6 +70,7 @@ public class SmartJumpAction extends BaseAction
 
   // VARIABLES
 
+  private final SignalDiagramController controller;
   private final JumpDirection direction;
 
   // CONSTRUCTORS
@@ -75,11 +78,13 @@ public class SmartJumpAction extends BaseAction
   /**
    * Creates a new {@link SmartJumpAction} instance.
    */
-  public SmartJumpAction( final JumpDirection aDirection, final ClientController aController )
+  public SmartJumpAction( final JumpDirection aDirection, SignalDiagramController aController )
   {
-    super( getID( aDirection ), aController, getTitle( aDirection ), getDescription( aDirection ) );
-
     this.direction = aDirection;
+    this.controller = aController;
+
+    putValue( NAME, getTitle( aDirection ) );
+    putValue( LONG_DESCRIPTION, getDescription( aDirection ) );
   }
 
   // METHODS
@@ -159,13 +164,22 @@ public class SmartJumpAction extends BaseAction
       controller.smartJump( getSignalDiagramModel().getSelectedChannelIndex(), type, this.direction );
     }
   }
+  
+  /**
+   * {@inheritDoc}
+   */
+  @Override
+  public String getId()
+  {
+    return getID( this.direction );
+  }
 
   /**
    * @return
    */
   private SignalDiagramController getSignalDiagramController()
   {
-    return getController().getSignalDiagramController();
+    return this.controller;
   }
 
   /**

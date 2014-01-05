@@ -98,7 +98,7 @@ public class DemoDevice implements Device
     }
 
     return this.taskExecutionService.execute( new DemoAcquisitionTask( channelCount, sampleCount, generator,
-        aProgressListener ) );
+        aProgressListener ), Collections.singletonMap( "type", "acquisition" ) );
   }
 
   /**

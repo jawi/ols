@@ -15,7 +15,7 @@
  * with this program; if not, write to the Free Software Foundation, Inc.,
  * 51 Franklin St, Fifth Floor, Boston, MA 02110, USA
  *
- * 
+ *
  * Copyright (C) 2010-2011 - J.W. Janssen, http://www.lxtreme.nl
  */
 package nl.lxtreme.ols.tool.i2s;
@@ -38,6 +38,9 @@ public class I2SAnalyserTask implements ToolTask<I2SDataSet>
   private final ToolProgressListener progressListener;
   private final ToolAnnotationHelper annHelper;
 
+  private int startOfDecode;
+  private int endOfDecode;
+
   private int clockIdx;
   private int dataIdx;
   private int wsIdx;
@@ -46,7 +49,7 @@ public class I2SAnalyserTask implements ToolTask<I2SDataSet>
 
   /**
    * Creates a new I2CAnalyserTask instance.
-   * 
+   *
    * @param aContext
    * @param aProgressListener
    */
@@ -63,16 +66,13 @@ public class I2SAnalyserTask implements ToolTask<I2SDataSet>
    * This is the I2C protocol decoder core The decoder scans for a decode start
    * event when one of the two lines is going low (start condition). After this
    * the decoder starts to decode the data.
-   * 
+   *
    * @see javax.swing.SwingWorker#doInBackground()
    */
   @Override
   public I2SDataSet call() throws Exception
   {
     final AcquisitionData data = this.context.getData();
-
-    int startOfDecode = this.context.getStartSampleIndex();
-    int endOfDecode = this.context.getEndSampleIndex();
 
     final int clockMask = ( 1 << this.clockIdx );
     final int dataMask = ( 1 << this.dataIdx );
@@ -81,26 +81,26 @@ public class I2SAnalyserTask implements ToolTask<I2SDataSet>
     final int[] values = data.getValues();
     final long[] timestamps = data.getTimestamps();
 
-    final I2SDataSet dataSet = new I2SDataSet( startOfDecode, endOfDecode, data );
+    final I2SDataSet dataSet = new I2SDataSet( this.startOfDecode, this.endOfDecode, data );
 
     // Prepare everything for the decoding results...
     prepareResults();
 
-    startOfDecode = findFirstWordSelect( data );
-    if ( startOfDecode >= endOfDecode )
+    this.startOfDecode = findFirstWordSelect( data );
+    if ( this.startOfDecode >= this.endOfDecode )
     {
       throw new IllegalStateException( "Failed to find a word-select edge!" );
     }
 
     int clockVal;
-    int oldClockVal = values[startOfDecode] & clockMask;
+    int oldClockVal = values[this.startOfDecode] & clockMask;
     int wsVal;
-    int oldWsVal = values[startOfDecode] & wsMask;
+    int oldWsVal = values[this.startOfDecode] & wsMask;
     long wordValue = 0;
     int clockCount = 0;
-    int startIdx = startOfDecode;
+    int startIdx = this.startOfDecode;
 
-    for ( int i = startOfDecode + 1; i < endOfDecode; i++ )
+    for ( int i = this.startOfDecode + 1; i < this.endOfDecode; i++ )
     {
       clockVal = values[i] & clockMask;
       wsVal = values[i] & wsMask;
@@ -135,7 +135,7 @@ public class I2SAnalyserTask implements ToolTask<I2SDataSet>
         clockCount++;
       }
 
-      this.progressListener.setProgress( getPercentage( i, startOfDecode, endOfDecode ) );
+      this.progressListener.setProgress( getPercentage( i, this.startOfDecode, this.endOfDecode ) );
 
       oldClockVal = clockVal;
       oldWsVal = wsVal;
@@ -144,7 +144,7 @@ public class I2SAnalyserTask implements ToolTask<I2SDataSet>
     if ( clockCount > 0 )
     {
       reportData( dataSet, timestamps, ( oldWsVal == 0 ) ? Channel.LEFT : Channel.RIGHT, wordValue, startIdx,
-          endOfDecode );
+          this.endOfDecode );
     }
 
     return dataSet;
@@ -167,6 +167,20 @@ public class I2SAnalyserTask implements ToolTask<I2SDataSet>
   }
 
   /**
+   * Sets the decoding area.
+   * 
+   * @param aStartOfDecode
+   *          a start sample index, >= 0;
+   * @param aEndOfDecode
+   *          a ending sample index, >= 0.
+   */
+  public void setDecodingArea( final int aStartOfDecode, final int aEndOfDecode )
+  {
+    this.startOfDecode = aStartOfDecode;
+    this.endOfDecode = aEndOfDecode;
+  }
+
+  /**
    * @param aWSIdx
    */
   public void setWordSelectIndex( final int aWSIdx )
@@ -179,8 +193,8 @@ public class I2SAnalyserTask implements ToolTask<I2SDataSet>
    */
   private int findFirstWordSelect( final AcquisitionData aData )
   {
-    int idx = this.context.getStartSampleIndex();
-    int end = this.context.getEndSampleIndex();
+    int idx = this.startOfDecode;
+    int end = this.endOfDecode;
 
     final int wsMask = ( 1 << this.wsIdx );
     final int[] values = aData.getValues();
@@ -220,8 +234,8 @@ public class I2SAnalyserTask implements ToolTask<I2SDataSet>
    * @param startIdx
    * @param endIdx
    */
-  private void reportData( final I2SDataSet dataSet, final long[] timestamps, Channel channel, long wordValue,
-      int startIdx, int endIdx )
+  private void reportData( final I2SDataSet dataSet, final long[] timestamps, final Channel channel,
+      final long wordValue, final int startIdx, final int endIdx )
   {
     String color = Channel.LEFT == channel ? "#cccccc" : "#eeeeee";
     String text = String.format( "%s data: 0x%x", channel.name(), Long.valueOf( wordValue ) );

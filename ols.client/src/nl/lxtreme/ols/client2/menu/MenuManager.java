@@ -16,38 +16,25 @@
  * 51 Franklin St, Fifth Floor, Boston, MA 02110, USA
  *
  * Copyright (C) 2006-2010 Michael Poppitz, www.sump.org
- * Copyright (C) 2010-2012 J.W. Janssen, www.lxtreme.nl
+ * Copyright (C) 2010-2014 J.W. Janssen, www.lxtreme.nl
  */
-package nl.lxtreme.ols.tool.linedecoder;
+package nl.lxtreme.ols.client2.menu;
 
 
-import nl.lxtreme.ols.tool.api.*;
+import javax.swing.*;
 
 
 /**
- * Provides the context for a {@link LineDecoder}.
+ * Provides a manager for various menus.
  */
-public interface LineDecoderToolContext extends ToolContext
+public interface MenuManager
 {
   // METHODS
 
   /**
-   * @return
+   * Returns the (managed) menu bar.
+   * 
+   * @return the menu bar, never <code>null</code>.
    */
-  int getClockSpeed();
-
-  /**
-   * @return
-   */
-  int[] getLineChannels();
-
-  /**
-   * @return
-   */
-  boolean isInverted();
-
-  /**
-   * @return
-   */
-  boolean isRecoverClock();
+  JMenuBar getMenuBar();
 }

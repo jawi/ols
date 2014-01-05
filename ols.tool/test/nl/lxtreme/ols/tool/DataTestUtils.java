@@ -180,10 +180,6 @@ public final class DataTestUtils
   public static ToolContext createToolContext( final AcquisitionData aData, final int aStartSampleIdx,
       final int aLastSampleIdx )
   {
-    final Integer first = Integer.valueOf( Math.max( 0, aStartSampleIdx ) );
-    final Integer last = Integer.valueOf( Math.min( aLastSampleIdx, aData.getValues().length - 1 ) );
-    final Integer size = Integer.valueOf( last.intValue() - first.intValue() );
-
     // Do NOT use Mockito#mock for this; it appears to slow things down *really*
     // much...
     return new ToolContext()
@@ -201,45 +197,9 @@ public final class DataTestUtils
       }
 
       @Override
-      public int getChannels()
-      {
-        return aData.getChannelCount();
-      }
-
-      @Override
-      public Cursor getCursor( final int aSelectedIndex )
-      {
-        return null;
-      }
-
-      @Override
       public AcquisitionData getData()
       {
         return aData;
-      }
-
-      @Override
-      public int getEnabledChannels()
-      {
-        return aData.getEnabledChannels();
-      }
-
-      @Override
-      public int getEndSampleIndex()
-      {
-        return last.intValue();
-      }
-
-      @Override
-      public int getLength()
-      {
-        return size.intValue();
-      }
-
-      @Override
-      public int getStartSampleIndex()
-      {
-        return first.intValue();
       }
     };
   }

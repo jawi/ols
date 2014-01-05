@@ -15,7 +15,7 @@
  * with this program; if not, write to the Free Software Foundation, Inc.,
  * 51 Franklin St, Fifth Floor, Boston, MA 02110, USA
  *
- * 
+ *
  * Copyright (C) 2010-2011 - J.W. Janssen, http://www.lxtreme.nl
  */
 package nl.lxtreme.ols.tool.i2c;
@@ -64,6 +64,9 @@ public class I2CAnalyserTask implements ToolTask<I2CDataSet>
   private final ToolAnnotationHelper annHelper;
   private final PropertyChangeSupport pcs;
 
+  private int startOfDecode;
+  private int endOfDecode;
+
   private boolean detectSDA_SCL;
   private boolean reportACK;
   private boolean reportNACK;
@@ -80,7 +83,7 @@ public class I2CAnalyserTask implements ToolTask<I2CDataSet>
 
   /**
    * Creates a new I2CAnalyserTask instance.
-   * 
+   *
    * @param aContext
    * @param aProgressListener
    */
@@ -100,7 +103,7 @@ public class I2CAnalyserTask implements ToolTask<I2CDataSet>
 
   /**
    * Adds the given property change listener.
-   * 
+   *
    * @param aListener
    *          the listener to add, cannot be <code>null</code>.
    */
@@ -113,7 +116,7 @@ public class I2CAnalyserTask implements ToolTask<I2CDataSet>
    * This is the I2C protocol decoder core The decoder scans for a decode start
    * event when one of the two lines is going low (start condition). After this
    * the decoder starts to decode the data.
-   * 
+   *
    * @see javax.swing.SwingWorker#doInBackground()
    */
   @Override
@@ -134,12 +137,9 @@ public class I2CAnalyserTask implements ToolTask<I2CDataSet>
       LOG.log( Level.FINE, "Line B mask = 0x{0}", Integer.toHexString( this.lineBmask ) );
     }
 
-    int startOfDecode = this.context.getStartSampleIndex();
-    int endOfDecode = this.context.getEndSampleIndex();
-
     if ( this.detectSDA_SCL )
     {
-      startOfDecode = autodetectDataAndClock( data, startOfDecode, endOfDecode );
+      this.startOfDecode = autodetectDataAndClock( data, this.startOfDecode, this.endOfDecode );
     }
     else
     {
@@ -151,7 +151,7 @@ public class I2CAnalyserTask implements ToolTask<I2CDataSet>
     final int sdaMask = ( 1 << this.sdaIdx );
     final int sclMask = ( 1 << this.sclIdx );
 
-    final I2CDataSet i2cDataSet = new I2CDataSet( startOfDecode, endOfDecode, data );
+    final I2CDataSet i2cDataSet = new I2CDataSet( this.startOfDecode, this.endOfDecode, data );
 
     // Prepare everything for the decoding results...
     prepareResults();
@@ -180,7 +180,7 @@ public class I2CAnalyserTask implements ToolTask<I2CDataSet>
     if ( this.detectSDA_SCL )
     {
       // We've just found our start condition, start the report with that...
-      reportStartCondition( i2cDataSet, startOfDecode, timestamps[startOfDecode] );
+      reportStartCondition( i2cDataSet, this.startOfDecode, timestamps[this.startOfDecode] );
 
       startCondFound = true;
     }
@@ -238,7 +238,7 @@ public class I2CAnalyserTask implements ToolTask<I2CDataSet>
 
               annotation = String.format( tenBitAddress ? "Setup %s slave: 0x%X " : "Setup %s slave: 0x%X [0x%X]",
                   ( direction == 1 ) ? "read from" : "write to", Integer.valueOf( slaveAddress ),
-                  Integer.valueOf( byteValue ) );
+                      Integer.valueOf( byteValue ) );
 
               tenBitAddress = false;
               type = TYPE_EVENT;
@@ -331,7 +331,7 @@ public class I2CAnalyserTask implements ToolTask<I2CDataSet>
       oldSDA = sda;
 
       this.progressListener
-          .setProgress( getPercentage( idx, i2cDataSet.getStartOfDecode(), i2cDataSet.getEndOfDecode() ) );
+      .setProgress( getPercentage( idx, i2cDataSet.getStartOfDecode(), i2cDataSet.getEndOfDecode() ) );
     }
 
     return i2cDataSet;
@@ -339,13 +339,27 @@ public class I2CAnalyserTask implements ToolTask<I2CDataSet>
 
   /**
    * Removes the given property change listener.
-   * 
+   *
    * @param aListener
    *          the listener to remove, cannot be <code>null</code>.
    */
   public void removePropertyChangeListener( final PropertyChangeListener aListener )
   {
     this.pcs.removePropertyChangeListener( aListener );
+  }
+
+  /**
+   * Sets the decoding area.
+   *
+   * @param aStartOfDecode
+   *          a start sample index, >= 0;
+   * @param aEndOfDecode
+   *          a ending sample index, >= 0.
+   */
+  public void setDecodingArea( final int aStartOfDecode, final int aEndOfDecode )
+  {
+    this.startOfDecode = aStartOfDecode;
+    this.endOfDecode = aEndOfDecode;
   }
 
   /**
@@ -426,7 +440,7 @@ public class I2CAnalyserTask implements ToolTask<I2CDataSet>
   /**
    * Tries to auto detect the SDA & SCL lines between the given boundries in the
    * data.
-   * 
+   *
    * @param aStartOfDecode
    *          the starting sample index;
    * @param aEndOfDecode
@@ -527,7 +541,7 @@ public class I2CAnalyserTask implements ToolTask<I2CDataSet>
   /**
    * @param aTime
    */
-  private void reportACK( I2CDataSet aDataSet, int aSampleIdx, long aTimestamp )
+  private void reportACK( final I2CDataSet aDataSet, final int aSampleIdx, final long aTimestamp )
   {
     if ( this.reportACK )
     {
@@ -541,18 +555,7 @@ public class I2CAnalyserTask implements ToolTask<I2CDataSet>
   /**
    * @param aTime
    */
-  private void reportIncompleteSymbol( I2CDataSet aDataSet, int aSampleIdx, long aTimestamp, int aBitCount )
-  {
-    aDataSet.reportBusError( this.sdaIdx, aSampleIdx );
-
-    this.annHelper.addErrorAnnotation( this.sdaIdx, aTimestamp, aTimestamp + 1, I2C_BUS_ERROR, KEY_COLOR, "#ff8000",
-        KEY_DESCRIPTION, "Incomplete byte read (only " + aBitCount + " bits)." );
-  }
-
-  /**
-   * @param aTime
-   */
-  private void reportBusError( I2CDataSet aDataSet, int aSampleIdx, long aTimestamp )
+  private void reportBusError( final I2CDataSet aDataSet, final int aSampleIdx, final long aTimestamp )
   {
     aDataSet.reportBusError( this.sdaIdx, aSampleIdx );
 
@@ -564,8 +567,8 @@ public class I2CAnalyserTask implements ToolTask<I2CDataSet>
    * @param aTime
    * @param aByteValue
    */
-  private void reportData( I2CDataSet aDataSet, int aStartSampleIdx, int aEndSampleIdx, long aStartTime, long aEndTime,
-      int aByteValue, String aDescription, String aType )
+  private void reportData( final I2CDataSet aDataSet, final int aStartSampleIdx, final int aEndSampleIdx, final long aStartTime, final long aEndTime,
+      final int aByteValue, final String aDescription, final String aType )
   {
     aDataSet.reportData( this.sdaIdx, aStartSampleIdx, aEndSampleIdx, aByteValue );
 
@@ -574,10 +577,21 @@ public class I2CAnalyserTask implements ToolTask<I2CDataSet>
   }
 
   /**
+   * @param aTime
+   */
+  private void reportIncompleteSymbol( final I2CDataSet aDataSet, final int aSampleIdx, final long aTimestamp, final int aBitCount )
+  {
+    aDataSet.reportBusError( this.sdaIdx, aSampleIdx );
+
+    this.annHelper.addErrorAnnotation( this.sdaIdx, aTimestamp, aTimestamp + 1, I2C_BUS_ERROR, KEY_COLOR, "#ff8000",
+        KEY_DESCRIPTION, "Incomplete byte read (only " + aBitCount + " bits)." );
+  }
+
+  /**
    * @param aDataSet
    * @param aTime
    */
-  private void reportNACK( I2CDataSet aDataSet, int aSampleIdx, long aTimestamp )
+  private void reportNACK( final I2CDataSet aDataSet, final int aSampleIdx, final long aTimestamp )
   {
     if ( this.reportNACK )
     {
@@ -591,7 +605,7 @@ public class I2CAnalyserTask implements ToolTask<I2CDataSet>
   /**
    * @param aTime
    */
-  private void reportStartCondition( I2CDataSet aDataSet, int aSampleIdx, long aTimestamp )
+  private void reportStartCondition( final I2CDataSet aDataSet, final int aSampleIdx, final long aTimestamp )
   {
     if ( this.reportStart )
     {
@@ -605,7 +619,7 @@ public class I2CAnalyserTask implements ToolTask<I2CDataSet>
   /**
    * @param aTime
    */
-  private void reportStopCondition( I2CDataSet aDataSet, int aSampleIdx, long aTimestamp )
+  private void reportStopCondition( final I2CDataSet aDataSet, final int aSampleIdx, final long aTimestamp )
   {
     if ( this.reportStop )
     {

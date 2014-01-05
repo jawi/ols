@@ -219,6 +219,7 @@ public final class I2SProtocolAnalysisDialog extends BaseToolDialog<I2SDataSet> 
     toolTask.setClockIndex( this.clockIdx.getSelectedIndex() );
     toolTask.setDataIndex( this.dataIdx.getSelectedIndex() );
     toolTask.setWordSelectIndex( this.wsIdx.getSelectedIndex() );
+    toolTask.setDecodingArea( getMarkerAIndex(), getMarkerBIndex() );
   }
 
   /**
@@ -299,6 +300,8 @@ public final class I2SProtocolAnalysisDialog extends BaseToolDialog<I2SDataSet> 
     final int channelCount = getData().getChannelCount();
 
     final JPanel panel = new JPanel( new SpringLayout() );
+    
+    addDecoderAreaPane( panel );
 
     SpringLayoutUtils.addSeparator( panel, "Settings" );
 

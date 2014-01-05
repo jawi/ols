@@ -412,7 +412,8 @@ public class ToolAnnotationHelper
    */
   private boolean isValidChannel( final int aChannelIdx )
   {
-    return ( this.context.getEnabledChannels() & ( 1 << aChannelIdx ) ) != 0;
+    final int enabled = this.context.getData().getEnabledChannels();
+    return ( enabled & ( 1 << aChannelIdx ) ) != 0;
   }
 
   /**

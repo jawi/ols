@@ -41,6 +41,9 @@ public class ManchesterDecoderTask implements ToolTask<AcquisitionData>
   private final ToolProgressListener progressListener;
   private final ToolAnnotationHelper annHelper;
 
+  private int startOfDecode;
+  private int endOfDecode;
+  
   private boolean inverted;
   private int dataIdx;
 
@@ -76,9 +79,7 @@ public class ManchesterDecoderTask implements ToolTask<AcquisitionData>
 
     this.annHelper.clearAnnotations( this.dataIdx, clockIdx );
 
-    int startIdx = this.context.getStartSampleIndex();
-    int endIdx = this.context.getEndSampleIndex();
-    int lastValue = values[startIdx] & dataMask;
+    int lastValue = values[this.startOfDecode] & dataMask;
 
     long symbolStartTime = -1L;
     long lastTimestamp = -1L;
@@ -91,7 +92,7 @@ public class ManchesterDecoderTask implements ToolTask<AcquisitionData>
     int bitCount = 0;
     int symbol = 0;
 
-    for ( int i = startIdx; i < endIdx; i++ )
+    for ( int i = this.startOfDecode; i < this.endOfDecode; i++ )
     {
       int value = values[i] & dataMask;
 
@@ -180,7 +181,7 @@ public class ManchesterDecoderTask implements ToolTask<AcquisitionData>
 
       lastValue = value;
 
-      this.progressListener.setProgress( ( i - endIdx ) * 100 / ( endIdx - startIdx ) );
+      this.progressListener.setProgress( ( i - this.endOfDecode ) * 100 / ( this.endOfDecode - this.startOfDecode ) );
     }
 
     // No more edges; we need to check whether we've missed the very last bit...
@@ -256,7 +257,7 @@ public class ManchesterDecoderTask implements ToolTask<AcquisitionData>
       builder.addSample( entry.getKey(), entry.getValue() );
     }
 
-    for ( int i = endIdx; i < values.length; i++ )
+    for ( int i = this.endOfDecode; i < values.length; i++ )
     {
       builder.addSample( timestamps[i], values[i] );
     }
@@ -273,6 +274,20 @@ public class ManchesterDecoderTask implements ToolTask<AcquisitionData>
   public void setDataIdx( final int aDataIdx )
   {
     this.dataIdx = aDataIdx;
+  }
+
+  /**
+   * Sets the decoding area.
+   *
+   * @param aStartOfDecode
+   *          a start sample index, >= 0;
+   * @param aEndOfDecode
+   *          a ending sample index, >= 0.
+   */
+  public void setDecodingArea( final int aStartOfDecode, final int aEndOfDecode )
+  {
+    this.startOfDecode = aStartOfDecode;
+    this.endOfDecode = aEndOfDecode;
   }
 
   public void setInverted( boolean aInverted )

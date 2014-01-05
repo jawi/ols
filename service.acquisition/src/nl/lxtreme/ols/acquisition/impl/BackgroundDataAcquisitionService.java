@@ -28,16 +28,17 @@ import java.util.logging.*;
 
 import nl.lxtreme.ols.acquisition.*;
 import nl.lxtreme.ols.common.acquisition.*;
-import nl.lxtreme.ols.common.acquisition.AcquisitionResultStatus.*;
+import nl.lxtreme.ols.common.acquisition.AcquisitionResultStatus.ResultStatus;
 import nl.lxtreme.ols.device.api.*;
-import nl.lxtreme.ols.task.execution.*;
+
+import org.osgi.service.event.*;
 
 
 /**
  * Provides a {@link DataAcquisitionService} that performs the acquisition in
  * the background.
  */
-public class BackgroundDataAcquisitionService implements DataAcquisitionService, TaskStatusListener
+public class BackgroundDataAcquisitionService implements DataAcquisitionService, EventHandler
 {
   // CONSTANTS
 
@@ -48,6 +49,7 @@ public class BackgroundDataAcquisitionService implements DataAcquisitionService,
   private final List<AcquisitionProgressListener> acquisitionProgressListeners;
   private final List<AcquisitionStatusListener> acquisitionStatusListeners;
   private final List<AcquisitionDataListener> acquisitionDataListeners;
+  private final ConcurrentMap<String, Device> devices;
   private final Map<String, Map<String, ? extends Serializable>> deviceConfigs;
 
   private volatile Future<?> acquisitionFutureTask;
@@ -64,6 +66,7 @@ public class BackgroundDataAcquisitionService implements DataAcquisitionService,
     this.acquisitionDataListeners = new CopyOnWriteArrayList<AcquisitionDataListener>();
 
     this.deviceConfigs = new HashMap<String, Map<String, ? extends Serializable>>();
+    this.devices = new ConcurrentHashMap<String, Device>();
   }
 
   // METHODS
@@ -72,45 +75,27 @@ public class BackgroundDataAcquisitionService implements DataAcquisitionService,
    * {@inheritDoc}
    */
   @Override
-  public void acquireData( Device aDevice ) throws IOException
-  {
-    if ( aDevice == null )
-    {
-      throw new IllegalArgumentException( "Device cannot be null!" );
-    }
-
-    Map<String, ? extends Serializable> config = this.deviceConfigs.get( aDevice.getName() );
-    if ( config == null )
-    {
-      throw new IllegalStateException( "No configuration present for " + aDevice.getName() );
-    }
-
-    acquireData( config, aDevice );
-  }
-
-  /**
-   * {@inheritDoc}
-   */
-  @Override
-  public void acquireData( Map<String, ? extends Serializable> aConfig, Device aDevice ) throws IOException
+  public void acquireData( Map<String, ? extends Serializable> aConfig, String aDeviceName ) throws IOException
   {
     if ( aConfig == null )
     {
       throw new IllegalArgumentException( "Config cannot be null!" );
     }
-    if ( aDevice == null )
-    {
-      throw new IllegalArgumentException( "Device cannot be null!" );
-    }
-    if ( isAcquiring() )
+    if ( isAcquiring( aDeviceName ) )
     {
       throw new IllegalStateException( "Acquisition still in progress!" );
     }
 
-    // Keep this configuration for later use...
-    this.deviceConfigs.put( aDevice.getName(), aConfig );
+    Device device = this.devices.get( aDeviceName );
+    if ( device == null )
+    {
+      throw new IllegalArgumentException( "Invalid device name!" );
+    }
 
-    this.acquisitionFutureTask = aDevice.acquireData( aConfig, new AcquisitionProgressListener()
+    // Keep this configuration for later use...
+    this.deviceConfigs.put( aDeviceName, aConfig );
+
+    this.acquisitionFutureTask = device.acquireData( aConfig, new AcquisitionProgressListener()
     {
       @Override
       public void acquisitionInProgress( final int aPercentage )
@@ -118,6 +103,26 @@ public class BackgroundDataAcquisitionService implements DataAcquisitionService,
         fireAcquisitionInProgressEvent( aPercentage );
       }
     } );
+  }
+
+  /**
+   * {@inheritDoc}
+   */
+  @Override
+  public void acquireData( String aDeviceName ) throws IOException
+  {
+    if ( aDeviceName == null || "".equals( aDeviceName.trim() ) || !this.devices.containsKey( aDeviceName ) )
+    {
+      throw new IllegalArgumentException( "Invalid device name!" );
+    }
+
+    Map<String, ? extends Serializable> config = this.deviceConfigs.get( aDeviceName );
+    if ( config == null )
+    {
+      throw new IllegalStateException( "No configuration present for " + aDeviceName );
+    }
+
+    acquireData( config, aDeviceName );
   }
 
   /**
@@ -163,10 +168,24 @@ public class BackgroundDataAcquisitionService implements DataAcquisitionService,
   }
 
   /**
+   * Adds a given device to this service.
+   * <p>
+   * This method is called by the dependency manager.
+   * </p>
+   * 
+   * @param aDevice
+   *          the device to add, cannot be <code>null</code>.
+   */
+  public void addDevice( Device aDevice )
+  {
+    this.devices.putIfAbsent( aDevice.getName(), aDevice );
+  }
+
+  /**
    * {@inheritDoc}
    */
   @Override
-  public void cancelAcquisition( final Device aDevice ) throws IOException, IllegalStateException
+  public void cancelAcquisition( String aDeviceName ) throws IOException, IllegalStateException
   {
     if ( this.acquisitionFutureTask == null )
     {
@@ -187,9 +206,33 @@ public class BackgroundDataAcquisitionService implements DataAcquisitionService,
    * {@inheritDoc}
    */
   @Override
-  public boolean isAcquiring()
+  public Map<String, ? extends Serializable> configureDevice( java.awt.Window aParent, String aDeviceName )
+  {
+    Device device = this.devices.get( aDeviceName );
+    if ( device == null )
+    {
+      throw new IllegalArgumentException( "Invalid device name!" );
+    }
+
+    return device.setupDevice();
+  }
+
+  /**
+   * {@inheritDoc}
+   */
+  @Override
+  public boolean isAcquiring( String aDeviceName )
   {
     return ( this.acquisitionFutureTask != null ) && !this.acquisitionFutureTask.isDone();
+  }
+
+  /**
+   * {@inheritDoc}
+   */
+  @Override
+  public boolean isDeviceSetup( String aDeviceName )
+  {
+    return this.deviceConfigs.get( aDeviceName ) != null;
   }
 
   /**
@@ -237,6 +280,20 @@ public class BackgroundDataAcquisitionService implements DataAcquisitionService,
   }
 
   /**
+   * Removes a given device from this service.
+   * <p>
+   * This method is called by the dependency manager.
+   * </p>
+   * 
+   * @param aDevice
+   *          the device to remove, cannot be <code>null</code>.
+   */
+  public void removeDevice( Device aDevice )
+  {
+    this.devices.remove( aDevice.getName(), aDevice );
+  }
+
+  /**
    * Closes/shuts down this data acquisition service.
    * <p>
    * Called by the dependency manager.
@@ -255,40 +312,34 @@ public class BackgroundDataAcquisitionService implements DataAcquisitionService,
    * {@inheritDoc}
    */
   @Override
-  public <RT> void taskEnded( final Task<RT> aTask, final RT aResult )
+  public void handleEvent( Event aEvent )
   {
-    this.acquisitionFutureTask = null;
+    String status = ( String )aEvent.getProperty( "status" );
+    if ( "success".equals( status ) )
+    {
+      AcquisitionData result = ( AcquisitionData )aEvent.getProperty( "result" );
+      Long timeTaken = ( Long )aEvent.getProperty( "time" );
 
-    final AcquisitionData result = ( AcquisitionData )aResult;
-    fireAcquisitionCompleteEvent( result );
+      fireAcquisitionCompleteEvent( result );
 
-    final AcquisitionResultStatus status = new AcquisitionResultStatus( ResultStatus.NORMAL );
-    fireAcquisitionEndedEvent( status );
+      fireAcquisitionEndedEvent( new AcquisitionResultStatus( ResultStatus.NORMAL, timeTaken ) );
 
-    LOG.log( Level.INFO, "Acquisition successful!" );
-  }
+      LOG.log( Level.INFO, "Acquisition successful!" );
+    }
+    else if ( "failure".equals( status ) )
+    {
+      Exception exception = ( Exception )aEvent.getProperty( "exception" );
+      Long timeTaken = ( Long )aEvent.getProperty( "time" );
 
-  /**
-   * {@inheritDoc}
-   */
-  @Override
-  public <RT> void taskFailed( final Task<RT> aTask, final Exception aException )
-  {
-    this.acquisitionFutureTask = null;
+      fireAcquisitionEndedEvent( AcquisitionResultStatus.create( exception, timeTaken ) );
 
-    final AcquisitionResultStatus status = AcquisitionResultStatus.create( aException );
-    fireAcquisitionEndedEvent( status );
+      LOG.log( Level.WARNING, "Acquisition failed!", exception );
 
-    LOG.log( Level.WARNING, "Acquisition failed!", aException );
-  }
-
-  /**
-   * {@inheritDoc}
-   */
-  @Override
-  public <RT> void taskStarted( final Task<RT> aTask )
-  {
-    fireAcquisitionStartedEvent();
+    }
+    else if ( "started".equals( status ) )
+    {
+      fireAcquisitionStartedEvent();
+    }
   }
 
   /**

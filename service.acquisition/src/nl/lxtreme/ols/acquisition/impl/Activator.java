@@ -21,12 +21,16 @@
 package nl.lxtreme.ols.acquisition.impl;
 
 
+import java.util.*;
+
 import nl.lxtreme.ols.acquisition.*;
 import nl.lxtreme.ols.common.acquisition.*;
+import nl.lxtreme.ols.device.api.*;
 import nl.lxtreme.ols.task.execution.*;
 
 import org.apache.felix.dm.*;
 import org.osgi.framework.*;
+import org.osgi.service.event.*;
 
 
 /**
@@ -51,15 +55,22 @@ public class Activator extends DependencyActivatorBase
   @Override
   public void init( final BundleContext aContext, final DependencyManager aManager ) throws Exception
   {
-    final String[] interfaces = new String[] { DataAcquisitionService.class.getName(),
-        TaskStatusListener.class.getName() };
+    Properties props = new Properties();
+    props.put( EventConstants.EVENT_TOPIC, TaskExecutionService.EVENT_TOPIC );
+    props.put( EventConstants.EVENT_FILTER, "(type=acquisition)" );
+
+    String[] interfaces = new String[] { DataAcquisitionService.class.getName(), EventHandler.class.getName() };
 
     aManager.add( createComponent() //
-        .setInterface( interfaces, null ) //
+        .setInterface( interfaces, props ) //
         .setImplementation( BackgroundDataAcquisitionService.class ) //
         .add( createServiceDependency() //
             .setService( TaskExecutionService.class ) //
             .setRequired( true ) ) //
+        .add( createServiceDependency() //
+            .setService( Device.class ) //
+            .setCallbacks( "addDevice", "removeDevice" ) //
+            .setRequired( false ) ) //
         .add( createServiceDependency() //
             .setService( AcquisitionProgressListener.class ) //
             .setCallbacks( "addAcquisitionProgressListener", "removeAcquisitionProgressListener" ) //
@@ -73,6 +84,5 @@ public class Activator extends DependencyActivatorBase
             .setCallbacks( "addAcquisitionDataListener", "removeAcquisitionDataListener" ) //
             .setRequired( false ) ) //
         );
-
   }
 }

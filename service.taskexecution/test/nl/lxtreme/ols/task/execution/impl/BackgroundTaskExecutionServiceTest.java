@@ -21,6 +21,7 @@
 package nl.lxtreme.ols.task.execution.impl;
 
 
+import static nl.lxtreme.ols.task.execution.TaskExecutionService.*;
 import static org.junit.Assert.*;
 import static org.mockito.Matchers.*;
 import static org.mockito.Mockito.*;
@@ -34,13 +35,49 @@ import nl.lxtreme.ols.task.execution.*;
 
 import org.junit.*;
 import org.mockito.*;
+import org.osgi.service.event.*;
+import org.osgi.service.log.*;
 
 
 /**
- * 
+ * Test cases for {@link BackgroundTaskExecutionService}.
  */
 public class BackgroundTaskExecutionServiceTest
 {
+  // INNER TYPES
+
+  static class EventMatcher extends ArgumentMatcher<Event>
+  {
+    private final Object[] props;
+
+    public EventMatcher( Object... aProperties )
+    {
+      this.props = aProperties;
+    }
+
+    @Override
+    public boolean matches( Object aArgument )
+    {
+      Event event = ( Event )aArgument;
+      if ( !EVENT_TOPIC.equals( event.getTopic() ) )
+      {
+        return false;
+      }
+      for ( int i = 0; i < props.length; i += 2 )
+      {
+        String name = String.valueOf( props[i] );
+        Object value = props[i + 1];
+
+        if ( !value.equals( event.getProperty( name ) ) )
+        {
+          return false;
+        }
+      }
+      return true;
+    }
+
+  }
+
   // CONSTANTS
 
   /**
@@ -49,15 +86,17 @@ public class BackgroundTaskExecutionServiceTest
    */
   private static final int THROW_EXCEPTION = -1;
   private static final int INFINITE_BLOCKING_CALL = -2;
-  private static final int INTERRUPTABLE_BLOCKING_CALL = -3;
 
   // VARIABLES
 
-  private TaskStatusListener mockTaskStatusListener;
+  private static final int INTERRUPTABLE_BLOCKING_CALL = -3;
+  private EventAdmin eventAdmin;
 
-  private BackgroundTaskExecutionService service;
+  private LogService logService;
 
   // METHODS
+
+  private BackgroundTaskExecutionService service;
 
   /**
    * @param aTime
@@ -74,9 +113,13 @@ public class BackgroundTaskExecutionServiceTest
   @Before
   public void setUp() throws Exception
   {
-    this.mockTaskStatusListener = mock( TaskStatusListener.class );
+    this.eventAdmin = mock( EventAdmin.class );
+    this.logService = mock( LogService.class );
 
-    this.service = new BackgroundTaskExecutionService( this.mockTaskStatusListener );
+    this.service = new BackgroundTaskExecutionService();
+    this.service.setEventAdmin( this.eventAdmin );
+    this.service.setLogService( this.logService );
+    this.service.start();
   }
 
   /**
@@ -89,7 +132,7 @@ public class BackgroundTaskExecutionServiceTest
     {
       try
       {
-        this.service.close();
+        this.service.stop();
       }
       catch ( IllegalStateException exception )
       {
@@ -108,9 +151,9 @@ public class BackgroundTaskExecutionServiceTest
     final Task<Object> task = createMockTask( 500 );
 
     // Test whether the callback methods are called in the correct order...
-    InOrder inOrder = inOrder( this.mockTaskStatusListener );
+    InOrder inOrder = inOrder( this.eventAdmin );
 
-    Future<Object> future = this.service.execute( task );
+    Future<Object> future = this.service.execute( task, null );
 
     sleep( 100 ); // sleep long enough for the entire method to complete...
 
@@ -118,8 +161,8 @@ public class BackgroundTaskExecutionServiceTest
 
     sleep( 50 ); // sleep long enough to allow callbacks to be invoked...
 
-    inOrder.verify( this.mockTaskStatusListener ).taskStarted( eq( task ) );
-    inOrder.verify( this.mockTaskStatusListener ).taskFailed( eq( task ), Matchers.<Exception> any() );
+    inOrder.verify( this.eventAdmin ).postEvent( argThat( new EventMatcher( "status", "started" ) ) );
+    inOrder.verify( this.eventAdmin ).postEvent( argThat( new EventMatcher( "status", "failure" ) ) );
     inOrder.verifyNoMoreInteractions();
 
     assertTrue( future.isCancelled() );
@@ -137,18 +180,18 @@ public class BackgroundTaskExecutionServiceTest
     final Task<Object> task = createMockTask( 500 );
 
     // Test whether the callback methods are called in the correct order...
-    InOrder inOrder = inOrder( this.mockTaskStatusListener );
+    InOrder inOrder = inOrder( this.eventAdmin );
 
-    Future<Object> future = this.service.execute( task );
+    Future<Object> future = this.service.execute( task, null );
 
     sleep( 10 ); // sleep long enough for the entire method to complete...
 
-    this.service.close();
+    this.service.stop();
 
     sleep( 50 ); // sleep long enough to allow callbacks to be invoked...
 
-    inOrder.verify( this.mockTaskStatusListener ).taskStarted( eq( task ) );
-    inOrder.verify( this.mockTaskStatusListener ).taskFailed( eq( task ), Matchers.<Exception> any() );
+    inOrder.verify( this.eventAdmin ).postEvent( argThat( new EventMatcher( "status", "started" ) ) );
+    inOrder.verify( this.eventAdmin ).postEvent( argThat( new EventMatcher( "status", "failure" ) ) );
     inOrder.verifyNoMoreInteractions();
 
     assertFalse( future.isCancelled() );
@@ -166,18 +209,18 @@ public class BackgroundTaskExecutionServiceTest
     final Task<Object> task = createMockTask( 100 );
 
     // Test whether the callback methods are called in the correct order...
-    InOrder inOrder = inOrder( this.mockTaskStatusListener );
+    InOrder inOrder = inOrder( this.eventAdmin );
 
-    Future<Object> future = this.service.execute( task );
+    Future<Object> future = this.service.execute( task, null );
 
     sleep( 200 ); // sleep long enough for the entire method to complete...
 
-    this.service.close();
+    this.service.stop();
 
     sleep( 50 ); // sleep long enough to allow callbacks to be invoked...
 
-    inOrder.verify( this.mockTaskStatusListener ).taskStarted( eq( task ) );
-    inOrder.verify( this.mockTaskStatusListener ).taskEnded( eq( task ), anyObject() );
+    inOrder.verify( this.eventAdmin ).postEvent( argThat( new EventMatcher( "status", "started" ) ) );
+    inOrder.verify( this.eventAdmin ).postEvent( argThat( new EventMatcher( "status", "success" ) ) );
     inOrder.verifyNoMoreInteractions();
 
     assertFalse( future.isCancelled() );
@@ -195,14 +238,14 @@ public class BackgroundTaskExecutionServiceTest
     final Task<Object> task = createMockTask( 100 );
 
     // Test whether the callback methods are called in the correct order...
-    InOrder inOrder = inOrder( this.mockTaskStatusListener );
+    InOrder inOrder = inOrder( this.eventAdmin );
 
-    Future<Object> future = this.service.execute( task );
+    Future<Object> future = this.service.execute( task, null );
 
     sleep( 200 ); // sleep long enough for the entire method to complete...
 
-    inOrder.verify( this.mockTaskStatusListener ).taskStarted( eq( task ) );
-    inOrder.verify( this.mockTaskStatusListener ).taskEnded( eq( task ), anyObject() );
+    inOrder.verify( this.eventAdmin ).postEvent( argThat( new EventMatcher( "status", "started" ) ) );
+    inOrder.verify( this.eventAdmin ).postEvent( argThat( new EventMatcher( "status", "success" ) ) );
     inOrder.verifyNoMoreInteractions();
 
     assertFalse( future.isCancelled() );
@@ -220,14 +263,14 @@ public class BackgroundTaskExecutionServiceTest
     final Task<Object> task = createMockTask( THROW_EXCEPTION );
 
     // Test whether the callback methods are called in the correct order...
-    InOrder inOrder = inOrder( this.mockTaskStatusListener );
+    InOrder inOrder = inOrder( this.eventAdmin );
 
-    Future<Object> future = this.service.execute( task );
+    Future<Object> future = this.service.execute( task, null );
 
     sleep( 10 );
 
-    inOrder.verify( this.mockTaskStatusListener ).taskStarted( eq( task ) );
-    inOrder.verify( this.mockTaskStatusListener ).taskFailed( eq( task ), Matchers.<Exception> any() );
+    inOrder.verify( this.eventAdmin ).postEvent( argThat( new EventMatcher( "status", "started" ) ) );
+    inOrder.verify( this.eventAdmin ).postEvent( argThat( new EventMatcher( "status", "failure" ) ) );
     inOrder.verifyNoMoreInteractions();
 
     assertTrue( future.isDone() );
@@ -241,7 +284,7 @@ public class BackgroundTaskExecutionServiceTest
   @Test( expected = IllegalArgumentException.class )
   public void testExecuteNullToolArgumentFail() throws Exception
   {
-    this.service.execute( null );
+    this.service.execute( null, null );
   }
 
   /**

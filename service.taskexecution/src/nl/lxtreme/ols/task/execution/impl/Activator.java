@@ -25,47 +25,45 @@ import java.util.*;
 
 import nl.lxtreme.ols.task.execution.*;
 
+import org.apache.felix.dm.*;
 import org.osgi.framework.*;
+import org.osgi.service.event.*;
+import org.osgi.service.log.*;
 
 
 /**
  * Provides a bundle activator for the tool execution service.
  */
-public class Activator implements BundleActivator
+public class Activator extends DependencyActivatorBase
 {
-  // VARIABLES
-
-  private TaskStatusListenerHelper taskStatusListenerHelper;
-  private BackgroundTaskExecutionService toolExecutionService;
-
   // METHODS
 
   /**
    * {@inheritDoc}
    */
   @Override
-  public void start( final BundleContext aContext ) throws Exception
+  public void destroy( BundleContext aContext, DependencyManager aManager ) throws Exception
   {
-    this.taskStatusListenerHelper = new TaskStatusListenerHelper( aContext );
-    this.taskStatusListenerHelper.open( true /* trackAllServices */);
-
-    this.toolExecutionService = new BackgroundTaskExecutionService( this.taskStatusListenerHelper );
-
-    final Properties props = new Properties();
-    props.put( "invocation", "asynchonous" );
-
-    aContext.registerService( TaskExecutionService.class.getName(), this.toolExecutionService, props );
+    // Nop
   }
 
   /**
    * {@inheritDoc}
    */
   @Override
-  public void stop( final BundleContext aContext ) throws Exception
+  public void init( BundleContext aContext, DependencyManager aManager ) throws Exception
   {
-    this.taskStatusListenerHelper.close();
+    final Properties props = new Properties();
+    props.put( "invocation", "asynchonous" );
 
-    this.toolExecutionService.close();
+    // @formatter:off
+    aManager.add( createComponent()
+        .setInterface( TaskExecutionService.class.getName(), props )
+        .setImplementation( BackgroundTaskExecutionService.class )
+        .add( createServiceDependency()
+            .setService( LogService.class ).setRequired( false )
+            .setService( EventAdmin.class ).setRequired( true ) )
+        );
+    // @formatter:on
   }
-
 }

@@ -26,7 +26,7 @@ import java.net.*;
 
 import javax.swing.*;
 
-import nl.lxtreme.ols.client.icons.*;
+import nl.lxtreme.ols.client2.icons.*;
 
 
 /**

@@ -149,6 +149,7 @@ public class ManchesterDecoderDialog extends BaseToolDialog<AcquisitionData>
     final ManchesterDecoderTask toolTask = ( ManchesterDecoderTask )aToolTask;
     toolTask.setDataIdx( this.dataLine.getSelectedIndex() ); // XXX
     toolTask.setInverted( this.inverted.isSelected() );
+    toolTask.setDecodingArea( getMarkerAIndex(), getMarkerBIndex() );
   }
 
   /**
@@ -159,6 +160,8 @@ public class ManchesterDecoderDialog extends BaseToolDialog<AcquisitionData>
   private JComponent createSettingsPane( final JPanel aSubSettingsPanel )
   {
     final JPanel panel = new JPanel( new SpringLayout() );
+    
+    addDecoderAreaPane( panel );
 
     SpringLayoutUtils.addSeparator( panel, "General settings" );
 

@@ -304,6 +304,7 @@ public final class I2CProtocolAnalysisDialog extends BaseToolDialog<I2CDataSet> 
     toolTask.setReportNACK( this.detectNACK.isSelected() );
     toolTask.setReportStart( this.detectSTART.isSelected() );
     toolTask.setReportStop( this.detectSTOP.isSelected() );
+    toolTask.setDecodingArea( getMarkerAIndex(), getMarkerBIndex() );
 
     // Register ourselves as property change listener...
     toolTask.addPropertyChangeListener( this );
@@ -401,6 +402,8 @@ public final class I2CProtocolAnalysisDialog extends BaseToolDialog<I2CDataSet> 
     this.busSetSDA = new JLabel( "<autodetect>" );
 
     final JPanel panel = new JPanel( new SpringLayout() );
+    
+    addDecoderAreaPane( panel );
 
     SpringLayoutUtils.addSeparator( panel, "Settings" );
 

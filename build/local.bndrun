@@ -76,10 +76,14 @@
 	ols.tool.uart;version=latest,\
 	org.apache.felix.configadmin;version='[1.4.0,1.4.1)',\
 	org.apache.felix.dependencymanager;version='[3.1.0,3.1.1)',\
+	org.apache.felix.dependencymanager.shell;version='[3.0.1,3.0.2)',\
 	org.apache.felix.eventadmin;version='[1.3.2,1.3.3)',\
 	org.apache.felix.log;version='[1.0.1,1.0.2)',\
 	org.apache.felix.metatype;version='[1.0.4,1.0.5)',\
 	org.apache.felix.prefs;version='[1.0.4,1.0.5)',\
+	org.apache.felix.gogo.runtime;version=latest,\
+	org.apache.felix.gogo.command;version=latest,\
+	org.apache.felix.gogo.shell;version=latest,\
 	purejavacomm;version=latest,\
 	service.acquisition.api;version=latest,\
 	service.acquisition.impl;version=latest,\

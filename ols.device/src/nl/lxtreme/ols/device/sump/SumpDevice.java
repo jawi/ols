@@ -87,7 +87,7 @@ public class SumpDevice implements Device
     }
 
     return this.taskExecutionService.execute( new LogicSnifferAcquisitionTask( config, getStreamConnection(),
-        aProgressListener ) );
+        aProgressListener ), Collections.singletonMap( "type", "acquisition" ) );
   }
 
   /**

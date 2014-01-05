@@ -195,6 +195,7 @@ public final class DMX512AnalyzerDialog extends BaseToolDialog<DMX512DataSet> im
     // causes all "unused" values to be equivalent to -1, which is interpreted
     // as not used...
     toolTask.setDataLine( this.dataLine.getSelectedIndex() - 1 );
+    toolTask.setDecodingArea( getMarkerAIndex(), getMarkerBIndex() );
   }
 
   /**
@@ -302,6 +303,8 @@ public final class DMX512AnalyzerDialog extends BaseToolDialog<DMX512DataSet> im
     final int channelCount = getData().getChannelCount();
 
     final JPanel settings = new JPanel( new SpringLayout() );
+    
+    addDecoderAreaPane( settings );
 
     SpringLayoutUtils.addSeparator( settings, "Settings" );
 

@@ -54,10 +54,9 @@ public final class ActionManagerFactory
    *          the controller to use for the actions, cannot be <code>null</code>
    *          .
    */
-  public static void fillActionManager( final ActionManager aActionManager, final ClientController aController )
+  public static void fillActionManager( ActionManager aActionManager, ClientController aController,
+      SignalDiagramController aDiagramController )
   {
-    final SignalDiagramController signalDiagramController = aController.getSignalDiagramController();
-
     aActionManager.add( new NewProjectAction( aController ) );
     aActionManager.add( new OpenProjectAction( aController ) );
     aActionManager.add( new SaveProjectAction( aController ) ).setEnabled( false );
@@ -70,28 +69,28 @@ public final class ActionManagerFactory
     aActionManager.add( new CancelCaptureAction( aController ) ).setEnabled( false );
     aActionManager.add( new RepeatCaptureAction( aController ) ).setEnabled( false );
 
-    aActionManager.add( new ZoomInAction( signalDiagramController ) ).setEnabled( false );
-    aActionManager.add( new ZoomOutAction( signalDiagramController ) ).setEnabled( false );
-    aActionManager.add( new ZoomOriginalAction( signalDiagramController ) ).setEnabled( false );
-    aActionManager.add( new ZoomAllAction( signalDiagramController ) ).setEnabled( false );
+    aActionManager.add( new ZoomInAction( aDiagramController ) ).setEnabled( false );
+    aActionManager.add( new ZoomOutAction( aDiagramController ) ).setEnabled( false );
+    aActionManager.add( new ZoomOriginalAction( aDiagramController ) ).setEnabled( false );
+    aActionManager.add( new ZoomAllAction( aDiagramController ) ).setEnabled( false );
 
-    aActionManager.add( new SmartJumpAction( JumpDirection.LEFT, aController ) ).setEnabled( false );
-    aActionManager.add( new SmartJumpAction( JumpDirection.RIGHT, aController ) ).setEnabled( false );
+    aActionManager.add( new SmartJumpAction( JumpDirection.LEFT, aDiagramController ) ).setEnabled( false );
+    aActionManager.add( new SmartJumpAction( JumpDirection.RIGHT, aDiagramController ) ).setEnabled( false );
 
     aActionManager.add( new GotoTriggerAction( aController ) ).setEnabled( false );
     for ( int c = 0; c < OlsConstants.MAX_CURSORS; c++ )
     {
-      aActionManager.add( new GotoNthCursorAction( signalDiagramController, c ) ).setEnabled( false );
+      aActionManager.add( new GotoNthCursorAction( aDiagramController, c ) ).setEnabled( false );
     }
-    aActionManager.add( new GotoFirstCursorAction( signalDiagramController ) ).setEnabled( false );
-    aActionManager.add( new GotoLastCursorAction( signalDiagramController ) ).setEnabled( false );
-    aActionManager.add( new DeleteAllCursorsAction( signalDiagramController ) ).setEnabled( false );
-    aActionManager.add( new SetCursorSnapModeAction( signalDiagramController ) );
-    aActionManager.add( new SetCursorModeAction( signalDiagramController ) );
+    aActionManager.add( new GotoFirstCursorAction( aDiagramController ) ).setEnabled( false );
+    aActionManager.add( new GotoLastCursorAction( aDiagramController ) ).setEnabled( false );
+    aActionManager.add( new DeleteAllCursorsAction( aDiagramController ) ).setEnabled( false );
+    aActionManager.add( new SetCursorSnapModeAction( aDiagramController ) );
+    aActionManager.add( new SetCursorModeAction( aDiagramController ) );
     aActionManager.add( new RemoveAnnotationsAction( aController ) ).setEnabled( false );
-    aActionManager.add( new SetMeasurementModeAction( signalDiagramController ) ).setEnabled( false );
+    aActionManager.add( new SetMeasurementModeAction( aDiagramController ) ).setEnabled( false );
 
-    aActionManager.add( new ShowManagerViewAction( aController ) );
+    aActionManager.add( new ShowManagerViewAction( aDiagramController ) );
     aActionManager.add( new ShowPreferencesDialogAction( aController ) );
 
     aActionManager.add( new HelpAboutAction( aController ) );

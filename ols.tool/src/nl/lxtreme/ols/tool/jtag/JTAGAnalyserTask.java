@@ -15,7 +15,7 @@
  * with this program; if not, write to the Free Software Foundation, Inc.,
  * 51 Franklin St, Fifth Floor, Boston, MA 02110, USA
  *
- * 
+ *
  * Copyright (C) 2010-2011 - J.W. Janssen, http://www.lxtreme.nl
  */
 package nl.lxtreme.ols.tool.jtag;
@@ -33,7 +33,7 @@ import nl.lxtreme.ols.tool.api.*;
 
 /**
  * Provides a task for decoding JTAG signals.
- * 
+ *
  * @author J.W. Janssen
  * @author Mario Schrenk
  */
@@ -50,6 +50,9 @@ public class JTAGAnalyserTask implements ToolTask<JTAGDataSet>
   private final ToolContext context;
   private final ToolAnnotationHelper annHelper;
   private final ToolProgressListener progressListener;
+
+  private int startOfDecode;
+  private int endOfDecode;
 
   private int tmsIdx;
   private int tckIdx;
@@ -80,7 +83,7 @@ public class JTAGAnalyserTask implements ToolTask<JTAGDataSet>
   /**
    * This is the JTAG protocol decoder core. The decoded data are put to a
    * JTable object directly.
-   * 
+   *
    * @see javax.swing.SwingWorker#doInBackground()
    */
   @Override
@@ -94,16 +97,13 @@ public class JTAGAnalyserTask implements ToolTask<JTAGDataSet>
       LOG.fine( "tdimask = 0x" + Integer.toHexString( 1 << this.tdiIdx ) );
     }
 
-    final int startOfDecode = this.context.getStartSampleIndex();
-    final int endOfDecode = this.context.getEndSampleIndex();
-
     // Initialize the channel labels + clear any existing annotations...
     prepareResults();
 
-    final JTAGDataSet decodedData = new JTAGDataSet( startOfDecode, endOfDecode, this.context.getData() );
+    final JTAGDataSet decodedData = new JTAGDataSet( this.startOfDecode, this.endOfDecode, this.context.getData() );
 
     // Perform the actual decoding of the data line(s)...
-    clockDataOnEdge( decodedData, startOfDecode );
+    clockDataOnEdge( decodedData, this.startOfDecode );
 
     // Sort the data on the starting timestamp...
     decodedData.sort();
@@ -112,8 +112,22 @@ public class JTAGAnalyserTask implements ToolTask<JTAGDataSet>
   }
 
   /**
-   * Sets the TCK channel index.
+   * Sets the decoding area.
    * 
+   * @param aStartOfDecode
+   *          a start sample index, >= 0;
+   * @param aEndOfDecode
+   *          a ending sample index, >= 0.
+   */
+  public void setDecodingArea( final int aStartOfDecode, final int aEndOfDecode )
+  {
+    this.startOfDecode = aStartOfDecode;
+    this.endOfDecode = aEndOfDecode;
+  }
+
+  /**
+   * Sets the TCK channel index.
+   *
    * @param aTckIndex
    *          the index of the "serial-clock" channel.
    */
@@ -124,7 +138,7 @@ public class JTAGAnalyserTask implements ToolTask<JTAGDataSet>
 
   /**
    * Sets the TDI channel index.
-   * 
+   *
    * @param aTdiMask
    *          the index of the "master-out slave-in" channel.
    */
@@ -135,7 +149,7 @@ public class JTAGAnalyserTask implements ToolTask<JTAGDataSet>
 
   /**
    * Sets the TDO channel index.
-   * 
+   *
    * @param aTdoMask
    *          the index of the "master-in slave-out" channel.
    */
@@ -146,7 +160,7 @@ public class JTAGAnalyserTask implements ToolTask<JTAGDataSet>
 
   /**
    * Sets the TMS channel index.
-   * 
+   *
    * @param aTmsMask
    *          the index of the chip-select channel.
    */
@@ -157,7 +171,7 @@ public class JTAGAnalyserTask implements ToolTask<JTAGDataSet>
 
   /**
    * Decodes the JTAG-data on a given clock edge.
-   * 
+   *
    * @param aDataSet
    *          the decoded data to fill;
    * @param aMode
@@ -339,8 +353,8 @@ public class JTAGAnalyserTask implements ToolTask<JTAGDataSet>
             this.annHelper.addAnnotation( this.tdoIdx, timestamps[startTdiDataIdx], timestamps[endTdiDataIdx],
                 new BigInteger( tdoData, 2 ), KEY_TYPE, TYPE_SYMBOL );
 
-            aDataSet.reportJTAGTdiData( tdiIdx, startTdiDataIdx, endTdiDataIdx, currentState, tdiData );
-            aDataSet.reportJTAGTdoData( tdoIdx, startTdiDataIdx, endTdiDataIdx, currentState, tdoData );
+            aDataSet.reportJTAGTdiData( this.tdiIdx, startTdiDataIdx, endTdiDataIdx, this.currentState, tdiData );
+            aDataSet.reportJTAGTdoData( this.tdoIdx, startTdiDataIdx, endTdiDataIdx, this.currentState, tdoData );
 
             if ( tmsValue == 0 )
             {
@@ -461,8 +475,8 @@ public class JTAGAnalyserTask implements ToolTask<JTAGDataSet>
             this.annHelper.addAnnotation( this.tdoIdx, timestamps[startTdiDataIdx], timestamps[endTdiDataIdx],
                 new BigInteger( tdoData, 2 ), KEY_TYPE, TYPE_SYMBOL );
 
-            aDataSet.reportJTAGTdiData( tdiIdx, startTdiDataIdx, endTdiDataIdx, currentState, tdiData );
-            aDataSet.reportJTAGTdoData( tdoIdx, startTdiDataIdx, endTdiDataIdx, currentState, tdoData );
+            aDataSet.reportJTAGTdiData( this.tdiIdx, startTdiDataIdx, endTdiDataIdx, this.currentState, tdiData );
+            aDataSet.reportJTAGTdoData( this.tdoIdx, startTdiDataIdx, endTdiDataIdx, this.currentState, tdoData );
 
             if ( tmsValue == 0 )
             {

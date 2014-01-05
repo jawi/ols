@@ -24,7 +24,6 @@ package nl.lxtreme.ols.client.action;
 import java.awt.*;
 import java.awt.event.*;
 
-import nl.lxtreme.ols.client.*;
 import nl.lxtreme.ols.client.signaldisplay.*;
 import nl.lxtreme.ols.client.signaldisplay.signalelement.*;
 import nl.lxtreme.ols.util.swing.*;
@@ -48,22 +47,8 @@ public class ShowManagerViewAction extends BaseAction
   // VARIABLES
 
   private final SignalDiagramController controller;
-  private final SignalElementManager elementManager;
 
   // CONSTRUCTORS
-
-  /**
-   * Creates a new {@link ShowManagerViewAction} instance.
-   * 
-   * @param aController
-   *          the client controller to use, cannot be <code>null</code>.
-   */
-  public ShowManagerViewAction( ClientController aController )
-  {
-    super( ID, aController, NAME, DESC );
-    this.controller = aController.getSignalDiagramController();
-    this.elementManager = this.controller.getSignalDiagramModel().getSignalElementManager();
-  }
 
   /**
    * Creates a new {@link ShowManagerViewAction} instance.
@@ -75,7 +60,6 @@ public class ShowManagerViewAction extends BaseAction
   {
     super( ID, null, NAME, DESC );
     this.controller = aController;
-    this.elementManager = this.controller.getSignalDiagramModel().getSignalElementManager();
   }
 
   // METHODS
@@ -88,7 +72,9 @@ public class ShowManagerViewAction extends BaseAction
   {
     final Window parent = SwingComponentUtils.getOwningWindow( aEvent );
 
-    SignalElementManagerView view = new SignalElementManagerView( parent, this.elementManager );
+    SignalElementManager elementManager = this.controller.getSignalDiagramModel().getSignalElementManager();
+    
+    SignalElementManagerView view = new SignalElementManagerView( parent, elementManager );
     if ( view.showDialog() )
     {
       this.controller.revalidateAll();

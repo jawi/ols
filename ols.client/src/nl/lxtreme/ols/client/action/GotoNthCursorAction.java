@@ -21,15 +21,15 @@
 package nl.lxtreme.ols.client.action;
 
 
-import static nl.lxtreme.ols.client.icons.IconFactory.*;
+import static nl.lxtreme.ols.client2.icons.IconFactory.*;
 
 import java.awt.event.*;
 
 import javax.swing.*;
 
 import nl.lxtreme.ols.client.actionmanager.*;
-import nl.lxtreme.ols.client.icons.*;
 import nl.lxtreme.ols.client.signaldisplay.*;
+import nl.lxtreme.ols.client2.icons.*;
 import nl.lxtreme.ols.common.*;
 import nl.lxtreme.ols.common.acquisition.*;
 import nl.lxtreme.ols.util.swing.*;

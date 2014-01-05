@@ -25,6 +25,7 @@ import java.awt.*;
 
 import javax.swing.*;
 
+import nl.lxtreme.ols.client.signaldisplay.*;
 import nl.lxtreme.ols.client.view.*;
 import nl.lxtreme.ols.common.acquisition.*;
 
@@ -39,6 +40,10 @@ public class WaveformView extends BaseView
 
   private static final long serialVersionUID = 1L;
 
+  // VARIABLES
+  
+  private final SignalDiagramController signalDiagramController;
+  
   // CONSTRUCTORS
 
   /**
@@ -49,10 +54,11 @@ public class WaveformView extends BaseView
    * @param aModel
    *          the model to use, cannot be <code>null</code>.
    */
-  public WaveformView( ViewController aController, ViewModel aModel )
+  public WaveformView( SignalDiagramController aDiagramController, ViewController aController, ViewModel aModel )
   {
     super( aController, aModel );
 
+    this.signalDiagramController = aDiagramController;
   }
 
   /**
@@ -61,6 +67,8 @@ public class WaveformView extends BaseView
   @Override
   public void initialize()
   {
-    add( new JLabel( "Waveform: " + model ), BorderLayout.CENTER );
+    this.signalDiagramController.initialize();
+
+    add( new JScrollPane( this.signalDiagramController.getSignalDiagram() ), BorderLayout.CENTER );
   }
 }

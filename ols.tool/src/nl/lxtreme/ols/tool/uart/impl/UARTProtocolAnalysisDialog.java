@@ -438,6 +438,7 @@ public final class UARTProtocolAnalysisDialog extends BaseToolDialog<UARTDataSet
     toolTask.setParity( ( Parity )this.parity.getSelectedItem() );
     toolTask.setStopBits( ( StopBits )this.stop.getSelectedItem() );
     toolTask.setBitCount( NumberUtils.smartParseInt( ( String )this.bits.getSelectedItem(), 8 ) );
+    toolTask.setDecodingArea( getMarkerAIndex(), getMarkerBIndex() );
   }
 
   /**
@@ -575,6 +576,8 @@ public final class UARTProtocolAnalysisDialog extends BaseToolDialog<UARTDataSet
     }
 
     final JPanel settings = new JPanel( new SpringLayout() );
+    
+    addDecoderAreaPane( settings );
 
     SpringLayoutUtils.addSeparator( settings, "Settings" );
 

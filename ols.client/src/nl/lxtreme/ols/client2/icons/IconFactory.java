@@ -18,7 +18,7 @@
  * 
  * Copyright (C) 2010-2011 - J.W. Janssen, http://www.lxtreme.nl
  */
-package nl.lxtreme.ols.client.icons;
+package nl.lxtreme.ols.client2.icons;
 
 
 import java.awt.*;
@@ -110,13 +110,16 @@ public final class IconFactory
     try
     {
       final URL url = getResource( aIconName );
-      return new ImageIcon( url );
+      if ( url != null )
+      {
+        return new ImageIcon( url );
+      }
     }
     catch ( Exception exception )
     {
       exception.printStackTrace();
-      return new ImageIcon();
     }
+    return new ImageIcon();
   }
 
   /**
@@ -161,8 +164,10 @@ public final class IconFactory
     }
     else
     {
-      resource = bundle.getResource( "nl/lxtreme/ols/client/icons/" + aIconName );
-      LOG.log( Level.FINE, "Get icon resource with bundle: {0} => {1}...", new Object[] { aIconName, resource } );
+      String path = IconLocator.class.getPackage().getName().replaceAll( "\\.", "/" );
+
+      resource = bundle.getResource( path + "/" + aIconName );
+      LOG.log( Level.FINE, "Get icon resource from bundle: {0} => {1}...", new Object[] { aIconName, resource } );
     }
     return resource;
   }

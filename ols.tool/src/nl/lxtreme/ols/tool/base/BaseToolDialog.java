@@ -21,14 +21,19 @@
 package nl.lxtreme.ols.tool.base;
 
 
+import static nl.lxtreme.ols.util.swing.SwingComponentUtils.*;
+
 import java.awt.*;
 import java.awt.Dialog.ModalExclusionType;
+import java.awt.event.*;
 import java.awt.Cursor;
+import java.util.*;
 import java.util.concurrent.*;
 
 import javax.swing.*;
 
 import nl.lxtreme.ols.common.acquisition.*;
+import nl.lxtreme.ols.common.acquisition.Cursor.LabelStyle;
 import nl.lxtreme.ols.task.execution.*;
 import nl.lxtreme.ols.tool.api.*;
 import nl.lxtreme.ols.util.swing.*;
@@ -36,14 +41,47 @@ import nl.lxtreme.ols.util.swing.StandardActionFactory.CloseAction.Closeable;
 import nl.lxtreme.ols.util.swing.Configurable;
 
 import org.osgi.framework.*;
+import org.osgi.service.event.*;
+import org.osgi.service.event.Event;
 
 
 /**
  * Provides a base tool dialog.
  */
-public abstract class BaseToolDialog<RESULT_TYPE> extends JFrame implements ToolDialog, TaskStatusListener,
-    Configurable, Closeable
+public abstract class BaseToolDialog<RESULT_TYPE> extends JFrame implements ToolDialog, EventHandler, Configurable,
+    Closeable
 {
+  // INNER TYPES
+
+  /**
+   * Provides a renderer for the cursor combobox.
+   */
+  final class CursorComboBoxRenderer extends DefaultListCellRenderer
+  {
+    private static final long serialVersionUID = 1L;
+
+    @Override
+    public Component getListCellRendererComponent( final JList aList, final Object aValue, final int aIndex,
+        final boolean aIsSelected, final boolean aCellHasFocus )
+    {
+      String text;
+      if ( ( aValue != null ) && ( aValue instanceof nl.lxtreme.ols.common.acquisition.Cursor ) )
+      {
+        text = ( ( nl.lxtreme.ols.common.acquisition.Cursor )aValue ).getLabel( LabelStyle.LABEL_TIME );
+      }
+      else if ( aValue != null )
+      {
+        text = String.valueOf( aValue );
+      }
+      else
+      {
+        text = "";
+      }
+
+      return super.getListCellRendererComponent( aList, text, aIndex, aIsSelected, aCellHasFocus );
+    }
+  }
+
   // CONSTANTS
 
   private static final long serialVersionUID = 1L;
@@ -69,6 +107,14 @@ public abstract class BaseToolDialog<RESULT_TYPE> extends JFrame implements Tool
 
   // CONSTRUCTORS
 
+  private JCheckBox decodeAll;
+
+  // METHODS
+
+  private JComboBox markerA;
+
+  private JComboBox markerB;
+
   /**
    * Creates a new {@link BaseToolDialog} instance that is document modal.
    * 
@@ -79,22 +125,20 @@ public abstract class BaseToolDialog<RESULT_TYPE> extends JFrame implements Tool
    * @param aContext
    *          the tool context to use in this dialog.
    */
-  protected BaseToolDialog( final Window aOwner, final ToolContext aContext,
-      final BundleContext aBundleContext, final Tool<RESULT_TYPE> aTool )
+  protected BaseToolDialog( final Window aOwner, final ToolContext aContext, final BundleContext aBundleContext,
+      final Tool<RESULT_TYPE> aTool )
   {
     super( aTool.getName() );
-    
+
     this.context = aContext;
     this.bundleContext = aBundleContext;
     this.tool = aTool;
-    
+
     setModalExclusionType( ModalExclusionType.NO_EXCLUDE );
 
     this.taskExecutionService = new TaskExecutionServiceTracker( aBundleContext );
     this.toolProgressListener = new ToolProgressListenerServiceTracker( aBundleContext );
   }
-
-  // METHODS
 
   /**
    * {@inheritDoc}
@@ -168,50 +212,14 @@ public abstract class BaseToolDialog<RESULT_TYPE> extends JFrame implements Tool
    * {@inheritDoc}
    */
   @Override
-  public final boolean invokeTool() throws IllegalStateException
-  {
-    if ( this.toolFutureTask != null )
-    {
-      throw new IllegalStateException( "Tool is already running!" );
-    }
-
-    boolean settingsValid = validateToolSettings();
-    if ( settingsValid )
-    {
-      this.toolTask = this.tool.createToolTask( this.context, this.toolProgressListener );
-      prepareToolTask( this.toolTask );
-
-      this.toolFutureTask = this.taskExecutionService.execute( this.toolTask );
-    }
-    return settingsValid;
-  }
-
-  /**
-   * {@inheritDoc}
-   */
-  @Override
-  public final void showDialog()
-  {
-    this.serviceReg = this.bundleContext.registerService( TaskStatusListener.class.getName(), this, null );
-
-    this.taskExecutionService.open();
-    this.toolProgressListener.open();
-
-    onBeforeShowDialog();
-
-    setVisible( true );
-  }
-
-  /**
-   * {@inheritDoc}
-   */
-  @Override
   @SuppressWarnings( "unchecked" )
-  public final <RT> void taskEnded( final Task<RT> aTask, final RT aResult )
+  public void handleEvent( Event aEvent )
   {
-    if ( this.toolTask == aTask )
+    String status = ( String )aEvent.getProperty( "status" );
+    if ( "success".equals( status ) )
     {
-      this.lastResult = ( RESULT_TYPE )aResult;
+      this.lastResult = ( RESULT_TYPE )aEvent.getProperty( "result" );
+      // Long timeTaken = ( Long )aEvent.getProperty( "time" );
 
       SwingComponentUtils.invokeOnEDT( new Runnable()
       {
@@ -229,16 +237,11 @@ public abstract class BaseToolDialog<RESULT_TYPE> extends JFrame implements Tool
       this.toolFutureTask = null;
       this.toolTask = null;
     }
-  }
-
-  /**
-   * {@inheritDoc}
-   */
-  @Override
-  public final <RT> void taskFailed( final Task<RT> aTask, final Exception aException )
-  {
-    if ( this.toolTask == aTask )
+    else if ( "failure".equals( status ) )
     {
+      final Exception exception = ( Exception )aEvent.getProperty( "exception" );
+      // Long timeTaken = ( Long )aEvent.getProperty( "time" );
+
       SwingComponentUtils.invokeOnEDT( new Runnable()
       {
         @Override
@@ -248,22 +251,14 @@ public abstract class BaseToolDialog<RESULT_TYPE> extends JFrame implements Tool
 
           setControlsEnabled( true );
 
-          onToolFailed( aException );
+          onToolFailed( exception );
         }
       } );
 
       this.toolFutureTask = null;
       this.toolTask = null;
     }
-  }
-
-  /**
-   * {@inheritDoc}
-   */
-  @Override
-  public final <RT> void taskStarted( final Task<RT> aTask )
-  {
-    if ( this.toolTask == aTask )
+    else if ( "started".equals( status ) )
     {
       SwingComponentUtils.invokeOnEDT( new Runnable()
       {
@@ -278,6 +273,100 @@ public abstract class BaseToolDialog<RESULT_TYPE> extends JFrame implements Tool
         }
       } );
     }
+  }
+
+  /**
+   * {@inheritDoc}
+   */
+  @Override
+  public final boolean invokeTool() throws IllegalStateException
+  {
+    if ( this.toolFutureTask != null )
+    {
+      throw new IllegalStateException( "Tool is already running!" );
+    }
+
+    boolean settingsValid = validateToolSettings();
+    if ( settingsValid )
+    {
+      this.toolTask = this.tool.createToolTask( this.context, this.toolProgressListener );
+      prepareToolTask( this.toolTask );
+
+      this.toolFutureTask = this.taskExecutionService.execute( this.toolTask,
+          Collections.singletonMap( "toolName", this.tool.getName() ) );
+    }
+    return settingsValid;
+  }
+
+  /**
+   * {@inheritDoc}
+   */
+  @Override
+  public final void showDialog()
+  {
+    Properties props = new Properties();
+    props.put( EventConstants.EVENT_TOPIC, TaskExecutionService.EVENT_TOPIC );
+    props.put( EventConstants.EVENT_FILTER, "(toolName=" + this.tool.getName() + ")" );
+
+    this.serviceReg = this.bundleContext.registerService( EventHandler.class.getName(), this, props );
+
+    this.taskExecutionService.open();
+    this.toolProgressListener.open();
+
+    onBeforeShowDialog();
+
+    setVisible( true );
+  }
+
+  protected final void addDecoderAreaPane( JPanel panel )
+  {
+    Vector<nl.lxtreme.ols.common.acquisition.Cursor> cursors = new Vector<nl.lxtreme.ols.common.acquisition.Cursor>();
+    for ( nl.lxtreme.ols.common.acquisition.Cursor cursor : getData().getCursors() )
+    {
+      if ( cursor.isDefined() )
+      {
+        cursors.add( cursor );
+      }
+    }
+
+    SpringLayoutUtils.addSeparator( panel, "Decoding area" );
+
+    final JLabel markerALabel = createRightAlignedLabel( "Marker A" );
+    markerALabel.setEnabled( false );
+    this.markerA = createCursorComboBox( cursors, 0 );
+    this.markerA.setEnabled( false );
+
+    final JLabel markerBLabel = createRightAlignedLabel( "Marker B" );
+    markerBLabel.setEnabled( false );
+    this.markerB = createCursorComboBox( cursors, 1 );
+    this.markerB.setEnabled( false );
+
+    this.decodeAll = new JCheckBox();
+    this.decodeAll.setSelected( true );
+    this.decodeAll.setEnabled( !cursors.isEmpty() );
+    this.decodeAll.addActionListener( new ActionListener()
+    {
+      @Override
+      public void actionPerformed( ActionEvent aEvent )
+      {
+        boolean enabled = !decodeAll.isSelected();
+
+        markerALabel.setEnabled( enabled );
+        markerA.setEnabled( enabled );
+
+        markerBLabel.setEnabled( enabled );
+        markerB.setEnabled( enabled );
+      }
+    } );
+
+    panel.add( createRightAlignedLabel( "Decode all?" ) );
+    panel.add( this.decodeAll );
+
+    panel.add( markerALabel );
+    panel.add( this.markerA );
+
+    panel.add( markerBLabel );
+    panel.add( this.markerB );
   }
 
   /**
@@ -298,6 +387,42 @@ public abstract class BaseToolDialog<RESULT_TYPE> extends JFrame implements Tool
   protected final AcquisitionData getData()
   {
     return this.context.getData();
+  }
+
+  /**
+   * @return the (sample) index of the first marker to start decoding from, >=
+   *         0.
+   */
+  protected final int getMarkerAIndex()
+  {
+    if ( this.decodeAll.isSelected() )
+    {
+      return 0;
+    }
+    else
+    {
+      nl.lxtreme.ols.common.acquisition.Cursor cursor = ( nl.lxtreme.ols.common.acquisition.Cursor )this.markerA
+          .getSelectedItem();
+      return getData().getSampleIndex( cursor.getTimestamp() );
+    }
+  }
+
+  /**
+   * @return the (sample) index of the second marker to end decoding, >= 0.
+   */
+  protected final int getMarkerBIndex()
+  {
+    if ( this.decodeAll.isSelected() )
+    {
+      int[] values = getData().getValues();
+      return values.length - 1;
+    }
+    else
+    {
+      nl.lxtreme.ols.common.acquisition.Cursor cursor = ( nl.lxtreme.ols.common.acquisition.Cursor )this.markerB
+          .getSelectedItem();
+      return getData().getSampleIndex( cursor.getTimestamp() );
+    }
   }
 
   /**
@@ -378,7 +503,8 @@ public abstract class BaseToolDialog<RESULT_TYPE> extends JFrame implements Tool
    * @param aSettingName
    *          the name of the user setting to use.
    */
-  protected final void setComboBoxIndex( final JComboBox aComboBox, final UserSettings aSettings, final String aSettingName )
+  protected final void setComboBoxIndex( final JComboBox aComboBox, final UserSettings aSettings,
+      final String aSettingName )
   {
     ToolUtils.setComboBoxIndex( aComboBox, aSettings.getInt( aSettingName, -1 ) );
   }
@@ -405,5 +531,21 @@ public abstract class BaseToolDialog<RESULT_TYPE> extends JFrame implements Tool
   protected boolean validateToolSettings()
   {
     return true;
+  }
+
+  /**
+   * @param aCursors
+   * @param aDefaultIdx
+   * @return
+   */
+  private JComboBox createCursorComboBox( Vector<nl.lxtreme.ols.common.acquisition.Cursor> aCursors, int aDefaultIdx )
+  {
+    JComboBox cb = new JComboBox( aCursors );
+    if ( aCursors.size() > aDefaultIdx )
+    {
+      cb.setSelectedIndex( aDefaultIdx );
+    }
+    cb.setRenderer( new CursorComboBoxRenderer() );
+    return cb;
   }
 }

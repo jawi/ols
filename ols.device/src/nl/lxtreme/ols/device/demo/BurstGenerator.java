@@ -99,7 +99,7 @@ final class BurstGenerator implements IDataGenerator
 
       if ( ( i > 0 ) && ( i % burstLength ) == 0 )
       {
-        aBuilder.setCursorTimestamp( cursor++, ts );
+        aBuilder.add( aBuilder.createCursor().setIndex( cursor++ ).setTimestamp( ts ) );
         ts += burstLength;
       }
 

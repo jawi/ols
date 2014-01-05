@@ -245,6 +245,9 @@ public class Asm45AnalyserTask implements ToolTask<Asm45DataSet>
   private final ToolContext context;
   private final ToolProgressListener progressListener;
 
+  private int startOfDecode;
+  private int endOfDecode;
+
   private int lineSMCmask;
   private int lineSTMmask;
   private int lineEBGmask;
@@ -291,13 +294,10 @@ public class Asm45AnalyserTask implements ToolTask<Asm45DataSet>
 
     // process the captured data and write to output
 
-    int startOfDecode = this.context.getStartSampleIndex();
-    int endOfDecode = this.context.getEndSampleIndex();
-
     int control; // 16 IDA bus control signals (includes BSC lines)
     int ida; // 16 IDA bus address/data lines
 
-    final Asm45DataSet asm45DataSet = new Asm45DataSet( startOfDecode, endOfDecode, data );
+    final Asm45DataSet asm45DataSet = new Asm45DataSet( this.startOfDecode, this.endOfDecode, data );
 
     int idx = asm45DataSet.getStartOfDecode();
     int startIdx = 0;
@@ -465,6 +465,12 @@ public class Asm45AnalyserTask implements ToolTask<Asm45DataSet>
     }
 
     return asm45DataSet;
+  }
+
+  public void setDecodingArea( int aStartOfDecode, int aEndOfDecode )
+  {
+    this.startOfDecode = aStartOfDecode;
+    this.endOfDecode = aEndOfDecode;
   }
 
   /**

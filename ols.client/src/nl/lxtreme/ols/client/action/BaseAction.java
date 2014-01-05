@@ -25,7 +25,7 @@ import javax.swing.*;
 
 import nl.lxtreme.ols.client.*;
 import nl.lxtreme.ols.client.actionmanager.*;
-import nl.lxtreme.ols.client.icons.*;
+import nl.lxtreme.ols.client2.icons.*;
 
 
 /**
@@ -132,7 +132,7 @@ public abstract class BaseAction extends AbstractAction implements IconLocator, 
   // METHODS
 
   /**
-   * @see nl.lxtreme.ols.client.actionmanager.luna.ui.IManagedAction#getId()
+   * @see nl.nl.lxtreme.ols.client2.action.ManagedAction.ui.IManagedAction#getId()
    */
   @Override
   public String getId()

@@ -75,7 +75,7 @@ public class GenericDevice implements Device
     int sampleWidth = ( ( Number )aConfig.get( KEY_SAMPLE_WIDTH ) ).intValue();
 
     return this.taskExecutionService.execute( new GenericDeviceAcquisitionTask( devicePath, channelCount, sampleRate,
-        sampleCount, sampleWidth, aProgressListener ) );
+        sampleCount, sampleWidth, aProgressListener ), Collections.singletonMap( "type", "acquisition" ) );
   }
 
   /**

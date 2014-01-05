@@ -1,5 +1,5 @@
 /*
- * OpenBench LogicSniffer / SUMP project 
+ * OpenBench LogicSniffer / SUMP project
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -72,6 +72,8 @@ public class DMX512AnalyzerTask implements ToolTask<DMX512DataSet>
   private final ToolProgressListener progressListener;
 
   private int dataLine;
+  private int startOfDecode;
+  private int endOfDecode;
 
   // CONSTRUCTORS
 
@@ -98,31 +100,28 @@ public class DMX512AnalyzerTask implements ToolTask<DMX512DataSet>
     final int[] values = data.getValues();
     final ToolAnnotationHelper annotationHelper = new ToolAnnotationHelper( this.context );
 
-    int startOfDecode = this.context.getStartSampleIndex();
-    final int endOfDecode = this.context.getEndSampleIndex();
-
     // find first state change on the selected lines
     final int mask = ( 1 << this.dataLine );
 
-    final int value = values[startOfDecode] & mask;
-    for ( int i = startOfDecode + 1; i < endOfDecode; i++ )
+    final int value = values[this.startOfDecode] & mask;
+    for ( int i = this.startOfDecode + 1; i < this.endOfDecode; i++ )
     {
       if ( value != ( values[i] & mask ) )
       {
-        startOfDecode = i;
+        this.startOfDecode = i;
         break;
       }
     }
 
-    startOfDecode = Math.max( 0, startOfDecode - 10 );
+    this.startOfDecode = Math.max( 0, this.startOfDecode - 10 );
 
     // Make sure we've got a valid range to decode..
-    if ( startOfDecode >= endOfDecode )
+    if ( this.startOfDecode >= this.endOfDecode )
     {
       throw new IllegalStateException( "No valid data range found for DMX512 analysis!" );
     }
 
-    final DMX512DataSet dataSet = new DMX512DataSet( startOfDecode, endOfDecode, data );
+    final DMX512DataSet dataSet = new DMX512DataSet( this.startOfDecode, this.endOfDecode, data );
 
     annotationHelper.clearAnnotations( this.dataLine );
     annotationHelper.addLabelAnnotation( this.dataLine, DMX512_DATA_LABEL );
@@ -211,7 +210,10 @@ public class DMX512AnalyzerTask implements ToolTask<DMX512DataSet>
       }
     } );
 
-    decoder.decodeDataLine( this.dataLine );
+    final long startTime = data.getTimestamps()[this.startOfDecode];
+    final long endTime = data.getTimestamps()[this.endOfDecode];
+
+    decoder.decodeDataLine( this.dataLine, startTime, endTime );
 
     return dataSet;
   }
@@ -232,8 +234,22 @@ public class DMX512AnalyzerTask implements ToolTask<DMX512DataSet>
    * @param aDataLine
    *          the data line channel index to set, >= 0.
    */
-  public void setDataLine( final int aDataLine )
+  public void setDataLine( int aDataLine )
   {
     this.dataLine = aDataLine;
+  }
+
+  /**
+   * Sets the decoding area.
+   * 
+   * @param aStartOfDecode
+   *          a start sample index, >= 0;
+   * @param aEndOfDecode
+   *          a ending sample index, >= 0.
+   */
+  public void setDecodingArea( int aStartOfDecode, int aEndOfDecode )
+  {
+    this.startOfDecode = aStartOfDecode;
+    this.endOfDecode = aEndOfDecode;
   }
 }

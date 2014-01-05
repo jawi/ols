@@ -21,6 +21,7 @@
 package nl.lxtreme.ols.task.execution;
 
 
+import java.util.*;
 import java.util.concurrent.*;
 
 
@@ -29,16 +30,23 @@ import java.util.concurrent.*;
  */
 public interface TaskExecutionService
 {
+  // CONSTANTS
+
+  String EVENT_TOPIC = "nl/lxtreme/ols/task/execution";
+
   // METHODS
 
   /**
    * Executes the given task.
    * 
    * @param aTask
-   *          the task to execute, cannot be <code>null</code>.
+   *          the task to execute, cannot be <code>null</code>;
+   * @param aProperties
+   *          the optional properties that belong to the task, can be
+   *          <code>null</code>.
    * @return a {@link Future} that can be used to track the result of the task,
    *         can not be <code>null</code>.
    */
-  <RESULT_TYPE> Future<RESULT_TYPE> execute( Task<RESULT_TYPE> aTask );
+  <RESULT_TYPE> Future<RESULT_TYPE> execute( Task<RESULT_TYPE> aTask, Map<String, ?> aProperties );
 
 }

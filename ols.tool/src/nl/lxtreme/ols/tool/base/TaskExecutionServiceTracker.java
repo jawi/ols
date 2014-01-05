@@ -21,6 +21,7 @@
 package nl.lxtreme.ols.tool.base;
 
 
+import java.util.*;
 import java.util.concurrent.*;
 
 import nl.lxtreme.ols.task.execution.*;
@@ -72,12 +73,12 @@ public class TaskExecutionServiceTracker implements TaskExecutionService
    * {@inheritDoc}
    */
   @Override
-  public <RESULT_TYPE> Future<RESULT_TYPE> execute( final Task<RESULT_TYPE> aTask )
+  public <RESULT_TYPE> Future<RESULT_TYPE> execute( Task<RESULT_TYPE> aTask, Map<String, ?> aProperties )
   {
     final TaskExecutionService service = ( TaskExecutionService )this.taskExecutionServiceHelper.getService();
     if ( service != null )
     {
-      return service.execute( aTask );
+      return service.execute( aTask, aProperties );
     }
 
     return null;

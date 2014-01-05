@@ -565,7 +565,7 @@ public class AsyncSerialDataDecoder
    *          the channel index to decode, >= 0;
    * @return the bit length used in decoding, in number of samples, >= 0;
    */
-  public double decodeDataLine( final int aChannelIndex )
+  public double decodeDataLine( final int aChannelIndex, final long aStartTime, final long aEndTime )
   {
     final int frameSize = this.configuration.getFrameSize( this.dataSet.getSampleRate() );
     final double bitLength = this.configuration.getBitLength( this.dataSet.getSampleRate() );
@@ -574,17 +574,13 @@ public class AsyncSerialDataDecoder
     final StopBits stopBits = this.configuration.getStopBits();
     final Parity parity = this.configuration.getParity();
 
-    final long[] timestamps = this.dataSet.getTimestamps();
-
-    final long startOfDecode = timestamps[this.context.getStartSampleIndex()];
-    final long endOfDecode = timestamps[this.context.getEndSampleIndex()];
     final BitLevel idleLevel = this.configuration.getIdleLevel();
 
     DataBitExtractor extractor = new DataBitExtractor( aChannelIndex );
     setProgress( 0 );
 
-    long start = findStartBit( aChannelIndex, idleLevel.nextEdge(), startOfDecode, endOfDecode );
-    while ( ( start >= 0 ) && ( ( endOfDecode - start ) > frameSize ) )
+    long start = findStartBit( aChannelIndex, idleLevel.nextEdge(), aStartTime, aEndTime );
+    while ( ( start >= 0 ) && ( ( aEndTime - start ) > frameSize ) )
     {
       extractor.jumpTo( start );
 
@@ -650,7 +646,7 @@ public class AsyncSerialDataDecoder
 
       // Find start bit after the stop bit
       start = findStartBit( aChannelIndex, idleLevel.nextEdge(), ( long )( extractor.time() + ( bitLength / 2 ) ),
-          endOfDecode );
+          aEndTime );
 
       // Check length of stopbit
       final long endOfStopbit = extractor.time() + ( long )( stopBits.getValue() * bitLength );
@@ -661,7 +657,7 @@ public class AsyncSerialDataDecoder
 
       if ( start >= 0 )
       {
-        setProgress( getPercentage( start, startOfDecode, endOfDecode ) );
+        setProgress( getPercentage( start, aStartTime, aEndTime ) );
       }
     }
 

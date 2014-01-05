@@ -195,6 +195,7 @@ public class OneWireAnalyserDialog extends BaseToolDialog<OneWireDataSet> implem
     toolTask.setOneWireLineIndex( this.owLine.getSelectedIndex() );
     toolTask.setOneWireBusMode( ( this.owMode.getSelectedIndex() == 0 ) ? OneWireBusMode.STANDARD
         : OneWireBusMode.OVERDRIVE );
+    toolTask.setDecodingArea( getMarkerAIndex(), getMarkerBIndex() );
   }
 
   /**
@@ -293,6 +294,8 @@ public class OneWireAnalyserDialog extends BaseToolDialog<OneWireDataSet> implem
     final String modes[] = new String[] { "Standard", "Overdrive" };
 
     final JPanel panel = new JPanel( new SpringLayout() );
+    
+    addDecoderAreaPane( panel );
 
     SpringLayoutUtils.addSeparator( panel, "Settings" );
 

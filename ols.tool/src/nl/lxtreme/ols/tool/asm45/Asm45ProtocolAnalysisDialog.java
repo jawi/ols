@@ -239,6 +239,7 @@ public final class Asm45ProtocolAnalysisDialog extends BaseToolDialog<Asm45DataS
     toolTask.setReportInst( this.showInst.isSelected() );
     toolTask.setReportData( this.showData.isSelected() );
     toolTask.setReportBusGrants( this.showBusGrants.isSelected() );
+    toolTask.setDecodingArea( getMarkerAIndex(), getMarkerBIndex() );
   }
 
   /**
@@ -270,7 +271,7 @@ public final class Asm45ProtocolAnalysisDialog extends BaseToolDialog<Asm45DataS
   {
     boolean result = super.validateToolSettings();
 
-    if ( result && ( getContext().getChannels() != OlsConstants.MAX_CHANNELS ) )
+    if ( result && ( getData().getChannelCount() != OlsConstants.MAX_CHANNELS ) )
     {
       JErrorDialog.showDialog( getOwner(), "Cannot start analysis!", "Not enough channels!",
           "For the Asm45 decoder, you need to have 32 channels enabled." );
@@ -389,6 +390,8 @@ public final class Asm45ProtocolAnalysisDialog extends BaseToolDialog<Asm45DataS
     final int channelCount = getData().getChannelCount();
 
     final JPanel panel = new JPanel( new SpringLayout() );
+    
+    addDecoderAreaPane( panel );
 
     SpringLayoutUtils.addSeparator( panel, "Settings" );
 
@@ -520,10 +523,10 @@ public final class Asm45ProtocolAnalysisDialog extends BaseToolDialog<Asm45DataS
   {
     setMinimumSize( new Dimension( 640, 480 ) );
 
-    final JComponent settingsPane = createSettingsPane();
-    final JComponent previewPane = createPreviewPane();
+    JComponent settingsPane = createSettingsPane();
+    JComponent previewPane = createPreviewPane();
 
-    final JPanel contentPane = new JPanel( new GridBagLayout() );
+    JPanel contentPane = new JPanel( new GridBagLayout() );
     contentPane.add( settingsPane, //
         new GridBagConstraints( 0, 0, 1, 1, 0.0, 0.0, GridBagConstraints.NORTH, GridBagConstraints.NONE, new Insets( 2,
             0, 2, 0 ), 0, 0 ) );
@@ -532,17 +535,17 @@ public final class Asm45ProtocolAnalysisDialog extends BaseToolDialog<Asm45DataS
         new GridBagConstraints( 1, 0, 1, 1, 1.0, 1.0, GridBagConstraints.NORTH, GridBagConstraints.BOTH, new Insets( 2,
             0, 2, 0 ), 0, 0 ) );
 
-    final JButton runAnalysisButton = ToolUtils.createRunAnalysisButton( this );
+    JButton runAnalysisButton = ToolUtils.createRunAnalysisButton( this );
     this.runAnalysisAction = ( RestorableAction )runAnalysisButton.getAction();
 
-    final JButton exportButton = ToolUtils.createExportButton( this );
+    JButton exportButton = ToolUtils.createExportButton( this );
     this.exportAction = exportButton.getAction();
     this.exportAction.setEnabled( false );
 
-    final JButton closeButton = ToolUtils.createCloseButton();
+    JButton closeButton = ToolUtils.createCloseButton();
     this.closeAction = closeButton.getAction();
 
-    final JComponent buttonPane = SwingComponentUtils.createButtonPane( runAnalysisButton, exportButton, closeButton );
+    JComponent buttonPane = SwingComponentUtils.createButtonPane( runAnalysisButton, exportButton, closeButton );
 
     SwingComponentUtils.setupWindowContentPane( this, contentPane, buttonPane, runAnalysisButton );
 

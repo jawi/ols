@@ -21,10 +21,13 @@
 package nl.lxtreme.ols.task.execution.impl;
 
 
+import java.util.*;
 import java.util.concurrent.*;
-import java.util.logging.*;
 
 import nl.lxtreme.ols.task.execution.*;
+
+import org.osgi.service.event.*;
+import org.osgi.service.log.*;
 
 
 /**
@@ -33,44 +36,157 @@ import nl.lxtreme.ols.task.execution.*;
  */
 public class BackgroundTaskExecutionService implements TaskExecutionService
 {
-  // CONSTANTS
-
-  private static final Logger LOG = Logger.getLogger( BackgroundTaskExecutionService.class.getName() );
-
-  private static final int POOL_SIZE = 5;
-
   // VARIABLES
 
-  private final TaskStatusListener taskStatusListener;
-
-  final ExecutorService executorService;
-
-  // CONSTANTS
-
-  /**
-   * Creates a new {@link BackgroundTaskExecutionService} instance.
-   */
-  public BackgroundTaskExecutionService( final TaskStatusListener aTaskStatusListener )
-  {
-    this.taskStatusListener = aTaskStatusListener;
-
-    this.executorService = Executors.newFixedThreadPool( POOL_SIZE );
-  }
+  // Locally managed...
+  private volatile ExecutorService executorService;
+  // Injected by Felix DM...
+  private volatile EventAdmin eventAdmin;
+  private volatile LogService logService;
 
   // METHODS
 
   /**
-   * Closes this tool execution service, cancelling any ongoing executions if
-   * needed.
-   * <p>
-   * After calling this method, this instance should <em>no longer</em> be used.
-   * </p>
+   * {@inheritDoc}
    */
-  public void close()
+  @Override
+  public <RESULT_TYPE> Future<RESULT_TYPE> execute( final Task<RESULT_TYPE> aTask, final Map<String, ?> aProperties )
   {
-    if ( this.executorService.isShutdown() )
+    if ( aTask == null )
     {
-      throw new IllegalStateException( "Service already shut down!" );
+      throw new IllegalArgumentException( "Parameter Task cannot be null!" );
+    }
+
+    final Callable<RESULT_TYPE> task = new Callable<RESULT_TYPE>()
+    {
+      @Override
+      public RESULT_TYPE call() throws Exception
+      {
+        long startTime = System.currentTimeMillis();
+
+        fireTaskStarted( aTask, aProperties, startTime );
+
+        try
+        {
+          RESULT_TYPE result = aTask.call();
+
+          fireTaskEnded( aTask, result, aProperties, System.currentTimeMillis() - startTime );
+
+          return result;
+        }
+        catch ( Exception exception )
+        {
+          logService.log( LogService.LOG_INFO, "Task execution failed!", exception );
+
+          fireTaskFailed( aTask, exception, aProperties, System.currentTimeMillis() - startTime );
+
+          throw exception;
+        }
+      }
+    };
+
+    return this.executorService.submit( task );
+  }
+
+  /**
+   * Fires an event that a task is successfully ended.
+   * 
+   * @param aTask
+   * @param aResult
+   */
+  final void fireTaskEnded( Task<?> aTask, Object aResult, Map<String, ?> aProperties, long aTimeTaken )
+  {
+    Map<String, Object> props = new HashMap<String, Object>();
+    if ( aProperties != null )
+    {
+      props.putAll( aProperties );
+    }
+    props.put( "status", "success" );
+    props.put( "result", aResult );
+    props.put( "time", aTimeTaken );
+
+    this.eventAdmin.postEvent( new Event( EVENT_TOPIC, props ) );
+  }
+
+  /**
+   * Fires an event that a task has failed.
+   * 
+   * @param aTask
+   * @param aException
+   */
+  final void fireTaskFailed( Task<?> aTask, Exception aException, Map<String, ?> aProperties, long aTimeTaken )
+  {
+    Map<String, Object> props = new HashMap<String, Object>();
+    if ( aProperties != null )
+    {
+      props.putAll( aProperties );
+    }
+    props.put( "status", "failure" );
+    props.put( "exception", aException );
+    props.put( "time", aTimeTaken );
+
+    this.eventAdmin.postEvent( new Event( EVENT_TOPIC, props ) );
+  }
+
+  /**
+   * Fires an event that a task has started.
+   * 
+   * @param aTask
+   */
+  final void fireTaskStarted( Task<?> aTask, Map<String, ?> aProperties, long aStartTime )
+  {
+    Map<String, Object> props = new HashMap<String, Object>();
+    if ( aProperties != null )
+    {
+      props.putAll( aProperties );
+    }
+    props.put( "status", "started" );
+    props.put( "time", aStartTime );
+
+    this.eventAdmin.postEvent( new Event( EVENT_TOPIC, props ) );
+  }
+
+  /**
+   * @param aEventAdmin
+   *          the event admin, can be <code>null</code>.
+   */
+  protected void setEventAdmin( EventAdmin aEventAdmin )
+  {
+    this.eventAdmin = aEventAdmin;
+  }
+
+  /**
+   * @param aLogService
+   *          the log service, can be <code>null</code>.
+   */
+  protected void setLogService( LogService aLogService )
+  {
+    this.logService = aLogService;
+  }
+
+  /**
+   * Starts this task execution service.
+   * 
+   * @param aComponent
+   *          the component that is started.
+   */
+  protected void start()
+  {
+    this.executorService = Executors.newCachedThreadPool();
+  }
+
+  /**
+   * Closes this task execution service, cancelling any ongoing executions if
+   * needed.
+   * 
+   * @param aComponent
+   *          the component that is started.
+   */
+  protected void stop()
+  {
+    if ( this.executorService == null || this.executorService.isShutdown() )
+    {
+      return;
     }
 
     // Force the running tasks to be cancelled immediately...
@@ -83,7 +199,7 @@ public class BackgroundTaskExecutionService implements TaskExecutionService
       {
         if ( this.executorService.awaitTermination( 500L, TimeUnit.MILLISECONDS ) )
         {
-          LOG.fine( "All running threads are terminated ..." );
+          this.logService.log( LogService.LOG_DEBUG, "All running threads are terminated ..." );
         }
       }
       catch ( InterruptedException exception )
@@ -93,47 +209,8 @@ public class BackgroundTaskExecutionService implements TaskExecutionService
       }
     }
 
-    LOG.fine( "Background task execution service closed ..." );
-  }
+    this.executorService = null;
 
-  /**
-   * {@inheritDoc}
-   */
-  @Override
-  public <RESULT_TYPE> Future<RESULT_TYPE> execute( final Task<RESULT_TYPE> aTask )
-  {
-    if ( aTask == null )
-    {
-      throw new IllegalArgumentException( "Parameter Task cannot be null!" );
-    }
-
-    final Callable<RESULT_TYPE> task = new Callable<RESULT_TYPE>()
-    {
-      private final TaskStatusListener tsl = BackgroundTaskExecutionService.this.taskStatusListener;
-
-      /**
-       * {@inheritDoc}
-       */
-      @Override
-      public RESULT_TYPE call() throws Exception
-      {
-        this.tsl.taskStarted( aTask );
-
-        try
-        {
-          RESULT_TYPE result = aTask.call();
-          this.tsl.taskEnded( aTask, result );
-          return result;
-        }
-        catch ( Exception exception )
-        {
-          LOG.log( Level.FINE, "Task execution failed!", exception );
-          this.tsl.taskFailed( aTask, exception );
-          throw exception;
-        }
-      }
-    };
-
-    return this.executorService.submit( task );
+    this.logService.log( LogService.LOG_INFO, "Background task execution service closed ..." );
   }
 }
