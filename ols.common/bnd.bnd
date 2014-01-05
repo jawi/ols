@@ -1,4 +1,5 @@
 -buildpath: junit.osgi;version=4.11.0
 Export-Package: nl.lxtreme.ols.common,\
 	nl.lxtreme.ols.common.acquisition,\
-	nl.lxtreme.ols.common.annotation
+	nl.lxtreme.ols.common.annotation,\
+	nl.lxtreme.ols.common.session

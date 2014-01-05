@@ -169,7 +169,7 @@ public final class OlsDataHelper
 
             if ( value > Long.MIN_VALUE )
             {
-              aBuilder.setCursorTimestamp( idx, value );
+              aBuilder.add( aBuilder.createCursor().setIndex( idx ).setTimestamp( value ) );
             }
           }
         }

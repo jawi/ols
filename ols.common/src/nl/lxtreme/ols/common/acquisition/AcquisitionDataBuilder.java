@@ -23,13 +23,12 @@ package nl.lxtreme.ols.common.acquisition;
 
 import static nl.lxtreme.ols.common.OlsConstants.*;
 
-import java.awt.*;
 import java.util.*;
-import java.util.List;
 
 import nl.lxtreme.ols.common.*;
 import nl.lxtreme.ols.common.acquisition.ChannelBuilder.ChannelImpl;
 import nl.lxtreme.ols.common.acquisition.ChannelGroupBuilder.ChannelGroupImpl;
+import nl.lxtreme.ols.common.acquisition.CursorBuilder.CursorImpl;
 
 
 /**
@@ -346,227 +345,6 @@ public final class AcquisitionDataBuilder
   }
 
   /**
-   * Provides a default implementation of {@link Cursor}.
-   */
-  static final class CursorImpl implements Cursor
-  {
-    // CONSTANTS
-
-    private static final long UNDEFINED = -1L;
-
-    // VARIABLES
-
-    private final int index;
-
-    private String label;
-    private long timestamp;
-    private Color color;
-
-    // CONSTRUCTORS
-
-    /**
-     * Creates a new {@link CursorImpl} instance.
-     */
-    public CursorImpl( final Cursor aCursor )
-    {
-      this.index = aCursor.getIndex();
-      this.timestamp = aCursor.isDefined() ? aCursor.getTimestamp() : UNDEFINED;
-      this.label = aCursor.getLabel();
-    }
-
-    /**
-     * Creates a new {@link CursorImpl} instance.
-     */
-    public CursorImpl( final int aIndex )
-    {
-      this.index = aIndex;
-      this.timestamp = UNDEFINED;
-    }
-
-    // METHODS
-
-    /**
-     * {@inheritDoc}
-     */
-    @Override
-    public void clear()
-    {
-      this.timestamp = UNDEFINED;
-    }
-
-    /**
-     * {@inheritDoc}
-     */
-    @Override
-    public Cursor clone()
-    {
-      try
-      {
-        CursorImpl clone = ( CursorImpl )super.clone();
-        clone.label = this.label;
-        clone.timestamp = this.timestamp;
-        return clone;
-      }
-      catch ( CloneNotSupportedException exception )
-      {
-        throw new RuntimeException( "Clone contract broken?!" );
-      }
-    }
-
-    /**
-     * {@inheritDoc}
-     */
-    @Override
-    public int compareTo( final Cursor aOther )
-    {
-      return getIndex() - aOther.getIndex();
-    }
-
-    /**
-     * {@inheritDoc}
-     */
-    @Override
-    public boolean equals( final Object aObject )
-    {
-      if ( this == aObject )
-      {
-        return true;
-      }
-      if ( ( aObject == null ) || !( aObject instanceof CursorImpl ) )
-      {
-        return false;
-      }
-
-      CursorImpl other = ( CursorImpl )aObject;
-      if ( this.index != other.index )
-      {
-        return false;
-      }
-      if ( this.timestamp != other.timestamp )
-      {
-        return false;
-      }
-
-      return true;
-    }
-
-    /**
-     * {@inheritDoc}
-     */
-    @Override
-    public Color getColor()
-    {
-      return this.color;
-    }
-
-    /**
-     * {@inheritDoc}
-     */
-    @Override
-    public int getIndex()
-    {
-      return this.index;
-    }
-
-    /**
-     * {@inheritDoc}
-     */
-    @Override
-    public String getLabel()
-    {
-      return this.label;
-    }
-
-    /**
-     * {@inheritDoc}
-     */
-    @Override
-    public long getTimestamp()
-    {
-      if ( this.timestamp < 0L )
-      {
-        throw new IllegalStateException( "Undefined cursor!" );
-      }
-      return this.timestamp;
-    }
-
-    /**
-     * {@inheritDoc}
-     */
-    @Override
-    public int hashCode()
-    {
-      final int prime = 31;
-      int result = 1;
-      result = ( prime * result ) + this.index;
-      result = ( prime * result ) + ( int )( this.timestamp ^ ( this.timestamp >>> 32 ) );
-      return result;
-    }
-
-    /**
-     * {@inheritDoc}
-     */
-    @Override
-    public boolean hasLabel()
-    {
-      return ( this.label != null ) && !"".equals( this.label.trim() );
-    }
-
-    /**
-     * {@inheritDoc}
-     */
-    @Override
-    public boolean inArea( long aTimestamp, double aDelta )
-    {
-      if ( !isDefined() )
-      {
-        return false;
-      }
-
-      final double min = this.timestamp - aDelta;
-      final double max = this.timestamp + aDelta;
-
-      return ( ( aTimestamp >= min ) && ( aTimestamp <= max ) );
-    }
-
-    /**
-     * {@inheritDoc}
-     */
-    @Override
-    public boolean isDefined()
-    {
-      return this.timestamp >= 0L;
-    }
-
-    /**
-     * {@inheritDoc}
-     */
-    @Override
-    public void setColor( Color aColor )
-    {
-      this.color = aColor;
-    }
-
-    /**
-     * {@inheritDoc}
-     */
-    @Override
-    public void setLabel( final String aLabel )
-    {
-      this.label = aLabel;
-    }
-
-    /**
-     * {@inheritDoc}
-     */
-    @Override
-    public void setTimestamp( final long aTimestamp )
-    {
-      this.timestamp = aTimestamp;
-    }
-  }
-
-  /**
    * Small container used to keep a sample and its timestamp together.
    */
   static final class Sample implements Comparable<Sample>
@@ -668,7 +446,7 @@ public final class AcquisitionDataBuilder
   private final SortedSet<Sample> sampleData;
   private final SortedSet<ChannelImpl> channels;
   private final SortedSet<ChannelGroupImpl> channelGroups;
-  private final Cursor[] cursors;
+  private final SortedSet<CursorImpl> cursors;
   private int sampleRate;
   private long triggerPosition;
   private boolean cursorsVisible;
@@ -683,7 +461,7 @@ public final class AcquisitionDataBuilder
     this.sampleData = new TreeSet<Sample>();
     this.channels = new TreeSet<ChannelImpl>();
     this.channelGroups = new TreeSet<ChannelGroupImpl>();
-    this.cursors = new Cursor[OlsConstants.MAX_CURSORS];
+    this.cursors = new TreeSet<CursorImpl>();
     this.absoluteLength = NOT_AVAILABLE;
     this.lastSeenTimestamp = NOT_AVAILABLE;
     this.enabledChannelMask = NOT_AVAILABLE;
@@ -691,17 +469,12 @@ public final class AcquisitionDataBuilder
     this.sampleRate = NOT_AVAILABLE; // state values
     this.channelCount = 0;
     this.cursorsVisible = true; // by default
-
-    for ( int i = 0; i < OlsConstants.MAX_CURSORS; i++ )
-    {
-      this.cursors[i] = new CursorImpl( i );
-    }
   }
 
   // METHODS
 
   /**
-   * Adds a new channel group to this builder.
+   * Adds a new channel to this builder.
    * 
    * @return a new {@link ChannelBuilder} instance to define the channel, never
    *         <code>null</code>.
@@ -723,6 +496,20 @@ public final class AcquisitionDataBuilder
    *           in case a channel group with the given index already exists.
    */
   public AcquisitionDataBuilder add( ChannelGroupBuilder aBuilder )
+  {
+    add( aBuilder.build( this ) );
+    return this;
+  }
+
+  /**
+   * Adds a new cursor to this builder.
+   * 
+   * @return a new {@link CursorBuilder} instance to define the cursor, never
+   *         <code>null</code>.
+   * @throws IllegalArgumentException
+   *           in case a cursor with the given index already exists.
+   */
+  public AcquisitionDataBuilder add( CursorBuilder aBuilder )
   {
     add( aBuilder.build( this ) );
     return this;
@@ -778,11 +565,19 @@ public final class AcquisitionDataBuilder
         .setCursorsVisible( aData.areCursorsVisible() ).setEnabledChannelMask( aData.getEnabledChannels() )
         .setSampleRate( aData.getSampleRate() ).setTriggerPosition( aData.getTriggerPosition() );
 
-    final Cursor[] _cursors = aData.getCursors();
-    for ( int i = 0; i < _cursors.length; i++ )
+    for ( Cursor _cursor : aData.getCursors() )
     {
       // Create real copies of the cursors to make them independent...
-      this.cursors[i] = new CursorImpl( _cursors[i] );
+      CursorBuilder builder = createCursor() //
+          .setIndex( _cursor.getIndex() ) //
+          .setColor( _cursor.getColor() ) //
+          .setLabel( _cursor.getLabel() );
+      if ( _cursor.isDefined() )
+      {
+        builder.setTimestamp( _cursor.getTimestamp() );
+      }
+
+      add( builder );
     }
 
     // Copy channel names...
@@ -926,11 +721,31 @@ public final class AcquisitionDataBuilder
       absLength = 0L;
     }
 
+    CursorImpl[] _cursors = new CursorImpl[OlsConstants.MAX_CURSORS];
+    for ( CursorImpl cursor : this.cursors )
+    {
+      _cursors[cursor.getIndex()] = cursor;
+    }
+    for ( int i = 0; i < _cursors.length; i++ )
+    {
+      if ( _cursors[i] == null )
+      {
+        _cursors[i] = new CursorBuilder().setIndex( i ).build( this );
+      }
+    }
+
     Channel[] _channels = this.channels.toArray( new Channel[this.channels.size()] );
     ChannelGroupImpl[] _channelGroups = this.channelGroups.toArray( new ChannelGroupImpl[this.channelGroups.size()] );
 
-    return new AcquisitionDataImpl( values, timestamps, this.triggerPosition, this.sampleRate, this.channelCount,
-        this.enabledChannelMask, absLength, this.cursors, this.cursorsVisible, _channels, _channelGroups );
+    AcquisitionDataImpl result = new AcquisitionDataImpl( values, timestamps, this.triggerPosition, this.sampleRate,
+        this.channelCount, this.enabledChannelMask, absLength, _cursors, this.cursorsVisible, _channels, _channelGroups );
+
+    for ( int i = 0; i < _cursors.length; i++ )
+    {
+      _cursors[i].setAcquisitionData( result );
+    }
+
+    return result;
   }
 
   /**
@@ -988,6 +803,16 @@ public final class AcquisitionDataBuilder
   }
 
   /**
+   * @return a new {@link CursorBuilder} to define a new cursor, never
+   *         <code>null</code>.
+   * @see #add(ChannelBuilder)
+   */
+  public CursorBuilder createCursor()
+  {
+    return new CursorBuilder();
+  }
+
+  /**
    * Sets the absolute length of the sample data.
    * 
    * @param aAbsoluteLength
@@ -1031,27 +856,6 @@ public final class AcquisitionDataBuilder
   }
 
   /**
-   * Sets the label for a particular cursor.
-   * 
-   * @param aIndex
-   *          the index of the cursor to set, >= 0 && <
-   *          {@value OlsConstants#MAX_CURSORS};
-   * @param aLabel
-   *          the label of the cursor to set.
-   * @throws IllegalArgumentException
-   *           in case of an invalid cursor index.
-   */
-  public AcquisitionDataBuilder setCursorLabel( final int aIndex, final String aLabel )
-  {
-    if ( ( aIndex < 0 ) || ( aIndex >= OlsConstants.MAX_CURSORS ) )
-    {
-      throw new IllegalArgumentException( "Invalid cursor index!" );
-    }
-    this.cursors[aIndex].setLabel( aLabel );
-    return this;
-  }
-
-  /**
    * Sets whether or not cursors are visible.
    * 
    * @param aCursorsVisible
@@ -1060,27 +864,6 @@ public final class AcquisitionDataBuilder
   public AcquisitionDataBuilder setCursorsVisible( final boolean aCursorsVisible )
   {
     this.cursorsVisible = aCursorsVisible;
-    return this;
-  }
-
-  /**
-   * Sets the timestamp for a particular cursor.
-   * 
-   * @param aIndex
-   *          the index of the cursor to set, >= 0 && <
-   *          {@value OlsConstants#MAX_CURSORS} ;
-   * @param aTimestamp
-   *          the timestamp of the cursor to set.
-   * @throws IllegalArgumentException
-   *           in case of an invalid cursor index.
-   */
-  public AcquisitionDataBuilder setCursorTimestamp( final int aIndex, final long aTimestamp )
-  {
-    if ( ( aIndex < 0 ) || ( aIndex >= OlsConstants.MAX_CURSORS ) )
-    {
-      throw new IllegalArgumentException( "Invalid cursor index!" );
-    }
-    this.cursors[aIndex].setTimestamp( aTimestamp );
     return this;
   }
 
@@ -1161,6 +944,19 @@ public final class AcquisitionDataBuilder
     return aChannel;
   }
 
+  CursorImpl add( CursorImpl aCursor )
+  {
+    for ( CursorImpl c : this.cursors )
+    {
+      if ( c.getIndex() == aCursor.getIndex() )
+      {
+        throw new IllegalArgumentException( "Cursor with index " + aCursor.getIndex() + " already defined!" );
+      }
+    }
+    this.cursors.add( aCursor );
+    return aCursor;
+  }
+
   ChannelImpl getChannel( int aIndex )
   {
     for ( ChannelImpl channel : this.channels )
@@ -1173,39 +969,14 @@ public final class AcquisitionDataBuilder
     return null;
   }
 
-  private void ensureConsistentModel()
+  int getSampleRate()
   {
-    int realChannelCount = 0;
-    List<ChannelImpl> remove = new ArrayList<ChannelImpl>();
+    return this.sampleRate;
+  }
 
-    for ( ChannelImpl ch : this.channels )
-    {
-      if ( ( this.enabledChannelMask & ch.getMask() ) != 0 )
-      {
-        // Channel is present...
-        realChannelCount++;
-      }
-      else
-      {
-        // Channel is masked out, remove it...
-        remove.add( ch );
-      }
-    }
-
-    for ( ChannelImpl ch : remove )
-    {
-      if ( this.channels.remove( ch ) )
-      {
-        ch.removeFromGroup();
-      }
-    }
-
-    if ( realChannelCount == 0 )
-    {
-      throw new IllegalArgumentException( "No channel count defined!" );
-    }
-
-    this.channelCount = realChannelCount;
+  long getTriggerPosition()
+  {
+    return this.triggerPosition;
   }
 
   /**
@@ -1249,122 +1020,38 @@ public final class AcquisitionDataBuilder
     }
   }
 
-  //
-  // /**
-  // * @param aChannelIndex
-  // * @return
-  // */
-  // private List<ChannelGroupImpl> createChannelGroups( LinkedHashMap<Integer,
-  // Channel> aChannelIndex )
-  // {
-  // // Use defaults for the situation when no channel groups are defined...
-  // ensureChannelGroupsAreDefined( aChannelIndex );
-  //
-  // int cgSize = this.channelGroups.size();
-  // List<ChannelGroupImpl> channelGroups = new ArrayList<ChannelGroupImpl>(
-  // cgSize );
-  // List<Channel> allChannels = new ArrayList<Channel>( aChannelIndex.values()
-  // );
-  //
-  // for ( Entry<Integer, ChannelGroupInfo> entry :
-  // this.channelGroupDefs.entrySet() )
-  // {
-  // int groupIdx = entry.getKey().intValue();
-  // ChannelGroupInfo groupDef = entry.getValue();
-  //
-  // List<Integer> channelIndices = groupDef.channelIndices;
-  // List<Channel> channelRefs = new ArrayList<Channel>( channelIndices.size()
-  // );
-  // for ( Integer channelIdx : channelIndices )
-  // {
-  // Channel channel = aChannelIndex.get( channelIdx );
-  // if ( channel == null )
-  // {
-  // // probably masked out...
-  // continue;
-  // }
-  // channelRefs.add( channel );
-  // allChannels.remove( channel );
-  // }
-  //
-  // channelGroups.add( new ChannelGroupImpl( groupIdx, groupDef.name,
-  // channelRefs ) );
-  // }
-  //
-  // if ( !allChannels.isEmpty() )
-  // {
-  // // Add all remaining channels...
-  // Integer groupIdx = Integer.valueOf( channelGroups.size() );
-  // String name = String.format( "Group %d", groupIdx );
-  //
-  // channelGroups.add( new ChannelGroupImpl( groupIdx.intValue(), name,
-  // allChannels ) );
-  // }
-  //
-  // return channelGroups;
-  // }
-  //
-  // /**
-  // * @return
-  // */
-  // private LinkedHashMap<Integer, Channel> createChannels( boolean foo )
-  // {
-  // LinkedHashMap<Integer, Channel> chIndex = new LinkedHashMap<Integer,
-  // Channel>( this.channelCount );
-  // // The enabledChannels only tells us _which_ channels are to be enabled,
-  // // but we still need to keep track of how many channels we have...
-  // for ( int i = 0, _channelCount = 0; ( _channelCount < this.channelCount )
-  // && ( i < OlsConstants.MAX_CHANNELS ); i++ )
-  // {
-  // final int mask = ( 1 << i );
-  // if ( ( this.enabledChannelMask & mask ) != 0 )
-  // {
-  // Integer idx = Integer.valueOf( i );
-  // ChannelImpl channelImpl = new ChannelImpl( i, true /* enabled */);
-  //
-  // ChannelInfo chDef = this.channelDefs.get( idx );
-  // if ( chDef != null )
-  // {
-  // channelImpl.setLabel( chDef.label );
-  // // channelImpl.addAnnotations( chDef.annotations ); XXX
-  // }
-  //
-  // chIndex.put( idx, channelImpl );
-  // _channelCount++;
-  // }
-  // }
-  // return chIndex;
-  // }
-  //
-  // /**
-  // * @param aChannelIndex
-  // */
-  // private void ensureChannelGroupsAreDefined( LinkedHashMap<Integer, Channel>
-  // aChannelIndex )
-  // {
-  // if ( this.channelGroups.isEmpty() )
-  // {
-  // List<Channel> channels = new ArrayList<Channel>( aChannelIndex.values() );
-  //
-  // int groupCount = Math.max( 1, channels.size() /
-  // OlsConstants.CHANNELS_PER_BLOCK );
-  // for ( int g = 0, groupOffset = 0; g < groupCount; g++, groupOffset +=
-  // OlsConstants.CHANNELS_PER_BLOCK )
-  // {
-  // Integer groupIdx = Integer.valueOf( g );
-  // ChannelGroupInfo cgDef = new ChannelGroupInfo( String.format( "Group %d",
-  // groupIdx ) );
-  //
-  // int from = groupOffset;
-  // int to = Math.min( this.channelCount, groupOffset +
-  // OlsConstants.CHANNELS_PER_BLOCK );
-  // for ( Channel ch : channels.subList( from, to ) )
-  // {
-  // cgDef.channelIndices.add( Integer.valueOf( ch.getIndex() ) );
-  // }
-  //
-  // this.channelGroups.put( groupIdx, cgDef );
-  // }
-  // }
-  // }
+  private void ensureConsistentModel()
+  {
+    int realChannelCount = 0;
+    List<ChannelImpl> remove = new ArrayList<ChannelImpl>();
+
+    for ( ChannelImpl ch : this.channels )
+    {
+      if ( ( this.enabledChannelMask & ch.getMask() ) != 0 )
+      {
+        // Channel is present...
+        realChannelCount++;
+      }
+      else
+      {
+        // Channel is masked out, remove it...
+        remove.add( ch );
+      }
+    }
+
+    for ( ChannelImpl ch : remove )
+    {
+      if ( this.channels.remove( ch ) )
+      {
+        ch.removeFromGroup();
+      }
+    }
+
+    if ( realChannelCount == 0 )
+    {
+      throw new IllegalArgumentException( "No channel count defined!" );
+    }
+
+    this.channelCount = realChannelCount;
+  }
 }

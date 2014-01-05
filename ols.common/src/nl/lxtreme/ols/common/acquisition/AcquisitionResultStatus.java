@@ -40,6 +40,7 @@ public final class AcquisitionResultStatus
 
   private final ResultStatus status;
   private final String message;
+  private final long time;
 
   // CONSTRUCTORS
 
@@ -47,11 +48,13 @@ public final class AcquisitionResultStatus
    * Creates a new AcquisitionResultStatus instance.
    * 
    * @param aStatus
-   *          the status of the acquisition result, cannot be <code>null</code>.
+   *          the status of the acquisition result, cannot be <code>null</code>;
+   * @param aTime
+   *          the time taken by the acquisition, in milliseconds.
    */
-  public AcquisitionResultStatus( final ResultStatus aStatus )
+  public AcquisitionResultStatus( ResultStatus aStatus, long time )
   {
-    this( aStatus, null /* aMessage */);
+    this( aStatus, time, null /* aMessage */);
   }
 
   /**
@@ -59,12 +62,15 @@ public final class AcquisitionResultStatus
    * 
    * @param aStatus
    *          the status of the acquisition result, cannot be <code>null</code>;
+   * @param aTime
+   *          the time taken by the acquisition, in milliseconds;
    * @param aMessage
    *          the message of the acquisition result, may be <code>null</code>.
    */
-  public AcquisitionResultStatus( final ResultStatus aStatus, final String aMessage )
+  public AcquisitionResultStatus( ResultStatus aStatus, long aTime, String aMessage )
   {
     this.status = aStatus;
+    this.time = aTime;
     this.message = aMessage;
   }
 
@@ -80,9 +86,9 @@ public final class AcquisitionResultStatus
    * @return a new instance of {@link AcquisitionResultStatus}, never
    *         <code>null</code>.
    */
-  public static AcquisitionResultStatus create( final Throwable aThrowable )
+  public static AcquisitionResultStatus create( Throwable aThrowable, long aTime )
   {
-    return new AcquisitionResultStatus( ResultStatus.FAILED, aThrowable.getMessage() );
+    return new AcquisitionResultStatus( ResultStatus.FAILED, aTime, aThrowable.getMessage() );
   }
 
   /**
@@ -140,6 +146,16 @@ public final class AcquisitionResultStatus
   public ResultStatus getStatus()
   {
     return this.status;
+  }
+
+  /**
+   * Returns the time taken by the acquisition.
+   * 
+   * @return the acquisition time, in milliseconds.
+   */
+  public long getTime()
+  {
+    return this.time;
   }
 
   /**

@@ -30,6 +30,17 @@ import java.awt.*;
  */
 public interface Cursor extends Cloneable, Comparable<Cursor>
 {
+  // INNER TYPES
+
+  /**
+   * Denotes how to represent a cursor label. Used for automatic placement of
+   * cursor labels.
+   */
+  public static enum LabelStyle
+  {
+    INDEX_ONLY, TIME_ONLY, LABEL_ONLY, INDEX_LABEL, LABEL_TIME;
+  }
+
   // METHODS
 
   /**
@@ -59,11 +70,21 @@ public interface Cursor extends Cloneable, Comparable<Cursor>
   int getIndex();
 
   /**
-   * Returns the label of this cursor.
+   * Returns the raw label of this cursor, as set with {@link #setLabel(String)}
+   * .
    * 
    * @return the label, can be <code>null</code> if no label is (yet) defined.
    */
   String getLabel();
+
+  /**
+   * Returns a styled label for this cursor.
+   * 
+   * @param aStyle
+   *          the label style to use, cannot be <code>null</code>.
+   * @return a styled label, never <code>null</code>.
+   */
+  String getLabel( LabelStyle aStyle );
 
   /**
    * Returns the time stamp of this cursor.

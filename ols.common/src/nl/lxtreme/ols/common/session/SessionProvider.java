@@ -16,29 +16,20 @@
  * 51 Franklin St, Fifth Floor, Boston, MA 02110, USA
  *
  * Copyright (C) 2006-2010 Michael Poppitz, www.sump.org
- * Copyright (C) 2010 J.W. Janssen, www.lxtreme.nl
+ * Copyright (C) 2010-2014 J.W. Janssen, www.lxtreme.nl
  */
-package nl.lxtreme.ols.common.acquisition;
+package nl.lxtreme.ols.common.session;
 
 
 /**
- * Can be used to access the earlier acquired results.
+ * Provides a provider for sessions.
  */
-public interface AcquisitionDataProvider
+public interface SessionProvider
 {
-  /**
-   * Returns the current available acquisition results.
-   * 
-   * @return an array of acquisition results, never <code>null</code>. If no
-   *         acquisition results are available, an empty array is returned.
-   */
-  AcquisitionData[] getAcquiredData();
+  // METHODS
 
   /**
-   * Removes an instance of previously acquired data.
-   * 
-   * @param aData
-   *          the acquisition data to remove, cannot be <code>null</code>.
+   * @return an array with all sessions, never <code>null</code>.
    */
-  void remove( AcquisitionData aData );
+  Session[] getSessions();
 }

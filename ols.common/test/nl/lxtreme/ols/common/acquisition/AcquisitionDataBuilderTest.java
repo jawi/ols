@@ -362,7 +362,7 @@ public class AcquisitionDataBuilderTest
     builder.setChannelCount( 1 );
     builder.setSampleRate( 1 );
     builder.add( builder.createChannel().setIndex( 0 ).setLabel( "aaa" ) );
-    builder.setCursorLabel( 1, "bbb" );
+    builder.add( builder.createCursor().setIndex( 1 ).setLabel( "bbb" ) );
 
     AcquisitionData data = builder.build();
     assertNotNull( data );
