@@ -21,9 +21,12 @@
 package nl.lxtreme.ols.client2.views;
 
 
+import java.util.concurrent.atomic.*;
+
 import javax.swing.event.*;
 
 import nl.lxtreme.ols.common.acquisition.*;
+import nl.lxtreme.ols.common.annotation.*;
 import nl.lxtreme.ols.common.session.*;
 
 
@@ -34,8 +37,9 @@ public class ViewModel
 {
   // VARIABLES
 
-  private final EventListenerList listeners;
   private final Session session;
+  private final EventListenerList listeners;
+  private final AtomicReference<Cursor> selectedCursorRef;
 
   // CONSTRUCTORS
 
@@ -50,6 +54,7 @@ public class ViewModel
     this.session = aSession;
 
     this.listeners = new EventListenerList();
+    this.selectedCursorRef = new AtomicReference<Cursor>();
   }
 
   // METHODS
@@ -66,6 +71,22 @@ public class ViewModel
   }
 
   /**
+   * @see AcquisitionData#areCursorsVisible()
+   */
+  public boolean areCursorsVisible()
+  {
+    return getData().areCursorsVisible();
+  }
+
+  /**
+   * @return the annotation data, never <code>null</code>.
+   */
+  public AnnotationData getAnnotations()
+  {
+    return this.session.getAnnotationData();
+  }
+
+  /**
    * Returns the actual acquisition data.
    * 
    * @return the data, never <code>null</code>.
@@ -73,6 +94,16 @@ public class ViewModel
   public AcquisitionData getData()
   {
     return this.session.getAcquiredData();
+  }
+
+  /**
+   * Returns the selected cursor.
+   * 
+   * @return a selected cursor, can be <code>null</code>.
+   */
+  public Cursor getSelectedCursor()
+  {
+    return this.selectedCursorRef.get();
   }
 
   /**
@@ -94,8 +125,7 @@ public class ViewModel
   }
 
   /**
-   * @return <code>true</code> if timing data (for waveform views) is present,
-   *         <code>false</code> otherwise.
+   * @see AcquisitionData#hasTimingData()
    */
   public boolean hasTimingData()
   {
@@ -119,6 +149,22 @@ public class ViewModel
   public void removeMarkerChangeListener( IMarkerChangeListener aListener )
   {
     this.listeners.remove( IMarkerChangeListener.class, aListener );
+  }
+
+  /**
+   * Sets the selected cursor to the one given.
+   * 
+   * @param aCursor
+   *          the selected cursor, can be <code>null</code>.
+   */
+  public void setSelectedCursor( Cursor aCursor )
+  {
+    Cursor old;
+    do
+    {
+      old = this.selectedCursorRef.get();
+    }
+    while ( !this.selectedCursorRef.compareAndSet( old, aCursor ) );
   }
 
   /**

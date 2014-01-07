@@ -23,6 +23,7 @@ package nl.lxtreme.ols.tool.api;
 
 import static nl.lxtreme.ols.common.annotation.DataAnnotation.*;
 
+import java.awt.event.*;
 import java.util.*;
 
 import nl.lxtreme.ols.common.annotation.*;
@@ -132,6 +133,11 @@ public class ToolAnnotationHelper
 
     // METHODS
 
+    private static boolean isSet( int aValue, int aBitMask )
+    {
+      return ( aValue & aBitMask ) != 0;
+    }
+
     /**
      * {@inheritDoc}
      */
@@ -206,6 +212,90 @@ public class ToolAnnotationHelper
     public long getStartTimestamp()
     {
       return this.startTimestamp;
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public String getText( int aOptions )
+    {
+      StringBuilder result = new StringBuilder();
+
+
+      Map<String, Object> props = getProperties();
+      Object desc = props.get( KEY_DESCRIPTION );
+      Object type = props.get( KEY_TYPE );
+
+      if ( TYPE_SYMBOL.equals( type ) )
+      {
+        if ( isSet( aOptions, OPTION_WITH_DESCRIPTION ) && ( desc != null ) )
+        {
+          result.append( desc ).append( " " );
+        }
+
+        Object data = getData();
+        if ( data instanceof Number )
+        {
+          int value = ( ( Number )data ).intValue();
+
+          if ( isSet( aOptions, OPTION_WITH_BIN_DATA ) )
+          {
+            result.append( "0b" ).append( Integer.toBinaryString( value ) ).append( " " );
+          }
+          if ( isSet( aOptions, OPTION_WITH_OCT_DATA ) )
+          {
+            result.append( "0" ).append( Integer.toOctalString( value ) ).append( " " );
+          }
+          if ( isSet( aOptions, OPTION_WITH_HEX_DATA ) )
+          {
+            result.append( "0x" ).append( Integer.toHexString( value ) ).append( " " );
+          }
+          if ( isSet( aOptions, OPTION_WITH_CHAR_DATA ) && isPrintableChar( ( char )value ) )
+          {
+            result.append( ( char )value ).append( " " );
+          }
+        }
+        else
+        {
+          if ( isSet( aOptions, OPTION_WITH_CHAR_DATA ) )
+          {
+            result.append( data ).append( " " );
+          }
+        }
+      }
+
+      if ( isSet( aOptions, OPTION_WITH_DESCRIPTION ) && ( TYPE_EVENT.equals( type ) || TYPE_ERROR.equals( type ) )
+          && ( desc != null ) )
+      {
+        result.append( desc ).append( " " );
+      }
+
+      if ( result.length() == 0 )
+      {
+        Object data = getData();
+        result.append( "(" ).append( data ).append( ")" );
+      }
+
+      return result.toString().trim();
+    }
+
+    /**
+     * Determines if the given character is a printable character or not.
+     * 
+     * @param aChar
+     *          the character to test.
+     * @return <code>true</code> if the given character is a printable one,
+     *         <code>false</code> otherwise.
+     */
+    private boolean isPrintableChar( final char aChar )
+    {
+      if ( Character.isISOControl( aChar ) || ( aChar == KeyEvent.CHAR_UNDEFINED ) )
+      {
+        return false;
+      }
+      Character.UnicodeBlock block = Character.UnicodeBlock.of( aChar );
+      return ( block != null ) && ( block != Character.UnicodeBlock.SPECIALS );
     }
   }
 
@@ -347,25 +437,6 @@ public class ToolAnnotationHelper
   }
 
   /**
-   * Clears all annotations for the channel with the given index and sets its
-   * label to the one given.
-   * 
-   * @param aChannelIdx
-   *          the index of the channel to clear and annotate with the new label;
-   * @param aLabel
-   *          the new label of the channel, may be <code>null</code> to use the
-   *          default label.
-   */
-  public void prepareChannel( final int aChannelIdx, final String aLabel )
-  {
-    if ( isValidChannel( aChannelIdx ) )
-    {
-      this.context.clearAnnotations( aChannelIdx );
-      this.context.addAnnotation( new ChannelLabelAnnotation( aChannelIdx, aLabel ) );
-    }
-  }
-
-  /**
    * Adds a data symbol annotation to a channel (having the property
    * "type=symbol").
    * 
@@ -404,6 +475,25 @@ public class ToolAnnotationHelper
   public void clearAnnotations( final int... aChannelIdxs )
   {
     this.context.clearAnnotations( aChannelIdxs );
+  }
+
+  /**
+   * Clears all annotations for the channel with the given index and sets its
+   * label to the one given.
+   * 
+   * @param aChannelIdx
+   *          the index of the channel to clear and annotate with the new label;
+   * @param aLabel
+   *          the new label of the channel, may be <code>null</code> to use the
+   *          default label.
+   */
+  public void prepareChannel( final int aChannelIdx, final String aLabel )
+  {
+    if ( isValidChannel( aChannelIdx ) )
+    {
+      this.context.clearAnnotations( aChannelIdx );
+      this.context.addAnnotation( new ChannelLabelAnnotation( aChannelIdx, aLabel ) );
+    }
   }
 
   /**

@@ -132,6 +132,15 @@ public class UARTAnalyserTask implements ToolTask<UARTDataSet>
      * {@inheritDoc}
      */
     @Override
+    public String getText( int aOptions )
+    {
+      return toString();
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
     public String toString()
     {
       StringBuilder sb = new StringBuilder();
@@ -595,7 +604,7 @@ public class UARTAnalyserTask implements ToolTask<UARTDataSet>
           UARTAnalyserTask.this.annHelper.addSymbolAnnotation( aChannelIdx, aStartTime, aEndTime, aSymbol );
         }
       } );
-      
+
       final long startTime = data.getTimestamps()[this.startOfDecode];
       final long endTime = data.getTimestamps()[this.endOfDecode];
 

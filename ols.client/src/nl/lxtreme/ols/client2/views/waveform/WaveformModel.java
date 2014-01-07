@@ -21,16 +21,22 @@
 package nl.lxtreme.ols.client2.views.waveform;
 
 
+import static nl.lxtreme.ols.client2.views.UIMgr.*;
 import static nl.lxtreme.ols.client2.views.waveform.WaveformElement.*;
+import static nl.lxtreme.ols.client2.views.waveform.WaveformElement.WaveformElementMeasurer.*;
 
 import java.awt.*;
 import java.util.*;
 import java.util.List;
 import java.util.concurrent.*;
+import java.util.concurrent.atomic.*;
+
+import javax.swing.*;
 
 import nl.lxtreme.ols.client2.views.*;
 import nl.lxtreme.ols.client2.views.waveform.WaveformElement.WaveformElementMeasurer;
 import nl.lxtreme.ols.common.acquisition.*;
+import nl.lxtreme.ols.common.acquisition.Cursor;
 import nl.lxtreme.ols.common.session.*;
 
 
@@ -39,10 +45,19 @@ import nl.lxtreme.ols.common.session.*;
  */
 public class WaveformModel extends ViewModel
 {
+  // CONSTANTS
+
+  /**
+   * Defines the area around each cursor in which the mouse cursor should be in
+   * before the cursor can be moved.
+   */
+  private static final int CURSOR_SENSITIVITY_AREA = 4;
+
   // VARIABLES
 
   private final ViewController controller;
   private final List<WaveformElement> elements;
+  private final AtomicReference<WaveformElement> selectedElementRef;
 
   private ZoomController zoomController;
 
@@ -59,7 +74,9 @@ public class WaveformModel extends ViewModel
     super( aSession );
 
     this.controller = aController;
+
     this.elements = new CopyOnWriteArrayList<WaveformElement>();
+    this.selectedElementRef = new AtomicReference<WaveformElement>();
 
     AcquisitionData data = aSession.getAcquiredData();
     for ( ChannelGroup group : data.getChannelGroups() )
@@ -90,9 +107,7 @@ public class WaveformModel extends ViewModel
   {
     int height = 0;
 
-    final int spacing = 5; // XXX UIManager.getInt(
-                           // UIManagerKeys.SIGNAL_ELEMENT_SPACING );
-
+    final int spacing = UIManager.getInt( SIGNAL_ELEMENT_SPACING );
     for ( WaveformElement element : this.elements )
     {
       height += element.getHeight() + spacing;
@@ -102,7 +117,94 @@ public class WaveformModel extends ViewModel
   }
 
   /**
-   * @return
+   * Converts the given coordinate to the corresponding sample index.
+   * 
+   * @param aCoordinate
+   *          the coordinate to convert to a sample index, cannot be
+   *          <code>null</code>.
+   * @return a sample index, >= 0, or -1 if no corresponding sample index could
+   *         be found.
+   */
+  public int coordinateToSampleIndex( final Point aCoordinate )
+  {
+    final long timestamp = coordinateToTimestamp( aCoordinate );
+    final int idx = getData().getSampleIndex( timestamp );
+    if ( idx < 0 )
+    {
+      return -1;
+    }
+    final int sampleCount = getSampleCount() - 1;
+    if ( idx > sampleCount )
+    {
+      return sampleCount;
+    }
+
+    return idx;
+  }
+
+  /**
+   * Converts the given coordinate to the corresponding sample index.
+   * 
+   * @param aCoordinate
+   *          the coordinate to convert to a sample index, cannot be
+   *          <code>null</code>.
+   * @return a sample index, >= 0, or -1 if no corresponding sample index could
+   *         be found.
+   */
+  public long coordinateToTimestamp( final Point aCoordinate )
+  {
+    final long timestamp = ( long )Math.ceil( aCoordinate.x / getZoomFactor() );
+    if ( timestamp < 0 )
+    {
+      return -1;
+    }
+    return timestamp;
+  }
+
+  /**
+   * Finds the cursor under the given point.
+   * 
+   * @param aPoint
+   *          the coordinate of the potential cursor, cannot be
+   *          <code>null</code>.
+   * @return the cursor index, or -1 if not found.
+   */
+  public Cursor findCursor( Point aPoint )
+  {
+    final long refIdx = coordinateToTimestamp( aPoint );
+    final double snapArea = CURSOR_SENSITIVITY_AREA / getZoomFactor();
+
+    for ( Cursor cursor : getData().getCursors() )
+    {
+      if ( cursor.inArea( refIdx, snapArea ) )
+      {
+        return cursor;
+      }
+    }
+
+    return null;
+  }
+
+  /**
+   * Finds the waveform element based on a given screen coordinate.
+   * 
+   * @param aPoint
+   *          the coordinate to find the channel for, cannot be
+   *          <code>null</code>.
+   * @return the channel if found, or <code>null</code> if no channel was found.
+   */
+  public WaveformElement findWaveformElement( Point aPoint )
+  {
+    final WaveformElement[] elements = getWaveformElements( aPoint.y, 1, LOOSE_MEASURER );
+    if ( elements.length == 0 )
+    {
+      return null;
+    }
+    return elements[0];
+  }
+
+  /**
+   * @see AcquisitionData#getAbsoluteLength()
    */
   public long getAbsoluteLength()
   {
@@ -116,7 +218,7 @@ public class WaveformModel extends ViewModel
   public int getEndIndex( Rectangle aClip, int aLength )
   {
     final Point location = new Point( aClip.x + aClip.width, 0 );
-    int index = locationToSampleIndex( location );
+    int index = coordinateToSampleIndex( location );
     return Math.min( index + 1, aLength - 1 );
   }
 
@@ -129,14 +231,33 @@ public class WaveformModel extends ViewModel
   }
 
   /**
+   * Returns the selected waveform element (= the element under the mouse
+   * cursor).
+   * 
+   * @return a waveform element, can be <code>null</code>.
+   */
+  public WaveformElement getSelectedElement()
+  {
+    return this.selectedElementRef.get();
+  }
+
+  /**
    * @param aClip
    * @return
    */
   public int getStartIndex( Rectangle aClip )
   {
     final Point location = aClip.getLocation();
-    int index = locationToSampleIndex( location );
+    int index = coordinateToSampleIndex( location );
     return Math.max( index - 1, 0 );
+  }
+
+  /**
+   * @return a collection of all waveform elements, never <code>null</code>.
+   */
+  public Collection<WaveformElement> getWaveformElements()
+  {
+    return this.elements;
   }
 
   /**
@@ -155,8 +276,7 @@ public class WaveformModel extends ViewModel
     final int yMin = aY;
     final int yMax = aHeight + aY;
 
-    final int spacing = 5; // XXX UIManager.getInt(
-                           // UIManagerKeys.SIGNAL_ELEMENT_SPACING );
+    final int spacing = UIManager.getInt( SIGNAL_ELEMENT_SPACING );
     final int halfSpacing = spacing / 2;
 
     int yPos = 0;
@@ -194,52 +314,52 @@ public class WaveformModel extends ViewModel
   @Override
   public void initialize()
   {
-    this.zoomController = new ZoomController( this, ( WaveformView )this.controller.getView() );
+    this.zoomController = new ZoomController( this.controller );
   }
 
   /**
-   * Converts the given coordinate to the corresponding sample index.
+   * Sets the selected element to the one given.
    * 
-   * @param aCoordinate
-   *          the coordinate to convert to a sample index, cannot be
-   *          <code>null</code>.
-   * @return a sample index, >= 0, or -1 if no corresponding sample index could
-   *         be found.
+   * @param aElement
+   *          the selected element, can be <code>null</code>.
    */
-  public int locationToSampleIndex( final Point aCoordinate )
+  public void setSelectedElement( WaveformElement aElement )
   {
-    final long timestamp = locationToTimestamp( aCoordinate );
-    final int idx = getData().getSampleIndex( timestamp );
-    if ( idx < 0 )
+    WaveformElement old;
+    do
     {
-      return -1;
+      old = this.selectedElementRef.get();
     }
-    final int sampleCount = getSampleCount() - 1;
-    if ( idx > sampleCount )
-    {
-      return sampleCount;
-    }
-
-    return idx;
+    while ( !this.selectedElementRef.compareAndSet( old, aElement ) );
   }
 
   /**
-   * Converts the given coordinate to the corresponding sample index.
+   * Converts a given time stamp to a screen coordinate.
    * 
-   * @param aCoordinate
-   *          the coordinate to convert to a sample index, cannot be
-   *          <code>null</code>.
-   * @return a sample index, >= 0, or -1 if no corresponding sample index could
-   *         be found.
+   * @param aTimestamp
+   *          the time stamp to convert, >= 0.
+   * @return a screen coordinate, >= 0.
    */
-  public long locationToTimestamp( final Point aCoordinate )
+  public int timestampToCoordinate( final long aTimestamp )
   {
-    final long timestamp = ( long )Math.ceil( aCoordinate.x / getZoomFactor() );
-    if ( timestamp < 0 )
+    double result = getZoomFactor() * aTimestamp;
+    if ( result > Integer.MAX_VALUE )
     {
-      return -1;
+      return Integer.MAX_VALUE;
     }
-    return timestamp;
+    return ( int )result;
+  }
+
+  /**
+   * Zooms in the direction denoted by the given rotation using the given
+   * coordinate as center location.
+   * 
+   * @param aRotation
+   * @param aLocation
+   */
+  public void zoom( int aRotation, Point aLocation )
+  {
+    this.zoomController.zoom( aRotation, aLocation );
   }
 
   /**

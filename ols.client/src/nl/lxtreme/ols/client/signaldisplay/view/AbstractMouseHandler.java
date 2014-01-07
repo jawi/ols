@@ -76,7 +76,7 @@ abstract class AbstractMouseHandler extends MouseAdapter
    * {@inheritDoc}
    */
   @Override
-  public void mouseClicked( final MouseEvent aEvent )
+  public void mouseClicked( MouseEvent aEvent )
   {
     // Ensure the focus is moved to the main signal diagram component...
     getSignalDiagram().requestFocusInWindow();

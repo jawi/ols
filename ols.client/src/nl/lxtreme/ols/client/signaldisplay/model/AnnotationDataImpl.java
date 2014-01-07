@@ -119,6 +119,15 @@ public class AnnotationDataImpl implements AnnotationData
     SortedSet<Annotation> result = this.annotations.get( Integer.valueOf( aChannelIdx ) );
     return ( result == null ) ? new TreeSet<Annotation>() : result;
   }
+  
+  /**
+   * {@inheritDoc}
+   */
+  @Override
+  public SortedSet<DataAnnotation> getAnnotations( int aChannelIdx, long aStartTime, long aEndTime )
+  {
+    return null; // XXX
+  }
 
   /**
    * {@inheritDoc}

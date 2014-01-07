@@ -23,6 +23,7 @@ package nl.lxtreme.ols.client2;
 
 import java.awt.*;
 import java.util.*;
+import java.util.concurrent.atomic.*;
 
 import nl.lxtreme.ols.acquisition.*;
 import nl.lxtreme.ols.client2.action.*;
@@ -147,7 +148,7 @@ public class Activator extends DependencyActivatorBase
   @Override
   public void destroy( BundleContext aContext, DependencyManager aManager ) throws Exception
   {
-    // TODO Auto-generated method stub
+    Lm.clearLicense();
   }
 
   /**
@@ -158,12 +159,6 @@ public class Activator extends DependencyActivatorBase
   {
     // Platform initialization...
     Platform.initPlatform();
-
-    // Do not start if we're running headless...
-    if ( GraphicsEnvironment.isHeadless() )
-    {
-      throw new RuntimeException( "Cannot start client: running headless." );
-    }
 
     // Verify the license for JIDE-docking; thanks to JIDE Software for
     // providing a free license...
@@ -178,11 +173,22 @@ public class Activator extends DependencyActivatorBase
     createSessionProvider( aManager );
     createSessionViewManager( aManager );
 
+    final AtomicReference<Client> clientRef = new AtomicReference<Client>();
+    // Ensure that the client itself is created on the EDT...
+    EventQueue.invokeAndWait( new Runnable()
+    {
+      @Override
+      public void run()
+      {
+        clientRef.set( new Client() );
+      }
+    } );
+
     // Client...
     String[] serviceNames = { AcquisitionStatusListener.class.getName(), AcquisitionProgressListener.class.getName() };
     aManager.add( createComponent() //
         .setInterface( serviceNames, null ) //
-        .setImplementation( Client.class ) //
+        .setImplementation( clientRef.get() ) //
         .add( createServiceDependency() //
             .setService( ViewController.class ) //
             .setCallbacks( "addViewController", "removeViewController" ) //

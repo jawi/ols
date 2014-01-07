@@ -142,7 +142,39 @@ public class SessionImpl implements Session, AnnotationData
     SortedSet<Annotation> result = this.annotations.get( Integer.valueOf( aChannelIdx ) );
     return ( result == null ) ? new TreeSet<Annotation>() : result;
   }
-  
+
+  /**
+   * {@inheritDoc}
+   */
+  @Override
+  public SortedSet<DataAnnotation> getAnnotations( int aChannelIdx, long aStartTime, long aEndTime )
+  {
+    SortedSet<Annotation> anns = this.annotations.get( Integer.valueOf( aChannelIdx ) );
+    if ( anns == null )
+    {
+      return new TreeSet<DataAnnotation>();
+    }
+    SortedSet<DataAnnotation> result = new TreeSet<DataAnnotation>();
+    for ( Annotation annotation : anns )
+    {
+      if ( annotation instanceof DataAnnotation )
+      {
+        long annStartTime = ( ( DataAnnotation )annotation ).getStartTimestamp();
+        long annEndTime = ( ( DataAnnotation )annotation ).getEndTimestamp();
+
+        if ( ( ( annStartTime < aStartTime ) && ( annEndTime < aStartTime ) )
+            || ( ( annStartTime > aEndTime ) && ( annEndTime > aEndTime ) ) )
+        {
+          // Simple reject: annotation falls outside time interval...
+          continue;
+        }
+
+        result.add( ( DataAnnotation )annotation );
+      }
+    }
+    return result;
+  }
+
   /**
    * {@inheritDoc}
    */

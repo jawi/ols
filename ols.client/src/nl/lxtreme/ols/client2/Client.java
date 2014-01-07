@@ -33,6 +33,8 @@ import javax.swing.*;
 import nl.lxtreme.ols.acquisition.*;
 import nl.lxtreme.ols.client2.about.*;
 import nl.lxtreme.ols.client2.action.*;
+import nl.lxtreme.ols.client2.action.SmartJumpAction.JumpDirection;
+import nl.lxtreme.ols.client2.action.SmartJumpAction.JumpType;
 import nl.lxtreme.ols.client2.actionmanager.*;
 import nl.lxtreme.ols.client2.bundles.*;
 import nl.lxtreme.ols.client2.icons.*;
@@ -108,7 +110,6 @@ public class Client extends DefaultDockableHolder implements ApplicationCallback
 
   // VARIABLES
 
-  private final Bundle bundle;
   private final List<ManagedAction> registeredActions;
   private final List<ViewController> viewControllers;
   private final ProgressUpdatingRunnable progressUpdater;
@@ -121,6 +122,7 @@ public class Client extends DefaultDockableHolder implements ApplicationCallback
   private volatile ProjectManager projectManager;
 
   // Locally managed...
+  private volatile Bundle bundle;
   private volatile String selectedDeviceName;
   private volatile int mode;
 
@@ -134,6 +136,12 @@ public class Client extends DefaultDockableHolder implements ApplicationCallback
    */
   public Client()
   {
+    // Do not start if we're running headless...
+    if ( GraphicsEnvironment.isHeadless() )
+    {
+      throw new RuntimeException( "Cannot start client: running headless." );
+    }
+
     this.bundle = FrameworkUtil.getBundle( getClass() );
 
     this.registeredActions = new ArrayList<ManagedAction>();
@@ -232,7 +240,11 @@ public class Client extends DefaultDockableHolder implements ApplicationCallback
         @Override
         public void run()
         {
-          viewsPane.add( aController.getModel().getTitle(), aController.getView() );
+          String title = aController.getModel().getTitle();
+          BaseView view = aController.getView();
+
+          viewsPane.add( title, view );
+          viewsPane.setSelectedIndex( viewsPane.getTabCount() - 1 );
         }
       } );
     }
@@ -307,6 +319,19 @@ public class Client extends DefaultDockableHolder implements ApplicationCallback
   }
 
   /**
+   * Closes the current session, if any is available.
+   */
+  public void closeCurrentSession()
+  {
+    Session session = getCurrentSession();
+    if ( session != null )
+    {
+      session.close();
+    }
+    updateActions();
+  }
+
+  /**
    * Creates a new tool context for invoking a tool.
    * 
    * @return a new {@link ToolContext} instance, never <code>null</code>.
@@ -353,6 +378,7 @@ public class Client extends DefaultDockableHolder implements ApplicationCallback
       {
         Bundle systemBundle = this.bundle.getBundleContext().getBundle( 0L );
         systemBundle.stop();
+        this.bundle = null;
       }
       catch ( BundleException exception )
       {
@@ -434,6 +460,14 @@ public class Client extends DefaultDockableHolder implements ApplicationCallback
   public String getSelectedDeviceName()
   {
     return this.selectedDeviceName;
+  }
+
+  /**
+   * @return the number of open sessions, >= 0.
+   */
+  public int getSessionCount()
+  {
+    return this.viewControllers.size();
   }
 
   /**
@@ -821,6 +855,7 @@ public class Client extends DefaultDockableHolder implements ApplicationCallback
     {
       this.mode &= ~MODE_SNAP_CURSORS;
     }
+
     updateActions();
   }
 
@@ -838,7 +873,9 @@ public class Client extends DefaultDockableHolder implements ApplicationCallback
     {
       data.setCursorsVisible( aCursorsVisible );
     }
+    
     updateActions();
+    repaint();
   }
 
   /**
@@ -858,7 +895,9 @@ public class Client extends DefaultDockableHolder implements ApplicationCallback
     {
       this.mode &= ~MODE_MEASUREMENT;
     }
+    
     updateActions();
+    repaint();
   }
 
   /**
@@ -945,6 +984,19 @@ public class Client extends DefaultDockableHolder implements ApplicationCallback
   }
 
   /**
+   * Performs a "smart" jump in a given direction.
+   * 
+   * @param aType
+   *          what kind of jump to perform;
+   * @param aDirection
+   *          in what direction to jump.
+   */
+  public void smartJump( JumpType aType, JumpDirection aDirection )
+  {
+    // TODO
+  }
+
+  /**
    * Updates the state of all actions.
    */
   public void updateActions()
@@ -968,7 +1020,7 @@ public class Client extends DefaultDockableHolder implements ApplicationCallback
     if ( viewCtrl != null )
     {
       viewCtrl.zoomAll();
-      
+
       repaint();
     }
   }
@@ -982,7 +1034,7 @@ public class Client extends DefaultDockableHolder implements ApplicationCallback
     if ( viewCtrl != null )
     {
       viewCtrl.zoomIn();
-      
+
       repaint();
     }
   }
@@ -996,7 +1048,7 @@ public class Client extends DefaultDockableHolder implements ApplicationCallback
     if ( viewCtrl != null )
     {
       viewCtrl.zoomOriginal();
-      
+
       repaint();
     }
   }
@@ -1010,7 +1062,7 @@ public class Client extends DefaultDockableHolder implements ApplicationCallback
     if ( viewCtrl != null )
     {
       viewCtrl.zoomOut();
-      
+
       repaint();
     }
   }
@@ -1056,6 +1108,9 @@ public class Client extends DefaultDockableHolder implements ApplicationCallback
 
     // Help menu
     registerAction( new ShowBundlesAction() );
+
+    registerAction( new SmartJumpAction( JumpDirection.LEFT ) );
+    registerAction( new SmartJumpAction( JumpDirection.RIGHT ) );
 
     if ( !Platform.isMacOS() )
     {

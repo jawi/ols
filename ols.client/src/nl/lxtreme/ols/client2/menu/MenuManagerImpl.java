@@ -282,7 +282,7 @@ public class MenuManagerImpl implements MenuManager
 
     // Add two items that remain constant for the remainder of the lifetime of
     // this client...
-    windowMenu.add( new JMenuItem( StandardActionFactory.createCloseAction() ) );
+    windowMenu.add( new JMenuItem( new CloseSessionAction() ) );
     windowMenu.add( new JMenuItem( new MinimizeWindowAction() ) );
 
     windowMenu.addSeparator();

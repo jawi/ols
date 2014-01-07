@@ -21,6 +21,8 @@
 package nl.lxtreme.ols.client2.views.waveform;
 
 
+import static nl.lxtreme.ols.client2.views.UIMgr.*;
+
 import java.awt.*;
 
 import nl.lxtreme.ols.common.acquisition.*;
@@ -32,6 +34,16 @@ import nl.lxtreme.ols.common.acquisition.*;
 public class WaveformElement
 {
   // INNER TYPES
+
+  public static enum Alignment
+  {
+    TOP, CENTER, BOTTOM;
+
+    public static Alignment parse( String aValue )
+    {
+      return valueOf( aValue.toUpperCase() );
+    }
+  }
 
   public static enum Type
   {
@@ -106,10 +118,9 @@ public class WaveformElement
   private ChannelGroup group;
   private Channel channel;
 
-  private Color color;
+  private Alignment alignment;
   private boolean enabled;
   private int height;
-  private int mask;
   private int signalHeight;
   private int yPos;
 
@@ -121,61 +132,94 @@ public class WaveformElement
   private WaveformElement( Type aType )
   {
     this.type = aType;
+    this.alignment = Alignment.CENTER;
     this.enabled = true;
   }
 
   // METHODS
 
   /**
+   * Creates a {@link WaveformElement} that represents an analog scope for a
+   * given group.
+   * 
    * @param aGroup
-   * @return
+   *          the group to create the analog scope for, cannot be
+   *          <code>null</code>.
+   * @return a new {@link WaveformElement} instance, never <code>null</code>.
    */
   public static WaveformElement createAnalogScope( ChannelGroup aGroup )
   {
     WaveformElement result = new WaveformElement( Type.ANALOG_SCOPE );
-    result.setHeight( 50 ); // XXX
+    result.setAlignment( Alignment.valueOf( getString( SIGNALVIEW_SIGNAL_ALIGNMENT, "CENTER" ) ) );
+    result.setHeight( getInt( ANALOG_SCOPE_HEIGHT, 50 ) );
     result.group = aGroup;
     return result;
   }
 
   /**
+   * Creates a {@link WaveformElement} that represents a digital signal for a
+   * given channel.
+   * 
    * @param aChannel
-   * @return
+   *          the channel to create the digital signal element for, cannot be
+   *          <code>null</code>.
+   * @return a new {@link WaveformElement} instance, never <code>null</code>.
    */
   public static WaveformElement createChannelElement( Channel aChannel )
   {
     WaveformElement result = new WaveformElement( Type.CHANNEL );
-    result.setColor( Color.BLUE ); // XXX
-    result.setSignalHeight( 20 ); // XXX
-    result.setHeight( 30 ); // XXX
-    result.mask = aChannel.getMask();
+    result.setAlignment( Alignment.valueOf( getString( SIGNALVIEW_SIGNAL_ALIGNMENT, "CENTER" ) ) );
+    result.setSignalHeight( getInt( DIGITAL_SIGNAL_HEIGHT, 24 ) );
+    result.setHeight( getInt( CHANNEL_HEIGHT, 30 ) );
     result.channel = aChannel;
     return result;
   }
 
   /**
+   * Creates a {@link WaveformElement} that represents the group-element for a
+   * given group.
+   * 
    * @param aGroup
-   * @return
+   *          the group to create the group-element for, cannot be
+   *          <code>null</code>.
+   * @return a new {@link WaveformElement} instance, never <code>null</code>.
    */
   public static WaveformElement createGroupElement( ChannelGroup aGroup )
   {
     WaveformElement result = new WaveformElement( Type.GROUP );
-    result.setHeight( 25 ); // XXX
+    result.setAlignment( Alignment.valueOf( getString( SIGNALVIEW_SIGNAL_ALIGNMENT, "CENTER" ) ) );
+    result.setHeight( getInt( GROUP_SUMMARY_HEIGHT, 25 ) );
     result.group = aGroup;
     return result;
   }
 
   /**
+   * Creates a {@link WaveformElement} that represents a group-summary for a
+   * given group.
+   * 
    * @param aGroup
-   * @return
+   *          the group to create the group-summary for, cannot be
+   *          <code>null</code>.
+   * @return a new {@link WaveformElement} instance, never <code>null</code>.
    */
   public static WaveformElement createGroupSummary( ChannelGroup aGroup )
   {
     WaveformElement result = new WaveformElement( Type.GROUP_SUMMARY );
+    result.setAlignment( Alignment.valueOf( getString( SIGNALVIEW_SIGNAL_ALIGNMENT, "CENTER" ) ) );
+    result.setHeight( getInt( GROUP_SUMMARY_HEIGHT, 25 ) );
     result.setLabel( aGroup.getName() );
     result.group = aGroup;
-    result.setHeight( 25 ); // XXX
     return result;
+  }
+
+  /**
+   * Returns the current value of alignment.
+   * 
+   * @return the alignment, never <code>null</code>.
+   */
+  public Alignment getAlignment()
+  {
+    return this.alignment;
   }
 
   /**
@@ -185,7 +229,28 @@ public class WaveformElement
    */
   public Color getColor()
   {
-    return this.color;
+    Color result;
+    if ( this.channel != null )
+    {
+      result = getChannelColor( channel );
+    }
+    else
+    {
+      result = getGroupColor( group );
+    }
+    return result;
+  }
+
+  /**
+   * @return a channel group index, >= 0.
+   */
+  public int getGroupIndex()
+  {
+    if ( this.channel != null )
+    {
+      return this.channel.getGroup().getIndex();
+    }
+    return this.group.getIndex();
   }
 
   /**
@@ -194,6 +259,22 @@ public class WaveformElement
   public int getHeight()
   {
     return this.height;
+  }
+
+  /**
+   * Returns the index of this element, which means that for elements with
+   * {@link Type#CHANNEL}, this will return the index of the channel, otherwise
+   * it will return <tt>-1</tt>.
+   * 
+   * @return an index, >= 0.
+   */
+  public int getIndex()
+  {
+    if ( this.channel != null )
+    {
+      return this.channel.getIndex();
+    }
+    return -1;
   }
 
   /**
@@ -210,14 +291,48 @@ public class WaveformElement
     return this.group.getName();
   }
 
+  /**
+   * @return the bitmask.
+   */
   public int getMask()
   {
-    return this.mask;
+    if ( this.channel != null )
+    {
+      return this.channel.getMask();
+    }
+    return this.group.getIndex(); // XXX
   }
 
+  /**
+   * @return a relative offset to display the contents of this signal element,
+   *         >= 0.
+   */
   public int getOffset()
   {
-    return 2; // XXX
+    return getOffset( this.alignment );
+  }
+
+  /**
+   * @return a relative offset to display the contents of this signal element,
+   *         >= 0.
+   */
+  public int getOffset( final Alignment aAlignment )
+  {
+    final int signalOffset;
+    if ( Alignment.BOTTOM.equals( aAlignment ) )
+    {
+      signalOffset = ( this.height - this.signalHeight );
+    }
+    else if ( Alignment.CENTER.equals( aAlignment ) )
+    {
+      signalOffset = ( int )( ( this.height - this.signalHeight ) / 2.0 );
+    }
+    else
+    {
+      signalOffset = 0;
+    }
+
+    return signalOffset;
   }
 
   public int getSignalHeight()
@@ -253,6 +368,15 @@ public class WaveformElement
   }
 
   /**
+   * @param aAlignment
+   *          the alignment to set, cannot be <code>null</code>.
+   */
+  public void setAlignment( Alignment aAlignment )
+  {
+    this.alignment = aAlignment;
+  }
+
+  /**
    * Sets the color for this element.
    * 
    * @param aColor
@@ -260,7 +384,14 @@ public class WaveformElement
    */
   public void setColor( Color aColor )
   {
-    this.color = aColor;
+    if ( this.channel != null )
+    {
+      this.channel.setColor( aColor );
+    }
+    else if ( this.group != null )
+    {
+      this.group.setColor( aColor );
+    }
   }
 
   /**
@@ -286,15 +417,10 @@ public class WaveformElement
     {
       this.channel.setLabel( aLabel );
     }
-    if ( this.group != null )
+    else if ( this.group != null )
     {
       this.group.setName( aLabel );
     }
-  }
-
-  public void setOffset( int aOffset )
-  {
-    // TODO
   }
 
   public void setSignalHeight( int aHeight )

@@ -218,8 +218,8 @@ public class ViewController
     setView( view );
     setModel( model );
 
-    this.model.initialize();
     this.view.initialize();
+    this.model.initialize();
   }
 
   /**
