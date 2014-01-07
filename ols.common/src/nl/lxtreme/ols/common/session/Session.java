@@ -48,4 +48,9 @@ public interface Session
    */
   AnnotationData getAnnotationData();
 
+  /**
+   * @return a session identifier, >= 0.
+   */
+  int getId();
+
 }
