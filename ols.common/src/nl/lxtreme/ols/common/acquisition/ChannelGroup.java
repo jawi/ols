@@ -21,12 +21,23 @@
 package nl.lxtreme.ols.common.acquisition;
 
 
+import java.awt.*;
+
+
 /**
  * Denotes a group of channels.
  */
 public interface ChannelGroup extends Comparable<ChannelGroup>
 {
   // METHODS
+
+  /**
+   * Returns the color for this channel group, if specified.
+   * 
+   * @return a {@link Color}, or <code>null</code> in case the default color
+   *         should be used (UI-specific).
+   */
+  Color getColor();
 
   /**
    * Returns the channels present in this channel group.
@@ -48,6 +59,15 @@ public interface ChannelGroup extends Comparable<ChannelGroup>
    * @return a name, never <code>null</code>.
    */
   String getName();
+
+  /**
+   * Sets the color for this channel group.
+   * 
+   * @param aColor
+   *          the color to set, can be <code>null</code> if the default
+   *          (UI-specific) color should be used.
+   */
+  void setColor( Color aColor );
 
   /**
    * Sets the name of this channel group.

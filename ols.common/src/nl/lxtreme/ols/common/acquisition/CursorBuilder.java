@@ -355,10 +355,6 @@ public class CursorBuilder
     {
       throw new IllegalArgumentException( "Invalid cursor index " + this.index + "!" );
     }
-    if ( this.color == null )
-    {
-      this.color = Color.WHITE;
-    }
 
     return new CursorImpl( this.index, this.color, this.name, this.timestamp );
   }

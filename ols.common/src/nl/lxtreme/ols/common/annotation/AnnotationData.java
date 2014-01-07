@@ -85,6 +85,27 @@ public interface AnnotationData
   SortedSet<Annotation> getAnnotations( int aChannelIdx );
 
   /**
+   * Returns all data annotations for a single channel that fall in a given time
+   * interval.
+   * <p>
+   * The returned set is sorted on the start timestamp of the annotation in
+   * ascending order.
+   * </p>
+   * 
+   * @param aChannelIdx
+   *          the index of the channel to retrieve the annotations for, &gt;= 0
+   *          && &lt; 32;
+   * @param aStartTime
+   *          the starting timestamp;
+   * @param aEndTime
+   *          the ending timestamp.
+   * @return a sorted set of annotations, never <code>null</code>.
+   * @throws IllegalArgumentException
+   *           in case the given channel index was invalid.
+   */
+  SortedSet<DataAnnotation> getAnnotations( int aChannelIdx, long aStartTime, long aEndTime );
+
+  /**
    * Returns whether or not annotations are present for the channel with the
    * given index.
    * 

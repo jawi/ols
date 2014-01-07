@@ -56,9 +56,10 @@ public interface Cursor extends Cloneable, Comparable<Cursor>
   Cursor clone();
 
   /**
-   * Returns the cursor color.
+   * Returns the color of this cursor.
    * 
-   * @return the color of this cursor, never <code>null</code>.
+   * @return the color of this cursor, can be <code>null</code> in case the
+   *         default (UI-specific) color should be used.
    */
   Color getColor();
 
@@ -130,7 +131,8 @@ public interface Cursor extends Cloneable, Comparable<Cursor>
    * Sets the color of this cursor.
    * 
    * @param aColor
-   *          the color to set, cannot be <code>null</code>.
+   *          the color to set, can be <code>null</code> in case the default
+   *          color for this cursor (UI-specific) should be used.
    */
   void setColor( final Color aColor );
 

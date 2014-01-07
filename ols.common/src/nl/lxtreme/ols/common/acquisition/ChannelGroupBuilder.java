@@ -21,7 +21,9 @@
 package nl.lxtreme.ols.common.acquisition;
 
 
+import java.awt.*;
 import java.util.*;
+import java.util.List;
 
 import nl.lxtreme.ols.common.acquisition.ChannelBuilder.ChannelImpl;
 
@@ -41,17 +43,19 @@ public class ChannelGroupBuilder
     // VARIABLES
 
     private final int index;
-    private String name;
     private final List<Channel> channels;
+    private Color color;
+    private String name;
 
     /**
      * Creates a new {@link ChannelGroupImpl} instance.
      */
-    ChannelGroupImpl( int aIndex, String aName, List<Channel> aChannels )
+    ChannelGroupImpl( int aIndex, Color aColor, String aName, List<Channel> aChannels )
     {
       this.index = aIndex;
-      this.name = aName;
       this.channels = aChannels;
+      this.color = aColor;
+      this.name = aName;
     }
 
     // METHODS
@@ -117,6 +121,15 @@ public class ChannelGroupBuilder
      * {@inheritDoc}
      */
     @Override
+    public Color getColor()
+    {
+      return this.color;
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
     public int getIndex()
     {
       return this.index;
@@ -148,6 +161,15 @@ public class ChannelGroupBuilder
      * {@inheritDoc}
      */
     @Override
+    public void setColor( Color aColor )
+    {
+      this.color = aColor;
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
     public void setName( String aName )
     {
       if ( aName == null )
@@ -171,6 +193,7 @@ public class ChannelGroupBuilder
   // VARIABLES
 
   private final Set<Integer> channelIndices;
+  private Color color;
   private String name;
   private int index;
   private int channelCount;
@@ -183,6 +206,7 @@ public class ChannelGroupBuilder
   ChannelGroupBuilder()
   {
     this.index = -1;
+    this.color = null;
     this.name = null;
     this.channelCount = -1;
     this.channelIndices = new LinkedHashSet<Integer>();
@@ -211,6 +235,12 @@ public class ChannelGroupBuilder
   public ChannelGroupBuilder setChannelCount( int aCount )
   {
     this.channelCount = aCount;
+    return this;
+  }
+
+  public ChannelGroupBuilder setColor( Color aColor )
+  {
+    this.color = aColor;
     return this;
   }
 
@@ -246,7 +276,7 @@ public class ChannelGroupBuilder
     }
 
     List<Channel> channels = new ArrayList<Channel>();
-    ChannelGroupImpl group = new ChannelGroupImpl( index, name, channels );
+    ChannelGroupImpl group = new ChannelGroupImpl( this.index, this.color, this.name, channels );
 
     for ( Integer channelIdx : this.channelIndices )
     {

@@ -21,6 +21,8 @@
 package nl.lxtreme.ols.common.acquisition;
 
 
+import java.awt.*;
+
 import nl.lxtreme.ols.common.acquisition.ChannelGroupBuilder.ChannelGroupImpl;
 
 
@@ -41,6 +43,7 @@ public class ChannelBuilder
     private final int index;
     private final int mask;
 
+    private Color color;
     private String label;
     private boolean enabled;
     private ChannelGroupImpl group;
@@ -52,16 +55,21 @@ public class ChannelBuilder
      * 
      * @param aIndex
      *          the index of the channel to represent;
+     * @param aColor
+     *          the color of this channel;
+     * @param aLabel
+     *          the label of this channel;
      * @param aEnabled
      *          <code>true</code> if the channel is enabled, <code>false</code>
      *          otherwise.
      */
-    public ChannelImpl( int aIndex, String aLabel, boolean aEnabled )
+    public ChannelImpl( int aIndex, Color aColor, String aLabel, boolean aEnabled )
     {
       this.index = aIndex;
-      this.enabled = aEnabled;
       this.mask = 1 << aIndex;
+      this.color = aColor;
       this.label = aLabel;
+      this.enabled = aEnabled;
     }
 
     // METHODS
@@ -101,6 +109,15 @@ public class ChannelBuilder
       }
 
       return true;
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public Color getColor()
+    {
+      return this.color;
     }
 
     /**
@@ -174,6 +191,15 @@ public class ChannelBuilder
      * {@inheritDoc}
      */
     @Override
+    public void setColor( Color aColor )
+    {
+      this.color = aColor;
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
     public void setEnabled( final boolean aEnabled )
     {
       this.enabled = aEnabled;
@@ -219,6 +245,7 @@ public class ChannelBuilder
 
   // VARIABLES
 
+  private Color color;
   private String name;
   private boolean enabled;
   private int index;
@@ -231,8 +258,9 @@ public class ChannelBuilder
   ChannelBuilder()
   {
     this.index = -1;
-    this.enabled = true;
+    this.color = null;
     this.name = null;
+    this.enabled = true;
   }
 
   /**
@@ -247,9 +275,15 @@ public class ChannelBuilder
     return String.format( "Channel %d", Integer.valueOf( aIndex ) );
   }
 
-  public ChannelBuilder setLabel( String aLabel )
+  public ChannelBuilder setColor( Color aColor )
   {
-    this.name = aLabel;
+    this.color = aColor;
+    return this;
+  }
+
+  public ChannelBuilder setEnabled( boolean aEnabled )
+  {
+    this.enabled = aEnabled;
     return this;
   }
 
@@ -259,9 +293,9 @@ public class ChannelBuilder
     return this;
   }
 
-  public ChannelBuilder setEnabled( boolean aEnabled )
+  public ChannelBuilder setLabel( String aLabel )
   {
-    this.enabled = aEnabled;
+    this.name = aLabel;
     return this;
   }
 
@@ -276,6 +310,6 @@ public class ChannelBuilder
       this.name = getDefaultLabel( this.index );
     }
 
-    return new ChannelImpl( this.index, this.name, this.enabled );
+    return new ChannelImpl( this.index, this.color, this.name, this.enabled );
   }
 }

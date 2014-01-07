@@ -58,7 +58,29 @@ public interface DataAnnotation extends Annotation
   /** Denotes this annotation as a symbol. */
   String TYPE_SYMBOL = "symbol";
 
+  /** Include the description (if defined). */
+  int OPTION_WITH_DESCRIPTION = 1;
+  /** Include decimal representation of the data. */
+  int OPTION_WITH_DEC_DATA = 2;
+  /** Include binary representation of the data. */
+  int OPTION_WITH_BIN_DATA = 4;
+  /** Include octal representation of the data. */
+  int OPTION_WITH_OCT_DATA = 8;
+  /** Include hexadecimal representation of the data. */
+  int OPTION_WITH_HEX_DATA = 16;
+  /** Include a character representation of the data. */
+  int OPTION_WITH_CHAR_DATA = 32;
+  /** Default options. */
+  int OPTION_DEFAULT = OPTION_WITH_DESCRIPTION | OPTION_WITH_CHAR_DATA;
+
   // METHODS
+
+  /**
+   * Returns the ending time stamp of this annotation.
+   * 
+   * @return a time stamp, >= 0.
+   */
+  long getEndTimestamp();
 
   /**
    * Returns the (optional) properties of this annotation, such as color,
@@ -70,17 +92,19 @@ public interface DataAnnotation extends Annotation
   Map<String, Object> getProperties();
 
   /**
-   * Returns the ending time stamp of this annotation.
-   * 
-   * @return a time stamp, >= 0.
-   */
-  long getEndTimestamp();
-
-  /**
    * Returns the starting time stamp of this annotation.
    * 
    * @return a time stamp, >= 0.
    */
   long getStartTimestamp();
 
+  /**
+   * Returns a text representation of this annotation.
+   * 
+   * @param aOptions
+   *          a bit mask representing the various options to include in the
+   *          returned text, see {@link #OPTION_*} constants.
+   * @return a text representation, never <code>null</code>.
+   */
+  String getText( int aOptions );
 }

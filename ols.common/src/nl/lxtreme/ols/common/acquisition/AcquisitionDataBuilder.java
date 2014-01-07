@@ -584,6 +584,7 @@ public final class AcquisitionDataBuilder
     for ( Channel c : aData.getChannels() )
     {
       add( createChannel() //
+          .setColor( c.getColor() ) //
           .setEnabled( c.isEnabled() ) //
           .setIndex( c.getIndex() ) //
           .setLabel( c.getLabel() ) );
@@ -599,6 +600,7 @@ public final class AcquisitionDataBuilder
     {
       add( createChannelGroup() //
           .setIndex( cg.getIndex() ) //
+          .setColor( cg.getColor() ) //
           .setName( cg.getName() ) //
           .addChannel( cg.getChannels() ) //
           .setChannelCount( cg.getChannels().length ) );

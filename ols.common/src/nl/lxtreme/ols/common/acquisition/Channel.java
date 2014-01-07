@@ -21,12 +21,23 @@
 package nl.lxtreme.ols.common.acquisition;
 
 
+import java.awt.*;
+
+
 /**
  * Denotes a single channel in the data set.
  */
 public interface Channel extends Comparable<Channel>
 {
   // METHODS
+
+  /**
+   * Returns the color for this channel, if specified.
+   * 
+   * @return a {@link Color}, or <code>null</code> in case the default color
+   *         should be used (UI-specific).
+   */
+  Color getColor();
 
   /**
    * @return the channel group this channel belongs to, cannot be
@@ -76,12 +87,21 @@ public interface Channel extends Comparable<Channel>
   boolean isEnabled();
 
   /**
+   * Sets the color for this channel.
+   * 
+   * @param aColor
+   *          the color to set, can be <code>null</code> if the default
+   *          (UI-specific) color should be used.
+   */
+  void setColor( Color aColor );
+
+  /**
    * Sets enabled to the given value.
    * 
    * @param aEnabled
    *          the enabled to set.
    */
-  void setEnabled( final boolean aEnabled );
+  void setEnabled( boolean aEnabled );
 
   /**
    * Sets name to the given value.
@@ -89,6 +109,6 @@ public interface Channel extends Comparable<Channel>
    * @param aName
    *          the name to set.
    */
-  void setLabel( final String aName );
+  void setLabel( String aName );
 
 }
