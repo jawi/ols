@@ -658,7 +658,7 @@ public final class SwingComponentUtils
    * @param aWindow
    *          the window to load the state for.
    */
-  public static void loadWindowState( final org.osgi.service.prefs.Preferences aProperties, final Window aWindow )
+  public static void loadWindowState( final UserSettings aProperties, final Window aWindow )
   {
     // Special case: for FileDialog/JFileChooser we also should restore the
     // properties...
@@ -784,7 +784,7 @@ public final class SwingComponentUtils
    * @param aWindow
    *          the window to save the state for.
    */
-  public static void saveWindowState( final org.osgi.service.prefs.Preferences aProperties, final Window aWindow )
+  public static void saveWindowState( final UserSettings aProperties, final Window aWindow )
   {
     // Special case: for FileDialog/JFileChooser we also store the properties...
     saveFileDialogState( aProperties, aWindow );
@@ -1237,7 +1237,7 @@ public final class SwingComponentUtils
    * @param aWindow
    *          the window to check for.
    */
-  private static void loadFileDialogState( final org.osgi.service.prefs.Preferences aProperties, final Window aWindow )
+  private static void loadFileDialogState( final UserSettings aProperties, final Window aWindow )
   {
     final String propKey = "lastDirectory";
 
@@ -1276,7 +1276,7 @@ public final class SwingComponentUtils
    * @param aWindow
    *          the window to check for.
    */
-  private static void saveFileDialogState( final org.osgi.service.prefs.Preferences aProperties, final Window aWindow )
+  private static void saveFileDialogState( final UserSettings aProperties, final Window aWindow )
   {
     final String propKey = "lastDirectory";
 

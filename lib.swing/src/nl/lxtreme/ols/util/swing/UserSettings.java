@@ -23,14 +23,17 @@ package nl.lxtreme.ols.util.swing;
 
 import java.io.*;
 import java.util.*;
+import java.util.Map.*;
 
 
 /**
  * Denotes an abstract way for obtaining/storing user settings.
  */
-public interface UserSettings extends Serializable, Iterable<Map.Entry<String, Object>>
+public interface UserSettings extends Serializable
 {
   // METHODS
+
+  Set<Entry<String, String>> entrySet();
 
   /**
    * Returns the string value associated with the given name, returning a given
@@ -42,7 +45,7 @@ public interface UserSettings extends Serializable, Iterable<Map.Entry<String, O
    *          the default value to return.
    * @return the value associated with the given name, or the given default.
    */
-  public String get( String aName, String aDefaultValue );
+  String get( String aName, String aDefaultValue );
 
   /**
    * Returns the boolean value associated with the given name, returning a given
@@ -54,7 +57,7 @@ public interface UserSettings extends Serializable, Iterable<Map.Entry<String, O
    *          the default value to return.
    * @return the value associated with the given name, or the given default.
    */
-  public boolean getBoolean( String aName, boolean aDefaultValue );
+  boolean getBoolean( String aName, boolean aDefaultValue );
 
   /**
    * Returns the integer value associated with the given name, returning a given
@@ -66,7 +69,7 @@ public interface UserSettings extends Serializable, Iterable<Map.Entry<String, O
    *          the default value to return.
    * @return the value associated with the given name, or the given default.
    */
-  public int getInt( String aName, int aDefaultValue );
+  int getInt( String aName, int aDefaultValue );
 
   /**
    * Returns the long value associated with the given name, returning a given
@@ -78,14 +81,14 @@ public interface UserSettings extends Serializable, Iterable<Map.Entry<String, O
    *          the default value to return.
    * @return the value associated with the given name, or the given default.
    */
-  public long getLong( String aName, long aDefaultValue );
+  long getLong( String aName, long aDefaultValue );
 
   /**
    * Returns the symbolic name for this user settings.
    * 
    * @return a symbolic name, never <code>null</code>.
    */
-  public String getName();
+  String getName();
 
   /**
    * Associates the given String value to the given name.
@@ -95,15 +98,7 @@ public interface UserSettings extends Serializable, Iterable<Map.Entry<String, O
    * @param aValue
    *          the value to associate to the given name.
    */
-  public void put( String aName, String aValue );
-
-  /**
-   * Allows all given map of settings to be copied to this user settings.
-   * 
-   * @param aSettings
-   *          the map with settings to copy, cannot be <code>null</code>.
-   */
-  public void putAll( Map<?, ?> aSettings );
+  void put( String aName, String aValue );
 
   /**
    * Associates the given boolean value to the given name.
@@ -113,7 +108,7 @@ public interface UserSettings extends Serializable, Iterable<Map.Entry<String, O
    * @param aValue
    *          the value to associate to the given name.
    */
-  public void putBoolean( String aName, boolean aValue );
+  void putBoolean( String aName, boolean aValue );
 
   /**
    * Associates the given integer value to the given name.
@@ -123,7 +118,7 @@ public interface UserSettings extends Serializable, Iterable<Map.Entry<String, O
    * @param aValue
    *          the value to associate to the given name.
    */
-  public void putInt( String aName, int aValue );
+  void putInt( String aName, int aValue );
 
   /**
    * Associates the given long value to the given name.
@@ -133,5 +128,5 @@ public interface UserSettings extends Serializable, Iterable<Map.Entry<String, O
    * @param aValue
    *          the value to associate to the given name.
    */
-  public void putLong( String aName, long aValue );
+  void putLong( String aName, long aValue );
 }
