@@ -117,6 +117,8 @@ public class SelectDeviceAction extends AbstractManagedAction
   public void updateState( Client aClient )
   {
     // Always enabled.
+    boolean selected = this.device.getName().equals( aClient.getSelectedDeviceName() );
+    putValue( SELECTED_KEY, Boolean.valueOf( selected ) );
   }
 }
 

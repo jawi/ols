@@ -18,23 +18,33 @@
  * Copyright (C) 2006-2010 Michael Poppitz, www.sump.org
  * Copyright (C) 2010-2013 J.W. Janssen, www.lxtreme.nl
  */
-package nl.lxtreme.ols.client.api;
+package nl.lxtreme.ols.client2.views;
+
+
+import java.util.*;
 
 
 /**
- * Constants used in the client.
+ * Implementations are notified when markers are changed.
  */
-public interface Constants
+public interface IMarkerChangeListener extends EventListener
 {
   // CONSTANTS
 
-  /**
-   * Short name of the client.
-   */
-  String SHORT_NAME = "LogicSniffer";
-  /**
-   * Long name of the client.
-   */
-  String FULL_NAME = SHORT_NAME.concat( " - Logic Analyzer Client" );
+  String PROPERTY_TIMESTAMP = "timestamp";
+  String PROPERTY_COLOR = "color";
+  String PROPERTY_LABEL = "label";
+
+  // METHODS
+
+  void markerAdded( IMarker aMarker );
+
+  void markerChanged( String aProperty, IMarker aOldMarker, IMarker aNewMarker );
+
+  void markerRemoved( IMarker aMarker );
+
+  void markersInvisible();
+
+  void markersVisible();
 
 }

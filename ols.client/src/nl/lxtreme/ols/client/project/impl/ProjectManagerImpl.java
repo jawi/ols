@@ -47,7 +47,7 @@ public class ProjectManagerImpl implements PropertyChangeListener, ProjectManage
   private static final String FILENAME_PROJECT_SETTINGS = "settings/";
   private static final String FILENAME_CAPTURE_RESULTS = "data.ols";
 
-  private static final String FULL_NAME = nl.lxtreme.ols.client.api.Constants.FULL_NAME;
+  private static final String FULL_NAME = "OBLS"; // XXX
 
   // VARIABLES
 
@@ -495,7 +495,7 @@ public class ProjectManagerImpl implements PropertyChangeListener, ProjectManage
 
           // Convert to a properties object...
           final Properties props = new Properties();
-          for ( Map.Entry<String, Object> userSetting : aSettings )
+          for ( Map.Entry<String, String> userSetting : aSettings.entrySet() )
           {
             props.put( userSetting.getKey(), userSetting.getValue() );
           }

@@ -16,36 +16,54 @@
  * 51 Franklin St, Fifth Floor, Boston, MA 02110, USA
  *
  * Copyright (C) 2006-2010 Michael Poppitz, www.sump.org
- * Copyright (C) 2010-2014 J.W. Janssen, www.lxtreme.nl
+ * Copyright (C) 2010-2012 J.W. Janssen, www.lxtreme.nl
  */
 package nl.lxtreme.ols.client2;
 
 
+import org.apache.felix.dm.*;
+
+
 /**
- * Provides common used constants.
+ * Provides an adapter for {@link ComponentStateListener}.
  */
-public interface ClientConstants
+public abstract class ComponentStateAdapter implements ComponentStateListener
 {
-  // CONSTANTS
+  // METHODS
 
   /**
-   * Short name of the client.
+   * {@inheritDoc}
    */
-  String SHORT_NAME = "LogicSniffer";
-  /**
-   * Long name of the client.
-   */
-  String FULL_NAME = SHORT_NAME.concat( " - Logic Analyzer Client" );
+  @Override
+  public void started( final Component aComponent )
+  {
+    // Nop...
+  }
 
-  String CAPTURE_MENU = "captureMenu";
-  String CURSORS_MENU = "cursorsMenu";
-  String DEVICE_MENU = "deviceMenu";
-  String DIAGRAM_MENU = "diagramMenu";
-  String EXPORT_MENU = "exportMenu";
-  String EDIT_MENU = "editMenu";
-  String FILE_MENU = "fileMenu";
-  String HELP_MENU = "helpMenu";
-  String TOOL_MENU = "toolMenu";
-  String WINDOW_MENU = "windowMenu";
-  String VIEW_MENU = "viewMenu";
+  /**
+   * {@inheritDoc}
+   */
+  @Override
+  public void starting( final Component aComponent )
+  {
+    // Nop...
+  }
+
+  /**
+   * {@inheritDoc}
+   */
+  @Override
+  public void stopped( final Component aComponent )
+  {
+    // Nop...
+  }
+
+  /**
+   * {@inheritDoc}
+   */
+  @Override
+  public void stopping( final Component aComponent )
+  {
+    // Nop...
+  }
 }

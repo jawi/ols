@@ -22,6 +22,7 @@ package nl.lxtreme.ols.client2.action;
 
 
 import java.awt.event.*;
+import java.io.*;
 
 import nl.lxtreme.ols.client2.*;
 import nl.lxtreme.ols.client2.icons.*;
@@ -61,7 +62,7 @@ public class SaveProjectAsAction extends SaveProjectAction
   // METHODS
 
   @Override
-  protected boolean showFileChooserDialogNeeded( Client aClient )
+  protected boolean showFileChooserDialogNeeded( File aFile )
   {
     // Always should the file chooser dialog...
     return true;

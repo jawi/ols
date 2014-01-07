@@ -34,12 +34,13 @@ import javax.swing.*;
 import nl.lxtreme.ols.acquisition.*;
 import nl.lxtreme.ols.client.action.*;
 import nl.lxtreme.ols.client.actionmanager.*;
-import nl.lxtreme.ols.client.api.*;
-import nl.lxtreme.ols.client.api.Constants;
 import nl.lxtreme.ols.client.appcallback.*;
 import nl.lxtreme.ols.client.osgi.*;
+import nl.lxtreme.ols.client.osgi.ComponentStateAdapter;
 import nl.lxtreme.ols.client.project.*;
 import nl.lxtreme.ols.client.signaldisplay.*;
+import nl.lxtreme.ols.client2.*;
+import nl.lxtreme.ols.client2.api.*;
 import nl.lxtreme.ols.common.*;
 import nl.lxtreme.ols.common.acquisition.*;
 import nl.lxtreme.ols.common.acquisition.Cursor;
@@ -1274,7 +1275,7 @@ public final class ClientController implements ActionProvider, AcquisitionProgre
   public final void start()
   {
     final String version = getVersion();
-    initOSSpecifics( Constants.SHORT_NAME, getVersion() );
+    initOSSpecifics( ClientConstants.SHORT_NAME, getVersion() );
 
     // Make sure we're running on the EDT to ensure the Swing threading model is
     // correctly defined...
@@ -1297,8 +1298,8 @@ public final class ClientController implements ActionProvider, AcquisitionProgre
         // new CursorActionListener() ); XXX
         updateDefaultSettings();
 
-        mf.setTitle( Constants.FULL_NAME );
-        mf.setStatus( "{0} v{1} ready ...", Constants.SHORT_NAME, version );
+        mf.setTitle( ClientConstants.FULL_NAME );
+        mf.setStatus( "{0} v{1} ready ...", ClientConstants.SHORT_NAME, version );
         mf.setVisible( true );
 
         LOG.info( "Client started ..." );

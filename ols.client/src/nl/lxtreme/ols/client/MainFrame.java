@@ -37,12 +37,12 @@ import javax.swing.plaf.*;
 import nl.lxtreme.ols.client.about.*;
 import nl.lxtreme.ols.client.action.*;
 import nl.lxtreme.ols.client.actionmanager.*;
-import nl.lxtreme.ols.client.api.*;
 import nl.lxtreme.ols.client.project.*;
 import nl.lxtreme.ols.client.signaldisplay.*;
 import nl.lxtreme.ols.client.signaldisplay.laf.*;
 import nl.lxtreme.ols.client.signaldisplay.view.*;
 import nl.lxtreme.ols.client.view.*;
+import nl.lxtreme.ols.client2.*;
 import nl.lxtreme.ols.client2.icons.*;
 import nl.lxtreme.ols.common.*;
 import nl.lxtreme.ols.common.acquisition.*;
@@ -1064,7 +1064,7 @@ public final class MainFrame extends DefaultDockableHolder implements Closeable,
   public void showAboutBox()
   {
     String version = this.controller.getVersion();
-    AboutBox aboutDialog = new AboutBox( Constants.SHORT_NAME, version );
+    AboutBox aboutDialog = new AboutBox( ClientConstants.SHORT_NAME, version );
     aboutDialog.showDialog();
   }
 
@@ -1324,7 +1324,7 @@ public final class MainFrame extends DefaultDockableHolder implements Closeable,
    */
   private void updateWindowDecorations( final Project aProject )
   {
-    String title = Constants.FULL_NAME;
+    String title = ClientConstants.FULL_NAME;
     if ( aProject != null )
     {
       String projectName = aProject.getName();

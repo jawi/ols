@@ -21,7 +21,6 @@
 package nl.lxtreme.ols.client2.menu;
 
 
-import static nl.lxtreme.ols.client2.Client.*;
 import static nl.lxtreme.ols.client2.ClientConstants.*;
 import static nl.lxtreme.ols.client2.action.ManagedAction.*;
 
@@ -29,9 +28,9 @@ import java.util.*;
 
 import javax.swing.*;
 
-import nl.lxtreme.ols.client.action.*;
-import nl.lxtreme.ols.client.api.*;
 import nl.lxtreme.ols.client2.action.*;
+import nl.lxtreme.ols.client2.api.*;
+import nl.lxtreme.ols.client2.platform.*;
 import nl.lxtreme.ols.util.swing.*;
 
 import org.apache.felix.dm.*;
@@ -232,7 +231,7 @@ public class MenuManagerImpl implements MenuManager
 
     this.menus.add( exportMenu );
 
-    if ( !isMacOS() )
+    if ( !Platform.isMacOS() )
     {
       JMenu editMenu = this.menuBar.add( new JMenu( "Edit" ) );
       editMenu.putClientProperty( MENU_NAME, EDIT_MENU );
@@ -326,15 +325,15 @@ public class MenuManagerImpl implements MenuManager
    */
   void stop( Component aComponent ) throws Exception
   {
-    SwingUtilities.invokeAndWait( new Runnable()
-    {
-      @Override
-      public void run()
-      {
-        menuBar.removeAll();
-        menuBar = null;
-      }
-    } );
+    // SwingUtilities.invokeAndWait( new Runnable()
+    // {
+    // @Override
+    // public void run()
+    // {
+    // menuBar.removeAll();
+    // menuBar = null;
+    // }
+    // } );
   }
 
   /**
@@ -396,11 +395,19 @@ public class MenuManagerImpl implements MenuManager
     int index = -1;
     for ( int i = aMenu.getItemCount(); i >= 0; i-- )
     {
-      JMenuItem item = aMenu.getItem( i );
-      if ( item != null && id.equals( item.getClientProperty( "id" ) ) )
+      JMenuItem item;
+      try
       {
-        index = i;
-        break;
+        item = aMenu.getItem( i );
+        if ( item != null && id.equals( item.getClientProperty( "id" ) ) )
+        {
+          index = i;
+          break;
+        }
+      }
+      catch ( Exception exception )
+      {
+        // Ignore...
       }
     }
 

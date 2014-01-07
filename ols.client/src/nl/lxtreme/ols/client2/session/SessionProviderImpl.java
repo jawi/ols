@@ -23,6 +23,7 @@ package nl.lxtreme.ols.client2.session;
 
 import java.util.*;
 import java.util.concurrent.*;
+import java.util.concurrent.atomic.*;
 
 import nl.lxtreme.ols.common.session.*;
 import nl.lxtreme.ols.common.acquisition.*;
@@ -39,6 +40,7 @@ public class SessionProviderImpl implements SessionProvider, AcquisitionDataList
   // VARIABLES
 
   private final ConcurrentMap<Session, ServiceRegistration> sessions;
+  private final AtomicInteger sessionIdCounter;
   // Injected by Felix DM...
   private volatile BundleContext context;
   private volatile LogService log;
@@ -51,6 +53,7 @@ public class SessionProviderImpl implements SessionProvider, AcquisitionDataList
   public SessionProviderImpl()
   {
     this.sessions = new ConcurrentHashMap<Session, ServiceRegistration>();
+    this.sessionIdCounter = new AtomicInteger( 1 );
   }
 
   // METHODS
@@ -65,7 +68,7 @@ public class SessionProviderImpl implements SessionProvider, AcquisitionDataList
     {
       this.log.log( LogService.LOG_INFO, "Creating new session for acquired data..." );
     }
-    addSession( new SessionImpl( this, aData ) );
+    addSession( new SessionImpl( this.sessionIdCounter.getAndIncrement(), this, aData ) );
   }
 
   /**

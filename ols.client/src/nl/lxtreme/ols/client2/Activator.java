@@ -25,13 +25,16 @@ import java.awt.*;
 import java.util.*;
 
 import nl.lxtreme.ols.acquisition.*;
-import nl.lxtreme.ols.client.api.*;
-import nl.lxtreme.ols.client.osgi.*;
 import nl.lxtreme.ols.client2.action.*;
 import nl.lxtreme.ols.client2.actionmanager.*;
+import nl.lxtreme.ols.client2.api.*;
 import nl.lxtreme.ols.client2.colorscheme.*;
 import nl.lxtreme.ols.client2.menu.*;
+import nl.lxtreme.ols.client2.platform.*;
+import nl.lxtreme.ols.client2.project.*;
 import nl.lxtreme.ols.client2.session.*;
+import nl.lxtreme.ols.client2.usersettings.*;
+import nl.lxtreme.ols.client2.views.*;
 import nl.lxtreme.ols.common.acquisition.*;
 import nl.lxtreme.ols.common.session.*;
 import nl.lxtreme.ols.device.api.*;
@@ -42,7 +45,6 @@ import nl.lxtreme.ols.tool.api.*;
 import org.apache.felix.dm.*;
 import org.apache.felix.dm.Component;
 import org.osgi.framework.*;
-import org.osgi.framework.Constants;
 import org.osgi.service.cm.*;
 import org.osgi.service.log.*;
 
@@ -154,6 +156,9 @@ public class Activator extends DependencyActivatorBase
   @Override
   public void init( BundleContext aContext, DependencyManager aManager ) throws Exception
   {
+    // Platform initialization...
+    Platform.initPlatform();
+
     // Do not start if we're running headless...
     if ( GraphicsEnvironment.isHeadless() )
     {
@@ -168,15 +173,10 @@ public class Activator extends DependencyActivatorBase
     createActionManager( aManager );
     createMenuManager( aManager );
     createColorSchemeManager( aManager );
-
-    // Helpers...
-    aManager.add( createComponent().setInterface( //
-        new String[] { SessionProvider.class.getName(), AcquisitionDataListener.class.getName() }, null ) //
-        .setImplementation( SessionProviderImpl.class ) //
-        .add( createServiceDependency() //
-            .setService( LogService.class ) //
-            .setRequired( false ) ) //
-        );
+    createUserSettingsProvider( aManager );
+    createProjectManager( aManager );
+    createSessionProvider( aManager );
+    createSessionViewManager( aManager );
 
     // Client...
     String[] serviceNames = { AcquisitionStatusListener.class.getName(), AcquisitionProgressListener.class.getName() };
@@ -184,11 +184,9 @@ public class Activator extends DependencyActivatorBase
         .setInterface( serviceNames, null ) //
         .setImplementation( Client.class ) //
         .add( createServiceDependency() //
-            .setService( SessionProvider.class ) //
-            .setRequired( true ) ) //
-        .add( createServiceDependency() //
-            .setService( ColorSchemeProvider.class ) //
-            .setRequired( true ) ) //
+            .setService( ViewController.class ) //
+            .setCallbacks( "addViewController", "removeViewController" ) //
+            .setRequired( false ) ) //
         .add( createServiceDependency() //
             .setService( DataAcquisitionService.class ) //
             .setRequired( true ) ) //
@@ -196,19 +194,36 @@ public class Activator extends DependencyActivatorBase
             .setService( ActionManager.class ) //
             .setRequired( true ) ) //
         .add( createServiceDependency() //
+            .setService( ProjectManager.class ) //
+            .setRequired( true ) ) //
+        .add( createServiceDependency() //
             .setService( MenuManager.class ) //
+            .setRequired( true ) ) //
+        .add( createServiceDependency() //
+            .setService( UserSettingProvider.class ) //
             .setRequired( true ) ) //
         );
   }
 
-  private void createColorSchemeManager( DependencyManager aManager )
+  void createSessionProvider( DependencyManager aManager )
   {
-    Properties props = new Properties();
-    props.put( Constants.SERVICE_PID, ColorSchemeManager.PID );
+    aManager.add( createComponent().setInterface( //
+        new String[] { SessionProvider.class.getName(), AcquisitionDataListener.class.getName() }, null ) //
+        .setImplementation( SessionProviderImpl.class ) //
+        .add( createServiceDependency() //
+            .setService( LogService.class ) //
+            .setRequired( false ) ) //
+        );
+  }
 
+  void createSessionViewManager( DependencyManager aManager )
+  {
     aManager.add( createComponent() //
-        .setInterface( new String[] { ColorSchemeProvider.class.getName(), ManagedServiceFactory.class.getName() }, props ) //
-        .setImplementation( ColorSchemeManager.class ) //
+        .setImplementation( SessionViewManager.class ) //
+        .add( createServiceDependency() //
+            .setService( Session.class ) //
+            .setCallbacks( "addSession", "removeSession" ) //
+            .setRequired( false ) ) //
         .add( createServiceDependency() //
             .setService( LogService.class ) //
             .setRequired( false ) ) //
@@ -253,6 +268,21 @@ public class Activator extends DependencyActivatorBase
         .setImplementation( ExporterBundleAdapter.class ) );
   }
 
+  private void createColorSchemeManager( DependencyManager aManager )
+  {
+    Properties props = new Properties();
+    props.put( Constants.SERVICE_PID, ColorSchemeManager.PID );
+
+    aManager.add( createComponent() //
+        .setInterface( new String[] { ColorSchemeProvider.class.getName(), ManagedServiceFactory.class.getName() },
+            props ) //
+        .setImplementation( ColorSchemeManager.class ) //
+        .add( createServiceDependency() //
+            .setService( LogService.class ) //
+            .setRequired( false ) ) //
+        );
+  }
+
   private void createMenuManager( DependencyManager aManager )
   {
     aManager.add( createComponent() //
@@ -268,6 +298,31 @@ public class Activator extends DependencyActivatorBase
         .add( createServiceDependency() //
             .setService( ManagedAction.class, "(menuName=*)" ) //
             .setCallbacks( "addAction", "removeAction" ) //
+            .setRequired( false ) ) //
+        );
+  }
+
+  private void createProjectManager( DependencyManager aManager )
+  {
+    aManager.add( createComponent() //
+        .setInterface( ProjectManager.class.getName(), null ) //
+        .setImplementation( ProjectManagerImpl.class ) //
+        .add( createServiceDependency() //
+            .setService( SessionProvider.class ) //
+            .setRequired( true ) ) //
+        .add( createServiceDependency() //
+            .setService( LogService.class ) //
+            .setRequired( false ) ) //
+        );
+  }
+
+  private void createUserSettingsProvider( DependencyManager aManager )
+  {
+    aManager.add( createComponent() //
+        .setInterface( UserSettingProvider.class.getName(), null ) //
+        .setImplementation( UserSettingsProviderImpl.class ) //
+        .add( createServiceDependency() //
+            .setService( LogService.class ) //
             .setRequired( false ) ) //
         );
   }

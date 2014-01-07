@@ -16,36 +16,24 @@
  * 51 Franklin St, Fifth Floor, Boston, MA 02110, USA
  *
  * Copyright (C) 2006-2010 Michael Poppitz, www.sump.org
- * Copyright (C) 2010-2014 J.W. Janssen, www.lxtreme.nl
+ * Copyright (C) 2010-2013 J.W. Janssen, www.lxtreme.nl
  */
-package nl.lxtreme.ols.client2;
+package nl.lxtreme.ols.client2.views;
+
+
+import nl.lxtreme.ols.common.acquisition.*;
 
 
 /**
- * Provides common used constants.
+ * Generalization of {@link Cursor} for visual markers in a view.
  */
-public interface ClientConstants
+public interface IMarker extends Cursor
 {
-  // CONSTANTS
+  // METHODS
 
   /**
-   * Short name of the client.
+   * @return <code>true</code> if this marker can be moved, <code>false</code>
+   *         otherwise.
    */
-  String SHORT_NAME = "LogicSniffer";
-  /**
-   * Long name of the client.
-   */
-  String FULL_NAME = SHORT_NAME.concat( " - Logic Analyzer Client" );
-
-  String CAPTURE_MENU = "captureMenu";
-  String CURSORS_MENU = "cursorsMenu";
-  String DEVICE_MENU = "deviceMenu";
-  String DIAGRAM_MENU = "diagramMenu";
-  String EXPORT_MENU = "exportMenu";
-  String EDIT_MENU = "editMenu";
-  String FILE_MENU = "fileMenu";
-  String HELP_MENU = "helpMenu";
-  String TOOL_MENU = "toolMenu";
-  String WINDOW_MENU = "windowMenu";
-  String VIEW_MENU = "viewMenu";
+  boolean isMoveable();
 }

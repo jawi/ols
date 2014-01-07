@@ -18,7 +18,7 @@
  * 
  * Copyright (C) 2010-2011 - J.W. Janssen, http://www.lxtreme.nl
  */
-package nl.lxtreme.ols.client.api;
+package nl.lxtreme.ols.client2.api;
 
 
 import javax.swing.*;

@@ -161,7 +161,7 @@ public class UserSettingsImpl implements UserSettings
     else
     {
       this.properties = new Properties();
-      for ( Map.Entry<String, Object> entry : aSettings )
+      for ( Entry<String, String> entry : aSettings.entrySet() )
       {
         this.properties.put( entry.getKey(), entry.getValue() );
       }
@@ -245,9 +245,9 @@ public class UserSettingsImpl implements UserSettings
    * {@inheritDoc}
    */
   @Override
-  public Iterator<Entry<String, Object>> iterator()
+  public Set<Entry<String, String>> entrySet()
   {
-    return new UserSettingsIterator( this.properties );
+    return null; // XXX
   }
 
   /**
@@ -262,8 +262,7 @@ public class UserSettingsImpl implements UserSettings
   /**
    * {@inheritDoc}
    */
-  @Override
-  public void putAll( final Map<?, ?> aSettings )
+  public void putAll( final Map<String, Object> aSettings )
   {
     this.properties.putAll( aSettings );
   }

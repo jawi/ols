@@ -36,6 +36,7 @@ public class SessionImpl implements Session, AnnotationData
 {
   // VARIABLES
 
+  private final int id;
   private final SessionProviderImpl provider;
   private final AcquisitionData data;
   private final ConcurrentMap<Integer, SortedSet<Annotation>> annotations;
@@ -45,8 +46,9 @@ public class SessionImpl implements Session, AnnotationData
   /**
    * Creates a new {@link SessionImpl} instance.
    */
-  public SessionImpl( SessionProviderImpl aProvider, AcquisitionData aData )
+  public SessionImpl( int aId, SessionProviderImpl aProvider, AcquisitionData aData )
   {
+    this.id = aId;
     this.provider = aProvider;
     this.data = aData;
 
@@ -139,6 +141,15 @@ public class SessionImpl implements Session, AnnotationData
   {
     SortedSet<Annotation> result = this.annotations.get( Integer.valueOf( aChannelIdx ) );
     return ( result == null ) ? new TreeSet<Annotation>() : result;
+  }
+  
+  /**
+   * {@inheritDoc}
+   */
+  @Override
+  public int getId()
+  {
+    return this.id;
   }
 
   /**

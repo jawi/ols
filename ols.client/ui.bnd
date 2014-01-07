@@ -6,7 +6,6 @@ Bundle-Copyright: J.W. Janssen (lxtreme.nl) (C) 2010-2013
 Bundle-License: GPLv2;link=http://www.gnu.org/licenses/gpl-2.0.html
 Bundle-Activator: nl.lxtreme.ols.client2.Activator
 Private-Package: \
-	nl.lxtreme.ols.client2.*,\
 	nl.lxtreme.ols.client,\
 	nl.lxtreme.ols.client.appcallback,\
 	nl.lxtreme.ols.client.about,\
@@ -26,6 +25,21 @@ Private-Package: \
 	nl.lxtreme.ols.client.signaldisplay.view.renderer,\
 	nl.lxtreme.ols.client.view,\
 	nl.lxtreme.ols.client.view.state,\
-	nl.lxtreme.ols.client.view.waveform
+	nl.lxtreme.ols.client.view.waveform,\
+	nl.lxtreme.ols.client2,\
+	nl.lxtreme.ols.client2.about,\
+	nl.lxtreme.ols.client2.action,\
+	nl.lxtreme.ols.client2.actionmanager,\
+	nl.lxtreme.ols.client2.bundles,\
+	nl.lxtreme.ols.client2.colorscheme,\
+	nl.lxtreme.ols.client2.icons,\
+	nl.lxtreme.ols.client2.menu,\
+	nl.lxtreme.ols.client2.platform,\
+	nl.lxtreme.ols.client2.platform.osx,\
+	nl.lxtreme.ols.client2.prefs,\
+	nl.lxtreme.ols.client2.project,\
+	nl.lxtreme.ols.client2.session,\
+	nl.lxtreme.ols.client2.usersettings,\
+	nl.lxtreme.ols.client2.views.*
 X-ClientVersion = ${ols.version}
 X-ClientIncidentAddress = info+v${ols.version}@lxtreme.nl

@@ -22,22 +22,26 @@ package nl.lxtreme.ols.client2;
 
 
 import java.awt.*;
+import java.awt.event.*;
 import java.io.*;
 import java.util.*;
 import java.util.List;
+import java.util.concurrent.*;
 
 import javax.swing.*;
 
 import nl.lxtreme.ols.acquisition.*;
-import nl.lxtreme.ols.client.api.Constants;
 import nl.lxtreme.ols.client2.about.*;
 import nl.lxtreme.ols.client2.action.*;
 import nl.lxtreme.ols.client2.actionmanager.*;
 import nl.lxtreme.ols.client2.bundles.*;
-import nl.lxtreme.ols.client2.colorscheme.*;
 import nl.lxtreme.ols.client2.icons.*;
 import nl.lxtreme.ols.client2.menu.*;
+import nl.lxtreme.ols.client2.platform.*;
 import nl.lxtreme.ols.client2.prefs.*;
+import nl.lxtreme.ols.client2.project.*;
+import nl.lxtreme.ols.client2.usersettings.*;
+import nl.lxtreme.ols.client2.views.*;
 import nl.lxtreme.ols.common.*;
 import nl.lxtreme.ols.common.acquisition.*;
 import nl.lxtreme.ols.common.acquisition.Cursor;
@@ -53,16 +57,32 @@ import org.osgi.framework.*;
 
 import com.jidesoft.docking.*;
 import com.jidesoft.docking.DockingManager.TabbedPaneCustomizer;
+import com.jidesoft.plaf.*;
 import com.jidesoft.swing.*;
 
 
 /**
  * Represents the main client.
  */
-public class Client extends DefaultDockableHolder implements Closeable, AcquisitionStatusListener,
+public class Client extends DefaultDockableHolder implements ApplicationCallback, Closeable, AcquisitionStatusListener,
     AcquisitionProgressListener
 {
   // INNER TYPES
+
+  /**
+   * Provides an {@link Action} for closing a {@link JOptionPane}.
+   */
+  static final class CloseOptionPaneAction extends AbstractAction
+  {
+    private static final long serialVersionUID = 1L;
+
+    @Override
+    public void actionPerformed( final ActionEvent aEvent )
+    {
+      final JOptionPane optionPane = ( JOptionPane )aEvent.getSource();
+      optionPane.setValue( Integer.valueOf( JOptionPane.CLOSED_OPTION ) );
+    }
+  }
 
   /**
    * A runnable implementation that accumulates several calls to avoid an
@@ -70,9 +90,6 @@ public class Client extends DefaultDockableHolder implements Closeable, Acquisit
    */
   final class ProgressUpdatingRunnable extends AccumulatingRunnable<Integer>
   {
-    /**
-     * {@inheritDoc}
-     */
     @Override
     protected void run( final Deque<Integer> aArgs )
     {
@@ -91,18 +108,23 @@ public class Client extends DefaultDockableHolder implements Closeable, Acquisit
 
   // VARIABLES
 
+  private final Bundle bundle;
   private final List<ManagedAction> registeredActions;
+  private final List<ViewController> viewControllers;
   private final ProgressUpdatingRunnable progressUpdater;
+
   // Injected by Felix DM...
   private volatile ActionManager actionManager;
   private volatile MenuManager menuManager;
-  private volatile SessionProvider sessionProvider;
   private volatile DataAcquisitionService acquisitionService;
-  private volatile ColorSchemeProvider colorSchemeProvider;
+  private volatile UserSettingProvider userSettingProvider;
+  private volatile ProjectManager projectManager;
+
   // Locally managed...
   private volatile String selectedDeviceName;
   private volatile int mode;
 
+  private JTabbedPane viewsPane;
   private JTextStatusBar status;
 
   // CONSTRUCTORS
@@ -112,25 +134,16 @@ public class Client extends DefaultDockableHolder implements Closeable, Acquisit
    */
   public Client()
   {
+    this.bundle = FrameworkUtil.getBundle( getClass() );
+
     this.registeredActions = new ArrayList<ManagedAction>();
+    this.viewControllers = new CopyOnWriteArrayList<ViewController>();
     this.progressUpdater = new ProgressUpdatingRunnable();
 
     this.mode = 0;
   }
 
   // METHODS
-
-  /**
-   * Returns whether the current host's operating system is Mac OS X.
-   * 
-   * @return <code>true</code> if running on Mac OS X, <code>false</code>
-   *         otherwise.
-   */
-  public static boolean isMacOS()
-  {
-    final String osName = System.getProperty( "os.name" );
-    return ( "Mac OS X".equalsIgnoreCase( osName ) || "Darwin".equalsIgnoreCase( osName ) );
-  }
 
   /**
    * Starts a data acquisition for the current selected device.
@@ -205,6 +218,27 @@ public class Client extends DefaultDockableHolder implements Closeable, Acquisit
   }
 
   /**
+   * Adds a given view controller to this client.
+   * 
+   * @param aController
+   *          the controller to add, cannot be <code>null</code>.
+   */
+  public void addViewController( final ViewController aController )
+  {
+    if ( this.viewControllers.add( aController ) )
+    {
+      SwingComponentUtils.invokeOnEDT( new Runnable()
+      {
+        @Override
+        public void run()
+        {
+          viewsPane.add( aController.getModel().getTitle(), aController.getView() );
+        }
+      } );
+    }
+  }
+
+  /**
    * @return <code>true</code> if cursors are visible, <code>false</code>
    *         otherwise.
    */
@@ -273,17 +307,6 @@ public class Client extends DefaultDockableHolder implements Closeable, Acquisit
   }
 
   /**
-   * Configures the channel groups for the current acquired data.
-   * 
-   * @param aParent
-   *          the parent window to use, can be <code>null</code>.
-   */
-  public void configureChannelGroups( Window aParent )
-  {
-    // TODO
-  }
-
-  /**
    * Creates a new tool context for invoking a tool.
    * 
    * @return a new {@link ToolContext} instance, never <code>null</code>.
@@ -324,12 +347,11 @@ public class Client extends DefaultDockableHolder implements Closeable, Acquisit
   {
     close();
 
-    Bundle thisBundle = FrameworkUtil.getBundle( getClass() );
-    if ( thisBundle != null )
+    if ( this.bundle != null )
     {
       try
       {
-        Bundle systemBundle = thisBundle.getBundleContext().getBundle( 0L );
+        Bundle systemBundle = this.bundle.getBundleContext().getBundle( 0L );
         systemBundle.stop();
       }
       catch ( BundleException exception )
@@ -401,9 +423,9 @@ public class Client extends DefaultDockableHolder implements Closeable, Acquisit
    * @return the filename of the current project, can be <code>null</code> in
    *         case the project is not yet saved.
    */
-  public File getProjectFileName()
+  public File getProjectFile()
   {
-    return null; // TODO
+    return this.projectManager.getProjectFile();
   }
 
   /**
@@ -412,15 +434,6 @@ public class Client extends DefaultDockableHolder implements Closeable, Acquisit
   public String getSelectedDeviceName()
   {
     return this.selectedDeviceName;
-  }
-
-  /**
-   * @return the version of this client, never <code>null</code>.
-   */
-  public String getVersion()
-  {
-    Dictionary<?, ?> headers = FrameworkUtil.getBundle( getClass() ).getHeaders();
-    return ( String )headers.get( "X-ClientVersion" );
   }
 
   /**
@@ -496,6 +509,36 @@ public class Client extends DefaultDockableHolder implements Closeable, Acquisit
   }
 
   /**
+   * {@inheritDoc}
+   */
+  @Override
+  public boolean handleAbout()
+  {
+    showAboutBox( this );
+    return true;
+  }
+
+  /**
+   * {@inheritDoc}
+   */
+  @Override
+  public boolean handlePreferences()
+  {
+    showPreferencesDialog( this );
+    return true;
+  }
+
+  /**
+   * {@inheritDoc}
+   */
+  @Override
+  public boolean handleQuit()
+  {
+    exit();
+    return true;
+  }
+
+  /**
    * Returns whether or not there is acquired data present.
    * 
    * @return <code>true</code> if there is data acquired, <code>false</code>
@@ -504,6 +547,15 @@ public class Client extends DefaultDockableHolder implements Closeable, Acquisit
   public boolean hasAcquiredData()
   {
     return getAcquiredData() != null;
+  }
+
+  /**
+   * {@inheritDoc}
+   */
+  @Override
+  public boolean hasPreferences()
+  {
+    return true;
   }
 
   /**
@@ -561,24 +613,68 @@ public class Client extends DefaultDockableHolder implements Closeable, Acquisit
     return ( this.mode & MODE_MEASUREMENT ) != 0;
   }
 
+  /**
+   * @return <code>true</code> if the current project is changed,
+   *         <code>false</code> otherwise.
+   */
   public boolean isProjectChanged()
   {
-    return false; // TODO
+    return this.projectManager.isProjectChanged();
   }
 
+  /**
+   * Starts a new project.
+   */
   public void newProject()
   {
-    // TODO
+    try
+    {
+      this.projectManager.createNewProject();
+    }
+    finally
+    {
+      updateActions();
+    }
   }
 
+  /**
+   * Opens a given file as data file.
+   * 
+   * @param aFile
+   *          the file to load from, cannot be <code>null</code>.
+   * @throws IOException
+   *           in case of I/O problems reading from the given file.
+   */
   public void openDataFile( File aFile ) throws IOException
   {
-    // TODO
+    try
+    {
+      this.projectManager.loadDataFile( aFile );
+    }
+    finally
+    {
+      updateActions();
+    }
   }
 
+  /**
+   * Opens a given file as project file.
+   * 
+   * @param aFile
+   *          the file to load from, cannot be <code>null</code>.
+   * @throws IOException
+   *           in case of I/O problems reading from the given file.
+   */
   public void openProjectFile( File aFile ) throws IOException
   {
-    // TODO
+    try
+    {
+      this.projectManager.loadProject( aFile );
+    }
+    finally
+    {
+      updateActions();
+    }
   }
 
   /**
@@ -586,11 +682,38 @@ public class Client extends DefaultDockableHolder implements Closeable, Acquisit
    */
   public void removeAllCursors()
   {
-    for ( Cursor cursor : getDefinedCursors() )
+    try
     {
-      cursor.clear();
+      for ( Cursor cursor : getDefinedCursors() )
+      {
+        cursor.clear();
+      }
     }
-    updateActions();
+    finally
+    {
+      updateActions();
+    }
+  }
+
+  /**
+   * Removes a given view controller from this client.
+   * 
+   * @param aController
+   *          the controller to remove, cannot be <code>null</code>.
+   */
+  public void removeViewController( final ViewController aController )
+  {
+    if ( this.viewControllers.remove( aController ) )
+    {
+      SwingComponentUtils.invokeOnEDT( new Runnable()
+      {
+        @Override
+        public void run()
+        {
+          viewsPane.remove( aController.getView() );
+        }
+      } );
+    }
   }
 
   /**
@@ -614,14 +737,44 @@ public class Client extends DefaultDockableHolder implements Closeable, Acquisit
     this.acquisitionService.acquireData( this.selectedDeviceName );
   }
 
+  /**
+   * Saves the current acquired data to the given file.
+   * 
+   * @param aFile
+   *          the file to save to, cannot be <code>null</code>.
+   * @throws IOException
+   *           in case of I/O problems reading from the given file.
+   */
   public void saveDataFile( File aFile ) throws IOException
   {
-    // TODO
+    try
+    {
+      this.projectManager.saveDataFile( aFile, getCurrentSession() );
+    }
+    finally
+    {
+      updateActions();
+    }
   }
 
+  /**
+   * Saves the current project to the given file.
+   * 
+   * @param aFile
+   *          the file to save to, cannot be <code>null</code>.
+   * @throws IOException
+   *           in case of I/O problems reading from the given file.
+   */
   public void saveProjectFile( String aProjectName, File aFile ) throws IOException
   {
-    // TODO
+    try
+    {
+      this.projectManager.saveProject( aFile, getCurrentSession() );
+    }
+    finally
+    {
+      updateActions();
+    }
   }
 
   /**
@@ -632,7 +785,11 @@ public class Client extends DefaultDockableHolder implements Closeable, Acquisit
    */
   public void scrollToRelativeTimestamp( long aTimestamp )
   {
-    // TODO
+    ViewController viewCtrl = getCurrentViewController();
+    if ( viewCtrl != null )
+    {
+      viewCtrl.scrollToTimestamp( aTimestamp );
+    }
   }
 
   /**
@@ -748,7 +905,8 @@ public class Client extends DefaultDockableHolder implements Closeable, Acquisit
    */
   public void showAboutBox( Window aParent )
   {
-    new AboutBox( Constants.SHORT_NAME, getVersion() ).showDialog();
+    AboutBox aboutBox = new AboutBox( ClientConstants.SHORT_NAME, getVersion() );
+    aboutBox.showDialog();
   }
 
   /**
@@ -759,7 +917,19 @@ public class Client extends DefaultDockableHolder implements Closeable, Acquisit
    */
   public void showBundlesDialog( Window aParent )
   {
-    new BundlesDialog( aParent ).showDialog();
+    BundlesDialog bundlesDialog = new BundlesDialog( aParent );
+    bundlesDialog.showDialog();
+  }
+
+  /**
+   * Configures the channel groups for the current acquired data.
+   * 
+   * @param aParent
+   *          the parent window to use, can be <code>null</code>.
+   */
+  public void showChannelGroupManagerDialog( Window aParent )
+  {
+    // TODO
   }
 
   /**
@@ -770,11 +940,8 @@ public class Client extends DefaultDockableHolder implements Closeable, Acquisit
    */
   public void showPreferencesDialog( Window aParent )
   {
-    if ( new PreferencesDialog( aParent, this.colorSchemeProvider ).showDialog() )
-    {
-      invalidate();
-      repaint();
-    }
+    PreferencesDialog preferencesDialog = new PreferencesDialog( aParent );
+    preferencesDialog.showDialog();
   }
 
   /**
@@ -782,7 +949,14 @@ public class Client extends DefaultDockableHolder implements Closeable, Acquisit
    */
   public void updateActions()
   {
-    this.actionManager.updateState( this );
+    SwingComponentUtils.invokeOnEDT( new Runnable()
+    {
+      @Override
+      public void run()
+      {
+        actionManager.updateState( Client.this );
+      }
+    } );
   }
 
   /**
@@ -790,7 +964,13 @@ public class Client extends DefaultDockableHolder implements Closeable, Acquisit
    */
   public void zoomAll()
   {
-    // TODO
+    ViewController viewCtrl = getCurrentViewController();
+    if ( viewCtrl != null )
+    {
+      viewCtrl.zoomAll();
+      
+      repaint();
+    }
   }
 
   /**
@@ -798,7 +978,13 @@ public class Client extends DefaultDockableHolder implements Closeable, Acquisit
    */
   public void zoomIn()
   {
-    // TODO
+    ViewController viewCtrl = getCurrentViewController();
+    if ( viewCtrl != null )
+    {
+      viewCtrl.zoomIn();
+      
+      repaint();
+    }
   }
 
   /**
@@ -806,7 +992,13 @@ public class Client extends DefaultDockableHolder implements Closeable, Acquisit
    */
   public void zoomOriginal()
   {
-    // TODO
+    ViewController viewCtrl = getCurrentViewController();
+    if ( viewCtrl != null )
+    {
+      viewCtrl.zoomOriginal();
+      
+      repaint();
+    }
   }
 
   /**
@@ -814,7 +1006,13 @@ public class Client extends DefaultDockableHolder implements Closeable, Acquisit
    */
   public void zoomOut()
   {
-    // TODO
+    ViewController viewCtrl = getCurrentViewController();
+    if ( viewCtrl != null )
+    {
+      viewCtrl.zoomOut();
+      
+      repaint();
+    }
   }
 
   /**
@@ -847,7 +1045,7 @@ public class Client extends DefaultDockableHolder implements Closeable, Acquisit
     registerAction( new SetCursorsVisibleAction() );
     registerAction( new SetCursorSnapModeAction() );
     registerAction( new RemoveAnnotationsAction() );
-    registerAction( new ConfigureChannelGroupsAction() );
+    registerAction( new ShowChannelGroupDialogAction() );
     for ( int i = 0; i < OlsConstants.MAX_CURSORS; i++ )
     {
       registerAction( new GotoNthCursorAction( i ) );
@@ -859,7 +1057,7 @@ public class Client extends DefaultDockableHolder implements Closeable, Acquisit
     // Help menu
     registerAction( new ShowBundlesAction() );
 
-    if ( !isMacOS() )
+    if ( !Platform.isMacOS() )
     {
       // File menu
       registerAction( new ExitAction() );
@@ -868,15 +1066,58 @@ public class Client extends DefaultDockableHolder implements Closeable, Acquisit
       registerAction( new ShowPreferencesDialogAction() );
 
       // Help menu
-      registerAction( new HelpAboutAction() );
+      registerAction( new ShowAboutBoxAction() );
     }
   }
 
   /**
-   * Starts this client.
+   * Starts this client, should be called from the EDT.
    */
   final void startClient()
   {
+    System.setProperty( "nl.lxtreme.ols.client.version", getVersion() );
+
+    // Use the defined email address...
+    System.setProperty( JErrorDialog.PROPERTY_REPORT_INCIDENT_EMAIL_ADDRESS, getReportIncidentAddress() );
+
+    if ( Boolean.getBoolean( "nl.lxtreme.ols.client.debug" ) )
+    {
+      // Install a custom repaint manager that detects whether Swing
+      // components are created outside the EDT; if so, it will yield a
+      // stack trace to the offending parts of the code...
+      ThreadViolationDetectionRepaintManager.install();
+    }
+
+    if ( Platform.isMacOS() )
+    {
+      // Install an additional accelerator (Cmd+W) for closing option panes...
+      ActionMap map = ( ActionMap )UIManager.get( "OptionPane.actionMap" );
+      if ( map == null )
+      {
+        map = new ActionMap();
+        UIManager.put( "OptionPane.actionMap", map );
+      }
+      map.put( "close", new CloseOptionPaneAction() );
+
+      UIManager.put( "OptionPane.windowBindings", //
+          new Object[] { SwingComponentUtils.createMenuKeyMask( KeyEvent.VK_W ), "close", "ESCAPE", "close" } );
+    }
+    else if ( Platform.isWindows() )
+    {
+      // Windows platform...
+      UIManager.put( "Application.useSystemFontSettings", Boolean.TRUE );
+      setLookAndFeel();
+    }
+    else
+    {
+      // All other platforms...
+      UIManager.put( "Application.useSystemFontSettings", Boolean.FALSE );
+      setLookAndFeel();
+    }
+
+    // Install the JIDE-specific extensions...
+    LookAndFeelFactory.installJideExtension();
+
     setJMenuBar( this.menuManager.getMenuBar() );
 
     // Let the host platform determine where this diagram should be displayed;
@@ -926,14 +1167,20 @@ public class Client extends DefaultDockableHolder implements Closeable, Acquisit
       }
     } );
 
+    this.viewsPane = new JTabbedPane();
+
     Workspace workspace = dm.getWorkspace();
     workspace.setAcceptDockableFrame( false );
-    // workspace.add( new ZoomCapableScrollPane( signalDiagramController ) );
+    workspace.add( this.viewsPane );
 
     Container contentPane = getContentPane();
     // contentPane.add( tools, BorderLayout.PAGE_START );
     contentPane.add( dm.getMainContainer(), BorderLayout.CENTER );
     contentPane.add( this.status, BorderLayout.PAGE_END );
+
+    // Load user settings...
+    UserSettings settings = this.userSettingProvider.getSettings( getClass().getName() );
+    loadUserSettings( settings );
 
     dm.resetToDefault();
 
@@ -945,10 +1192,14 @@ public class Client extends DefaultDockableHolder implements Closeable, Acquisit
   }
 
   /**
-   * Stops this client.
+   * Stops this client, should be called from the EDT.
    */
   final void stopClient()
   {
+    // Save user settings...
+    UserSettings settings = this.userSettingProvider.getSettings( getClass().getName() );
+    saveUserSettings( settings );
+
     // Closes this window...
     close();
   }
@@ -970,6 +1221,8 @@ public class Client extends DefaultDockableHolder implements Closeable, Acquisit
    */
   protected void start( Component aComponent ) throws Exception
   {
+    Platform.installApplicationCallback( this );
+
     SwingUtilities.invokeAndWait( new Runnable()
     {
       @Override
@@ -1007,12 +1260,47 @@ public class Client extends DefaultDockableHolder implements Closeable, Acquisit
    */
   private Session getCurrentSession()
   {
-    Session[] sessions = this.sessionProvider.getSessions();
-    if ( sessions.length < 1 )
+    ViewController viewController = getCurrentViewController();
+    if ( viewController != null )
+    {
+      ViewModel model = viewController.getModel();
+
+      return model.getSession();
+    }
+
+    return null;
+  }
+
+  /**
+   * @return the current view controller, if available.
+   */
+  private ViewController getCurrentViewController()
+  {
+    int idx = this.viewsPane.getSelectedIndex();
+    if ( idx < 0 || idx >= this.viewControllers.size() )
     {
       return null;
     }
-    return sessions[sessions.length - 1];
+
+    return this.viewControllers.get( idx );
+  }
+
+  /**
+   * @return the version of this client, never <code>null</code>.
+   */
+  private String getReportIncidentAddress()
+  {
+    Dictionary<?, ?> headers = this.bundle.getHeaders();
+    return ( String )headers.get( "X-ClientIncidentAddress" );
+  }
+
+  /**
+   * @return the version of this client, never <code>null</code>.
+   */
+  private String getVersion()
+  {
+    Dictionary<?, ?> headers = this.bundle.getHeaders();
+    return ( String )headers.get( "X-ClientVersion" );
   }
 
   /**
@@ -1031,6 +1319,17 @@ public class Client extends DefaultDockableHolder implements Closeable, Acquisit
   }
 
   /**
+   * @param aSettings
+   *          the settings for this client to load from, cannot be
+   *          <code>null</code>.
+   */
+  private void loadUserSettings( UserSettings aSettings )
+  {
+    this.mode = aSettings.getInt( "mode", 0 );
+    this.selectedDeviceName = aSettings.get( "selectedDevice", "OpenBench LogicSniffer" );
+  }
+
+  /**
    * Registers a new {@link ManagedAction}.
    * 
    * @param aAction
@@ -1039,5 +1338,38 @@ public class Client extends DefaultDockableHolder implements Closeable, Acquisit
   private void registerAction( ManagedAction aAction )
   {
     this.registeredActions.add( this.actionManager.add( aAction ) );
+  }
+
+  /**
+   * @param settings
+   *          the settings for this client to save to, cannot be
+   *          <code>null</code>.
+   */
+  private void saveUserSettings( UserSettings settings )
+  {
+    settings.putInt( "mode", this.mode );
+    settings.put( "selectedDevice", this.selectedDeviceName );
+  }
+
+  /**
+   * Sets the default L&F, assuming <tt>-Dswing.defaultlaf=...</tt> is defined.
+   */
+  private void setLookAndFeel()
+  {
+    final UIDefaults defaults = UIManager.getLookAndFeelDefaults();
+    // to make sure we always use system class loader
+    defaults.put( "ClassLoader", Activator.class.getClassLoader() );
+
+    String lafName = System.getProperty( "swing.defaultlaf", UIManager.getSystemLookAndFeelClassName() );
+
+    try
+    {
+      UIManager.setLookAndFeel( lafName );
+    }
+    catch ( Exception exception )
+    {
+      System.err.printf( "[WARNING] Failed to set look and feel to '%s', possible cause: %s.%n", lafName,
+          exception.getMessage() );
+    }
   }
 }

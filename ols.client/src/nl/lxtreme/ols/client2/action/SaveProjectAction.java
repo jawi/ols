@@ -95,8 +95,8 @@ public class SaveProjectAction extends AbstractManagedAction
   {
     Client client = getClient( aEvent );
 
-    File file = getProjectFilename( client );
-    if ( showFileChooserDialogNeeded( client ) )
+    File file = client.getProjectFile();
+    if ( showFileChooserDialogNeeded( file ) )
     {
       file = askForFilename( client );
     }
@@ -127,17 +127,6 @@ public class SaveProjectAction extends AbstractManagedAction
       return FileUtils.setFileExtension( file, OpenProjectAction.OLS_PROJECT_EXTENSION );
     }
     return file;
-  }
-
-  /**
-   * Returns the project's filename.
-   * 
-   * @return a file object denoting the project file to save the project to, can
-   *         be <code>null</code> if no name is yet defined for the project.
-   */
-  protected File getProjectFilename( Client aClient )
-  {
-    return aClient.getProjectFileName();
   }
 
   /**
@@ -173,9 +162,9 @@ public class SaveProjectAction extends AbstractManagedAction
    * @return <code>true</code> if a file chooser dialog should be shown,
    *         <code>false</code> otherwise.
    */
-  protected boolean showFileChooserDialogNeeded( Client aClient )
+  protected boolean showFileChooserDialogNeeded( File aFile )
   {
-    return aClient.getProjectFileName() == null;
+    return aFile == null;
   }
 
   /**

@@ -28,6 +28,7 @@ import static nl.lxtreme.ols.util.swing.SwingComponentUtils.*;
 import java.awt.*;
 import java.io.*;
 import java.util.*;
+import java.util.concurrent.atomic.*;
 
 import javax.swing.*;
 
@@ -39,7 +40,11 @@ import nl.lxtreme.ols.util.swing.StandardActionFactory.DialogStatus;
 import nl.lxtreme.ols.util.swing.StandardActionFactory.StatusAwareCloseableDialog;
 import nl.lxtreme.ols.util.swing.component.*;
 
+import org.apache.felix.dm.*;
+import org.apache.felix.dm.Component;
+import org.osgi.framework.*;
 import org.osgi.service.cm.*;
+import org.osgi.service.log.*;
 
 
 /**
@@ -140,22 +145,27 @@ public class PreferencesDialog extends JDialog implements StatusAwareCloseableDi
 
   // VARIABLES
 
-  private final ColorSchemeProvider colorSchemeProvider;
-  private final JCheckBox mouseWheelZooms;
-  private final JCheckBox cursorSnapToEdge;
-  private final JCheckBox showGroupSummary;
-  private final JCheckBox showAnalogScope;
-  private final JCheckBox showToolWindows;
-  private final JCheckBox showChannelIndexes;
-  private final JCheckBox retainAnnotations;
-  private final JCheckBox autoCenterCapture;
-  private final JComboBox annotationAlignment;
-  private final JComboBox signalAlignment;
-  private final JComboBox colorScheme;
+  private final AtomicBoolean dialogResult;
 
-  private volatile boolean dialogResult;
+  private JCheckBox mouseWheelZooms;
+  private JCheckBox cursorSnapToEdge;
+  private JCheckBox showGroupSummary;
+  private JCheckBox showAnalogScope;
+  private JCheckBox showToolWindows;
+  private JCheckBox showChannelIndexes;
+  private JCheckBox retainAnnotations;
+  private JCheckBox autoCenterCapture;
+  private JComboBox annotationAlignment;
+  private JComboBox signalAlignment;
+  private JComboBox colorScheme;
+
+  // Injected by Felix DM...
+  private volatile ColorSchemeProvider colorSchemeProvider;
   private volatile ConfigurationAdmin configAdmin;
+  private volatile LogService logService;
+  // Locally managed...
   private volatile Configuration config;
+  private volatile Component component;
 
   // CONSTRUCTORS
 
@@ -167,59 +177,11 @@ public class PreferencesDialog extends JDialog implements StatusAwareCloseableDi
    * @param aColorSchemeProvider
    *          the color scheme manager to use, cannot be <code>null</code>.
    */
-  public PreferencesDialog( Window aParent, ColorSchemeProvider aColorSchemeProvider )
+  public PreferencesDialog( Window aParent )
   {
-    super( aParent, "", ModalityType.APPLICATION_MODAL );
+    super( aParent, "", ModalityType.MODELESS );
 
-    this.colorSchemeProvider = aColorSchemeProvider;
-
-    // @formatter:off
-    this.mouseWheelZooms = new JCheckBox();
-    this.mouseWheelZooms
-        .setToolTipText( "Whether the mouse wheel by default zooms in or out, or scrolls the view. Will be applied immediately." );
-
-    this.cursorSnapToEdge = new JCheckBox();
-    this.cursorSnapToEdge
-        .setToolTipText( "Whether or not cursors by default snap to signal edges. Will be applied immediately." );
-
-    this.showGroupSummary = new JCheckBox();
-    this.showGroupSummary
-        .setToolTipText( "Whether or not the group (byte) summary is shown by default for each acquisition. Will be applied after an acquisition." );
-
-    this.showAnalogScope = new JCheckBox();
-    this.showAnalogScope
-        .setToolTipText( "Whether or not the analog scope is shown by default for each acquisition. Will be applied after an acquisition." );
-
-    this.showChannelIndexes = new JCheckBox();
-    this.showChannelIndexes
-        .setToolTipText( "Whether or not channel indexes are shown beside the labels. Will be applied immediately." );
-
-    this.retainAnnotations = new JCheckBox();
-    this.retainAnnotations
-        .setToolTipText( "Whether or not annotations should be retained after a recapture. Will be applied immediately." );
-
-    this.showToolWindows = new JCheckBox();
-    this.showToolWindows
-        .setToolTipText( "Whether or not the tool windows are shown by default. Will be applied after a restart." );
-
-    this.autoCenterCapture = new JCheckBox();
-    this.autoCenterCapture
-        .setToolTipText( "Whether or not to auto-center the diagram to the trigger after a capture. Will be applied immediately." );
-
-    this.signalAlignment = new JComboBox( SignalAlignment.values() );
-    this.signalAlignment
-        .setToolTipText( "The vertical alignment of the signals itself. Will be applied after an acquisition." );
-    this.signalAlignment.setRenderer( new SignalAlignmentRenderer() );
-
-    this.annotationAlignment = new JComboBox( SignalAlignment.values() );
-    this.annotationAlignment.setToolTipText( "The vertical aligment of the annotations. Will be applied immediately." );
-    this.annotationAlignment.setRenderer( new SignalAlignmentRenderer() );
-
-    this.colorScheme = new JComboBox( new ColorSchemeModel() );
-    this.colorScheme.setToolTipText( "What color scheme is to be used. Will be applied immediately." );
-    // @formatter:on
-
-    buildDialog();
+    this.dialogResult = new AtomicBoolean( false );
   }
 
   // METHODS
@@ -230,19 +192,12 @@ public class PreferencesDialog extends JDialog implements StatusAwareCloseableDi
   @Override
   public void close()
   {
-    setVisible( false );
-    dispose();
-
-    if ( this.dialogResult )
+    if ( this.component != null )
     {
-      try
-      {
-        applyNewPreferences();
-      }
-      catch ( IOException exception )
-      {
-        JErrorDialog.showDialog( getOwner(), "Failed to apply preferences!", exception );
-      }
+      // All changes are persisted automatically...
+      DependencyManager dm = this.component.getDependencyManager();
+      dm.remove( this.component );
+      this.component = null;
     }
   }
 
@@ -252,49 +207,113 @@ public class PreferencesDialog extends JDialog implements StatusAwareCloseableDi
   @Override
   public boolean setDialogStatus( final DialogStatus aStatus )
   {
-    this.dialogResult = ( aStatus == DialogStatus.OK );
+    this.dialogResult.set( aStatus == DialogStatus.OK );
     return true;
   }
 
   /**
    * Display the bundles dialog.
-   * 
-   * @return always <code>true</code>.
    */
-  public boolean showDialog()
+  public void showDialog()
   {
-    this.dialogResult = false;
+    DependencyManager dm = new DependencyManager( FrameworkUtil.getBundle( getClass() ).getBundleContext() );
+    this.component = dm.createComponent();
 
-    setVisible( true );
+    this.component.setImplementation( this ) //
+        .add( dm.createServiceDependency() //
+            .setService( LogService.class ) //
+            .setInstanceBound( true ) //
+            .setRequired( false ) ) //
+        .add( dm.createServiceDependency() //
+            .setService( ConfigurationAdmin.class ) //
+            .setInstanceBound( true ) //
+            .setRequired( true ) ) //
+        .add( dm.createServiceDependency() //
+            .setService( ColorSchemeProvider.class ) //
+            .setInstanceBound( true ) //
+            .setRequired( true ) );
+    dm.add( this.component );
+  }
 
-    return this.dialogResult;
+  /**
+   * Initializes this dialog, should be called from the EDT.
+   */
+  @SuppressWarnings( "unchecked" )
+  final void initDialog()
+  {
+    this.dialogResult.set( false );
+    // The properties are in string format; so we need to do some conversions
+    // prior to applying them to our components...
+    Dictionary<Object, Object> properties = this.config.getProperties();
+
+    // @formatter:off
+    this.mouseWheelZooms = new JCheckBox();
+    this.mouseWheelZooms.setToolTipText( "Whether the mouse wheel by default zooms in or out, or scrolls the view. Will be applied immediately." );
+    this.mouseWheelZooms.setSelected( getBoolean( properties.get( MOUSEWHEEL_ZOOM_DEFAULT ) ) );
+
+    this.cursorSnapToEdge = new JCheckBox();
+    this.cursorSnapToEdge.setToolTipText( "Whether or not cursors by default snap to signal edges. Will be applied immediately." );
+    this.cursorSnapToEdge.setSelected( getBoolean( properties.get( SNAP_CURSORS_DEFAULT ) ) );
+
+    this.showGroupSummary = new JCheckBox();
+    this.showGroupSummary.setToolTipText( "Whether or not the group (byte) summary is shown by default for each acquisition. Will be applied after an acquisition." );
+    this.showGroupSummary.setSelected( getBoolean( properties.get( GROUP_SUMMARY_VISIBLE_DEFAULT ) ) );
+
+    this.showAnalogScope = new JCheckBox();
+    this.showAnalogScope.setToolTipText( "Whether or not the analog scope is shown by default for each acquisition. Will be applied after an acquisition." );
+    this.showAnalogScope.setSelected( getBoolean( properties.get( ANALOG_SCOPE_VISIBLE_DEFAULT ) ) );
+
+    this.showChannelIndexes = new JCheckBox();
+    this.showChannelIndexes.setToolTipText( "Whether or not channel indexes are shown beside the labels. Will be applied immediately." );
+    this.showChannelIndexes.setSelected( getBoolean( properties.get( CHANNELLABELS_SHOW_CHANNEL_INDEX ) ) );
+
+    this.retainAnnotations = new JCheckBox();
+    this.retainAnnotations.setToolTipText( "Whether or not annotations should be retained after a recapture. Will be applied immediately." );
+    this.retainAnnotations.setSelected( getBoolean( properties.get( RETAIN_ANNOTATIONS_WITH_RECAPTURE ) ) );
+
+    this.showToolWindows = new JCheckBox();
+    this.showToolWindows.setToolTipText( "Whether or not the tool windows are shown by default. Will be applied after a restart." );
+    this.showToolWindows.setSelected( getBoolean( properties.get( SHOW_TOOL_WINDOWS_DEFAULT ) ) );
+
+    this.autoCenterCapture = new JCheckBox();
+    this.autoCenterCapture.setToolTipText( "Whether or not to auto-center the diagram to the trigger after a capture. Will be applied immediately." );
+    this.autoCenterCapture.setSelected( getBoolean( properties.get( AUTO_CENTER_TO_TRIGGER_AFTER_CAPTURE ) ) );
+
+    this.signalAlignment = new JComboBox( SignalAlignment.values() );
+    this.signalAlignment.setToolTipText( "The vertical alignment of the signals itself. Will be applied after an acquisition." );
+    this.signalAlignment.setSelectedItem( getSignalAlignment( properties.get( SIGNALVIEW_SIGNAL_ALIGNMENT ) ) );
+    this.signalAlignment.setRenderer( new SignalAlignmentRenderer() );
+
+    this.annotationAlignment = new JComboBox( SignalAlignment.values() );
+    this.annotationAlignment.setToolTipText( "The vertical aligment of the annotations. Will be applied immediately." );
+    this.annotationAlignment.setSelectedItem( getSignalAlignment( properties.get( SIGNALVIEW_ANNOTATION_ALIGNMENT ) ) );
+    this.annotationAlignment.setRenderer( new SignalAlignmentRenderer() );
+
+    this.colorScheme = new JComboBox( new ColorSchemeModel() );
+    this.colorScheme.setToolTipText( "What color scheme is to be used. Will be applied immediately." );
+    this.colorScheme.setSelectedItem( String.valueOf( properties.get( COLOR_SCHEME ) ) );
+    // @formatter:on
+
+    buildDialog();
   }
 
   /**
    * Called upon start of this component by the dependency manager.
    */
-  @SuppressWarnings( "unchecked" )
   protected void start() throws IOException
   {
     this.config = this.configAdmin.getConfiguration( UIManagerConfigurator.PID );
 
-    // The properties are in string format; so we need to do some conversions
-    // prior to applying them to our components...
-    Dictionary<Object, Object> properties = this.config.getProperties();
+    SwingComponentUtils.invokeOnEDT( new Runnable()
+    {
+      @Override
+      public void run()
+      {
+        initDialog();
 
-    // Apply values to our components...
-    this.mouseWheelZooms.setSelected( getBoolean( properties.get( MOUSEWHEEL_ZOOM_DEFAULT ) ) );
-    this.cursorSnapToEdge.setSelected( getBoolean( properties.get( SNAP_CURSORS_DEFAULT ) ) );
-    this.showGroupSummary.setSelected( getBoolean( properties.get( GROUP_SUMMARY_VISIBLE_DEFAULT ) ) );
-    this.showAnalogScope.setSelected( getBoolean( properties.get( ANALOG_SCOPE_VISIBLE_DEFAULT ) ) );
-    this.showChannelIndexes.setSelected( getBoolean( properties.get( CHANNELLABELS_SHOW_CHANNEL_INDEX ) ) );
-    this.retainAnnotations.setSelected( getBoolean( properties.get( RETAIN_ANNOTATIONS_WITH_RECAPTURE ) ) );
-    this.showToolWindows.setSelected( getBoolean( properties.get( SHOW_TOOL_WINDOWS_DEFAULT ) ) );
-    this.autoCenterCapture.setSelected( getBoolean( properties.get( AUTO_CENTER_TO_TRIGGER_AFTER_CAPTURE ) ) );
-
-    this.signalAlignment.setSelectedItem( getSignalAlignment( properties.get( SIGNALVIEW_SIGNAL_ALIGNMENT ) ) );
-    this.annotationAlignment.setSelectedItem( getSignalAlignment( properties.get( SIGNALVIEW_ANNOTATION_ALIGNMENT ) ) );
-    this.colorScheme.setSelectedItem( String.valueOf( properties.get( COLOR_SCHEME ) ) );
+        setVisible( true );
+      }
+    } );
   }
 
   /**
@@ -302,7 +321,27 @@ public class PreferencesDialog extends JDialog implements StatusAwareCloseableDi
    */
   protected void stop()
   {
-    // Nop...
+    SwingComponentUtils.invokeOnEDT( new Runnable()
+    {
+      @Override
+      public void run()
+      {
+        setVisible( false );
+        dispose();
+
+        if ( dialogResult.get() )
+        {
+          try
+          {
+            applyNewPreferences();
+          }
+          catch ( IOException exception )
+          {
+            JErrorDialog.showDialog( getOwner(), "Failed to apply preferences!", exception );
+          }
+        }
+      }
+    } );
   }
 
   /**
@@ -315,6 +354,8 @@ public class PreferencesDialog extends JDialog implements StatusAwareCloseableDi
    */
   private void applyNewColorScheme( final String colorScheme, final Dictionary<Object, Object> dictionary )
   {
+    this.logService.log( LogService.LOG_INFO, "Applying updated color scheme..." );
+
     dictionary.put( COLOR_SCHEME, colorScheme );
 
     Properties props = this.colorSchemeProvider.getColorScheme( colorScheme );
@@ -342,6 +383,8 @@ public class PreferencesDialog extends JDialog implements StatusAwareCloseableDi
   @SuppressWarnings( "unchecked" )
   private void applyNewPreferences() throws IOException
   {
+    this.logService.log( LogService.LOG_INFO, "Applying updated preferences..." );
+
     // The properties are in string format; so we need to do some conversions
     // prior to persisting them...
     Dictionary<Object, Object> properties = this.config.getProperties();

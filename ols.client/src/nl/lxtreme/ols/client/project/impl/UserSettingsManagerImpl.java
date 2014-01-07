@@ -5,6 +5,7 @@ package nl.lxtreme.ols.client.project.impl;
 
 
 import java.io.*;
+import java.util.Map.Entry;
 import java.util.*;
 import java.util.zip.*;
 
@@ -76,7 +77,7 @@ public final class UserSettingsManagerImpl implements UserSettingsManager
         settings.load( zipIS );
 
         final UserSettings userSettings = aProject.getSettings( userSettingsName );
-        userSettings.putAll( settings );
+//        userSettings.putAll( settings ); XXX
 
         zipIS.closeEntry();
       }
@@ -131,7 +132,7 @@ public final class UserSettingsManagerImpl implements UserSettingsManager
 
           // Convert to a properties object...
           final Properties props = new Properties();
-          for ( Map.Entry<String, Object> userSetting : aSettings )
+          for ( Entry<String, String> userSetting : aSettings.entrySet() )
           {
             props.put( userSetting.getKey(), userSetting.getValue() );
           }

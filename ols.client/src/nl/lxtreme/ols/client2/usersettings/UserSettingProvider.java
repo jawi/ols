@@ -16,36 +16,39 @@
  * 51 Franklin St, Fifth Floor, Boston, MA 02110, USA
  *
  * Copyright (C) 2006-2010 Michael Poppitz, www.sump.org
- * Copyright (C) 2010-2014 J.W. Janssen, www.lxtreme.nl
+ * Copyright (C) 2010-2012 J.W. Janssen, www.lxtreme.nl
  */
-package nl.lxtreme.ols.client2;
+package nl.lxtreme.ols.client2.usersettings;
+
+
+import java.util.*;
+
+import nl.lxtreme.ols.util.swing.*;
 
 
 /**
- * Provides common used constants.
+ * Denotes a provider for user-settings, which are either implicit (e.g. window
+ * size and placement), or explicit settings (e.g, settings explicitly made by
+ * the user).
  */
-public interface ClientConstants
+public interface UserSettingProvider
 {
-  // CONSTANTS
+  // METHODS
 
   /**
-   * Short name of the client.
+   * Return all known settings.
+   * 
+   * @return a collection with all user settings, never <code>null</code>.
    */
-  String SHORT_NAME = "LogicSniffer";
-  /**
-   * Long name of the client.
-   */
-  String FULL_NAME = SHORT_NAME.concat( " - Logic Analyzer Client" );
+  Collection<UserSettings> getAllSettings();
 
-  String CAPTURE_MENU = "captureMenu";
-  String CURSORS_MENU = "cursorsMenu";
-  String DEVICE_MENU = "deviceMenu";
-  String DIAGRAM_MENU = "diagramMenu";
-  String EXPORT_MENU = "exportMenu";
-  String EDIT_MENU = "editMenu";
-  String FILE_MENU = "fileMenu";
-  String HELP_MENU = "helpMenu";
-  String TOOL_MENU = "toolMenu";
-  String WINDOW_MENU = "windowMenu";
-  String VIEW_MENU = "viewMenu";
+  /**
+   * Returns the other user settings, like UI-settings, and such.
+   * 
+   * @param aName
+   *          the name of the user settings to retrieve, cannot be
+   *          <code>null</code>.
+   * @return a user settings object, never <code>null</code>.
+   */
+  UserSettings getSettings( String aName );
 }

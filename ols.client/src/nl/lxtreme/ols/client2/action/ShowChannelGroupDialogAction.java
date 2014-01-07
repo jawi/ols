@@ -15,55 +15,65 @@
  * with this program; if not, write to the Free Software Foundation, Inc.,
  * 51 Franklin St, Fifth Floor, Boston, MA 02110, USA
  *
- * 
- * Copyright (C) 2010-2011 - J.W. Janssen, http://www.lxtreme.nl
+ * Copyright (C) 2006-2010 Michael Poppitz, www.sump.org
+ * Copyright (C) 2010 J.W. Janssen, www.lxtreme.nl
  */
 package nl.lxtreme.ols.client2.action;
 
 
 import java.awt.event.*;
 
+import nl.lxtreme.ols.client.signaldisplay.signalelement.*;
 import nl.lxtreme.ols.client2.*;
 
 
 /**
- * Shows some information about this client (version stuff, legal stuff, and
- * such).
+ * Provides an Swing-action for opening the {@link SignalElementManagerView}
+ * dialog.
  */
-public class HelpAboutAction extends AbstractManagedAction
+public class ShowChannelGroupDialogAction extends AbstractManagedAction
 {
   // CONSTANTS
 
   private static final long serialVersionUID = 1L;
 
-  public static final String ID = "HelpAbout";
+  public static final String ID = "ShowManagerViewAction";
 
   // CONSTRUCTORS
 
   /**
-   * Creates a new {@link HelpAboutAction} instance.
+   * Creates a new {@link ShowChannelGroupDialogAction} instance.
    */
-  public HelpAboutAction()
+  public ShowChannelGroupDialogAction()
   {
     super( ID );
 
-    putValue( NAME, "About OLS" );
-    putValue( MNEMONIC_KEY, Integer.valueOf( KeyEvent.VK_A ) );
+    putValue( NAME, "Configure channel groups" );
+    putValue( SHORT_DESCRIPTION, "Add or edit channel groups." );
 
-    putValue( MENU_NAME, ClientConstants.HELP_MENU );
-    putValue( MENU_ORDER, 1 );
+    putValue( MENU_NAME, ClientConstants.DIAGRAM_MENU );
+    putValue( MENU_ORDER, 12 );
     putValue( MENU_SEPARATOR_ABOVE, Boolean.TRUE );
   }
 
   // METHODS
 
   /**
-   * @see java.awt.event.ActionListener#actionPerformed(java.awt.event.ActionEvent)
+   * {@inheritDoc}
    */
   @Override
-  public void actionPerformed( final ActionEvent aEvent )
+  public void actionPerformed( ActionEvent aEvent )
   {
     Client client = getClient( aEvent );
-    client.showAboutBox( client );
+    client.showChannelGroupManagerDialog( client );
+  }
+
+  /**
+   * {@inheritDoc}
+   */
+  @Override
+  public void updateState( Client aClient )
+  {
+    setEnabled( aClient.hasAcquiredData() );
   }
 }
