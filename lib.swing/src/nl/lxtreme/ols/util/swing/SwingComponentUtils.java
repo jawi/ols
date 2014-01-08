@@ -525,6 +525,36 @@ public final class SwingComponentUtils
   }
 
   /**
+   * Returns the "presumed" filename extension (like '.jpg', '.zip') from a
+   * given file.
+   * 
+   * @param aFile
+   *          the file to return the extension for, cannot be <code>null</code>.
+   * @return the file extension (always in lower case), never <code>null</code>
+   *         but can be empty if the given file has <em>no</em> file extension.
+   */
+  public static String getFileExtension( File aFile )
+  {
+    String ext = "";
+
+    String filename = aFile.getName();
+    int idx = filename.lastIndexOf( '.' );
+
+    if ( ( idx >= 0 ) && ( idx < ( filename.length() - 1 ) ) )
+    {
+      ext = filename.substring( idx + 1 ).toLowerCase();
+    }
+
+    // Avoid directories being detected as having a file extension...
+    if ( aFile.exists() && aFile.isDirectory() && !"".equals( ext ) )
+    {
+      ext = "";
+    }
+
+    return ext;
+  }
+
+  /**
    * Returns the key mask of the menu shortcut key.
    * 
    * @return a key mask, >= 0.
@@ -794,6 +824,52 @@ public final class SwingComponentUtils
     aProperties.put( "winYpos", Integer.toString( bounds.y ) );
     aProperties.put( "winWidth", Integer.toString( bounds.width ) );
     aProperties.put( "winHeight", Integer.toString( bounds.height ) );
+  }
+
+  /**
+   * Sets the filename to end with the given file extension, if this is not
+   * already the case.
+   * 
+   * @param aFile
+   *          the file that should get the given file extension, cannot be
+   *          <code>null</code>;
+   * @param aFileExtension
+   *          the new file extension to add to the given file, cannot be
+   *          <code>null</code>.
+   * @return a file with the given file extension, never <code>null</code>.
+   */
+  public static File setFileExtension( File aFile, String aFileExtension )
+  {
+    // Take care of any given periods in the extension...
+    String extension = aFileExtension.trim();
+    if ( extension.startsWith( "." ) )
+    {
+      extension = extension.substring( 1 );
+    }
+
+    // If the filename already has the given file extension, than simply do
+    // nothing...
+    if ( extension.isEmpty() )
+    {
+      return aFile;
+    }
+
+    File directory = aFile;
+    String filename = "";
+    boolean endsWithExtension = aFile.getName().toLowerCase().endsWith( extension.toLowerCase() );
+
+    if ( !aFile.isDirectory() || endsWithExtension )
+    {
+      filename = aFile.getName();
+      directory = aFile.getParentFile();
+    }
+
+    if ( !endsWithExtension )
+    {
+      filename = filename.concat( "." ).concat( aFileExtension );
+    }
+
+    return new File( directory, filename );
   }
 
   /**
@@ -1089,6 +1165,60 @@ public final class SwingComponentUtils
       dialog.setVisible( true );
       return dialog.getSelectedFile();
     }
+  }
+
+  /**
+   * Returns the "presumed" filename extension (like '.jpg', '.zip') from a
+   * given file.
+   * 
+   * @param aFile
+   *          the file to return the extension for, cannot be <code>null</code>.
+   * @return the file extension (always in lower case), never <code>null</code>
+   *         but can be empty if the given file has <em>no</em> file extension.
+   */
+  public static  String[] stripFileExtension( File aFile, String... aExtensions )
+  {
+    return stripFileExtension( aFile.getName(), aExtensions );
+  }
+
+  /**
+   * Returns the "presumed" filename extension (like '.jpg', '.zip') from a
+   * given file.
+   * 
+   * @param aFilename
+   *          the name of the file to strip the extension from, cannot be
+   *          <code>null</code>;
+   * @param aExtensions
+   *          the (optional) extensions that should be stripped. If omitted,
+   *          everything behind the last dot will be removed.
+   * @return the file extension (always in lower case), never <code>null</code>
+   *         but can be empty if the given file has <em>no</em> file extension.
+   */
+  public static  String[] stripFileExtension( String aFilename, String... aExtensions )
+  {
+    String strippedName = aFilename;
+    String foundExt = null;
+
+    int idx = aFilename.lastIndexOf( '.' );
+    if ( ( idx >= 0 ) && ( idx < ( aFilename.length() - 1 ) ) )
+    {
+      strippedName = aFilename.substring( 0, idx );
+
+      final String ext = aFilename.substring( idx + 1 ).toLowerCase();
+      if ( ( aExtensions != null ) && ( aExtensions.length > 0 ) )
+      {
+        for ( String extension : aExtensions )
+        {
+          if ( ext.equalsIgnoreCase( extension ) )
+          {
+            foundExt = ext;
+            break;
+          }
+        }
+      }
+    }
+
+    return new String[] { strippedName, foundExt };
   }
 
   /**
