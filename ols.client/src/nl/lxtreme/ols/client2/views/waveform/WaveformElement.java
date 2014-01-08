@@ -25,25 +25,16 @@ import static nl.lxtreme.ols.client2.views.UIMgr.*;
 
 import java.awt.*;
 
+import nl.lxtreme.ols.client2.views.UIMgr.Alignment;
 import nl.lxtreme.ols.common.acquisition.*;
 
 
 /**
  * Represents an signal element on screen.
  */
-public class WaveformElement
+final class WaveformElement
 {
   // INNER TYPES
-
-  public static enum Alignment
-  {
-    TOP, CENTER, BOTTOM;
-
-    public static Alignment parse( String aValue )
-    {
-      return valueOf( aValue.toUpperCase() );
-    }
-  }
 
   public static enum Type
   {

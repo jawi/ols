@@ -25,7 +25,6 @@ import java.awt.event.*;
 import java.io.*;
 import java.util.logging.*;
 
-import nl.lxtreme.ols.client.action.*;
 import nl.lxtreme.ols.client2.*;
 import nl.lxtreme.ols.client2.icons.*;
 import nl.lxtreme.ols.util.swing.*;
@@ -35,7 +34,7 @@ import nl.lxtreme.ols.util.swing.component.*;
 /**
  * Provides a "save data file" action.
  */
-public class SaveDataFileAction extends AbstractManagedAction
+public class SaveDataFileAction extends AbstractFileAction
 {
   // CONSTANTS
 
@@ -77,7 +76,7 @@ public class SaveDataFileAction extends AbstractManagedAction
     final File file = SwingComponentUtils.showFileSaveDialog( client, OpenDataFileAction.OLS_FILEFILTER );
     if ( file != null )
     {
-      final File actualFile = FileUtils.setFileExtension( file, OpenDataFileAction.OLS_FILE_EXTENSION );
+      File actualFile = setFileExtension( file, OpenDataFileAction.OLS_FILE_EXTENSION );
 
       LOG.log( Level.INFO, "Saving capture data to file {0}", actualFile );
 
@@ -92,7 +91,7 @@ public class SaveDataFileAction extends AbstractManagedAction
       }
     }
   }
-  
+
   /**
    * {@inheritDoc}
    */

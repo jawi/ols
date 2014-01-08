@@ -25,9 +25,8 @@ import java.awt.*;
 
 import javax.swing.*;
 
-import nl.lxtreme.ols.client.*;
-import nl.lxtreme.ols.client.view.state.*;
-import nl.lxtreme.ols.client.view.waveform.*;
+import nl.lxtreme.ols.client2.views.state.*;
+import nl.lxtreme.ols.client2.views.waveform.*;
 import nl.lxtreme.ols.common.*;
 
 
@@ -76,7 +75,7 @@ public abstract class BaseView extends JComponent
   @Override
   public final void paint( Graphics aGraphics )
   {
-    if ( Activator.isDebugMode() )
+    if ( Boolean.getBoolean( "nl.lxtreme.ols.client.debug" ) )
     {
       long startTime = System.nanoTime();
       try

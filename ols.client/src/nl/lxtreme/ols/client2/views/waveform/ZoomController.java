@@ -37,7 +37,7 @@ import nl.lxtreme.ols.client2.views.*;
 /**
  * Defines a zoom factor, with a ratio and some additional properties.
  */
-public final class ZoomController
+final class ZoomController
 {
   // INNER TYPES
 

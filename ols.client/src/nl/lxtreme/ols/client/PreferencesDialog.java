@@ -69,12 +69,13 @@ public class PreferencesDialog extends JDialog implements StatusAwareCloseableDi
     @Override
     public Object getElementAt( final int aIndex )
     {
-      java.util.List<String> schemes = PreferencesDialog.this.colorSchemeManager.getColorSchemes();
-      if ( ( aIndex < 0 ) || ( aIndex >= schemes.size() ) )
-      {
-        return null;
-      }
-      return schemes.get( aIndex );
+//      java.util.List<String> schemes = PreferencesDialog.this.colorSchemeManager.getColorSchemes();
+//      if ( ( aIndex < 0 ) || ( aIndex >= schemes.size() ) )
+//      {
+//        return null;
+//      }
+//      return schemes.get( aIndex );
+      return null;
     }
 
     /**
@@ -92,7 +93,8 @@ public class PreferencesDialog extends JDialog implements StatusAwareCloseableDi
     @Override
     public int getSize()
     {
-      return PreferencesDialog.this.colorSchemeManager.getColorSchemeCount();
+//      return PreferencesDialog.this.colorSchemeManager.getColorSchemeCount();
+      return 0;
     }
 
     /**
@@ -101,8 +103,8 @@ public class PreferencesDialog extends JDialog implements StatusAwareCloseableDi
     @Override
     public void setSelectedItem( final Object aItem )
     {
-      java.util.List<String> schemes = PreferencesDialog.this.colorSchemeManager.getColorSchemes();
-      this.selected = schemes.indexOf( aItem );
+//      java.util.List<String> schemes = PreferencesDialog.this.colorSchemeManager.getColorSchemes();
+//      this.selected = schemes.indexOf( aItem );
     }
   }
 
@@ -139,7 +141,7 @@ public class PreferencesDialog extends JDialog implements StatusAwareCloseableDi
 
   // VARIABLES
 
-  private final UIColorSchemeManager colorSchemeManager;
+//  private final UIColorSchemeManager colorSchemeManager;
   private final JCheckBox mouseWheelZooms;
   private final JCheckBox cursorSnapToEdge;
   private final JCheckBox showGroupSummary;
@@ -166,11 +168,11 @@ public class PreferencesDialog extends JDialog implements StatusAwareCloseableDi
    * @param aColorSchemeManager
    *          the color scheme manager to use, cannot be <code>null</code>.
    */
-  public PreferencesDialog( final Window aParent, final UIColorSchemeManager aColorSchemeManager )
+  public PreferencesDialog( final Window aParent /*, final UIColorSchemeManager aColorSchemeManager */ )
   {
     super( aParent, "", ModalityType.APPLICATION_MODAL );
 
-    this.colorSchemeManager = aColorSchemeManager;
+//    this.colorSchemeManager = aColorSchemeManager;
 
     // @formatter:off
     this.mouseWheelZooms = new JCheckBox();
@@ -266,7 +268,7 @@ public class PreferencesDialog extends JDialog implements StatusAwareCloseableDi
   @SuppressWarnings( "unchecked" )
   protected void start() throws IOException
   {
-    this.config = this.configAdmin.getConfiguration( UIManagerConfigurator.PID );
+//    this.config = this.configAdmin.getConfiguration( UIManagerConfigurator.PID );
 
     // The properties are in string format; so we need to do some conversions
     // prior to applying them to our components...
@@ -307,20 +309,20 @@ public class PreferencesDialog extends JDialog implements StatusAwareCloseableDi
   {
     dictionary.put( COLOR_SCHEME, colorScheme );
 
-    Properties props = this.colorSchemeManager.getColorScheme( colorScheme );
-    if ( props == null )
-    {
-      return;
-    }
-
-    for ( Object key : props.keySet() )
-    {
-      Object value = props.get( key );
-      if ( value instanceof Color )
-      {
-        dictionary.put( key, ColorUtils.toHexString( ( Color )value ) );
-      }
-    }
+//    Properties props = this.colorSchemeManager.getColorScheme( colorScheme );
+//    if ( props == null )
+//    {
+//      return;
+//    }
+//
+//    for ( Object key : props.keySet() )
+//    {
+//      Object value = props.get( key );
+//      if ( value instanceof Color )
+//      {
+//        dictionary.put( key, ColorUtils.toHexString( ( Color )value ) );
+//      }
+//    }
   }
 
   /**
@@ -474,19 +476,19 @@ public class PreferencesDialog extends JDialog implements StatusAwareCloseableDi
   private void purgeOldColorScheme( final Dictionary<Object, Object> dictionary )
   {
     String oldColorScheme = ( String )dictionary.get( COLOR_SCHEME );
-    Properties props = this.colorSchemeManager.getColorScheme( oldColorScheme );
-    if ( props == null )
-    {
-      return;
-    }
-
-    for ( Object key : props.keySet() )
-    {
-      Object value = props.get( key );
-      if ( value instanceof Color )
-      {
-        dictionary.put( key, "" );
-      }
-    }
+//    Properties props = this.colorSchemeManager.getColorScheme( oldColorScheme );
+//    if ( props == null )
+//    {
+//      return;
+//    }
+//
+//    for ( Object key : props.keySet() )
+//    {
+//      Object value = props.get( key );
+//      if ( value instanceof Color )
+//      {
+//        dictionary.put( key, "" );
+//      }
+//    }
   }
 }

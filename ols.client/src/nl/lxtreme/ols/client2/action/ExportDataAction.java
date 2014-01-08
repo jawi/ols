@@ -28,7 +28,6 @@ import java.util.logging.*;
 import javax.swing.*;
 import javax.swing.filechooser.*;
 
-import nl.lxtreme.ols.client.action.*;
 import nl.lxtreme.ols.client2.*;
 import nl.lxtreme.ols.export.api.*;
 import nl.lxtreme.ols.util.swing.*;
@@ -38,7 +37,7 @@ import nl.lxtreme.ols.util.swing.component.*;
 /**
  * Provides a export to file functionality.
  */
-public class ExportDataAction extends AbstractManagedAction
+public class ExportDataAction extends AbstractFileAction
 {
   // CONSTANTS
 
@@ -114,7 +113,7 @@ public class ExportDataAction extends AbstractManagedAction
       return;
     }
 
-    File actualFile = FileUtils.setFileExtension( exportFileName, preferredExtension );
+    File actualFile = setFileExtension( exportFileName, preferredExtension );
 
     if ( LOG.isLoggable( Level.INFO ) )
     {

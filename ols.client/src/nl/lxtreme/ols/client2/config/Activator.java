@@ -18,7 +18,7 @@
  * Copyright (C) 2006-2010 Michael Poppitz, www.sump.org
  * Copyright (C) 2010-2013 J.W. Janssen, www.lxtreme.nl
  */
-package nl.lxtreme.ols.client.provision;
+package nl.lxtreme.ols.client2.config;
 
 import org.apache.felix.dm.*;
 import org.osgi.framework.*;

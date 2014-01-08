@@ -215,10 +215,11 @@ public class UserSettingsProviderImpl implements UserSettingProvider
    * Defines a (global) AWT event listener for storing/retrieving the window
    * state.
    */
-  final class WindowStateListener implements AWTEventListener
+  static class WindowStateListener implements AWTEventListener
   {
     // VARIABLES
 
+    private final UserSettingProvider provider;
     private final ConcurrentMap<String, Boolean> prefsLoaded;
     // Injected by Felix DM...
     private volatile LogService logger;
@@ -228,8 +229,9 @@ public class UserSettingsProviderImpl implements UserSettingProvider
     /**
      * Creates a new {@link WindowStateListener} instance.
      */
-    public WindowStateListener()
+    public WindowStateListener( UserSettingProvider aProvider )
     {
+      this.provider = aProvider;
       this.prefsLoaded = new ConcurrentHashMap<String, Boolean>();
     }
 
@@ -368,7 +370,7 @@ public class UserSettingsProviderImpl implements UserSettingProvider
 
           try
           {
-            UserSettings userSettings = getSettings( aNamespace );
+            UserSettings userSettings = this.provider.getSettings( aNamespace );
             ( ( Configurable )aComponent ).readPreferences( userSettings );
           }
           catch ( Exception exception )
@@ -383,7 +385,7 @@ public class UserSettingsProviderImpl implements UserSettingProvider
         {
           this.logger.log( LogService.LOG_DEBUG, "Reading window-properties for: " + aNamespace );
 
-          UserSettings componentPrefs = getSettings( aNamespace.concat( ".window" ) );
+          UserSettings componentPrefs = this.provider.getSettings( aNamespace.concat( ".window" ) );
           SwingComponentUtils.loadWindowState( componentPrefs, aComponent );
         }
       }
@@ -433,7 +435,7 @@ public class UserSettingsProviderImpl implements UserSettingProvider
 
           try
           {
-            UserSettings userSettings = getSettings( aNamespace );
+            UserSettings userSettings = this.provider.getSettings( aNamespace );
             ( ( Configurable )aComponent ).writePreferences( userSettings );
           }
           catch ( Exception exception )
@@ -448,7 +450,7 @@ public class UserSettingsProviderImpl implements UserSettingProvider
         {
           this.logger.log( LogService.LOG_DEBUG, "Writing window-properties for: " + aNamespace );
 
-          UserSettings componentPrefs = getSettings( aNamespace.concat( ".window" ) );
+          UserSettings componentPrefs = this.provider.getSettings( aNamespace.concat( ".window" ) );
           SwingComponentUtils.saveWindowState( componentPrefs, aComponent );
         }
       }
@@ -520,7 +522,7 @@ public class UserSettingsProviderImpl implements UserSettingProvider
     loadImplicitUserSettings();
 
     this.windowStateComponent = this.dependencyManager.createComponent();
-    this.windowStateComponent.setImplementation( new WindowStateListener() ) //
+    this.windowStateComponent.setImplementation( new WindowStateListener( this ) ) //
         .add( this.dependencyManager.createServiceDependency() //
             .setService( PreferencesService.class ) //
             .setRequired( true ) //

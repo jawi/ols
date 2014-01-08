@@ -31,7 +31,7 @@ import java.awt.*;
 import javax.swing.*;
 
 import nl.lxtreme.ols.client2.views.*;
-import nl.lxtreme.ols.client2.views.waveform.WaveformElement.Alignment;
+import nl.lxtreme.ols.client2.views.UIMgr.Alignment;
 import nl.lxtreme.ols.client2.views.waveform.WaveformElement.Type;
 import nl.lxtreme.ols.common.acquisition.*;
 import nl.lxtreme.ols.common.annotation.*;

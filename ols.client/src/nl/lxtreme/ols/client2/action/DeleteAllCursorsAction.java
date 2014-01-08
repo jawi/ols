@@ -22,7 +22,6 @@ package nl.lxtreme.ols.client2.action;
 
 import java.awt.event.*;
 
-import nl.lxtreme.ols.client.signaldisplay.action.*;
 import nl.lxtreme.ols.client2.*;
 import nl.lxtreme.ols.util.swing.*;
 
@@ -41,7 +40,7 @@ public class DeleteAllCursorsAction extends AbstractManagedAction
   // CONSTRUCTORS
 
   /**
-   * Creates a new {@link DeleteCursorAction} instance.
+   * Creates a new {@link DeleteAllCursorsAction} instance.
    */
   public DeleteAllCursorsAction()
   {

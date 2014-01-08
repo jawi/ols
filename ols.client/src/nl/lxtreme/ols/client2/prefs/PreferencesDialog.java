@@ -21,7 +21,7 @@
 package nl.lxtreme.ols.client2.prefs;
 
 
-import static nl.lxtreme.ols.client.signaldisplay.laf.UIManagerKeys.*;
+import static nl.lxtreme.ols.client2.views.UIMgr.*;
 import static nl.lxtreme.ols.util.swing.SpringLayoutUtils.*;
 import static nl.lxtreme.ols.util.swing.SwingComponentUtils.*;
 
@@ -32,9 +32,8 @@ import java.util.concurrent.atomic.*;
 
 import javax.swing.*;
 
-import nl.lxtreme.ols.client.osgi.*;
-import nl.lxtreme.ols.client.signaldisplay.model.SignalDiagramModel.SignalAlignment;
 import nl.lxtreme.ols.client2.colorscheme.*;
+import nl.lxtreme.ols.client2.views.UIMgr.Alignment;
 import nl.lxtreme.ols.util.swing.*;
 import nl.lxtreme.ols.util.swing.StandardActionFactory.DialogStatus;
 import nl.lxtreme.ols.util.swing.StandardActionFactory.StatusAwareCloseableDialog;
@@ -115,7 +114,7 @@ public class PreferencesDialog extends JDialog implements StatusAwareCloseableDi
   /**
    * Provides a combobox renderer for ColorScheme values.
    */
-  static final class SignalAlignmentRenderer extends EnumItemRenderer<SignalAlignment>
+  static final class SignalAlignmentRenderer extends EnumItemRenderer<Alignment>
   {
     // CONSTANTS
 
@@ -124,7 +123,7 @@ public class PreferencesDialog extends JDialog implements StatusAwareCloseableDi
     // METHODS
 
     @Override
-    protected String getDisplayValue( final SignalAlignment aValue )
+    protected String getDisplayValue( Alignment aValue )
     {
       switch ( aValue )
       {
@@ -279,12 +278,12 @@ public class PreferencesDialog extends JDialog implements StatusAwareCloseableDi
     this.autoCenterCapture.setToolTipText( "Whether or not to auto-center the diagram to the trigger after a capture. Will be applied immediately." );
     this.autoCenterCapture.setSelected( getBoolean( properties.get( AUTO_CENTER_TO_TRIGGER_AFTER_CAPTURE ) ) );
 
-    this.signalAlignment = new JComboBox( SignalAlignment.values() );
+    this.signalAlignment = new JComboBox( Alignment.values() );
     this.signalAlignment.setToolTipText( "The vertical alignment of the signals itself. Will be applied after an acquisition." );
     this.signalAlignment.setSelectedItem( getSignalAlignment( properties.get( SIGNALVIEW_SIGNAL_ALIGNMENT ) ) );
     this.signalAlignment.setRenderer( new SignalAlignmentRenderer() );
 
-    this.annotationAlignment = new JComboBox( SignalAlignment.values() );
+    this.annotationAlignment = new JComboBox( Alignment.values() );
     this.annotationAlignment.setToolTipText( "The vertical aligment of the annotations. Will be applied immediately." );
     this.annotationAlignment.setSelectedItem( getSignalAlignment( properties.get( SIGNALVIEW_ANNOTATION_ALIGNMENT ) ) );
     this.annotationAlignment.setRenderer( new SignalAlignmentRenderer() );
@@ -302,7 +301,7 @@ public class PreferencesDialog extends JDialog implements StatusAwareCloseableDi
    */
   protected void start() throws IOException
   {
-    this.config = this.configAdmin.getConfiguration( UIManagerConfigurator.PID );
+    this.config = this.configAdmin.getConfiguration( PreferencesManager.PID );
 
     SwingComponentUtils.invokeOnEDT( new Runnable()
     {
@@ -501,21 +500,24 @@ public class PreferencesDialog extends JDialog implements StatusAwareCloseableDi
   }
 
   /**
-   * Returns the {@link SignalAlignment} for the given value representation.
+   * Returns the {@link Alignment} for the given value representation.
    * 
    * @param aValue
-   *          the value parse as {@link SignalAlignment}, can be
+   *          the value parse as {@link Alignment}, can be
    *          <code>null</code>.
-   * @return a {@link SignalAlignment} value, defaults to
-   *         {@link SignalAlignment#CENTER}.
+   * @return a {@link Alignment} value, defaults to
+   *         {@link Alignment#CENTER}.
    */
-  private SignalAlignment getSignalAlignment( final Object aValue )
+  private Alignment getSignalAlignment( Object aValue )
   {
-    if ( aValue == null )
+    try
     {
-      return SignalAlignment.CENTER;
+      return Alignment.valueOf( aValue.toString().toUpperCase() );
     }
-    return SignalAlignment.valueOf( aValue.toString().toUpperCase() );
+    catch ( Exception exception )
+    {
+      return Alignment.CENTER;
+    }
   }
 
   /**

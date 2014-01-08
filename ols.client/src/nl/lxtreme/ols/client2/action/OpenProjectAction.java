@@ -37,7 +37,7 @@ import nl.lxtreme.ols.util.swing.component.*;
 /**
  * Provides an "open project" action.
  */
-public class OpenProjectAction extends AbstractManagedAction
+public class OpenProjectAction extends AbstractFileAction
 {
   // CONSTANTS
 

@@ -26,7 +26,6 @@ import java.awt.event.*;
 import java.io.*;
 import java.util.logging.*;
 
-import nl.lxtreme.ols.client.action.*;
 import nl.lxtreme.ols.client2.*;
 import nl.lxtreme.ols.client2.icons.*;
 import nl.lxtreme.ols.util.swing.*;
@@ -36,7 +35,7 @@ import nl.lxtreme.ols.util.swing.component.*;
 /**
  * Provides a "save" functionality for (existing) project.
  */
-public class SaveProjectAction extends AbstractManagedAction
+public class SaveProjectAction extends AbstractFileAction
 {
   // CONSTANTS
 
@@ -124,7 +123,7 @@ public class SaveProjectAction extends AbstractManagedAction
     final File file = SwingComponentUtils.showFileSaveDialog( owner, OpenProjectAction.OLS_PROJECT_FILTER );
     if ( file != null )
     {
-      return FileUtils.setFileExtension( file, OpenProjectAction.OLS_PROJECT_EXTENSION );
+      return setFileExtension( file, OpenProjectAction.OLS_PROJECT_EXTENSION );
     }
     return file;
   }
@@ -142,7 +141,7 @@ public class SaveProjectAction extends AbstractManagedAction
     LOG.log( Level.INFO, "Saving project data to file: {0}", aFile );
 
     // Strip any "known" file extensions from the given value...
-    final String projectName = FileUtils.stripFileExtension( aFile, OpenDataFileAction.OLS_FILE_EXTENSION,
+    final String projectName = stripFileExtension( aFile, OpenDataFileAction.OLS_FILE_EXTENSION,
         OpenProjectAction.OLS_PROJECT_EXTENSION )[0];
 
     try

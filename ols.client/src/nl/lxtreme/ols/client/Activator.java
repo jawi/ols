@@ -22,14 +22,9 @@ package nl.lxtreme.ols.client;
 
 
 import java.awt.*;
-import java.util.*;
 
-import nl.lxtreme.ols.acquisition.*;
-import nl.lxtreme.ols.client.appcallback.*;
 import nl.lxtreme.ols.client.osgi.*;
-import nl.lxtreme.ols.client.project.*;
 import nl.lxtreme.ols.client2.api.*;
-import nl.lxtreme.ols.common.acquisition.*;
 import nl.lxtreme.ols.device.api.*;
 import nl.lxtreme.ols.export.api.*;
 import nl.lxtreme.ols.task.execution.*;
@@ -38,9 +33,6 @@ import nl.lxtreme.ols.tool.api.*;
 import org.apache.felix.dm.*;
 import org.apache.felix.dm.Component;
 import org.osgi.framework.*;
-import org.osgi.service.cm.*;
-import org.osgi.service.log.*;
-import org.osgi.service.prefs.*;
 
 import com.jidesoft.utils.*;
 
@@ -187,88 +179,88 @@ public class Activator extends DependencyActivatorBase
     aManager.add( createBundleAdapterService( Bundle.ACTIVE, EXPORTER_BUNDLE_FILTER, true /* propagate */) //
         .setImplementation( ExporterBundleAdapter.class ) );
 
-    Properties props = new Properties();
-    props.put( Constants.SERVICE_PID, UIManagerConfigurator.PID );
-
-    String[] serviceNames = new String[] { UIManagerConfigurator.class.getName(), ManagedService.class.getName() };
-
-    // UI Manager Configuration...
-    aManager.add( createComponent() //
-        .setInterface( serviceNames, props ) //
-        .setImplementation( UIManagerConfigurator.class ) //
-        );
-
-    props.put( Constants.SERVICE_PID, UIColorSchemeManager.PID );
-
-    serviceNames = new String[] { UIColorSchemeManager.class.getName(), ManagedServiceFactory.class.getName() };
-
-    // UI Manager Configuration...
-    aManager.add( createComponent() //
-        .setInterface( serviceNames, props ) //
-        .setImplementation( UIColorSchemeManager.class ) );
-
-    // User session manager...
-    aManager.add( createComponent() //
-        .setImplementation( new UserSessionManager() ) //
-        .add( createServiceDependency() //
-            .setService( ProjectManager.class ) //
-            .setRequired( true ) ) //
-        .add( createServiceDependency() //
-            .setService( UserSettingsManager.class ) //
-            .setRequired( true ) ) //
-        .add( createServiceDependency() //
-            .setService( PreferencesService.class ) //
-            .setRequired( true ) ) //
-        .add( createServiceDependency() //
-            .setService( LogService.class ) //
-            .setRequired( false ) //
-        ) );
-
-    aManager.add( createComponent() //
-        .setImplementation( ApplicationCallbackFacade.class ) //
-        .add( //
-            createServiceDependency() //
-                .setService( ApplicationCallback.class ) //
-                .setRequired( false ) ) //
-        );
+//    Properties props = new Properties();
+//    props.put( Constants.SERVICE_PID, UIManagerConfigurator.PID );
+//
+//    String[] serviceNames = new String[] { UIManagerConfigurator.class.getName(), ManagedService.class.getName() };
+//
+//    // UI Manager Configuration...
+//    aManager.add( createComponent() //
+//        .setInterface( serviceNames, props ) //
+//        .setImplementation( UIManagerConfigurator.class ) //
+//        );
+//
+//    props.put( Constants.SERVICE_PID, UIColorSchemeManager.PID );
+//
+//    serviceNames = new String[] { UIColorSchemeManager.class.getName(), ManagedServiceFactory.class.getName() };
+//
+//    // UI Manager Configuration...
+//    aManager.add( createComponent() //
+//        .setInterface( serviceNames, props ) //
+//        .setImplementation( UIColorSchemeManager.class ) );
+//
+//    // User session manager...
+//    aManager.add( createComponent() //
+//        .setImplementation( new UserSessionManager() ) //
+//        .add( createServiceDependency() //
+//            .setService( ProjectManager.class ) //
+//            .setRequired( true ) ) //
+//        .add( createServiceDependency() //
+//            .setService( UserSettingsManager.class ) //
+//            .setRequired( true ) ) //
+//        .add( createServiceDependency() //
+//            .setService( PreferencesService.class ) //
+//            .setRequired( true ) ) //
+//        .add( createServiceDependency() //
+//            .setService( LogService.class ) //
+//            .setRequired( false ) //
+//        ) );
+//
+//    aManager.add( createComponent() //
+//        .setImplementation( ApplicationCallbackFacade.class ) //
+//        .add( //
+//            createServiceDependency() //
+//                .setService( ApplicationCallback.class ) //
+//                .setRequired( false ) ) //
+//        );
 
     // All the interfaces we're registering the client controller under...
-    serviceNames = new String[] { AcquisitionDataListener.class.getName(), AcquisitionProgressListener.class.getName(),
-        AcquisitionStatusListener.class.getName(), ApplicationCallback.class.getName() };
-
-    // Client controller...
-    aManager.add( createComponent() //
-        .setInterface( serviceNames, null ) //
-        .setImplementation( clientController ) //
-        .add( createServiceDependency() //
-            .setService( ProjectManager.class ) //
-            .setRequired( true ) //
-            .setCallbacks( "setProjectManager", "removeProjectManager" ) ) //
-        .add( createServiceDependency() //
-            .setService( DataAcquisitionService.class ) //
-            .setRequired( true ) ) //
-        .add( createServiceDependency() //
-            .setService( UIColorSchemeManager.class ) //
-            .setRequired( true ) ) //
-        .add( createServiceDependency() //
-            .setService( ComponentProvider.class, "(OLS-ComponentProvider=Menu)" ) //
-            .setCallbacks( "addMenu", "removeMenu" ) //
-            .setRequired( false ) ) //
-        .add( createServiceDependency() //
-            .setService( Device.class ) //
-            .setCallbacks( "addDevice", "removeDevice" ) //
-            .setRequired( false ) ) //
-        .add( createServiceDependency() //
-            .setService( Tool.class ) //
-            .setCallbacks( "addTool", "removeTool" ) //
-            .setRequired( false ) ) //
-        .add( createServiceDependency() //
-            .setService( Exporter.class ) //
-            .setCallbacks( "addExporter", "removeExporter" ) //
-            .setRequired( false ) ) //
-        .add( createConfigurationDependency() //
-            .setPid( UIManagerConfigurator.PID ) ) //
-        );
+//    serviceNames = new String[] { AcquisitionDataListener.class.getName(), AcquisitionProgressListener.class.getName(),
+//        AcquisitionStatusListener.class.getName(), ApplicationCallback.class.getName() };
+//
+//    // Client controller...
+//    aManager.add( createComponent() //
+//        .setInterface( serviceNames, null ) //
+//        .setImplementation( clientController ) //
+//        .add( createServiceDependency() //
+//            .setService( ProjectManager.class ) //
+//            .setRequired( true ) //
+//            .setCallbacks( "setProjectManager", "removeProjectManager" ) ) //
+//        .add( createServiceDependency() //
+//            .setService( DataAcquisitionService.class ) //
+//            .setRequired( true ) ) //
+//        .add( createServiceDependency() //
+//            .setService( UIColorSchemeManager.class ) //
+//            .setRequired( true ) ) //
+//        .add( createServiceDependency() //
+//            .setService( ComponentProvider.class, "(OLS-ComponentProvider=Menu)" ) //
+//            .setCallbacks( "addMenu", "removeMenu" ) //
+//            .setRequired( false ) ) //
+//        .add( createServiceDependency() //
+//            .setService( Device.class ) //
+//            .setCallbacks( "addDevice", "removeDevice" ) //
+//            .setRequired( false ) ) //
+//        .add( createServiceDependency() //
+//            .setService( Tool.class ) //
+//            .setCallbacks( "addTool", "removeTool" ) //
+//            .setRequired( false ) ) //
+//        .add( createServiceDependency() //
+//            .setService( Exporter.class ) //
+//            .setCallbacks( "addExporter", "removeExporter" ) //
+//            .setRequired( false ) ) //
+//        .add( createConfigurationDependency() //
+//            .setPid( UIManagerConfigurator.PID ) ) //
+//        );
   }
 }
 

@@ -377,6 +377,7 @@ public class WaveformView extends BaseView
     JScrollPane scrollPane = new JScrollPane( this.mainComponent );
     scrollPane.setColumnHeaderView( this.timelineComponent );
     scrollPane.setRowHeaderView( this.labelComponent );
+    scrollPane.setCorner( ScrollPaneConstants.UPPER_LEFT_CORNER, new WaveformCornerComponent() );
     scrollPane.setInheritsPopupMenu( true );
 
     add( scrollPane, BorderLayout.CENTER );

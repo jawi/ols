@@ -18,7 +18,7 @@
  * Copyright (C) 2006-2010 Michael Poppitz, www.sump.org
  * Copyright (C) 2010-2011 J.W. Janssen, www.lxtreme.nl
  */
-package nl.lxtreme.ols.client.osgi;
+package nl.lxtreme.ols.client2.usersettings;
 
 
 import static org.mockito.Matchers.*;
@@ -27,13 +27,11 @@ import static org.mockito.Mockito.*;
 import java.awt.*;
 import java.awt.event.*;
 
-import nl.lxtreme.ols.client.osgi.UserSessionManager.WindowStateListener;
-import nl.lxtreme.ols.client.project.*;
+import nl.lxtreme.ols.client2.usersettings.UserSettingsProviderImpl.WindowStateListener;
 import nl.lxtreme.ols.util.swing.*;
 
 import org.junit.*;
 import org.osgi.service.log.*;
-import org.osgi.service.prefs.*;
 
 
 /**
@@ -53,15 +51,12 @@ public class WindowStateListenerTest
   @Before
   public void setUp() throws Exception
   {
-    PreferencesService mockedPreferenceService = mock( PreferencesService.class );
+    UserSettings settings = mock( UserSettings.class );
+    
+    UserSettingProvider provider = mock( UserSettingProvider.class );
+    when( provider.getSettings( anyString() ) ).thenReturn( settings );
 
-    Project mockedProject = mock( Project.class );
-    ProjectManager mockedProjectManager = mock( ProjectManager.class );
-    when( mockedProjectManager.getCurrentProject() ).thenReturn( mockedProject );
-
-    this.windowStateListener = spy( new WindowStateListener() );
-    this.windowStateListener.setPreferenceService( mockedPreferenceService );
-    this.windowStateListener.setProjectManager( mockedProjectManager );
+    this.windowStateListener = spy( new WindowStateListener( provider ) );
     this.windowStateListener.setLogger( mock( LogService.class ) );
   }
 

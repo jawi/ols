@@ -34,9 +34,6 @@ import javax.swing.*;
 import nl.lxtreme.ols.acquisition.*;
 import nl.lxtreme.ols.client.action.*;
 import nl.lxtreme.ols.client.actionmanager.*;
-import nl.lxtreme.ols.client.appcallback.*;
-import nl.lxtreme.ols.client.osgi.*;
-import nl.lxtreme.ols.client.osgi.ComponentStateAdapter;
 import nl.lxtreme.ols.client.project.*;
 import nl.lxtreme.ols.client.signaldisplay.*;
 import nl.lxtreme.ols.client2.*;
@@ -51,10 +48,7 @@ import nl.lxtreme.ols.tool.api.*;
 import nl.lxtreme.ols.util.swing.*;
 import nl.lxtreme.ols.util.swing.component.*;
 
-import org.apache.felix.dm.*;
-import org.apache.felix.dm.Component;
 import org.osgi.framework.*;
-import org.osgi.service.cm.*;
 
 import com.jidesoft.plaf.*;
 
@@ -63,7 +57,7 @@ import com.jidesoft.plaf.*;
  * Denotes a front-end controller for the client.
  */
 public final class ClientController implements ActionProvider, AcquisitionProgressListener, AcquisitionStatusListener,
-    AcquisitionDataListener, ApplicationCallback
+    AcquisitionDataListener /*, ApplicationCallback*/
 {
   // INNER TYPES
 
@@ -247,7 +241,7 @@ public final class ClientController implements ActionProvider, AcquisitionProgre
   private volatile ProjectManager projectManager;
   private volatile DataAcquisitionService dataAcquisitionService;
   private volatile MainFrame mainFrame;
-  private volatile UIColorSchemeManager colorSchemeManager;
+//  private volatile UIColorSchemeManager colorSchemeManager;
 
   private volatile long acquisitionStartTime;
 
@@ -753,7 +747,6 @@ public final class ClientController implements ActionProvider, AcquisitionProgre
   /**
    * {@inheritDoc}
    */
-  @Override
   public boolean handleAbout()
   {
     showAboutBox();
@@ -763,7 +756,6 @@ public final class ClientController implements ActionProvider, AcquisitionProgre
   /**
    * {@inheritDoc}
    */
-  @Override
   public boolean handlePreferences()
   {
     showPreferencesDialog( getMainFrame() );
@@ -773,7 +765,6 @@ public final class ClientController implements ActionProvider, AcquisitionProgre
   /**
    * {@inheritDoc}
    */
-  @Override
   public boolean handleQuit()
   {
     LOG.fine( "Handling quit from app.menu..." );
@@ -800,7 +791,6 @@ public final class ClientController implements ActionProvider, AcquisitionProgre
   /**
    * {@inheritDoc}
    */
-  @Override
   public boolean hasPreferences()
   {
     return true;
@@ -1236,36 +1226,36 @@ public final class ClientController implements ActionProvider, AcquisitionProgre
    */
   public void showPreferencesDialog( final Window aParent )
   {
-    final PreferencesDialog dialog = new PreferencesDialog( aParent, this.colorSchemeManager );
-
-    final Bundle thisBundle = getBundle();
-    final DependencyManager dm = new DependencyManager( thisBundle.getBundleContext() );
-    final Component comp = dm.createComponent();
-
-    comp.setImplementation( dialog ).add( dm.createServiceDependency() //
-        .setService( ConfigurationAdmin.class ) //
-        .setInstanceBound( true ) //
-        .setRequired( true ) ) //
-        .addStateListener( new ComponentStateAdapter()
-        {
-          @Override
-          public void started( final Component aComponent )
-          {
-            if ( dialog.showDialog() )
-            {
-              // Update the default settings (if needed)...
-              updateDefaultSettings();
-
-              // Ensure all UI-related changes are immediately visible...
-              repaintMainFrame();
-            }
-
-            // All changes are persisted automatically...
-            dm.remove( comp );
-          }
-        } );
-
-    dm.add( comp );
+//    final PreferencesDialog dialog = new PreferencesDialog( aParent, this.colorSchemeManager );
+//
+//    final Bundle thisBundle = getBundle();
+//    final DependencyManager dm = new DependencyManager( thisBundle.getBundleContext() );
+//    final Component comp = dm.createComponent();
+//
+//    comp.setImplementation( dialog ).add( dm.createServiceDependency() //
+//        .setService( ConfigurationAdmin.class ) //
+//        .setInstanceBound( true ) //
+//        .setRequired( true ) ) //
+//        .addStateListener( new ComponentStateAdapter()
+//        {
+//          @Override
+//          public void started( final Component aComponent )
+//          {
+//            if ( dialog.showDialog() )
+//            {
+//              // Update the default settings (if needed)...
+//              updateDefaultSettings();
+//
+//              // Ensure all UI-related changes are immediately visible...
+//              repaintMainFrame();
+//            }
+//
+//            // All changes are persisted automatically...
+//            dm.remove( comp );
+//          }
+//        } );
+//
+//    dm.add( comp );
   }
 
   /**

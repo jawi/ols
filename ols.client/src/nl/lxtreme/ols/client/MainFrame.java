@@ -34,7 +34,6 @@ import javax.swing.*;
 import javax.swing.event.*;
 import javax.swing.plaf.*;
 
-import nl.lxtreme.ols.client.about.*;
 import nl.lxtreme.ols.client.action.*;
 import nl.lxtreme.ols.client.actionmanager.*;
 import nl.lxtreme.ols.client.project.*;
@@ -1063,9 +1062,9 @@ public final class MainFrame extends DefaultDockableHolder implements Closeable,
    */
   public void showAboutBox()
   {
-    String version = this.controller.getVersion();
-    AboutBox aboutDialog = new AboutBox( ClientConstants.SHORT_NAME, version );
-    aboutDialog.showDialog();
+//    String version = this.controller.getVersion();
+//    AboutBox aboutDialog = new AboutBox( ClientConstants.SHORT_NAME, version );
+//    aboutDialog.showDialog();
   }
 
   /**

@@ -40,7 +40,7 @@ import nl.lxtreme.ols.util.swing.*;
 /**
  * Represents a component for the labels of each waveform.
  */
-public class WaveformLabelComponent extends JComponent
+class WaveformLabelComponent extends JComponent
 {
   // CONSTANTS
 

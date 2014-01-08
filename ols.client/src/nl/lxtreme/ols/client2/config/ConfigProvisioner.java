@@ -18,7 +18,7 @@
  * Copyright (C) 2006-2010 Michael Poppitz, www.sump.org
  * Copyright (C) 2010-2013 J.W. Janssen, www.lxtreme.nl
  */
-package nl.lxtreme.ols.client.provision;
+package nl.lxtreme.ols.client2.config;
 
 
 import java.io.*;
@@ -32,7 +32,8 @@ import org.osgi.service.log.*;
 
 
 /**
- * 
+ * Provides a configuration provisioning service that bootstraps the OLS client
+ * with the initial set of configurations.
  */
 public class ConfigProvisioner
 {
@@ -71,9 +72,9 @@ public class ConfigProvisioner
     while ( entries.hasMoreElements() )
     {
       URL entry = ( URL )entries.nextElement();
-      
+
       String name = entry.getFile();
-      name = name.substring( 11 ); // strip off the '/resources/' 
+      name = name.substring( 11 ); // strip off the '/resources/'
 
       this.logService.log( LogService.LOG_DEBUG, "Found: " + name + "..." );
 

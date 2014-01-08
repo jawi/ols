@@ -32,6 +32,7 @@ import nl.lxtreme.ols.client2.api.*;
 import nl.lxtreme.ols.client2.colorscheme.*;
 import nl.lxtreme.ols.client2.menu.*;
 import nl.lxtreme.ols.client2.platform.*;
+import nl.lxtreme.ols.client2.prefs.*;
 import nl.lxtreme.ols.client2.project.*;
 import nl.lxtreme.ols.client2.session.*;
 import nl.lxtreme.ols.client2.usersettings.*;
@@ -172,6 +173,7 @@ public class Activator extends DependencyActivatorBase
     createProjectManager( aManager );
     createSessionProvider( aManager );
     createSessionViewManager( aManager );
+    createPreferencesManager( aManager );
 
     final AtomicReference<Client> clientRef = new AtomicReference<Client>();
     // Ensure that the client itself is created on the EDT...
@@ -208,31 +210,6 @@ public class Activator extends DependencyActivatorBase
         .add( createServiceDependency() //
             .setService( UserSettingProvider.class ) //
             .setRequired( true ) ) //
-        );
-  }
-
-  void createSessionProvider( DependencyManager aManager )
-  {
-    aManager.add( createComponent().setInterface( //
-        new String[] { SessionProvider.class.getName(), AcquisitionDataListener.class.getName() }, null ) //
-        .setImplementation( SessionProviderImpl.class ) //
-        .add( createServiceDependency() //
-            .setService( LogService.class ) //
-            .setRequired( false ) ) //
-        );
-  }
-
-  void createSessionViewManager( DependencyManager aManager )
-  {
-    aManager.add( createComponent() //
-        .setImplementation( SessionViewManager.class ) //
-        .add( createServiceDependency() //
-            .setService( Session.class ) //
-            .setCallbacks( "addSession", "removeSession" ) //
-            .setRequired( false ) ) //
-        .add( createServiceDependency() //
-            .setService( LogService.class ) //
-            .setRequired( false ) ) //
         );
   }
 
@@ -308,6 +285,20 @@ public class Activator extends DependencyActivatorBase
         );
   }
 
+  private void createPreferencesManager( DependencyManager aManager )
+  {
+    Properties props = new Properties();
+    props.put( Constants.SERVICE_PID, PreferencesManager.PID );
+
+    aManager.add( createComponent().setInterface( //
+        ManagedService.class.getName(), props ) //
+        .setImplementation( PreferencesManager.class ) //
+        .add( createServiceDependency() //
+            .setService( LogService.class ) //
+            .setRequired( false ) ) //
+        );
+  }
+
   private void createProjectManager( DependencyManager aManager )
   {
     aManager.add( createComponent() //
@@ -316,6 +307,31 @@ public class Activator extends DependencyActivatorBase
         .add( createServiceDependency() //
             .setService( SessionProvider.class ) //
             .setRequired( true ) ) //
+        .add( createServiceDependency() //
+            .setService( LogService.class ) //
+            .setRequired( false ) ) //
+        );
+  }
+
+  private void createSessionProvider( DependencyManager aManager )
+  {
+    aManager.add( createComponent().setInterface( //
+        new String[] { SessionProvider.class.getName(), AcquisitionDataListener.class.getName() }, null ) //
+        .setImplementation( SessionProviderImpl.class ) //
+        .add( createServiceDependency() //
+            .setService( LogService.class ) //
+            .setRequired( false ) ) //
+        );
+  }
+
+  private void createSessionViewManager( DependencyManager aManager )
+  {
+    aManager.add( createComponent() //
+        .setImplementation( SessionViewManager.class ) //
+        .add( createServiceDependency() //
+            .setService( Session.class ) //
+            .setCallbacks( "addSession", "removeSession" ) //
+            .setRequired( false ) ) //
         .add( createServiceDependency() //
             .setService( LogService.class ) //
             .setRequired( false ) ) //

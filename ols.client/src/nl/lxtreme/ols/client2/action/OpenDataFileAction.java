@@ -37,7 +37,7 @@ import nl.lxtreme.ols.util.swing.component.*;
 /**
  * Provides an "open data file" action.
  */
-public class OpenDataFileAction extends AbstractManagedAction
+public class OpenDataFileAction extends AbstractFileAction
 {
   // CONSTANTS
 

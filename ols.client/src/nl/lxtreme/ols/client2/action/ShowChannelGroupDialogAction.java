@@ -23,13 +23,11 @@ package nl.lxtreme.ols.client2.action;
 
 import java.awt.event.*;
 
-import nl.lxtreme.ols.client.signaldisplay.signalelement.*;
 import nl.lxtreme.ols.client2.*;
 
 
 /**
- * Provides an Swing-action for opening the {@link SignalElementManagerView}
- * dialog.
+ * Provides an Swing-action for opening the channel group editor dialog.
  */
 public class ShowChannelGroupDialogAction extends AbstractManagedAction
 {

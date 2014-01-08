@@ -16,9 +16,9 @@
  * 51 Franklin St, Fifth Floor, Boston, MA 02110, USA
  *
  * Copyright (C) 2006-2010 Michael Poppitz, www.sump.org
- * Copyright (C) 2010-2012 J.W. Janssen, www.lxtreme.nl
+ * Copyright (C) 2010-2014 J.W. Janssen, www.lxtreme.nl
  */
-package nl.lxtreme.ols.client.osgi;
+package nl.lxtreme.ols.client2.prefs;
 
 
 import java.awt.*;
@@ -31,13 +31,13 @@ import javax.swing.*;
 import nl.lxtreme.ols.util.swing.*;
 
 import org.osgi.service.cm.*;
+import org.osgi.service.log.*;
 
 
 /**
- * Provides a managed service that is used to initialize the {@link UIManager}
- * with its default values for the OLS client.
+ * Provides a {@link ManagedService} that takes care of the UI-preferences.
  */
-public class UIManagerConfigurator implements ManagedService
+public class PreferencesManager implements ManagedService
 {
   // CONSTANTS
 
@@ -50,6 +50,14 @@ public class UIManagerConfigurator implements ManagedService
   private static final String ENUM_SUFFIX = ".enum";
   private static final String BOOLEAN_SUFFIX = ".boolean";
 
+  private static final Pattern FONT_PATTERN = Pattern
+      .compile( "\\s*(%\\{[^}]+\\}|[\\s]+)\\s*(?i)(bold|italic|plain)?\\s*([^\\s]+)?\\s*" );
+
+  // VARIABLES
+
+  // Injected by Felix DM...
+  private volatile LogService log;
+
   // METHODS
 
   /**
@@ -57,7 +65,7 @@ public class UIManagerConfigurator implements ManagedService
    */
   @Override
   @SuppressWarnings( "rawtypes" )
-  public void updated( final Dictionary aProperties ) throws ConfigurationException
+  public void updated( Dictionary aProperties ) throws ConfigurationException
   {
     // Fall back to the defaults by removing all keys from UIManager...
     removeOlsSpecificKeys();
@@ -120,37 +128,13 @@ public class UIManagerConfigurator implements ManagedService
    */
   private void applyOlsSpecificKeys( final Dictionary<?, ?> aProperties ) throws ConfigurationException
   {
-    final Properties config = new Properties();
+    this.log.log( LogService.LOG_DEBUG, "Parsing OLS-specific properties..." );
 
-    final Enumeration<?> keys = aProperties.keys();
-    while ( keys.hasMoreElements() )
-    {
-      String key = ( String )keys.nextElement();
-      if ( !key.startsWith( PREFIX ) )
-      {
-        continue;
-      }
+    UIDefaults defaults = UIManager.getDefaults();
 
-      try
-      {
-        Object value = parseAsValue( aProperties, key );
-        if ( value != null )
-        {
-          config.put( key, value );
-        }
-      }
-      catch ( Exception exception )
-      {
-        System.err.println( "Configuration problem for '" + key + "' (value = '" + aProperties.get( key ) + "')!" );
-        exception.printStackTrace();
-        throw new ConfigurationException( key, "Unable to parse value!", exception );
-      }
-    }
+    this.log.log( LogService.LOG_DEBUG, "Applying OLS-specific properties..." );
 
-    // Replace all placeholders with real values...
-    replacePlaceholders( config );
-
-    final UIDefaults defaults = UIManager.getDefaults();
+    Properties config = parseValues( aProperties );
 
     // Write all values to the UIManager...
     for ( Map.Entry<Object, Object> entry : config.entrySet() )
@@ -163,11 +147,49 @@ public class UIManagerConfigurator implements ManagedService
   }
 
   /**
+   * @param value
+   * @return
+   */
+  private Font parseFontValue( String value )
+  {
+    Matcher m = FONT_PATTERN.matcher( value );
+    if ( m.matches() )
+    {
+      String name = m.group( 1 );
+      String variant = m.group( 2 );
+      String size = m.group( 3 );
+
+      Font result;
+      if ( name.startsWith( "%" ) )
+      {
+        result = UIManager.getFont( name.substring( 2, name.length() - 1 ) );
+      }
+      else
+      {
+        result = Font.decode( name );
+      }
+
+      if ( size != null )
+      {
+        result = applyFontSize( result, size );
+      }
+
+      if ( variant != null )
+      {
+        result = applyFontVariant( result, variant );
+      }
+
+      return result;
+    }
+    return null;
+  }
+
+  /**
    * @param aKey
    * @param aObject
    * @return
    */
-  private Object parseAsValue( final Dictionary<?, ?> aConfig, final String aKey )
+  private Object parseValue( Dictionary<?, ?> aConfig, String aKey )
   {
     String value = ( ( String )aConfig.get( aKey ) ).trim();
     if ( "".equals( value ) )
@@ -178,7 +200,7 @@ public class UIManagerConfigurator implements ManagedService
     if ( value.startsWith( "${" ) && value.endsWith( "}" ) )
     {
       String lookup = value.substring( 2, value.length() - 1 );
-      return parseAsValue( aConfig, lookup );
+      return parseValue( aConfig, lookup );
     }
 
     if ( aKey.endsWith( BOOLEAN_SUFFIX ) )
@@ -214,53 +236,59 @@ public class UIManagerConfigurator implements ManagedService
   }
 
   /**
-   * @param value
-   * @return
+   * Parses a given dictionary of (String) values and returns a
+   * {@link Properties} object with concrete values.
+   * 
+   * @param aDictionary
+   *          the dictionary to parse, cannot be <code>null</code>.
+   * @return the parsed properties, never <code>null</code>.
+   * @throws ConfigurationException
+   *           in case an invalid value was found.
    */
-  private Object parseFontValue( final String value )
+  private Properties parseValues( Dictionary<?, ?> aDictionary ) throws ConfigurationException
   {
-    String regex = "\\s*(%\\{[^}]+\\}|[\\s]+)\\s*(?i)(bold|italic|plain)?\\s*([^\\s]+)?\\s*";
-    Pattern p = Pattern.compile( regex );
-    Matcher m = p.matcher( value );
-    if ( m.matches() )
+    Properties config = new Properties();
+
+    Enumeration<?> keys = aDictionary.keys();
+    while ( keys.hasMoreElements() )
     {
-      String name = m.group( 1 );
-      String variant = m.group( 2 );
-      String size = m.group( 3 );
-
-      Font result;
-      if ( name.startsWith( "%" ) )
+      String key = ( String )keys.nextElement();
+      if ( !key.startsWith( PREFIX ) )
       {
-        result = UIManager.getFont( name.substring( 2, name.length() - 1 ) );
-      }
-      else
-      {
-        result = Font.decode( name );
+        continue;
       }
 
-      if ( size != null )
+      try
       {
-        result = applyFontSize( result, size );
+        Object value = parseValue( aDictionary, key );
+        if ( value != null )
+        {
+          config.put( key, value );
+        }
       }
-
-      if ( variant != null )
+      catch ( Exception exception )
       {
-        result = applyFontVariant( result, variant );
+        this.log.log( LogService.LOG_ERROR,
+            "Configuration problem for '" + key + "' (value = '" + aDictionary.get( key ) + "')!", exception );
+        throw new ConfigurationException( key, "Unable to parse value!", exception );
       }
-
-      return result;
     }
-    return null;
+
+    // Replace all placeholders with real values...
+    replacePlaceholders( config );
+    return config;
   }
 
   /**
-   * 
+   * Removes all OLS-specific properties from the {@link UIManager}.
    */
   private void removeOlsSpecificKeys()
   {
-    final UIDefaults defaults = UIManager.getDefaults();
+    UIDefaults defaults = UIManager.getDefaults();
 
-    final Enumeration<Object> keys = defaults.keys();
+    this.log.log( LogService.LOG_DEBUG, "Removing OLS-specific properties..." );
+
+    Enumeration<Object> keys = defaults.keys();
     while ( keys.hasMoreElements() )
     {
       Object key = keys.nextElement();

@@ -34,6 +34,16 @@ import nl.lxtreme.ols.common.acquisition.Cursor;
  */
 public final class UIMgr
 {
+  // INNER TYPES
+
+  /**
+   * Denotes the alignment of a waveform, or annotation.
+   */
+  public static enum Alignment
+  {
+    TOP, CENTER, BOTTOM;
+  }
+
   // CONSTANTS
 
   /** The space between two signal elements, in pixels. */
