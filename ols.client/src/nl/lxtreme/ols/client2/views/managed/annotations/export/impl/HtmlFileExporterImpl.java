@@ -18,13 +18,13 @@
  * 
  * Copyright (C) 2010-2011 - J.W. Janssen, http://www.lxtreme.nl
  */
-package nl.lxtreme.ols.client.annotation.export.impl;
+package nl.lxtreme.ols.client2.views.managed.annotations.export.impl;
 
 
 import java.io.*;
 
-import nl.lxtreme.ols.client.annotation.export.ExportUtils.HtmlExporter;
-import nl.lxtreme.ols.client.annotation.export.ExportUtils.HtmlFileExporter;
+import nl.lxtreme.ols.client2.views.managed.annotations.export.ExportUtils.HtmlExporter;
+import nl.lxtreme.ols.client2.views.managed.annotations.export.ExportUtils.HtmlFileExporter;
 
 
 /**

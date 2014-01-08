@@ -58,7 +58,7 @@ public class InvokeToolAction extends AbstractManagedAction
   public InvokeToolAction( Tool<?> aTool )
   {
     super( getID( aTool ) );
-    
+
     this.tool = aTool;
 
     String toolName = aTool.getName();
@@ -121,16 +121,9 @@ public class InvokeToolAction extends AbstractManagedAction
       LOG.log( Level.INFO, "Invoking tool: \"{0}\" ...", this.tool.getName() );
     }
 
-    try
-    {
-      final ToolContext context = client.createToolContext();
+    final ToolContext context = client.createToolContext();
 
-      this.tool.invoke( client, context );
-    }
-    finally
-    {
-      client.updateActions();
-    }
+    this.tool.invoke( client, context );
   }
 
   /**

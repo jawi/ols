@@ -25,6 +25,8 @@ import java.awt.*;
 
 import javax.swing.*;
 
+import nl.lxtreme.ols.client2.Client.JumpDirection;
+import nl.lxtreme.ols.client2.Client.JumpType;
 import nl.lxtreme.ols.client2.views.state.*;
 import nl.lxtreme.ols.client2.views.waveform.*;
 import nl.lxtreme.ols.common.*;
@@ -63,6 +65,21 @@ public abstract class BaseView extends JComponent
   }
 
   // METHODS
+
+  /**
+   * Returns the interval displayed by the current view.
+   * 
+   * @return a interval.
+   */
+  public abstract double getDisplayedInterval();
+
+  /**
+   * @return a zoom factor of 1.0 (always).
+   */
+  public double getZoomFactor()
+  {
+    return 1.0;
+  }
 
   /**
    * Initializes this view.
@@ -106,6 +123,51 @@ public abstract class BaseView extends JComponent
    */
   public void scrollToTimestamp( long timestamp )
   {
-    // TODO
+    // Nop
+  }
+
+  /**
+   * Performs a "smart" jump in a given direction.
+   * 
+   * @param aType
+   *          what kind of jump to perform;
+   * @param aDirection
+   *          in what direction to jump.
+   */
+  public void smartJump( JumpType aType, JumpDirection aDirection )
+  {
+    // Nop
+  }
+
+  /**
+   * Zooms the current view in such way that all data is visible.
+   */
+  public void zoomAll()
+  {
+    // Nop
+  }
+
+  /**
+   * Zooms in.
+   */
+  public void zoomIn()
+  {
+    // Nop
+  }
+
+  /**
+   * Zooms to a factor of 1.0.
+   */
+  public void zoomOriginal()
+  {
+    // Nop
+  }
+
+  /**
+   * Zooms out.
+   */
+  public void zoomOut()
+  {
+    // Nop
   }
 }

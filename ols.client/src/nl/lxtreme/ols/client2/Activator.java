@@ -48,6 +48,7 @@ import org.apache.felix.dm.*;
 import org.apache.felix.dm.Component;
 import org.osgi.framework.*;
 import org.osgi.service.cm.*;
+import org.osgi.service.event.*;
 import org.osgi.service.log.*;
 
 import com.jidesoft.utils.*;
@@ -172,7 +173,7 @@ public class Activator extends DependencyActivatorBase
     createUserSettingsProvider( aManager );
     createProjectManager( aManager );
     createSessionProvider( aManager );
-    createSessionViewManager( aManager );
+    createViewManager( aManager );
     createPreferencesManager( aManager );
 
     final AtomicReference<Client> clientRef = new AtomicReference<Client>();
@@ -187,14 +188,24 @@ public class Activator extends DependencyActivatorBase
     } );
 
     // Client...
-    String[] serviceNames = { AcquisitionStatusListener.class.getName(), AcquisitionProgressListener.class.getName() };
+    Properties props = new Properties();
+    props.put( EventConstants.EVENT_TOPIC, "nl/lxtreme/ols/*" );
+
+    String[] serviceNames = { AcquisitionStatusListener.class.getName(), AcquisitionProgressListener.class.getName(),
+        EventHandler.class.getName() };
     aManager.add( createComponent() //
-        .setInterface( serviceNames, null ) //
+        .setInterface( serviceNames, props ) //
         .setImplementation( clientRef.get() ) //
         .add( createServiceDependency() //
             .setService( ViewController.class ) //
             .setCallbacks( "addViewController", "removeViewController" ) //
             .setRequired( false ) ) //
+        .add( createServiceDependency() //
+            .setService( EventAdmin.class ) //
+            .setRequired( true ) ) //
+        .add( createServiceDependency() //
+            .setService( ViewManager.class ) //
+            .setRequired( true ) ) //
         .add( createServiceDependency() //
             .setService( DataAcquisitionService.class ) //
             .setRequired( true ) ) //
@@ -324,25 +335,26 @@ public class Activator extends DependencyActivatorBase
         );
   }
 
-  private void createSessionViewManager( DependencyManager aManager )
+  private void createUserSettingsProvider( DependencyManager aManager )
   {
     aManager.add( createComponent() //
-        .setImplementation( SessionViewManager.class ) //
-        .add( createServiceDependency() //
-            .setService( Session.class ) //
-            .setCallbacks( "addSession", "removeSession" ) //
-            .setRequired( false ) ) //
+        .setInterface( UserSettingProvider.class.getName(), null ) //
+        .setImplementation( UserSettingsProviderImpl.class ) //
         .add( createServiceDependency() //
             .setService( LogService.class ) //
             .setRequired( false ) ) //
         );
   }
 
-  private void createUserSettingsProvider( DependencyManager aManager )
+  private void createViewManager( DependencyManager aManager )
   {
     aManager.add( createComponent() //
-        .setInterface( UserSettingProvider.class.getName(), null ) //
-        .setImplementation( UserSettingsProviderImpl.class ) //
+        .setInterface( ViewManager.class.getName(), null ) //
+        .setImplementation( ViewManagerImpl.class ) //
+        .add( createServiceDependency() //
+            .setService( Session.class ) //
+            .setCallbacks( "addSession", "removeSession" ) //
+            .setRequired( false ) ) //
         .add( createServiceDependency() //
             .setService( LogService.class ) //
             .setRequired( false ) ) //

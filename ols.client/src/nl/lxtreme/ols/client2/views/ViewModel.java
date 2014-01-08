@@ -137,7 +137,7 @@ public class ViewModel
    */
   public void initialize()
   {
-    // TODO
+    // Nop
   }
 
   /**
@@ -165,37 +165,5 @@ public class ViewModel
       old = this.selectedCursorRef.get();
     }
     while ( !this.selectedCursorRef.compareAndSet( old, aCursor ) );
-  }
-
-  /**
-   * Zooms the current view in such way that all data is visible.
-   */
-  public void zoomAll()
-  {
-    // Nop
-  }
-
-  /**
-   * Zooms in.
-   */
-  public void zoomIn()
-  {
-    // Nop
-  }
-
-  /**
-   * Zooms to a factor of 1.0.
-   */
-  public void zoomOriginal()
-  {
-    // Nop
-  }
-
-  /**
-   * Zooms out.
-   */
-  public void zoomOut()
-  {
-    // Nop
   }
 }

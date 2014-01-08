@@ -21,6 +21,8 @@
 package nl.lxtreme.ols.client2.views;
 
 
+import nl.lxtreme.ols.client2.Client.JumpDirection;
+import nl.lxtreme.ols.client2.Client.JumpType;
 import nl.lxtreme.ols.client2.actionmanager.*;
 import nl.lxtreme.ols.client2.views.state.*;
 import nl.lxtreme.ols.client2.views.waveform.*;
@@ -133,11 +135,24 @@ public class ViewController
   }
 
   /**
+   * Performs a "smart" jump in a given direction.
+   * 
+   * @param aType
+   *          what kind of jump to perform;
+   * @param aDirection
+   *          in what direction to jump.
+   */
+  public void smartJump( JumpType aType, JumpDirection aDirection )
+  {
+    this.view.smartJump( aType, aDirection );
+  }
+
+  /**
    * Zooms the current view in such way that all data is visible.
    */
   public void zoomAll()
   {
-    this.model.zoomAll();
+    this.view.zoomAll();
   }
 
   /**
@@ -145,7 +160,7 @@ public class ViewController
    */
   public void zoomIn()
   {
-    this.model.zoomIn();
+    this.view.zoomIn();
   }
 
   /**
@@ -153,7 +168,7 @@ public class ViewController
    */
   public void zoomOriginal()
   {
-    this.model.zoomOriginal();
+    this.view.zoomOriginal();
   }
 
   /**
@@ -161,7 +176,7 @@ public class ViewController
    */
   public void zoomOut()
   {
-    this.model.zoomOut();
+    this.view.zoomOut();
   }
 
   /**

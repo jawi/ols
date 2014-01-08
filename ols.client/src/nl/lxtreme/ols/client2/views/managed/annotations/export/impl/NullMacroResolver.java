@@ -18,11 +18,11 @@
  * 
  * Copyright (C) 2010-2011 - J.W. Janssen, http://www.lxtreme.nl
  */
-package nl.lxtreme.ols.client.annotation.export.impl;
+package nl.lxtreme.ols.client2.views.managed.annotations.export.impl;
 
 
-import nl.lxtreme.ols.client.annotation.export.ExportUtils.HtmlExporter.Element;
-import nl.lxtreme.ols.client.annotation.export.ExportUtils.HtmlExporter.MacroResolver;
+import nl.lxtreme.ols.client2.views.managed.annotations.export.ExportUtils.HtmlExporter.Element;
+import nl.lxtreme.ols.client2.views.managed.annotations.export.ExportUtils.HtmlExporter.MacroResolver;
 
 
 /**

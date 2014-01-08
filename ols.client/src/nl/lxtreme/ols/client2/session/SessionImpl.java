@@ -21,12 +21,18 @@
 package nl.lxtreme.ols.client2.session;
 
 
+import static nl.lxtreme.ols.client2.ClientConstants.*;
+
 import java.util.*;
 import java.util.concurrent.*;
 
-import nl.lxtreme.ols.common.session.*;
 import nl.lxtreme.ols.common.acquisition.*;
 import nl.lxtreme.ols.common.annotation.*;
+import nl.lxtreme.ols.common.session.*;
+
+import org.apache.felix.dm.*;
+import org.osgi.service.event.*;
+import org.osgi.service.log.*;
 
 
 /**
@@ -40,6 +46,12 @@ public class SessionImpl implements Session, AnnotationData
   private final SessionProviderImpl provider;
   private final AcquisitionData data;
   private final ConcurrentMap<Integer, SortedSet<Annotation>> annotations;
+
+  // Injected by Felix DM...
+  private volatile EventAdmin eventAdmin;
+  private volatile LogService logService;
+  // Locally managed...
+  private volatile String name;
 
   // CONSTRUCTORS
 
@@ -72,6 +84,8 @@ public class SessionImpl implements Session, AnnotationData
     }
 
     annotations.add( aAnnotation );
+
+    postEvent( TOPIC_ANNOTATIONS.concat( "/ADD" ), "annotation", aAnnotation );
   }
 
   /**
@@ -81,6 +95,8 @@ public class SessionImpl implements Session, AnnotationData
   public void clear( int aChannelIdx )
   {
     this.annotations.remove( Integer.valueOf( aChannelIdx ) );
+
+    postEvent( TOPIC_ANNOTATIONS.concat( "/CLEAR" ), "channelIdx", aChannelIdx );
   }
 
   /**
@@ -90,6 +106,8 @@ public class SessionImpl implements Session, AnnotationData
   public void clearAll()
   {
     this.annotations.clear();
+
+    postEvent( TOPIC_ANNOTATIONS.concat( "/CLEAR" ) );
   }
 
   /**
@@ -98,7 +116,11 @@ public class SessionImpl implements Session, AnnotationData
   @Override
   public void close()
   {
+    this.logService.log( LogService.LOG_INFO, "Closing session #" + getId() );
+
     this.provider.removeSession( this );
+
+    postEvent( TOPIC_SESSIONS.concat( "/CLOSE" ), "session", this );
   }
 
   /**
@@ -188,6 +210,15 @@ public class SessionImpl implements Session, AnnotationData
    * {@inheritDoc}
    */
   @Override
+  public String getName()
+  {
+    return this.name;
+  }
+
+  /**
+   * {@inheritDoc}
+   */
+  @Override
   public boolean hasAnnotations( Class<? extends Annotation> aType, int aChannelIdx )
   {
     SortedSet<Annotation> result = this.annotations.get( Integer.valueOf( aChannelIdx ) );
@@ -202,5 +233,44 @@ public class SessionImpl implements Session, AnnotationData
       }
     }
     return false;
+  }
+
+  /**
+   * {@inheritDoc}
+   */
+  @Override
+  public void setName( String aName )
+  {
+    this.name = aName;
+
+    postEvent( TOPIC_SESSIONS.concat( "/CHANGE" ), "session", this );
+  }
+
+  /**
+   * Called by Felix DM upon starting of this component.
+   * 
+   * @param aComponent
+   *          the component that is started, never <code>null</code>.
+   */
+  protected void start( Component aComponent )
+  {
+    this.logService.log( LogService.LOG_INFO, "Created session #" + getId() );
+
+    postEvent( TOPIC_SESSIONS.concat( "/CREATE" ), "session", this );
+  }
+
+  /**
+   * @param aTopic
+   * @param aProperties
+   */
+  private void postEvent( String aTopic, Object... aProperties )
+  {
+    Map<Object, Object> props = new HashMap<Object, Object>();
+    for ( int i = 0; i < aProperties.length; i += 2 )
+    {
+      props.put( aProperties[i], aProperties[i + 1] );
+    }
+
+    this.eventAdmin.postEvent( new Event( aTopic, props ) );
   }
 }

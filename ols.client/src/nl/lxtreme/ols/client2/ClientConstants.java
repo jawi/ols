@@ -36,6 +36,19 @@ public interface ClientConstants
    * Long name of the client.
    */
   String FULL_NAME = SHORT_NAME.concat( " - Logic Analyzer Client" );
+  
+  /**
+   * EventAdmin topic used to post events about changes in the client state.
+   */
+  String TOPIC_CLIENT_STATE = "nl/lxtreme/ols/client/state";
+  /**
+   * EventAdmin topic used to post events about added or removed annotations.
+   */
+  String TOPIC_ANNOTATIONS = "nl/lxtreme/ols/data/annotation";
+  /**
+   * EventAdmin topic used to post events about added, changed, or removed sessions.
+   */
+  String TOPIC_SESSIONS = "nl/lxtreme/ols/data/session";
 
   String CAPTURE_MENU = "captureMenu";
   String CURSORS_MENU = "cursorsMenu";

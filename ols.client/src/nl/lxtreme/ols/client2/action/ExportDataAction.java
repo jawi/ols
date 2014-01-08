@@ -37,7 +37,7 @@ import nl.lxtreme.ols.util.swing.component.*;
 /**
  * Provides a export to file functionality.
  */
-public class ExportDataAction extends AbstractFileAction
+public class ExportDataAction extends AbstractManagedAction
 {
   // CONSTANTS
 
@@ -113,7 +113,7 @@ public class ExportDataAction extends AbstractFileAction
       return;
     }
 
-    File actualFile = setFileExtension( exportFileName, preferredExtension );
+    File actualFile = SwingComponentUtils.setFileExtension( exportFileName, preferredExtension );
 
     if ( LOG.isLoggable( Level.INFO ) )
     {
@@ -152,7 +152,7 @@ public class ExportDataAction extends AbstractFileAction
         // Ignore...
       }
 
-      client.updateActions();
+      client.updateManagedState();
     }
   }
 

@@ -18,15 +18,15 @@
  * Copyright (C) 2006-2010 Michael Poppitz, www.sump.org
  * Copyright (C) 2010-2013 J.W. Janssen, www.lxtreme.nl
  */
-package nl.lxtreme.ols.client.annotation.export.impl;
+package nl.lxtreme.ols.client2.views.managed.annotations.export.impl;
 
 
 import java.io.*;
 import java.util.*;
 
-import nl.lxtreme.ols.client.annotation.export.ExportUtils.CsvBuilder;
-import nl.lxtreme.ols.client.annotation.export.ExportUtils.CsvRowBuilder;
-import nl.lxtreme.ols.client.annotation.export.ExportUtils.DataConverter;
+import nl.lxtreme.ols.client2.views.managed.annotations.export.ExportUtils.CsvBuilder;
+import nl.lxtreme.ols.client2.views.managed.annotations.export.ExportUtils.CsvRowBuilder;
+import nl.lxtreme.ols.client2.views.managed.annotations.export.ExportUtils.DataConverter;
 
 
 /**

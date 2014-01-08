@@ -32,7 +32,6 @@ import javax.swing.*;
 import javax.swing.filechooser.*;
 
 import nl.lxtreme.ols.client.actionmanager.*;
-import nl.lxtreme.ols.client.annotation.export.*;
 import nl.lxtreme.ols.util.swing.*;
 import nl.lxtreme.ols.util.swing.component.*;
 
@@ -94,7 +93,7 @@ public class ExportAnnotationsAction extends AbstractAction implements IManagedA
   {
     final Window owner = SwingComponentUtils.getOwningWindow( aEvent );
 
-    final String[] extensions = ExportUtils.getExportExtensions();
+    final String[] extensions = new String[0]; // XXX
     assert extensions != null;
 
     final String preferredExtension = ( extensions.length == 0 ) ? "" : extensions[0];

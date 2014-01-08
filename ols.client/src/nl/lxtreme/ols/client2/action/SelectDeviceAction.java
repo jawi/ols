@@ -106,7 +106,7 @@ public class SelectDeviceAction extends AbstractManagedAction
     }
     finally
     {
-      client.updateActions();
+      client.updateManagedState();
     }
   }
 

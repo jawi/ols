@@ -24,6 +24,8 @@ package nl.lxtreme.ols.client2.action;
 import java.awt.event.*;
 
 import nl.lxtreme.ols.client2.*;
+import nl.lxtreme.ols.client2.Client.JumpDirection;
+import nl.lxtreme.ols.client2.Client.JumpType;
 
 
 /**
@@ -33,32 +35,6 @@ import nl.lxtreme.ols.client2.*;
 public class SmartJumpAction extends AbstractManagedAction
 {
   // INNER TYPES
-
-  /**
-   * Denotes the direction in which a smart jump should be performed.
-   */
-  public static enum JumpDirection
-  {
-    LEFT, RIGHT;
-
-    public boolean isLeft()
-    {
-      return this == LEFT;
-    }
-
-    public boolean isRight()
-    {
-      return this == RIGHT;
-    }
-  }
-
-  /**
-   * Denotes the type of jump that should be performed.
-   */
-  public static enum JumpType
-  {
-    CURSOR, SIGNAL_EDGE, ANNOTATION;
-  }
 
   // CONSTANTS
 

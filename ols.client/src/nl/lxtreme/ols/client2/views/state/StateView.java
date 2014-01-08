@@ -291,6 +291,22 @@ public class StateView extends BaseView
     super( aController, aModel );
   }
 
+  // METHODS
+
+  /**
+   * {@inheritDoc}
+   */
+  @Override
+  public double getDisplayedInterval()
+  {
+    Rectangle visibleRect = this.table.getVisibleRect();
+
+    int startRow = this.table.rowAtPoint( new Point( 0, visibleRect.y ) );
+    int endRow = this.table.rowAtPoint( new Point( 0, visibleRect.y + visibleRect.height ) );
+
+    return endRow - startRow;
+  }
+
   @Override
   public void initialize()
   {

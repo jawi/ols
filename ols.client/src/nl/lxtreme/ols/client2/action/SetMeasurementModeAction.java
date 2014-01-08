@@ -67,10 +67,10 @@ public class SetMeasurementModeAction extends AbstractManagedAction
   @Override
   public void actionPerformed( final ActionEvent aEvent )
   {
-    JCheckBoxMenuItem menuItem = ( JCheckBoxMenuItem )aEvent.getSource();
+    AbstractButton source = ( AbstractButton )aEvent.getSource();
 
     Client client = getClient( aEvent );
-    client.setMeasurementMode( menuItem.isSelected() );
+    client.setMeasurementMode( source.isSelected() );
   }
 
   /**

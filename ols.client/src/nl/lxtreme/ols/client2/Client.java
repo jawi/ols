@@ -21,6 +21,8 @@
 package nl.lxtreme.ols.client2;
 
 
+import static nl.lxtreme.ols.client2.ClientConstants.*;
+
 import java.awt.*;
 import java.awt.event.*;
 import java.io.*;
@@ -29,12 +31,11 @@ import java.util.List;
 import java.util.concurrent.*;
 
 import javax.swing.*;
+import javax.swing.event.*;
 
 import nl.lxtreme.ols.acquisition.*;
 import nl.lxtreme.ols.client2.about.*;
 import nl.lxtreme.ols.client2.action.*;
-import nl.lxtreme.ols.client2.action.SmartJumpAction.JumpDirection;
-import nl.lxtreme.ols.client2.action.SmartJumpAction.JumpType;
 import nl.lxtreme.ols.client2.actionmanager.*;
 import nl.lxtreme.ols.client2.bundles.*;
 import nl.lxtreme.ols.client2.icons.*;
@@ -44,6 +45,12 @@ import nl.lxtreme.ols.client2.prefs.*;
 import nl.lxtreme.ols.client2.project.*;
 import nl.lxtreme.ols.client2.usersettings.*;
 import nl.lxtreme.ols.client2.views.*;
+import nl.lxtreme.ols.client2.views.managed.acquisitiondetails.*;
+import nl.lxtreme.ols.client2.views.managed.annotations.*;
+import nl.lxtreme.ols.client2.views.managed.cursors.*;
+import nl.lxtreme.ols.client2.views.managed.measurement.*;
+import nl.lxtreme.ols.client2.views.managed.outline.*;
+import nl.lxtreme.ols.client2.views.managed.pulsecount.*;
 import nl.lxtreme.ols.common.*;
 import nl.lxtreme.ols.common.acquisition.*;
 import nl.lxtreme.ols.common.acquisition.Cursor;
@@ -56,6 +63,8 @@ import nl.lxtreme.ols.util.swing.component.*;
 
 import org.apache.felix.dm.Component;
 import org.osgi.framework.*;
+import org.osgi.service.event.*;
+import org.osgi.service.event.Event;
 
 import com.jidesoft.docking.*;
 import com.jidesoft.docking.DockingManager.TabbedPaneCustomizer;
@@ -67,9 +76,35 @@ import com.jidesoft.swing.*;
  * Represents the main client.
  */
 public class Client extends DefaultDockableHolder implements ApplicationCallback, Closeable, AcquisitionStatusListener,
-    AcquisitionProgressListener
+    AcquisitionProgressListener, EventHandler
 {
   // INNER TYPES
+
+  /**
+   * Denotes the direction in which a smart jump should be performed.
+   */
+  public static enum JumpDirection
+  {
+    LEFT, RIGHT;
+
+    public boolean isLeft()
+    {
+      return this == LEFT;
+    }
+
+    public boolean isRight()
+    {
+      return this == RIGHT;
+    }
+  }
+
+  /**
+   * Denotes the type of jump that should be performed.
+   */
+  public static enum JumpType
+  {
+    CURSOR, SIGNAL_EDGE, ANNOTATION;
+  }
 
   /**
    * Provides an {@link Action} for closing a {@link JOptionPane}.
@@ -97,7 +132,19 @@ public class Client extends DefaultDockableHolder implements ApplicationCallback
     {
       final Integer percentage = aArgs.getLast();
       setProgress( percentage.intValue() );
-      updateActions();
+    }
+  }
+
+  /**
+   * A runnable implementation that accumulates several calls to avoid an
+   * avalanche of events on the EDT.
+   */
+  private class AnnotationUpdatingRunnable extends AccumulatingRunnable<Annotation>
+  {
+    @Override
+    protected void run( Deque<Annotation> aArgs )
+    {
+      repaintAnnotations( aArgs.toArray( new Annotation[aArgs.size()] ) );
     }
   }
 
@@ -111,15 +158,19 @@ public class Client extends DefaultDockableHolder implements ApplicationCallback
   // VARIABLES
 
   private final List<ManagedAction> registeredActions;
+  private final List<ManagedView> registeredViews;
   private final List<ViewController> viewControllers;
   private final ProgressUpdatingRunnable progressUpdater;
+  private final AnnotationUpdatingRunnable annotationUpdater;
 
   // Injected by Felix DM...
+  private volatile EventAdmin eventAdmin;
   private volatile ActionManager actionManager;
   private volatile MenuManager menuManager;
   private volatile DataAcquisitionService acquisitionService;
   private volatile UserSettingProvider userSettingProvider;
   private volatile ProjectManager projectManager;
+  private volatile ViewManager viewManager;
 
   // Locally managed...
   private volatile Bundle bundle;
@@ -144,9 +195,11 @@ public class Client extends DefaultDockableHolder implements ApplicationCallback
 
     this.bundle = FrameworkUtil.getBundle( getClass() );
 
-    this.registeredActions = new ArrayList<ManagedAction>();
+    this.registeredActions = new CopyOnWriteArrayList<ManagedAction>();
+    this.registeredViews = new CopyOnWriteArrayList<ManagedView>();
     this.viewControllers = new CopyOnWriteArrayList<ViewController>();
     this.progressUpdater = new ProgressUpdatingRunnable();
+    this.annotationUpdater = new AnnotationUpdatingRunnable();
 
     this.mode = 0;
   }
@@ -201,7 +254,7 @@ public class Client extends DefaultDockableHolder implements ApplicationCallback
     }
 
     setProgress( 100 );
-    updateActions();
+    updateManagedState();
     setProgress( 0 );
   }
 
@@ -222,7 +275,7 @@ public class Client extends DefaultDockableHolder implements ApplicationCallback
   {
     setStatus( "Acquisition started for %s", getSelectedDeviceName() );
     setProgress( 0 );
-    updateActions();
+    updateManagedState();
   }
 
   /**
@@ -328,7 +381,7 @@ public class Client extends DefaultDockableHolder implements ApplicationCallback
     {
       session.close();
     }
-    updateActions();
+    updateManagedState();
   }
 
   /**
@@ -405,6 +458,29 @@ public class Client extends DefaultDockableHolder implements ApplicationCallback
       return null;
     }
     return session.getAcquiredData();
+  }
+
+  /**
+   * @return the action manager, never <code>null</code>.
+   */
+  public ActionManager getActionManager()
+  {
+    return this.actionManager;
+  }
+
+  /**
+   * Returns all available channels for the current acquired data.
+   * 
+   * @return an array with all channels, never <code>null</code>.
+   */
+  public Channel[] getAllChannels()
+  {
+    AcquisitionData data = getAcquiredData();
+    if ( data == null )
+    {
+      return new Channel[0];
+    }
+    return data.getChannels();
   }
 
   /**
@@ -556,6 +632,33 @@ public class Client extends DefaultDockableHolder implements ApplicationCallback
    * {@inheritDoc}
    */
   @Override
+  public void handleEvent( Event aEvent )
+  {
+    String topic = aEvent.getTopic();
+    if ( topic.startsWith( TOPIC_SESSIONS ) )
+    {
+      // Session added, changed or removed...
+    }
+    else if ( topic.startsWith( TOPIC_ANNOTATIONS ) )
+    {
+      // Annotation added or removed...
+      Annotation annotation = ( Annotation )aEvent.getProperty( "annotation" );
+      if ( annotation != null )
+      {
+        this.annotationUpdater.add( annotation );
+      }
+      else if ( topic.endsWith( "/CLEAR" ) )
+      {
+        // TODO
+        repaint( 50L );
+      }
+    }
+  }
+
+  /**
+   * {@inheritDoc}
+   */
+  @Override
   public boolean handlePreferences()
   {
     showPreferencesDialog( this );
@@ -667,7 +770,7 @@ public class Client extends DefaultDockableHolder implements ApplicationCallback
     }
     finally
     {
-      updateActions();
+      updateManagedState();
     }
   }
 
@@ -687,7 +790,7 @@ public class Client extends DefaultDockableHolder implements ApplicationCallback
     }
     finally
     {
-      updateActions();
+      updateManagedState();
     }
   }
 
@@ -707,7 +810,7 @@ public class Client extends DefaultDockableHolder implements ApplicationCallback
     }
     finally
     {
-      updateActions();
+      updateManagedState();
     }
   }
 
@@ -725,7 +828,7 @@ public class Client extends DefaultDockableHolder implements ApplicationCallback
     }
     finally
     {
-      updateActions();
+      updateManagedState();
     }
   }
 
@@ -787,7 +890,7 @@ public class Client extends DefaultDockableHolder implements ApplicationCallback
     }
     finally
     {
-      updateActions();
+      updateManagedState();
     }
   }
 
@@ -807,7 +910,7 @@ public class Client extends DefaultDockableHolder implements ApplicationCallback
     }
     finally
     {
-      updateActions();
+      updateManagedState();
     }
   }
 
@@ -856,7 +959,8 @@ public class Client extends DefaultDockableHolder implements ApplicationCallback
       this.mode &= ~MODE_SNAP_CURSORS;
     }
 
-    updateActions();
+    postEvent( TOPIC_CLIENT_STATE.concat( "/MODE" ), "snapCursors", aEnabled );
+    updateManagedState();
   }
 
   /**
@@ -873,8 +977,9 @@ public class Client extends DefaultDockableHolder implements ApplicationCallback
     {
       data.setCursorsVisible( aCursorsVisible );
     }
-    
-    updateActions();
+
+    postEvent( TOPIC_CLIENT_STATE.concat( "/MODE" ), "cursorsVisible", aCursorsVisible );
+    updateManagedState();
     repaint();
   }
 
@@ -895,8 +1000,9 @@ public class Client extends DefaultDockableHolder implements ApplicationCallback
     {
       this.mode &= ~MODE_MEASUREMENT;
     }
-    
-    updateActions();
+
+    postEvent( TOPIC_CLIENT_STATE.concat( "/MODE" ), "measurementMode", aEnabled );
+    updateManagedState();
     repaint();
   }
 
@@ -993,13 +1099,17 @@ public class Client extends DefaultDockableHolder implements ApplicationCallback
    */
   public void smartJump( JumpType aType, JumpDirection aDirection )
   {
-    // TODO
+    ViewController viewCtrl = getCurrentViewController();
+    if ( viewCtrl != null )
+    {
+      viewCtrl.smartJump( aType, aDirection );
+    }
   }
 
   /**
-   * Updates the state of all actions.
+   * Updates the state of all managed actions and views.
    */
-  public void updateActions()
+  public void updateManagedState()
   {
     SwingComponentUtils.invokeOnEDT( new Runnable()
     {
@@ -1021,6 +1131,7 @@ public class Client extends DefaultDockableHolder implements ApplicationCallback
     {
       viewCtrl.zoomAll();
 
+      updateManagedState();
       repaint();
     }
   }
@@ -1035,6 +1146,7 @@ public class Client extends DefaultDockableHolder implements ApplicationCallback
     {
       viewCtrl.zoomIn();
 
+      updateManagedState();
       repaint();
     }
   }
@@ -1049,6 +1161,7 @@ public class Client extends DefaultDockableHolder implements ApplicationCallback
     {
       viewCtrl.zoomOriginal();
 
+      updateManagedState();
       repaint();
     }
   }
@@ -1063,6 +1176,7 @@ public class Client extends DefaultDockableHolder implements ApplicationCallback
     {
       viewCtrl.zoomOut();
 
+      updateManagedState();
       repaint();
     }
   }
@@ -1070,7 +1184,7 @@ public class Client extends DefaultDockableHolder implements ApplicationCallback
   /**
    * Register all client-specific actions.
    */
-  final void registerClientActions()
+  final void registerManagedActions()
   {
     // File menu
     registerAction( new NewProjectAction() );
@@ -1123,6 +1237,28 @@ public class Client extends DefaultDockableHolder implements ApplicationCallback
       // Help menu
       registerAction( new ShowAboutBoxAction() );
     }
+  }
+
+  /**
+   * Register all managed views.
+   */
+  final void registerManagedViews()
+  {
+    registerView( new CursorDetailsView() );
+    registerView( new AcquisitionDetailsView() );
+    registerView( new MeasurementView() );
+    registerView( new PulseCountView() );
+    registerView( new ChannelOutlineView() );
+    registerView( new AnnotationsView() );
+  }
+
+  /**
+   * @param aAnnotations
+   */
+  final void repaintAnnotations( Annotation... aAnnotations )
+  {
+    // TODO
+    repaint( 50L );
   }
 
   /**
@@ -1223,13 +1359,22 @@ public class Client extends DefaultDockableHolder implements ApplicationCallback
     } );
 
     this.viewsPane = new JTabbedPane();
+    this.viewsPane.addChangeListener( new ChangeListener()
+    {
+      @Override
+      public void stateChanged( ChangeEvent aEvent )
+      {
+        postEvent( TOPIC_CLIENT_STATE.concat( "/VIEW_CHANGED" ), "type", "viewChanged", "controller",
+            getCurrentViewController() );
+      }
+    } );
 
     Workspace workspace = dm.getWorkspace();
     workspace.setAcceptDockableFrame( false );
     workspace.add( this.viewsPane );
 
     Container contentPane = getContentPane();
-    // contentPane.add( tools, BorderLayout.PAGE_START );
+    // contentPane.add( tools, BorderLayout.PAGE_START ); XXX
     contentPane.add( dm.getMainContainer(), BorderLayout.CENTER );
     contentPane.add( this.status, BorderLayout.PAGE_END );
 
@@ -1241,7 +1386,7 @@ public class Client extends DefaultDockableHolder implements ApplicationCallback
 
     dm.activateWorkspace();
 
-    updateActions();
+    updateManagedState();
     // Lastly, make ourselve visible on screen...
     setVisible( true );
   }
@@ -1283,7 +1428,8 @@ public class Client extends DefaultDockableHolder implements ApplicationCallback
       @Override
       public void run()
       {
-        registerClientActions();
+        registerManagedActions();
+        registerManagedViews();
 
         startClient();
       }
@@ -1385,6 +1531,21 @@ public class Client extends DefaultDockableHolder implements ApplicationCallback
   }
 
   /**
+   * @param aTopic
+   * @param aProperties
+   */
+  private void postEvent( String aTopic, Object... aProperties )
+  {
+    Map<Object, Object> props = new HashMap<Object, Object>();
+    for ( int i = 0; i < aProperties.length; i += 2 )
+    {
+      props.put( aProperties[i], aProperties[i + 1] );
+    }
+
+    this.eventAdmin.postEvent( new Event( aTopic, props ) );
+  }
+
+  /**
    * Registers a new {@link ManagedAction}.
    * 
    * @param aAction
@@ -1393,6 +1554,24 @@ public class Client extends DefaultDockableHolder implements ApplicationCallback
   private void registerAction( ManagedAction aAction )
   {
     this.registeredActions.add( this.actionManager.add( aAction ) );
+  }
+
+  /**
+   * Registers a new {@link ManagedView}.
+   * 
+   * @param aView
+   *          the view to register, cannot be <code>null</code>.
+   */
+  private void registerView( ManagedView aView )
+  {
+    if ( this.registeredViews.add( this.viewManager.add( aView ) ) )
+    {
+      DockableFrame frame = new DockableFrame();
+
+      aView.initialize( frame );
+
+      getDockingManager().addFrame( frame );
+    }
   }
 
   /**

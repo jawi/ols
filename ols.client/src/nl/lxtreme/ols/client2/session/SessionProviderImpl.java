@@ -25,10 +25,12 @@ import java.util.*;
 import java.util.concurrent.*;
 import java.util.concurrent.atomic.*;
 
-import nl.lxtreme.ols.common.session.*;
 import nl.lxtreme.ols.common.acquisition.*;
+import nl.lxtreme.ols.common.session.*;
 
+import org.apache.felix.dm.*;
 import org.osgi.framework.*;
+import org.osgi.service.event.*;
 import org.osgi.service.log.*;
 
 
@@ -39,7 +41,7 @@ public class SessionProviderImpl implements SessionProvider, AcquisitionDataList
 {
   // VARIABLES
 
-  private final ConcurrentMap<Session, ServiceRegistration> sessions;
+  private final ConcurrentMap<Session, Component> sessions;
   private final AtomicInteger sessionIdCounter;
   // Injected by Felix DM...
   private volatile BundleContext context;
@@ -52,7 +54,7 @@ public class SessionProviderImpl implements SessionProvider, AcquisitionDataList
    */
   public SessionProviderImpl()
   {
-    this.sessions = new ConcurrentHashMap<Session, ServiceRegistration>();
+    this.sessions = new ConcurrentHashMap<Session, Component>();
     this.sessionIdCounter = new AtomicInteger( 1 );
   }
 
@@ -79,9 +81,18 @@ public class SessionProviderImpl implements SessionProvider, AcquisitionDataList
   {
     Properties props = createSessionProps( aSession );
 
-    ServiceRegistration serviceReg = this.context.registerService( Session.class.getName(), aSession, props );
+    DependencyManager dm = new DependencyManager( this.context );
+    Component comp = dm.createComponent() //
+        .setInterface( Session.class.getName(), props ) //
+        .setImplementation( aSession ) //
+        .setServiceProperties( props ) //
+        .add( dm.createServiceDependency().setService( EventAdmin.class ).setRequired( true ) ) //
+        .add( dm.createServiceDependency().setService( LogService.class ).setRequired( false ) );
 
-    this.sessions.putIfAbsent( aSession, serviceReg );
+    if ( this.sessions.putIfAbsent( aSession, comp ) == null )
+    {
+      dm.add( comp );
+    }
   }
 
   /**
@@ -99,10 +110,11 @@ public class SessionProviderImpl implements SessionProvider, AcquisitionDataList
    */
   public void removeSession( Session aSession )
   {
-    ServiceRegistration serviceReg = this.sessions.remove( aSession );
-    if ( serviceReg != null )
+    Component comp = this.sessions.remove( aSession );
+    if ( comp != null )
     {
-      serviceReg.unregister();
+      DependencyManager dm = comp.getDependencyManager();
+      dm.remove( comp );
     }
   }
 

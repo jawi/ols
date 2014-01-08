@@ -29,6 +29,8 @@ import java.awt.event.*;
 import javax.swing.*;
 import javax.swing.event.*;
 
+import nl.lxtreme.ols.client2.Client.JumpDirection;
+import nl.lxtreme.ols.client2.Client.JumpType;
 import nl.lxtreme.ols.client2.action.*;
 import nl.lxtreme.ols.client2.actionmanager.*;
 import nl.lxtreme.ols.client2.views.*;
@@ -85,7 +87,7 @@ public class WaveformView extends BaseView
 
             int rotation = ( aEvent.isAltDown() || aEvent.isShiftDown() ) ? 1 : -1;
 
-            model.zoom( rotation, point );
+            zoom( rotation, point );
             // Consume the event to stop further processing...
             aEvent.consume();
           }
@@ -298,6 +300,7 @@ public class WaveformView extends BaseView
   private WaveformTimelineComponent timelineComponent;
   private WaveformLabelComponent labelComponent;
   private WaveformViewComponent mainComponent;
+  private ZoomController zoomController;
 
   // CONSTRUCTORS
 
@@ -317,6 +320,18 @@ public class WaveformView extends BaseView
   // METHODS
 
   /**
+   * {@inheritDoc}
+   */
+  @Override
+  public double getDisplayedInterval()
+  {
+    AcquisitionData data = this.model.getData();
+    double width = this.mainComponent.getVisibleRect().width;
+
+    return width / ( getZoomFactor() * data.getSampleRate() );
+  }
+
+  /**
    * Returns the main view component.
    * 
    * @return a view component, can only be <code>null</code> if this view itself
@@ -327,7 +342,14 @@ public class WaveformView extends BaseView
     return this.mainComponent;
   }
 
-  // METHODS
+  /**
+   * @return a zoom factor, >= 0.0.
+   */
+  @Override
+  public double getZoomFactor()
+  {
+    return this.zoomController.getFactor();
+  }
 
   /**
    * {@inheritDoc}
@@ -346,6 +368,8 @@ public class WaveformView extends BaseView
     this.labelComponent = new WaveformLabelComponent( ( WaveformModel )this.model );
     this.labelComponent.addMouseListener( mouseListener );
     this.labelComponent.addMouseMotionListener( mouseListener );
+
+    this.zoomController = new ZoomController( this.controller );
 
     JPopupMenu popup = new JPopupMenu();
     popup.addPopupMenuListener( new PopupMenuListener()
@@ -385,11 +409,94 @@ public class WaveformView extends BaseView
     registerKeyBindings();
   }
 
+  /**
+   * {@inheritDoc}
+   */
+  @Override
+  public void scrollToTimestamp( long aTimestamp )
+  {
+    final Rectangle visibleRect = this.mainComponent.getVisibleRect();
+
+    Rectangle rect = new Rectangle();
+    rect.width = visibleRect.width;
+    rect.height = visibleRect.height;
+    rect.x = ( int )( ( getZoomFactor() * aTimestamp ) - rect.getCenterX() );
+    rect.y = visibleRect.y;
+
+    this.mainComponent.scrollRectToVisible( rect );
+  }
+
+  /**
+   * {@inheritDoc}
+   */
+  @Override
+  public void smartJump( JumpType aType, JumpDirection aDirection )
+  {
+    Rectangle viewSize = this.mainComponent.getVisibleRect();
+    Point refPoint = new Point( ( int )Math.round( viewSize.getCenterX() ), 0 );
+
+    long jumpTo = ( ( WaveformModel )this.model ).smartJump( aType, refPoint, aDirection );
+    if ( jumpTo >= 0 )
+    {
+      scrollToTimestamp( jumpTo );
+    }
+  }
+
+  /**
+   * Zooms in the direction denoted by the given rotation using the given
+   * coordinate as center location.
+   * 
+   * @param aRotation
+   * @param aLocation
+   */
+  public void zoom( int aRotation, Point aLocation )
+  {
+    this.zoomController.zoom( aRotation, aLocation );
+  }
+
+  /**
+   * Zooms the current view in such way that all data is visible.
+   */
+  public void zoomAll()
+  {
+    this.zoomController.zoomAll();
+  }
+
+  /**
+   * Zooms in.
+   */
+  public void zoomIn()
+  {
+    this.zoomController.zoomIn();
+  }
+
+  /**
+   * Zooms to a factor of 1.0.
+   */
+  public void zoomOriginal()
+  {
+    this.zoomController.zoomOriginal();
+  }
+
+  /**
+   * Zooms out.
+   */
+  public void zoomOut()
+  {
+    this.zoomController.zoomOut();
+  }
+
+  /**
+   * @param aCursor
+   */
   final void editCursorProperties( Cursor aCursor )
   {
     // TODO
   }
 
+  /**
+   * @param aElement
+   */
   final void editElementProperties( WaveformElement aElement )
   {
     // TODO

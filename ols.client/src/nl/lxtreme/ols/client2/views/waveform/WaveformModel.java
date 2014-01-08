@@ -33,10 +33,14 @@ import java.util.concurrent.atomic.*;
 
 import javax.swing.*;
 
+import nl.lxtreme.ols.client2.Client.JumpDirection;
+import nl.lxtreme.ols.client2.Client.JumpType;
 import nl.lxtreme.ols.client2.views.*;
+import nl.lxtreme.ols.client2.views.waveform.WaveformElement.Type;
 import nl.lxtreme.ols.client2.views.waveform.WaveformElement.WaveformElementMeasurer;
 import nl.lxtreme.ols.common.acquisition.*;
 import nl.lxtreme.ols.common.acquisition.Cursor;
+import nl.lxtreme.ols.common.annotation.*;
 import nl.lxtreme.ols.common.session.*;
 
 
@@ -45,6 +49,21 @@ import nl.lxtreme.ols.common.session.*;
  */
 public class WaveformModel extends ViewModel
 {
+  // INNER TYPES
+
+  /**
+   * Provides a {@link Cursor}-comparator on timestamps (instead of comparing on
+   * indices).
+   */
+  private static class CursorComparator implements Comparator<Cursor>
+  {
+    @Override
+    public int compare( Cursor aCursor1, Cursor aCursor2 )
+    {
+      return ( int )( aCursor1.getTimestamp() - aCursor2.getTimestamp() );
+    }
+  }
+
   // CONSTANTS
 
   /**
@@ -58,8 +77,6 @@ public class WaveformModel extends ViewModel
   private final ViewController controller;
   private final List<WaveformElement> elements;
   private final AtomicReference<WaveformElement> selectedElementRef;
-
-  private ZoomController zoomController;
 
   // CONSTRUCTORS
 
@@ -305,16 +322,7 @@ public class WaveformModel extends ViewModel
    */
   public double getZoomFactor()
   {
-    return this.zoomController.getFactor();
-  }
-
-  /**
-   * {@inheritDoc}
-   */
-  @Override
-  public void initialize()
-  {
-    this.zoomController = new ZoomController( this.controller );
+    return ( ( WaveformView )this.controller.getView() ).getZoomFactor();
   }
 
   /**
@@ -331,6 +339,42 @@ public class WaveformModel extends ViewModel
       old = this.selectedElementRef.get();
     }
     while ( !this.selectedElementRef.compareAndSet( old, aElement ) );
+  }
+
+  /**
+   * Performs a "smart" jump in a given direction.
+   * 
+   * @param aType
+   *          what kind of jump to perform;
+   * @param aReferencePoint
+   *          the timestamp to take as reference for the jump;
+   * @param aDirection
+   *          in what direction to jump.
+   */
+  public long smartJump( JumpType aType, Point aReferencePoint, JumpDirection aDirection )
+  {
+    WaveformElement element = getSelectedElement();
+    if ( ( element == null ) || !Type.CHANNEL.equals( element.getType() ) )
+    {
+      return -1L;
+    }
+
+    long refTimestamp = coordinateToTimestamp( aReferencePoint );
+
+    switch ( aType )
+    {
+      case ANNOTATION:
+        return determineAnnotationJump( element, refTimestamp, aDirection );
+
+      case CURSOR:
+        return determineCursorJump( refTimestamp, aDirection );
+
+      case SIGNAL_EDGE:
+        return determineEdgeJump( element, refTimestamp, aDirection );
+
+      default:
+        return -1L;
+    }
   }
 
   /**
@@ -351,46 +395,150 @@ public class WaveformModel extends ViewModel
   }
 
   /**
-   * Zooms in the direction denoted by the given rotation using the given
-   * coordinate as center location.
+   * Finds the first annotation (strictly) before or after a given reference
+   * point in time.
    * 
-   * @param aRotation
-   * @param aLocation
+   * @param aElement
+   *          the waveform element representing the signal to search in;
+   * @param aTimestamp
+   *          the reference point in time to start searching from;
+   * @param aDirection
+   *          the direction in which to search.
+   * @return the timestamp of the found annotation, or -1L in case no such
+   *         annotation could be found.
    */
-  public void zoom( int aRotation, Point aLocation )
+  private long determineAnnotationJump( WaveformElement aElement, long aTimestamp, JumpDirection aDirection )
   {
-    this.zoomController.zoom( aRotation, aLocation );
+    AnnotationData annotations = getAnnotations();
+
+    SortedSet<DataAnnotation> result;
+    if ( aDirection.isLeft() )
+    {
+      result = annotations.getAnnotations( aElement.getIndex(), aTimestamp - 2, aTimestamp - 1 );
+    }
+    else
+    {
+      result = annotations.getAnnotations( aElement.getIndex(), aTimestamp + 1, aTimestamp + 2 );
+    }
+
+    if ( result.size() > 0 )
+    {
+      DataAnnotation annotation = result.first();
+
+      long start = annotation.getStartTimestamp();
+      long end = annotation.getEndTimestamp();
+
+      return start + ( ( end - start ) / 2L );
+    }
+
+    return -1L;
   }
 
   /**
-   * Zooms the current view in such way that all data is visible.
+   * Finds the first cursor (strictly) before or after a given reference point
+   * in time.
+   * 
+   * @param aTimestamp
+   *          the reference point in time to start searching from;
+   * @param aDirection
+   *          the direction in which to search.
+   * @return the timestamp of the found cursor, or -1L in case no such cursor
+   *         could be found or the cursors are not visible.
    */
-  public void zoomAll()
+  private long determineCursorJump( long aTimestamp, JumpDirection aDirection )
   {
-    this.zoomController.zoomAll();
+    AcquisitionData data = getData();
+    if ( !data.areCursorsVisible() )
+    {
+      return -1L;
+    }
+
+    Cursor[] allCursors = data.getCursors();
+    SortedSet<Cursor> cursors = new TreeSet<Cursor>( new CursorComparator() );
+    for ( Cursor cursor : allCursors )
+    {
+      if ( cursor.isDefined() )
+      {
+        cursors.add( cursor );
+      }
+    }
+
+    Cursor foundCursor = null;
+    for ( Cursor cursor : cursors )
+    {
+      long timestamp = cursor.getTimestamp();
+      if ( aDirection.isLeft() )
+      {
+        if ( timestamp < aTimestamp )
+        {
+          foundCursor = cursor;
+        }
+        else
+        {
+          break;
+        }
+      }
+      else
+      {
+        if ( timestamp > aTimestamp )
+        {
+          foundCursor = cursor;
+          break;
+        }
+      }
+    }
+
+    if ( foundCursor != null )
+    {
+      return foundCursor.getTimestamp();
+    }
+
+    return -1L;
   }
 
   /**
-   * Zooms in.
+   * Finds the first signal transition (strictly) before or after a given
+   * reference point in time.
+   * 
+   * @param aElement
+   *          the waveform element representing the signal to search in;
+   * @param aTimestamp
+   *          the reference point in time to start searching from;
+   * @param aDirection
+   *          the direction in which to search.
+   * @return the timestamp of the found signal transition, or -1L in case no
+   *         such signal transition could be found.
    */
-  public void zoomIn()
+  private long determineEdgeJump( WaveformElement aElement, long aTimestamp, JumpDirection aDirection )
   {
-    this.zoomController.zoomIn();
-  }
+    AcquisitionData data = getData();
+    long[] timestamps = data.getTimestamps();
+    int[] values = data.getValues();
 
-  /**
-   * Zooms to a factor of 1.0.
-   */
-  public void zoomOriginal()
-  {
-    this.zoomController.zoomOriginal();
-  }
+    int refIdx = data.getSampleIndex( aTimestamp );
 
-  /**
-   * Zooms out.
-   */
-  public void zoomOut()
-  {
-    this.zoomController.zoomOut();
+    // find the reference time value; which is the "timestamp" under the
+    // cursor...
+    final int mask = aElement.getMask();
+    final int refValue = ( values[refIdx] & mask );
+
+    if ( aDirection.isLeft() )
+    {
+      do
+      {
+        refIdx--;
+      }
+      while ( ( refIdx > 0 ) && ( ( values[refIdx] & mask ) == refValue ) );
+    }
+    else
+    {
+      do
+      {
+        refIdx++;
+      }
+      while ( ( refIdx < ( values.length - 1 ) ) && ( ( values[refIdx] & mask ) == refValue ) );
+    }
+
+    return timestamps[refIdx];
   }
 }
