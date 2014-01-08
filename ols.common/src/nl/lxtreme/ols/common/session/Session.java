@@ -53,4 +53,17 @@ public interface Session
    */
   int getId();
 
+  /**
+   * @return the (optional) name for this session, can be <code>null</code>.
+   */
+  String getName();
+
+  /**
+   * Sets the name for this session.
+   * 
+   * @param aName
+   *          a session name, can be <code>null</code>.
+   */
+  void setName( String aName );
+
 }

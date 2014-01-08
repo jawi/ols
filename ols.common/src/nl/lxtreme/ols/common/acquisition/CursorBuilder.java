@@ -189,25 +189,27 @@ public class CursorBuilder
 
       Integer index = Integer.valueOf( this.index + 1 );
 
-      String label = getLabel();
-      if ( !hasLabel() )
-      {
-        label = index.toString();
-      }
-
       switch ( aStyle )
       {
         case LABEL_TIME:
+          if ( !hasLabel() )
+          {
+            return timestampText;
+          }
           return String.format( "%s: %s", label, timestampText );
         case INDEX_LABEL:
-          return String.format( "%d: %s", index, label );
+          if ( !hasLabel() )
+          {
+            return index.toString();
+          }
+          return String.format( "%d: %s", index, getLabel() );
         case TIME_ONLY:
           return timestampText;
         case LABEL_ONLY:
-          return label;
+          return hasLabel() ? getLabel() : "";
         case INDEX_ONLY:
         default:
-          return String.format( "%d", index );
+          return index.toString();
       }
     }
 
