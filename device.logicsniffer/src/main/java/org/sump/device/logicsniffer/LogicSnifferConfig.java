@@ -730,6 +730,22 @@ public final class LogicSnifferConfig
     }
   }
 
+  public void setBasicTrigger(final int aMask, final int aValue)
+  {
+	int aStage = 0;
+    if ( isDoubleDataRateEnabled() )
+    {
+    	this.triggerMask[aStage] = ( aMask & 0xFFFF ) | ( ( aMask & 0xFFFF ) << 16 );
+    	this.triggerValue[aStage] = ( aValue & 0xFFFF ) | ( ( aValue & 0xFFFF ) << 16 );
+	}
+    else
+    {
+    	this.triggerMask[aStage] = aMask;
+    	this.triggerValue[aStage] = aValue;
+	}
+    this.triggerConfig[aStage] |= TRIGGER_CAPTURE;	  
+  }
+  
   /**
    * Sets the ratio for samples to read before and after started.
    * 

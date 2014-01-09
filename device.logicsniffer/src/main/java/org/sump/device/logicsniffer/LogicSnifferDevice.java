@@ -64,6 +64,11 @@ public class LogicSnifferDevice implements Device
 
   // METHODS
 
+  public LogicSnifferConfig getConfig()
+  {
+	  return config;
+  }
+  
   /**
    * {@inheritDoc}
    */
