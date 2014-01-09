@@ -83,7 +83,7 @@ public class ChannelLabelsUI extends ComponentUI
       // Nothing to do!
       return;
     }
-
+    
     Graphics2D canvas = ( Graphics2D )aGraphics.create();
 
     try
@@ -279,6 +279,23 @@ public class ChannelLabelsUI extends ComponentUI
 
       aCanvas.setFont( labelFont );
       drawLabel( aCanvas, aModel, label, labelColor, labelXpos, labelYpos );
+
+      
+      ChannelLabelsViewModel.TriggerStatus status = aModel.getTriggerStatus(aElement.getChannel().getIndex());      
+      if (status != ChannelLabelsViewModel.TriggerStatus.UNDEFINED)
+      {
+    	  aCanvas.setColor( aElement.getColor() );
+    	  aCanvas.drawRoundRect(0, 10, 16, 16, 2, 2);
+
+    	  if (status != ChannelLabelsViewModel.TriggerStatus.DISABLED)
+    	  {
+    		  int offset = status == ChannelLabelsViewModel.TriggerStatus.LEVEL_LOW ? 9 : 0;
+    		  aCanvas.setColor(aModel.getTextShadowColor());      
+    		  aCanvas.fillRect(4, 14 + offset, 11, 2);
+    		  aCanvas.setColor(labelColor);      
+    		  aCanvas.fillRect(2, 12 + offset, 11, 2);
+    	  }
+      }
     }
 
     if ( indexDefined )

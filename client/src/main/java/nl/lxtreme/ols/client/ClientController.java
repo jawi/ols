@@ -314,7 +314,7 @@ public final class ClientController implements ActionProvider, AcquisitionProgre
 
     this.actionManager = new ActionManager();
 
-    this.signalDiagramController = new SignalDiagramController( this.actionManager );
+    this.signalDiagramController = new SignalDiagramController( this.actionManager, this );
 
     Runnable runner = new Runnable()
     {

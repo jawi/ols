@@ -35,6 +35,7 @@ import nl.lxtreme.ols.client.signaldisplay.dnd.*;
 import nl.lxtreme.ols.client.signaldisplay.dnd.DragAndDropTargetController.DragAndDropHandler;
 import nl.lxtreme.ols.client.signaldisplay.laf.*;
 import nl.lxtreme.ols.client.signaldisplay.model.*;
+import nl.lxtreme.ols.client.signaldisplay.model.ChannelLabelsViewModel.TriggerStatus;
 import nl.lxtreme.ols.client.signaldisplay.signalelement.*;
 import nl.lxtreme.ols.client.signaldisplay.util.*;
 import nl.lxtreme.ols.client.signaldisplay.view.renderer.*;
@@ -73,7 +74,7 @@ public class ChannelLabelsView extends AbstractViewLayer
     {
       // Ensure the focus is moved to the main signal diagram component...
       getSignalDiagram().requestFocusInWindow();
-
+     
       if ( !aEvent.isConsumed() && ( aEvent.getClickCount() == 2 ) )
       {
         final IUIElement element = findSignalElement( aEvent.getPoint() );
@@ -87,6 +88,33 @@ public class ChannelLabelsView extends AbstractViewLayer
           aEvent.consume();
         }
       }
+      
+      if ( !aEvent.isConsumed() && ( aEvent.getButton() == 1 ) )
+      {
+        final IUIElement element = findSignalElement( aEvent.getPoint() );
+        if ( element != null && aEvent.getX() < this.getSignalDiagram().getX() + 16 )
+        {
+            SignalElement signalElement = ( SignalElement )element;
+            ChannelLabelsView view = controller.getChannelLabelsView();
+            
+            int channel = signalElement.getChannel().getIndex();
+            TriggerStatus status = view.getModel().getTriggerStatus(channel);            
+            switch(status)
+            {
+            case DISABLED: status = TriggerStatus.LEVEL_LOW; break;
+            case LEVEL_LOW: status = TriggerStatus.LEVEL_HIGH; break;
+            case LEVEL_HIGH: status = TriggerStatus.DISABLED; break;
+            }
+            view.getModel().setTriggerStatus(channel, status);
+
+            Rectangle rect = new Rectangle( 0, element.getYposition(), view.getWidth(), element.getHeight() );
+            view.repaint(rect);
+            
+          // Do not process this event any further...
+          aEvent.consume();
+        }
+      }
+
     }
 
     /**
@@ -516,7 +544,7 @@ public class ChannelLabelsView extends AbstractViewLayer
   @Override
   public final void updateUI()
   {
-    setUI( new ChannelLabelsUI() );
+    setUI( new ChannelLabelsUI());
   }
 
   /**

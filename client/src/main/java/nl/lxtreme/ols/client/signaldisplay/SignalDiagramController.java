@@ -31,7 +31,9 @@ import nl.lxtreme.ols.api.acquisition.AcquisitionResult;
 import nl.lxtreme.ols.api.data.*;
 import nl.lxtreme.ols.api.data.Cursor;
 import nl.lxtreme.ols.api.data.project.*;
+import nl.lxtreme.ols.api.devices.Device;
 import nl.lxtreme.ols.client.Activator;
+import nl.lxtreme.ols.client.ClientController;
 import nl.lxtreme.ols.client.action.*;
 import nl.lxtreme.ols.client.actionmanager.*;
 import nl.lxtreme.ols.client.signaldisplay.ZoomController.ZoomEvent;
@@ -58,6 +60,7 @@ public final class SignalDiagramController implements ZoomListener, PropertyChan
 
   private SignalDiagramModel signalDiagramModel;
   private SignalDiagramComponent signalDiagram;
+  private final ClientController clientController;
 
   // CONSTRUCTORS
 
@@ -67,10 +70,10 @@ public final class SignalDiagramController implements ZoomListener, PropertyChan
    * @param aActionManager
    *          the action manager to use, cannot be <code>null</code>.
    */
-  public SignalDiagramController( final IActionManager aActionManager )
+  public SignalDiagramController( final IActionManager aActionManager, final ClientController clientController )
   {
     this.actionManager = aActionManager;
-
+    this.clientController = clientController;
     this.dndTargetController = new DragAndDropTargetController( this );
   }
 
@@ -641,7 +644,7 @@ public final class SignalDiagramController implements ZoomListener, PropertyChan
   /**
    * @return
    */
-  private ChannelLabelsView getChannelLabelsView()
+  public ChannelLabelsView getChannelLabelsView()
   {
     JScrollPane scrollPane = getAncestorOfClass( JScrollPane.class, getSignalDiagram() );
     if ( scrollPane != null )
@@ -658,5 +661,10 @@ public final class SignalDiagramController implements ZoomListener, PropertyChan
   private long locationToTimestamp( final Point aPoint )
   {
     return this.signalDiagram.getModel().locationToTimestamp( aPoint );
+  }
+  
+  public Device getDevice()
+  {
+	return this.clientController.getDevice();  
   }
 }

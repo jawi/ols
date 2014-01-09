@@ -28,7 +28,10 @@ import java.util.List;
 
 import javax.swing.*;
 
+import org.sump.device.logicsniffer.*;
+
 import nl.lxtreme.ols.api.data.*;
+import nl.lxtreme.ols.api.devices.*;
 import nl.lxtreme.ols.client.signaldisplay.*;
 import nl.lxtreme.ols.client.signaldisplay.laf.*;
 import nl.lxtreme.ols.client.signaldisplay.signalelement.*;
@@ -405,5 +408,47 @@ public class ChannelLabelsViewModel extends AbstractViewModel
     }
 
     channelGroupManager.moveElement( aMovedElement, newGroup, newIndex );
+  }  
+  
+  public static enum TriggerStatus
+  {
+  	UNDEFINED,
+  	DISABLED,
+  	LEVEL_LOW,
+  	LEVEL_HIGH,
+  	TRANSITION_LOW,
+  	TRANSITION_HIGH
+  }
+
+  public TriggerStatus getTriggerStatus(int channel)
+  {
+      Device device = controller.getDevice();            
+      if (device instanceof LogicSnifferDevice)
+      {
+    	  LogicSnifferDevice lsd = (LogicSnifferDevice) device;
+    	  LogicSnifferConfig lsc = lsd.getConfig();    	  
+		  if ( (lsc.getTriggerMask(0) & (1<<channel)) != 0)
+		  {
+			 return (lsc.getTriggerValue(0) & (1<<channel)) == 0 ? TriggerStatus.LEVEL_LOW : TriggerStatus.LEVEL_HIGH;
+		  }
+		  return TriggerStatus.DISABLED;
+      }
+	  return TriggerStatus.UNDEFINED;
+  }
+  
+  public void setTriggerStatus(int channel, TriggerStatus status)
+  {
+      Device device = controller.getDevice();            
+      if (device instanceof LogicSnifferDevice)
+      {
+    	  LogicSnifferDevice lsd = (LogicSnifferDevice) device;
+    	  LogicSnifferConfig lsc = lsd.getConfig();    	      	  
+    	  switch (status)
+    	  {
+    	  case DISABLED:    lsc.setBasicTrigger(lsc.getTriggerMask(0) & ~(1<<channel), lsc.getTriggerValue(channel)); break;
+    	  case LEVEL_LOW:   lsc.setBasicTrigger(lsc.getTriggerMask(0) |  (1<<channel), lsc.getTriggerValue(channel) & ~(1<<channel)); break;
+    	  case LEVEL_HIGH:  lsc.setBasicTrigger(lsc.getTriggerMask(0) |  (1<<channel), lsc.getTriggerValue(channel) |  (1<<channel)); break;
+    	  }    	  
+      }
   }
 }
