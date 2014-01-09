@@ -31,6 +31,8 @@ import nl.lxtreme.ols.client2.views.state.*;
 import nl.lxtreme.ols.client2.views.waveform.*;
 import nl.lxtreme.ols.common.*;
 
+import org.osgi.service.event.Event;
+
 
 /**
  * Base class for both {@link StateView} and {@link WaveformView}.
@@ -111,6 +113,14 @@ public abstract class BaseView extends JComponent
     {
       super.paint( aGraphics );
     }
+  }
+
+  /**
+   * {@inheritDoc}
+   */
+  public void handleEvent( String aTopic, Event aEvent )
+  {
+    // Nop
   }
 
   /**

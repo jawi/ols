@@ -501,8 +501,13 @@ class AnnotationTableModel extends AbstractTableModel implements TableColumnMode
     // Step 1: determine dimensions of the table...
     for ( Annotation annotation : annotations )
     {
-      final Integer channelIdx = Integer.valueOf( annotation.getChannelIndex() );
+      Channel channel = annotation.getChannel();
+      if ( channel == null )
+      {
+        continue;
+      }
 
+      Integer channelIdx = Integer.valueOf( channel.getIndex() );
       if ( annotation instanceof DataAnnotation )
       {
         if ( !channelNames.containsKey( channelIdx ) )
@@ -537,7 +542,7 @@ class AnnotationTableModel extends AbstractTableModel implements TableColumnMode
     {
       for ( DataAnnotation annotation : entry )
       {
-        seenChannels.add( Integer.valueOf( annotation.getChannelIndex() ) );
+        seenChannels.add( Integer.valueOf( annotation.getChannel().getIndex() ) );
       }
     }
 
@@ -569,7 +574,7 @@ class AnnotationTableModel extends AbstractTableModel implements TableColumnMode
       columnData[2] = Double.valueOf( ( key.endTime - triggerPos ) / sampleRate );
       for ( DataAnnotation annotation : entry.getValue() )
       {
-        int idx = columnIndices.get( Integer.valueOf( annotation.getChannelIndex() ) ).intValue();
+        int idx = columnIndices.get( Integer.valueOf( annotation.getChannel().getIndex() ) ).intValue();
         columnData[idx + 3] = annotation;
       }
       newData[row++] = columnData;

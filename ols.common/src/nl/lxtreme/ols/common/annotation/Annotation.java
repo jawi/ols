@@ -21,6 +21,9 @@
 package nl.lxtreme.ols.common.annotation;
 
 
+import nl.lxtreme.ols.common.acquisition.*;
+
+
 /**
  * Denotes an annotation, which is additional data that can be added to a
  * channel, for example, to show the results of a decoding process.
@@ -42,10 +45,11 @@ public interface Annotation extends Comparable<Annotation>
   Object getData();
 
   /**
-   * Returns the index of the channel to annotate.
+   * Returns the channel to annotate.
    * 
-   * @return a channel index, >= 0.
+   * @return a channel, can be <code>null</code> in case this annotation is not
+   *         channel-related.
    */
-  int getChannelIndex();
+  Channel getChannel();
 
 }

@@ -21,13 +21,17 @@
 package nl.lxtreme.ols.client2.views.waveform;
 
 
+import static nl.lxtreme.ols.client2.ClientConstants.*;
 import static nl.lxtreme.ols.util.swing.SwingComponentUtils.*;
 
 import java.awt.*;
 import java.awt.event.*;
+import java.util.*;
 
 import javax.swing.*;
 import javax.swing.event.*;
+
+import org.osgi.service.event.Event;
 
 import nl.lxtreme.ols.client2.Client.JumpDirection;
 import nl.lxtreme.ols.client2.Client.JumpType;
@@ -37,6 +41,7 @@ import nl.lxtreme.ols.client2.views.*;
 import nl.lxtreme.ols.client2.views.waveform.WaveformElement.Type;
 import nl.lxtreme.ols.common.acquisition.*;
 import nl.lxtreme.ols.common.acquisition.Cursor;
+import nl.lxtreme.ols.common.annotation.*;
 import nl.lxtreme.ols.util.swing.*;
 
 
@@ -47,6 +52,34 @@ import nl.lxtreme.ols.util.swing.*;
 public class WaveformView extends BaseView
 {
   // INNER TYPES
+
+  /**
+   * A runnable implementation that accumulates several calls to avoid an
+   * avalanche of events on the EDT.
+   */
+  private class RepaintAccumulator extends AccumulatingRunnable<Object>
+  {
+    @Override
+    protected void run( Deque<Object> aArgs )
+    {
+      for ( int i = 0, max = aArgs.size(); i < max; i++ )
+      {
+        Object obj = aArgs.pop();
+        if ( obj instanceof WaveformElement )
+        {
+          repaintWaveformElement( ( WaveformElement )obj );
+        }
+        else if ( obj instanceof Annotation )
+        {
+          repaintAnnotation( ( Annotation )obj );
+        }
+        else if ( obj instanceof Cursor )
+        {
+          repaintCursor( ( Cursor )obj );
+        }
+      }
+    }
+  }
 
   /**
    * Handles mouse events from the various components.
@@ -302,6 +335,8 @@ public class WaveformView extends BaseView
   private WaveformViewComponent mainComponent;
   private ZoomController zoomController;
 
+  private RepaintAccumulator repaintAccumulator;
+
   // CONSTRUCTORS
 
   /**
@@ -355,9 +390,39 @@ public class WaveformView extends BaseView
    * {@inheritDoc}
    */
   @Override
+  public void handleEvent( String aTopic, Event aEvent )
+  {
+    if ( aTopic.startsWith( TOPIC_ANNOTATIONS ) )
+    {
+      if ( aTopic.endsWith( "/ADD" ) )
+      {
+        Annotation annotation = ( Annotation )aEvent.getProperty( "annotation" );
+        if ( annotation != null )
+        {
+          this.repaintAccumulator.add( annotation );
+        }
+      }
+      else if ( aTopic.endsWith( "/CLEAR" ) )
+      {
+        Channel channel = ( Channel )aEvent.getProperty( "channel" );
+        WaveformElement element = ( ( WaveformModel )this.model ).getWaveformElement( channel );
+        if ( element != null )
+        {
+          this.repaintAccumulator.add( element );
+        }
+      }
+    }
+  }
+
+  /**
+   * {@inheritDoc}
+   */
+  @Override
   public void initialize()
   {
     ViewMouseListener mouseListener = new ViewMouseListener();
+
+    this.repaintAccumulator = new RepaintAccumulator();
 
     this.mainComponent = new WaveformViewComponent( ( WaveformModel )this.model );
     this.mainComponent.addMouseListener( mouseListener );
@@ -528,6 +593,37 @@ public class WaveformView extends BaseView
     }
   }
 
+  final void repaintAnnotation( Annotation aAnnotation )
+  {
+    WaveformModel model = ( WaveformModel )this.model;
+
+    Channel channel = aAnnotation.getChannel();
+    WaveformElement element = model.getWaveformElement( channel );
+    if ( element == null )
+    {
+      return;
+    }
+
+    if ( aAnnotation instanceof DataAnnotation )
+    {
+      DataAnnotation ann = ( DataAnnotation )aAnnotation;
+      long start = ann.getStartTimestamp();
+      long end = ann.getEndTimestamp();
+
+      Rectangle rect = new Rectangle();
+      rect.x = model.timestampToCoordinate( start );
+      rect.y = element.getYposition();
+      rect.width = model.timestampToCoordinate( end ) - rect.x;
+      rect.height = element.getHeight();
+
+      this.mainComponent.repaint( rect );
+    }
+    else if ( aAnnotation instanceof LabelAnnotation )
+    {
+      repaintWaveformLabel( element );
+    }
+  }
+
   /**
    * Repaints the area taken up by the given cursor on screen.
    * 
@@ -548,7 +644,8 @@ public class WaveformView extends BaseView
   }
 
   /**
-   * Repaints the area taken up by the given waveform element on screen.
+   * Repaints the area taken up by the label of the given waveform element on
+   * screen.
    * 
    * @param aElement
    *          the waveform element to repaint, cannot be <code>null</code>.
@@ -556,7 +653,6 @@ public class WaveformView extends BaseView
   final void repaintWaveformLabel( WaveformElement aElement )
   {
     Rectangle rect = this.labelComponent.getVisibleRect();
-
     rect.y = aElement.getYposition();
     rect.height = aElement.getHeight();
     this.labelComponent.repaint( rect );
@@ -572,6 +668,20 @@ public class WaveformView extends BaseView
         this.labelComponent.repaint( rect );
       }
     }
+  }
+
+  /**
+   * Repaints the area taken up by the given waveform element on screen.
+   * 
+   * @param aElement
+   *          the waveform element to repaint, cannot be <code>null</code>.
+   */
+  final void repaintWaveformElement( WaveformElement aElement )
+  {
+    Rectangle rect = this.mainComponent.getVisibleRect();
+    rect.y = aElement.getYposition();
+    rect.height = aElement.getHeight();
+    this.mainComponent.repaint( rect );
   }
 
   /**

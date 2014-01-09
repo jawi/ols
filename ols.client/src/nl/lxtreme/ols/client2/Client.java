@@ -135,19 +135,6 @@ public class Client extends DefaultDockableHolder implements ApplicationCallback
     }
   }
 
-  /**
-   * A runnable implementation that accumulates several calls to avoid an
-   * avalanche of events on the EDT.
-   */
-  private class AnnotationUpdatingRunnable extends AccumulatingRunnable<Annotation>
-  {
-    @Override
-    protected void run( Deque<Annotation> aArgs )
-    {
-      repaintAnnotations( aArgs.toArray( new Annotation[aArgs.size()] ) );
-    }
-  }
-
   // CONSTANTS
 
   private static final long serialVersionUID = 1L;
@@ -161,7 +148,6 @@ public class Client extends DefaultDockableHolder implements ApplicationCallback
   private final List<ManagedView> registeredViews;
   private final List<ViewController> viewControllers;
   private final ProgressUpdatingRunnable progressUpdater;
-  private final AnnotationUpdatingRunnable annotationUpdater;
 
   // Injected by Felix DM...
   private volatile EventAdmin eventAdmin;
@@ -199,7 +185,6 @@ public class Client extends DefaultDockableHolder implements ApplicationCallback
     this.registeredViews = new CopyOnWriteArrayList<ManagedView>();
     this.viewControllers = new CopyOnWriteArrayList<ViewController>();
     this.progressUpdater = new ProgressUpdatingRunnable();
-    this.annotationUpdater = new AnnotationUpdatingRunnable();
 
     this.mode = 0;
   }
@@ -634,24 +619,10 @@ public class Client extends DefaultDockableHolder implements ApplicationCallback
   @Override
   public void handleEvent( Event aEvent )
   {
-    String topic = aEvent.getTopic();
-    if ( topic.startsWith( TOPIC_SESSIONS ) )
+    ViewController viewCtrl = getCurrentViewController();
+    if ( viewCtrl != null )
     {
-      // Session added, changed or removed...
-    }
-    else if ( topic.startsWith( TOPIC_ANNOTATIONS ) )
-    {
-      // Annotation added or removed...
-      Annotation annotation = ( Annotation )aEvent.getProperty( "annotation" );
-      if ( annotation != null )
-      {
-        this.annotationUpdater.add( annotation );
-      }
-      else if ( topic.endsWith( "/CLEAR" ) )
-      {
-        // TODO
-        repaint( 50L );
-      }
+      viewCtrl.handleEvent( aEvent.getTopic(), aEvent );
     }
   }
 
@@ -1250,15 +1221,6 @@ public class Client extends DefaultDockableHolder implements ApplicationCallback
     registerView( new PulseCountView() );
     registerView( new ChannelOutlineView() );
     registerView( new AnnotationsView() );
-  }
-
-  /**
-   * @param aAnnotations
-   */
-  final void repaintAnnotations( Annotation... aAnnotations )
-  {
-    // TODO
-    repaint( 50L );
   }
 
   /**

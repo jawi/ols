@@ -55,16 +55,16 @@ public class UARTAnalyserTask implements ToolTask<UARTDataSet>
   {
     // VARIABLES
 
-    private final int channelIdx;
+    private final Channel channel;
     private final Boolean data;
     private final Map<String, Object> properties;
 
     /**
      * Creates a new {@link BaudrateAnnotation} instance.
      */
-    public BaudrateAnnotation( final int aChannelIdx, final BaudRateAnalyzer aAnalyzer )
+    public BaudrateAnnotation( Channel aChannel, BaudRateAnalyzer aAnalyzer )
     {
-      this.channelIdx = aChannelIdx;
+      this.channel = aChannel;
       // TODO where does the 15 come from?!
       this.data = Boolean.valueOf( aAnalyzer.getBestBitLength() > 15 );
       this.properties = new HashMap<String, Object>( 3 );
@@ -87,9 +87,9 @@ public class UARTAnalyserTask implements ToolTask<UARTDataSet>
      * {@inheritDoc}
      */
     @Override
-    public int getChannelIndex()
+    public Channel getChannel()
     {
-      return this.channelIdx;
+      return this.channel;
     }
 
     /**
@@ -540,7 +540,7 @@ public class UARTAnalyserTask implements ToolTask<UARTDataSet>
     // Set nominal (normalized) baud rate
     aDataSet.setBaudRate( baudRateAnalyzer.getBaudRate() );
 
-    this.context.addAnnotation( new BaudrateAnnotation( aChannelIndex, baudRateAnalyzer ) );
+    this.context.addAnnotation( new BaudrateAnnotation( data.getChannels()[aChannelIndex], baudRateAnalyzer ) );
 
     LOG.log( Level.FINE, "Baudrate = {0}bps", Integer.valueOf( this.baudRate ) );
 

@@ -26,6 +26,7 @@ import static nl.lxtreme.ols.client2.ClientConstants.*;
 import java.util.*;
 import java.util.concurrent.*;
 
+import nl.lxtreme.ols.common.*;
 import nl.lxtreme.ols.common.acquisition.*;
 import nl.lxtreme.ols.common.annotation.*;
 import nl.lxtreme.ols.common.session.*;
@@ -45,7 +46,7 @@ public class SessionImpl implements Session, AnnotationData
   private final int id;
   private final SessionProviderImpl provider;
   private final AcquisitionData data;
-  private final ConcurrentMap<Integer, SortedSet<Annotation>> annotations;
+  private final ConcurrentMap<Channel, SortedSet<Annotation>> annotations;
 
   // Injected by Felix DM...
   private volatile EventAdmin eventAdmin;
@@ -64,7 +65,7 @@ public class SessionImpl implements Session, AnnotationData
     this.provider = aProvider;
     this.data = aData;
 
-    this.annotations = new ConcurrentHashMap<Integer, SortedSet<Annotation>>();
+    this.annotations = new ConcurrentHashMap<Channel, SortedSet<Annotation>>();
   }
 
   // METHODS
@@ -75,12 +76,17 @@ public class SessionImpl implements Session, AnnotationData
   @Override
   public void add( Annotation aAnnotation )
   {
-    Integer channelIndex = Integer.valueOf( aAnnotation.getChannelIndex() );
-    SortedSet<Annotation> annotations = this.annotations.get( channelIndex );
+    Channel channel = aAnnotation.getChannel();
+    SortedSet<Annotation> annotations = this.annotations.get( channel );
     if ( annotations == null )
     {
       annotations = new ConcurrentSkipListSet<Annotation>();
-      this.annotations.putIfAbsent( channelIndex, annotations );
+
+      SortedSet<Annotation> putResult = this.annotations.putIfAbsent( channel, annotations );
+      if ( putResult != null )
+      {
+        annotations = putResult;
+      }
     }
 
     annotations.add( aAnnotation );
@@ -92,11 +98,39 @@ public class SessionImpl implements Session, AnnotationData
    * {@inheritDoc}
    */
   @Override
+  public void clear( Channel aChannel )
+  {
+    if ( aChannel == null )
+    {
+      throw new IllegalArgumentException( "Channel cannot be null!" );
+    }
+
+    SortedSet<Annotation> ann = this.annotations.remove( aChannel );
+    if ( ann != null )
+    {
+      postEvent( TOPIC_ANNOTATIONS.concat( "/CLEAR" ), "channel", aChannel );
+    }
+  }
+
+  /**
+   * {@inheritDoc}
+   */
+  @Override
   public void clear( int aChannelIdx )
   {
-    this.annotations.remove( Integer.valueOf( aChannelIdx ) );
+    if ( aChannelIdx < 0 || aChannelIdx > OlsConstants.MAX_CHANNELS )
+    {
+      throw new IllegalArgumentException( "Invalid channel index!" );
+    }
 
-    postEvent( TOPIC_ANNOTATIONS.concat( "/CLEAR" ), "channelIdx", aChannelIdx );
+    List<Channel> channels = new ArrayList<Channel>( this.annotations.keySet() );
+    for ( Channel channel : channels )
+    {
+      if ( channel.getIndex() == aChannelIdx )
+      {
+        clear( channel );
+      }
+    }
   }
 
   /**
@@ -105,9 +139,11 @@ public class SessionImpl implements Session, AnnotationData
   @Override
   public void clearAll()
   {
-    this.annotations.clear();
-
-    postEvent( TOPIC_ANNOTATIONS.concat( "/CLEAR" ) );
+    List<Channel> channels = new ArrayList<Channel>( this.annotations.keySet() );
+    for ( Channel channel : channels )
+    {
+      clear( channel );
+    }
   }
 
   /**
@@ -161,7 +197,15 @@ public class SessionImpl implements Session, AnnotationData
   @Override
   public SortedSet<Annotation> getAnnotations( int aChannelIdx )
   {
-    SortedSet<Annotation> result = this.annotations.get( Integer.valueOf( aChannelIdx ) );
+    SortedSet<Annotation> result = null;
+    List<Channel> channels = new ArrayList<Channel>( this.annotations.keySet() );
+    for ( Channel channel : channels )
+    {
+      if ( channel.getIndex() == aChannelIdx )
+      {
+        result = this.annotations.get( channel );
+      }
+    }
     return ( result == null ) ? new TreeSet<Annotation>() : result;
   }
 
@@ -171,13 +215,8 @@ public class SessionImpl implements Session, AnnotationData
   @Override
   public SortedSet<DataAnnotation> getAnnotations( int aChannelIdx, long aStartTime, long aEndTime )
   {
-    SortedSet<Annotation> anns = this.annotations.get( Integer.valueOf( aChannelIdx ) );
-    if ( anns == null )
-    {
-      return new TreeSet<DataAnnotation>();
-    }
     SortedSet<DataAnnotation> result = new TreeSet<DataAnnotation>();
-    for ( Annotation annotation : anns )
+    for ( Annotation annotation : getAnnotations( aChannelIdx ) )
     {
       if ( annotation instanceof DataAnnotation )
       {
@@ -221,7 +260,7 @@ public class SessionImpl implements Session, AnnotationData
   @Override
   public boolean hasAnnotations( Class<? extends Annotation> aType, int aChannelIdx )
   {
-    SortedSet<Annotation> result = this.annotations.get( Integer.valueOf( aChannelIdx ) );
+    SortedSet<Annotation> result = getAnnotations( aChannelIdx );
     if ( result != null )
     {
       for ( Annotation annotation : result )

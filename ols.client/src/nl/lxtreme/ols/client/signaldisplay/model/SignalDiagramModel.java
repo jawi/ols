@@ -109,7 +109,7 @@ public class SignalDiagramModel
   {
     if ( aAnnotation instanceof LabelAnnotation )
     {
-      int idx = aAnnotation.getChannelIndex();
+      int idx = aAnnotation.getChannel().getIndex();
 
       Channel channel = getAcquisitionData().getChannels()[idx];
       channel.setLabel( ( String )aAnnotation.getData() );

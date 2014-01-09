@@ -24,6 +24,7 @@ package nl.lxtreme.ols.client.signaldisplay.model;
 import java.util.*;
 import java.util.concurrent.*;
 
+import nl.lxtreme.ols.common.acquisition.*;
 import nl.lxtreme.ols.common.annotation.*;
 
 
@@ -58,18 +59,28 @@ public class AnnotationDataImpl implements AnnotationData
   @Override
   public void add( final Annotation aAnnotation )
   {
-    Integer channelIndex = Integer.valueOf( aAnnotation.getChannelIndex() );
-    SortedSet<Annotation> annotations = this.annotations.get( channelIndex );
-    if ( annotations == null )
-    {
-      annotations = new ConcurrentSkipListSet<Annotation>();
-      this.annotations.putIfAbsent( channelIndex, annotations );
-    }
+    // Integer channelIndex = Integer.valueOf( aAnnotation.getChannelIndex() );
+    // SortedSet<Annotation> annotations = this.annotations.get( channelIndex );
+    // if ( annotations == null )
+    // {
+    // annotations = new ConcurrentSkipListSet<Annotation>();
+    // this.annotations.putIfAbsent( channelIndex, annotations );
+    // }
 
     // this.logService.log( LogService.LOG_DEBUG,
     // "Adding annotation for channel: " + channelIndex + ", " + aAnnotation );
 
-    annotations.add( aAnnotation );
+    // annotations.add( aAnnotation );
+  }
+
+  /**
+   * {@inheritDoc}
+   */
+  @Override
+  public void clear( Channel aChannel )
+  {
+    // TODO Auto-generated method stub
+
   }
 
   /**
@@ -119,7 +130,7 @@ public class AnnotationDataImpl implements AnnotationData
     SortedSet<Annotation> result = this.annotations.get( Integer.valueOf( aChannelIdx ) );
     return ( result == null ) ? new TreeSet<Annotation>() : result;
   }
-  
+
   /**
    * {@inheritDoc}
    */

@@ -270,6 +270,33 @@ public class WaveformModel extends ViewModel
   }
 
   /**
+   * Returns the {@link WaveformElement} corresponding to the given channel
+   * index.
+   * 
+   * @param aChannelIdx
+   *          the index of the channel to return the waveform element for, >= 0.
+   * @return a {@link WaveformElement} corresponding to the given channel index,
+   *         or <code>null</code> if no such element could be found.
+   */
+  public WaveformElement getWaveformElement( Channel aChannel )
+  {
+    if ( aChannel == null )
+    {
+      return null;
+    }
+
+    int idx = aChannel.getIndex();
+    for ( WaveformElement element : this.elements )
+    {
+      if ( Type.CHANNEL.equals( element.getType() ) && element.getIndex() == idx )
+      {
+        return element;
+      }
+    }
+    return null;
+  }
+
+  /**
    * @return a collection of all waveform elements, never <code>null</code>.
    */
   public Collection<WaveformElement> getWaveformElements()

@@ -25,6 +25,8 @@ import java.util.concurrent.atomic.*;
 
 import javax.swing.event.*;
 
+import org.osgi.service.event.*;
+
 import nl.lxtreme.ols.common.acquisition.*;
 import nl.lxtreme.ols.common.annotation.*;
 import nl.lxtreme.ols.common.session.*;
@@ -130,6 +132,14 @@ public class ViewModel
   public boolean hasTimingData()
   {
     return getData().hasTimingData();
+  }
+
+  /**
+   * {@inheritDoc}
+   */
+  public void handleEvent( String aTopic, Event aEvent )
+  {
+    // Nop
   }
 
   /**

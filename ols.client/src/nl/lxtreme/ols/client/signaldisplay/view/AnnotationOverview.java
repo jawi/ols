@@ -1023,7 +1023,7 @@ public class AnnotationOverview extends AbstractToolWindow implements ExportAnno
       // Step 1: determine dimensions of the table...
       for ( Annotation annotation : annotations )
       {
-        final Integer channelIdx = Integer.valueOf( annotation.getChannelIndex() );
+        final Integer channelIdx = Integer.valueOf( annotation.getChannel().getIndex() );
 
         if ( annotation instanceof DataAnnotation )
         {
@@ -1059,7 +1059,7 @@ public class AnnotationOverview extends AbstractToolWindow implements ExportAnno
       {
         for ( DataAnnotation annotation : entry )
         {
-          seenChannels.add( Integer.valueOf( annotation.getChannelIndex() ) );
+          seenChannels.add( Integer.valueOf( annotation.getChannel().getIndex() ) );
         }
       }
 
@@ -1091,7 +1091,7 @@ public class AnnotationOverview extends AbstractToolWindow implements ExportAnno
         columnData[2] = Double.valueOf( ( key.endTime - triggerPos ) / sampleRate );
         for ( DataAnnotation annotation : entry.getValue() )
         {
-          int idx = columnIndices.get( Integer.valueOf( annotation.getChannelIndex() ) ).intValue();
+          int idx = columnIndices.get( Integer.valueOf( annotation.getChannel().getIndex() ) ).intValue();
           columnData[idx + 3] = annotation;
         }
         newData[row++] = columnData;

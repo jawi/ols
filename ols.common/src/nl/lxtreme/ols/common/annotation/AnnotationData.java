@@ -23,6 +23,8 @@ package nl.lxtreme.ols.common.annotation;
 
 import java.util.*;
 
+import nl.lxtreme.ols.common.acquisition.*;
+
 
 /**
  * Provides a container for {@link Annotation}s.
@@ -42,20 +44,31 @@ public interface AnnotationData
   void add( Annotation aAnnotation );
 
   /**
-   * Clears all annotations of all channels.
+   * Clears all annotations for the given channel.
+   * 
+   * @param aChannel
+   *          the channel to clear the annotations for, cannot be
+   *          <code>null</code>.
+   * @throws IllegalArgumentException
+   *           in case the given channel was <code>null</code>.
    */
-  void clearAll();
+  void clear( Channel aChannel );
 
   /**
    * Clears all annotations of the channel denoted by the given index.
    * 
    * @param aChannelIdx
-   *          the index of the channel to retrieve the annotations for, &gt;= 0
-   *          && &lt; 32.
+   *          the index of the channel to clear the annotations for, &gt;= 0 &&
+   *          &lt; 32.
    * @throws IllegalArgumentException
    *           in case the given channel index was invalid.
    */
   void clear( int aChannelIdx );
+
+  /**
+   * Clears all annotations of all channels.
+   */
+  void clearAll();
 
   /**
    * Returns all annotations of all channels in a single set.

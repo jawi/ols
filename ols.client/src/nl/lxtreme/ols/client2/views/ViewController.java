@@ -21,6 +21,7 @@
 package nl.lxtreme.ols.client2.views;
 
 
+import static nl.lxtreme.ols.client2.ClientConstants.*;
 import nl.lxtreme.ols.client2.Client.JumpDirection;
 import nl.lxtreme.ols.client2.Client.JumpType;
 import nl.lxtreme.ols.client2.actionmanager.*;
@@ -31,6 +32,7 @@ import nl.lxtreme.ols.common.session.*;
 import nl.lxtreme.ols.util.swing.*;
 
 import org.apache.felix.dm.*;
+import org.osgi.service.event.*;
 
 
 /**
@@ -99,6 +101,23 @@ public class ViewController
   public BaseView getView()
   {
     return this.view;
+  }
+
+  /**
+   * {@inheritDoc}
+   */
+  public void handleEvent( String aTopic, Event aEvent )
+  {
+    if ( aTopic.startsWith( TOPIC_CLIENT_STATE ) )
+    {
+      // Client state changed...
+      this.model.handleEvent( aTopic, aEvent );
+    }
+    else if ( aTopic.startsWith( TOPIC_ANNOTATIONS ) )
+    {
+      // Annotation added or removed...
+      this.view.handleEvent( aTopic, aEvent );
+    }
   }
 
   /**
