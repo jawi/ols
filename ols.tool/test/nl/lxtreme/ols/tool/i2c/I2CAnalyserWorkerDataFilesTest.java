@@ -165,6 +165,7 @@ public class I2CAnalyserWorkerDataFilesTest
     ToolProgressListener progressListener = Mockito.mock( ToolProgressListener.class );
 
     I2CAnalyserTask worker = new I2CAnalyserTask( toolContext, progressListener );
+    worker.setDecodingArea( 0, container.getValues().length - 1 );
     worker.setLineAIndex( this.lineAidx );
     worker.setLineBIndex( this.lineBidx );
     worker.setDetectSDA_SCL( this.autoDetectSDA );

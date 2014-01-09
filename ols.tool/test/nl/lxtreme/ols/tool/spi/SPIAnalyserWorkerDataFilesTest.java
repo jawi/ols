@@ -142,8 +142,12 @@ public class SPIAnalyserWorkerDataFilesTest
     ToolContext toolContext = DataTestUtils.createToolContext( container );
 
     ToolProgressListener tpl = Mockito.mock( ToolProgressListener.class );
+    
+    int startIdx = Math.max( 0, container.getSampleIndex( container.getTriggerPosition() ) - 1 );
+    int endIdx = container.getValues().length - 1;
 
     SPIAnalyserTask worker = new SPIAnalyserTask( toolContext, tpl );
+    worker.setDecodingArea( startIdx, endIdx );
     worker.setBitCount( this.bitCount - 1 );
     worker.setHonourCS( this.honourCS );
     worker.setReportCS( false );

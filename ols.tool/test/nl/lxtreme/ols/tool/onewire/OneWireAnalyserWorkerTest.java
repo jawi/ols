@@ -172,6 +172,7 @@ public class OneWireAnalyserWorkerTest
     ToolProgressListener toolProgressListener = Mockito.mock( ToolProgressListener.class );
 
     OneWireAnalyserTask worker = new OneWireAnalyserTask( toolContext, toolProgressListener );
+    worker.setDecodingArea( 0, container.getValues().length - 1 );
     worker.setOneWireLineIndex( this.channelIdx );
     worker.setOneWireBusMode( this.busMode );
 

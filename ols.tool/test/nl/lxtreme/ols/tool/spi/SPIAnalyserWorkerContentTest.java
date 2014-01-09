@@ -107,11 +107,12 @@ public class SPIAnalyserWorkerContentTest
   {
     URL resource = ResourceUtils.getResource( getClass(), aResourceName );
     AcquisitionData container = DataTestUtils.getCapturedData( resource );
-    ToolContext toolContext = DataTestUtils.createToolContext( container, 0, container.getValues().length - 1 );
+    ToolContext toolContext = DataTestUtils.createToolContext( container );
 
     ToolProgressListener tpl = Mockito.mock( ToolProgressListener.class );
 
     SPIAnalyserTask worker = new SPIAnalyserTask( toolContext, tpl );
+    worker.setDecodingArea( 0, container.getValues().length - 1 );
     worker.setBitCount( aBitCount - 1 );
     worker.setHonourCS( aHonourCS );
     worker.setReportCS( false );

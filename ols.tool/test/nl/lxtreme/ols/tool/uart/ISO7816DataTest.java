@@ -153,6 +153,7 @@ public class ISO7816DataTest
     ToolProgressListener tpl = Mockito.mock( ToolProgressListener.class );
 
     UARTAnalyserTask worker = new UARTAnalyserTask( toolContext, tpl );
+    worker.setDecodingArea( 0, container.getValues().length - 1 );
     worker.setBitCount( 8 );
     worker.setStopBits( StopBits.ONE );
     worker.setParity( aParity );

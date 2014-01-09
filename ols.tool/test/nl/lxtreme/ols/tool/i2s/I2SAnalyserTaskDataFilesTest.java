@@ -110,11 +110,12 @@ public class I2SAnalyserTaskDataFilesTest
   {
     URL resource = ResourceUtils.getResource( getClass(), aResourceName );
     AcquisitionData container = DataTestUtils.getCapturedData( resource );
-    ToolContext toolContext = DataTestUtils.createToolContext( container, 0, Integer.MAX_VALUE );
+    ToolContext toolContext = DataTestUtils.createToolContext( container );
 
     ToolProgressListener progressListener = Mockito.mock( ToolProgressListener.class );
 
     I2SAnalyserTask worker = new I2SAnalyserTask( toolContext, progressListener );
+    worker.setDecodingArea( 0, container.getValues().length - 1 );
     worker.setClockIndex( this.clockIdx );
     worker.setDataIndex( this.dataIdx );
     worker.setWordSelectIndex( this.wsIdx );

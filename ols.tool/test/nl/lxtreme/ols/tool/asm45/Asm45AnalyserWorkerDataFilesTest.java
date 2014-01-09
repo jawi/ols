@@ -146,6 +146,7 @@ public class Asm45AnalyserWorkerDataFilesTest
     ToolProgressListener toolProgressListener = Mockito.mock( ToolProgressListener.class );
 
     Asm45AnalyserTask worker = new Asm45AnalyserTask( toolContext, toolProgressListener );
+    worker.setDecodingArea( 0, container.getValues().length - 1 );
     worker.setLineSMCIndex( this.lineSMCidx );
     worker.setLineSTMIndex( this.lineSTMidx );
     worker.setLineEBGIndex( this.lineEBGidx );

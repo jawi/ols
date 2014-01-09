@@ -96,6 +96,7 @@ public class I2CAnalyserWorkerContentTest
     ToolProgressListener progressListener = Mockito.mock( ToolProgressListener.class );
 
     I2CAnalyserTask worker = new I2CAnalyserTask( toolContext, progressListener );
+    worker.setDecodingArea( 0, container.getValues().length - 1 );
     worker.setLineAIndex( aSclIndex );
     worker.setLineBIndex( aSdaIndex );
     worker.setDetectSDA_SCL( false );
