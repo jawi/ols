@@ -347,8 +347,17 @@ public class UserSettingsProviderImpl implements UserSettingProvider
       {
         return false;
       }
-      return ( ( aComponent instanceof JFrame ) && !( ( JFrame )aComponent ).isUndecorated() )
-          || ( ( aComponent instanceof JDialog ) && !( ( JDialog )aComponent ).isUndecorated() );
+      if ( aComponent instanceof JFrame )
+      {
+        JFrame frame = ( JFrame )aComponent;
+        return !frame.isUndecorated() && frame.isResizable();
+      }
+      if ( aComponent instanceof JDialog )
+      {
+        JDialog dialog = ( JDialog )aComponent;
+        return !dialog.isUndecorated() && dialog.isResizable();
+      }
+      return false;
     }
 
     /**

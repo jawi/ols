@@ -128,23 +128,6 @@ final class WaveformViewComponent extends JComponent implements Scrollable
    * {@inheritDoc}
    */
   @Override
-  public void addNotify()
-  {
-    super.addNotify();
-
-    // Bootstrap the width of this component...
-    int width = ( int )( this.model.getZoomFactor() * this.model.getAbsoluteLength() );
-    int height = this.model.calculateScreenHeight();
-
-    setPreferredSize( new Dimension( width, height ) );
-
-    revalidate();
-  }
-
-  /**
-   * {@inheritDoc}
-   */
-  @Override
   public Dimension getPreferredScrollableViewportSize()
   {
     return getPreferredSize();
@@ -176,6 +159,12 @@ final class WaveformViewComponent extends JComponent implements Scrollable
   @Override
   public boolean getScrollableTracksViewportHeight()
   {
+    // Taken from the JList implementation...
+    JComponent parent = ( JComponent )getParent();
+    if ( parent instanceof JViewport )
+    {
+      return parent.getHeight() > getPreferredSize().height;
+    }
     return false;
   }
 
@@ -185,6 +174,12 @@ final class WaveformViewComponent extends JComponent implements Scrollable
   @Override
   public boolean getScrollableTracksViewportWidth()
   {
+    // Taken from the JList implementation...
+    JComponent parent = ( JComponent )getParent();
+    if ( parent instanceof JViewport )
+    {
+      return parent.getWidth() > getPreferredSize().width;
+    }
     return false;
   }
 
@@ -205,8 +200,8 @@ final class WaveformViewComponent extends JComponent implements Scrollable
   {
     try
     {
-      final Rectangle clip = aGraphics.getClipBounds();
-      final WaveformElement[] elements = this.model.getWaveformElements( clip.y, clip.height, LOOSE_MEASURER );
+      Rectangle clip = aGraphics.getClipBounds();
+      WaveformElement[] elements = this.model.getWaveformElements( clip.y, clip.height, LOOSE_MEASURER );
 
       Graphics2D canvas = ( Graphics2D )aGraphics.create();
 

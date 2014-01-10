@@ -115,9 +115,6 @@ public class WaveformModel extends ViewModel
   /**
    * Returns the absolute height of the screen.
    * 
-   * @param aHeightProvider
-   *          the provider for the various element's heights, cannot be
-   *          <code>null</code>.
    * @return a screen height, in pixels, >= 0 && < {@value Integer#MAX_VALUE}.
    */
   public int calculateScreenHeight()
@@ -131,6 +128,16 @@ public class WaveformModel extends ViewModel
     }
 
     return height;
+  }
+
+  /**
+   * Returns the absolute width of the screen.
+   * 
+   * @return a screen width, in pixels, >= 0 && < {@value Integer#MAX_VALUE}.
+   */
+  public int calculateScreenWidth()
+  {
+    return ( int )( getZoomFactor() * getAbsoluteLength() );
   }
 
   /**

@@ -302,12 +302,14 @@ final class WaveformTimelineComponent extends JComponent
   public WaveformTimelineComponent( WaveformModel aModel )
   {
     this.model = aModel;
-    
+
     setOpaque( true );
     // Inherit the popup menu from our parent...
     setInheritsPopupMenu( true );
     // Enable synthetic drag events (even when mouse is outside window)...
     setAutoscrolls( true );
+    // We can NOT receive the focus...
+    setFocusable( false );
   }
 
   // METHODS
@@ -323,23 +325,6 @@ final class WaveformTimelineComponent extends JComponent
     hints.put( KEY_COLOR_RENDERING, VALUE_COLOR_RENDER_QUALITY );
     hints.put( KEY_RENDERING, VALUE_RENDER_QUALITY );
     return hints;
-  }
-
-  /**
-   * {@inheritDoc}
-   */
-  @Override
-  public void addNotify()
-  {
-    super.addNotify();
-
-    // Bootstrap the width of this component...
-    int width = ( int )( this.model.getZoomFactor() * this.model.getAbsoluteLength() );
-    int height = getInt( TIMELINE_HEIGHT, 40 );
-
-    setPreferredSize( new Dimension( width, height ) );
-
-    revalidate();
   }
 
   /**

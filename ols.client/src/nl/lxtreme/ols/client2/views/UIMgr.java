@@ -83,6 +83,9 @@ public final class UIMgr
   /** The default color for channels, group summary and the scope of group 4. */
   public static final String CHANNEL_GROUP4_DEFAULT_COLOR = "ols.channelgroup4.default.color";
 
+  /** The default color of cursors. */
+  public static final String CURSOR_DEFAULT_COLOR = "ols.cursor.default.color";
+
   /** The height of the signal group, in pixels. */
   public static final String SIGNAL_GROUP_HEIGHT = "ols.signalgroup.height";
   /** The height of the digital channels, in pixels. */
@@ -249,6 +252,10 @@ public final class UIMgr
 
       result = UIManager.getColor( key );
     }
+    if ( result == null )
+    {
+      result = UIManager.getColor( CURSOR_DEFAULT_COLOR );
+    }
     return ( result == null ) ? Color.ORANGE.darker() : result;
   }
 
@@ -263,7 +270,9 @@ public final class UIMgr
     Color result = aChannelGroup.getColor();
     if ( result == null )
     {
-      String key = String.format( "ols.channelgroup%d.default.color", aChannelGroup.getIndex() );
+      Integer groupIdx = Integer.valueOf( aChannelGroup.getIndex() + 1 );
+      
+      String key = String.format( "ols.channelgroup%d.default.color", groupIdx );
       result = UIManager.getColor( key );
     }
     return ( result == null ) ? Color.BLUE.darker() : result;

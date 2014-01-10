@@ -64,6 +64,8 @@ class WaveformLabelComponent extends JComponent
     setInheritsPopupMenu( true );
     // Enable synthetic drag events (even when mouse is outside window)...
     setAutoscrolls( true );
+    // We can NOT receive the focus...
+    setFocusable( false );
   }
 
   // METHODS
@@ -82,20 +84,44 @@ class WaveformLabelComponent extends JComponent
   }
 
   /**
-   * {@inheritDoc}
+   * Determines the preferred width of this view, based on the current set of
+   * channel labels.
+   * 
+   * @return a width, in pixels.
    */
-  @Override
-  public void addNotify()
+  public int getPreferredWidth()
   {
-    super.addNotify();
+    int minWidth = 0;
 
-    // Bootstrap the width of this component...
-    int width = getPreferredWidth();
-    int height = this.model.calculateScreenHeight();
+    BufferedImage dummy = new BufferedImage( 1, 1, BufferedImage.TYPE_INT_ARGB );
+    Graphics2D canvas = dummy.createGraphics();
 
-    setPreferredSize( new Dimension( width, height ) );
+    int padding = ( 2 * getInt( CHANNELLABELS_PADDING, 1 ) ) + getInt( CHANNELLABELS_GUTTER_WIDTH, 1 );
 
-    revalidate();
+    try
+    {
+      final FontMetrics fm = canvas.getFontMetrics( UIMgr.getFont( CHANNELLABELS_LABEL_FONT ) );
+      for ( WaveformElement element : this.model.getWaveformElements() )
+      {
+        String label = element.getLabel();
+        if ( label == null )
+        {
+          label = "";
+        }
+        minWidth = Math.max( minWidth, fm.stringWidth( label ) + padding );
+      }
+    }
+    finally
+    {
+      canvas.dispose();
+      canvas = null;
+      dummy = null;
+    }
+
+    // And always ensure we've got at least a minimal width...
+    minWidth = Math.max( minWidth, getInt( CHANNELLABELS_MINIMAL_WIDTH, 50 ) );
+
+    return minWidth;
   }
 
   /**
@@ -177,47 +203,6 @@ class WaveformLabelComponent extends JComponent
 
     aCanvas.setColor( aColor );
     aCanvas.drawString( aText, aXpos, aYpos );
-  }
-
-  /**
-   * Determines the preferred width of this view, based on the current set of
-   * channel labels.
-   * 
-   * @return a width, in pixels.
-   */
-  private int getPreferredWidth()
-  {
-    int minWidth = 0;
-
-    BufferedImage dummy = new BufferedImage( 1, 1, BufferedImage.TYPE_INT_ARGB );
-    Graphics2D canvas = dummy.createGraphics();
-
-    int padding = ( 2 * getInt( CHANNELLABELS_PADDING, 1 ) ) + getInt( CHANNELLABELS_GUTTER_WIDTH, 1 );
-
-    try
-    {
-      final FontMetrics fm = canvas.getFontMetrics( UIMgr.getFont( CHANNELLABELS_LABEL_FONT ) );
-      for ( WaveformElement element : this.model.getWaveformElements() )
-      {
-        String label = element.getLabel();
-        if ( label == null )
-        {
-          label = "";
-        }
-        minWidth = Math.max( minWidth, fm.stringWidth( label ) + padding );
-      }
-    }
-    finally
-    {
-      canvas.dispose();
-      canvas = null;
-      dummy = null;
-    }
-
-    // And always ensure we've got at least a minimal width...
-    minWidth = Math.max( minWidth, getInt( CHANNELLABELS_MINIMAL_WIDTH, 50 ) );
-
-    return minWidth;
   }
 
   /**
