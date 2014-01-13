@@ -76,7 +76,7 @@ import com.jidesoft.swing.*;
  * Represents the main client.
  */
 public class Client extends DefaultDockableHolder implements ApplicationCallback, Closeable, AcquisitionStatusListener,
-    AcquisitionProgressListener, EventHandler
+    AcquisitionProgressListener, EventHandler, CursorChangeListener
 {
   // INNER TYPES
 
@@ -273,6 +273,9 @@ public class Client extends DefaultDockableHolder implements ApplicationCallback
   {
     if ( this.viewControllers.add( aController ) )
     {
+      // Register ourselves as cursor change listener...
+      aController.addCursorChangeListener( this );
+
       SwingComponentUtils.invokeOnEDT( new Runnable()
       {
         @Override
@@ -401,6 +404,15 @@ public class Client extends DefaultDockableHolder implements ApplicationCallback
         return getCurrentSession().getAcquiredData();
       }
     };
+  }
+
+  /**
+   * {@inheritDoc}
+   */
+  @Override
+  public void cursorChanged( CursorChangeEvent aEvent )
+  {
+    postEvent( TOPIC_CLIENT_STATE.concat( "/CURSOR_CHANGED" ), "cursor", aEvent.getNewValue(), "controller", getCurrentViewController() );
   }
 
   /**
@@ -813,6 +825,9 @@ public class Client extends DefaultDockableHolder implements ApplicationCallback
   {
     if ( this.viewControllers.remove( aController ) )
     {
+      // Register ourselves as cursor change listener...
+      aController.removeCursorChangeListener( this );
+
       SwingComponentUtils.invokeOnEDT( new Runnable()
       {
         @Override
@@ -949,7 +964,8 @@ public class Client extends DefaultDockableHolder implements ApplicationCallback
       data.setCursorsVisible( aCursorsVisible );
     }
 
-    postEvent( TOPIC_CLIENT_STATE.concat( "/MODE" ), "cursorsVisible", aCursorsVisible, "controller", getCurrentViewController() );
+    postEvent( TOPIC_CLIENT_STATE.concat( "/MODE" ), "cursorsVisible", aCursorsVisible, "controller",
+        getCurrentViewController() );
     updateManagedState();
     repaint();
   }
@@ -972,7 +988,8 @@ public class Client extends DefaultDockableHolder implements ApplicationCallback
       this.mode &= ~MODE_MEASUREMENT;
     }
 
-    postEvent( TOPIC_CLIENT_STATE.concat( "/MODE" ), "measurementMode", aEnabled, "controller", getCurrentViewController() );
+    postEvent( TOPIC_CLIENT_STATE.concat( "/MODE" ), "measurementMode", aEnabled, "controller",
+        getCurrentViewController() );
     updateManagedState();
     repaint();
   }

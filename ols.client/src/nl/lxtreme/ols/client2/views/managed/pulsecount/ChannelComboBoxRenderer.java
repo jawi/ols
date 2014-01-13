@@ -16,24 +16,44 @@
  * 51 Franklin St, Fifth Floor, Boston, MA 02110, USA
  *
  * Copyright (C) 2006-2010 Michael Poppitz, www.sump.org
- * Copyright (C) 2010-2013 J.W. Janssen, www.lxtreme.nl
+ * Copyright (C) 2010-2014 J.W. Janssen, www.lxtreme.nl
  */
-package nl.lxtreme.ols.client2.views;
+package nl.lxtreme.ols.client2.views.managed.pulsecount;
 
+
+import java.awt.*;
+
+import javax.swing.*;
 
 import nl.lxtreme.ols.common.acquisition.*;
 
 
 /**
- * Generalization of {@link Cursor} for visual markers in a view.
+ * Provides a renderer for the channels combobox.
  */
-public interface IMarker extends Cursor
+final class ChannelComboBoxRenderer extends DefaultListCellRenderer
 {
+  // CONSTANTS
+
+  private static final long serialVersionUID = 1L;
+
   // METHODS
 
-  /**
-   * @return <code>true</code> if this marker can be moved, <code>false</code>
-   *         otherwise.
-   */
-  boolean isMoveable();
+  @Override
+  public Component getListCellRendererComponent( JList aList, Object aValue, int aIndex, boolean aIsSelected, boolean aCellHasFocus )
+  {
+    StringBuilder sb = new StringBuilder();
+    if ( aValue instanceof Channel )
+    {
+      Channel channel = ( Channel )aValue;
+
+      sb.append( channel.getIndex() );
+      if ( channel.hasName() )
+      {
+        sb.append( ", " ).append( channel.getLabel() );
+      }
+    }
+
+    return super.getListCellRendererComponent( aList, sb.toString(), aIndex, aIsSelected, aCellHasFocus );
+  }
 }

@@ -27,6 +27,7 @@ import javax.swing.event.*;
 
 import org.osgi.service.event.*;
 
+import nl.lxtreme.ols.client2.views.CursorChangeListener.CursorChangeEvent;
 import nl.lxtreme.ols.common.acquisition.*;
 import nl.lxtreme.ols.common.annotation.*;
 import nl.lxtreme.ols.common.session.*;
@@ -67,9 +68,9 @@ public class ViewModel
    * @param aListener
    *          the listener to add, cannot be <code>null</code>.
    */
-  public void addMarkerChangeListener( IMarkerChangeListener aListener )
+  public void addCursorChangeListener( CursorChangeListener aListener )
   {
-    this.listeners.add( IMarkerChangeListener.class, aListener );
+    this.listeners.add( CursorChangeListener.class, aListener );
   }
 
   /**
@@ -78,6 +79,20 @@ public class ViewModel
   public boolean areCursorsVisible()
   {
     return getData().areCursorsVisible();
+  }
+
+  /**
+   * @param aEvent
+   */
+  public void fireCursorChangeEvent( String aPropertyName, Cursor aOldCursor, Cursor aNewCursor )
+  {
+    CursorChangeEvent event = new CursorChangeEvent( aPropertyName, aOldCursor, aNewCursor );
+
+    CursorChangeListener[] listeners = this.listeners.getListeners( CursorChangeListener.class );
+    for ( CursorChangeListener listener : listeners )
+    {
+      listener.cursorChanged( event );
+    }
   }
 
   /**
@@ -156,9 +171,9 @@ public class ViewModel
    * @param aListener
    *          the listener to remove, cannot be <code>null</code>.
    */
-  public void removeMarkerChangeListener( IMarkerChangeListener aListener )
+  public void removeCursorChangeListener( CursorChangeListener aListener )
   {
-    this.listeners.remove( IMarkerChangeListener.class, aListener );
+    this.listeners.remove( CursorChangeListener.class, aListener );
   }
 
   /**

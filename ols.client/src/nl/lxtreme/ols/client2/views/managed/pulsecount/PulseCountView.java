@@ -33,7 +33,6 @@ import javax.swing.*;
 import nl.lxtreme.ols.client2.views.*;
 import nl.lxtreme.ols.client2.views.managed.*;
 import nl.lxtreme.ols.common.acquisition.*;
-import nl.lxtreme.ols.common.acquisition.Cursor.LabelStyle;
 import nl.lxtreme.ols.common.acquisition.Cursor;
 import nl.lxtreme.ols.util.swing.*;
 import nl.lxtreme.ols.util.swing.component.*;
@@ -48,314 +47,6 @@ import com.jidesoft.docking.*;
  */
 public class PulseCountView extends AbstractManagedView implements EventHandler
 {
-  // INNER TYPES
-
-  /**
-   * Provides a renderer for the channels combobox.
-   */
-  static final class ChannelComboBoxRenderer extends DefaultListCellRenderer
-  {
-    private static final long serialVersionUID = 1L;
-
-    @Override
-    public Component getListCellRendererComponent( final JList aList, final Object aValue, final int aIndex,
-        final boolean aIsSelected, final boolean aCellHasFocus )
-    {
-      StringBuilder sb = new StringBuilder();
-      if ( ( aValue != null ) && ( aValue instanceof Channel ) )
-      {
-        final Channel channel = ( Channel )aValue;
-        sb.append( channel.getIndex() );
-        if ( channel.hasName() )
-        {
-          sb.append( ", " ).append( channel.getLabel() );
-        }
-      }
-
-      return super.getListCellRendererComponent( aList, sb.toString(), aIndex, aIsSelected, aCellHasFocus );
-    }
-  }
-
-  /**
-   * Provides a renderer for the cursor combobox.
-   */
-  final class CursorComboBoxRenderer extends DefaultListCellRenderer
-  {
-    private static final long serialVersionUID = 1L;
-
-    @Override
-    public Component getListCellRendererComponent( final JList aList, final Object aValue, final int aIndex,
-        final boolean aIsSelected, final boolean aCellHasFocus )
-    {
-      String text;
-      if ( ( aValue != null ) && ( aValue instanceof Cursor ) )
-      {
-        Cursor cursor = ( Cursor )aValue;
-        text = cursor.getLabel( LabelStyle.INDEX_LABEL );
-      }
-      else if ( aValue != null )
-      {
-        text = String.valueOf( aValue );
-      }
-      else
-      {
-        text = "";
-      }
-
-      return super.getListCellRendererComponent( aList, text, aIndex, aIsSelected, aCellHasFocus );
-    }
-  }
-
-  /**
-   * {@link ActionListener} implementation to initiate a pulse count.
-   */
-  final class PulseCountActionListener implements ActionListener
-  {
-    /**
-     * {@inheritDoc}
-     */
-    @Override
-    public void actionPerformed( ActionEvent aEvent )
-    {
-      startPulseCount();
-    }
-  }
-
-  /**
-   * Represents a small DTO for measured pulse count information.
-   */
-  static final class PulseCountInfo
-  {
-    final Double measureTime;
-    final Integer risingEdgeCount;
-    final Integer fallingEdgeCount;
-    final Integer totalEdgeCount;
-    final long totalLowTime;
-    final long totalHighTime;
-    final Integer pulseCount;
-    final int sampleRate;
-    final boolean hasTimingData;
-
-    /**
-     * Creates a new {@link PulseCountInfo} instance.
-     */
-    public PulseCountInfo( final double aMeasureTime, final int aRisingEdgeCount, final int aFallingEdgeCount,
-        final long aTotalLowTime, final long aTotalHighTime, final int aSampleRate, final boolean aHasTimingData )
-    {
-      this.measureTime = Double.valueOf( aMeasureTime );
-      this.risingEdgeCount = Integer.valueOf( aRisingEdgeCount );
-      this.fallingEdgeCount = Integer.valueOf( aFallingEdgeCount );
-      this.totalEdgeCount = Integer.valueOf( aRisingEdgeCount + aFallingEdgeCount );
-      this.totalLowTime = aTotalLowTime;
-      this.totalHighTime = aTotalHighTime;
-      this.pulseCount = Integer.valueOf( this.totalEdgeCount.intValue() / 2 );
-      this.sampleRate = aSampleRate;
-      this.hasTimingData = aHasTimingData;
-    }
-
-    /**
-     * @return
-     */
-    public double getDutyCycle()
-    {
-      final double avgHighTime = getAveragePulseHighTime();
-      final double avgLowTime = getAveragePulseLowTime();
-      return 100.0 * ( avgHighTime / ( avgHighTime + avgLowTime ) );
-    }
-
-    /**
-     * @return
-     */
-    public Double getFrequency()
-    {
-      return Double.valueOf( this.sampleRate / ( getAveragePulseHighTime() + getAveragePulseLowTime() ) );
-    }
-
-    /**
-     * @return
-     */
-    private double getAveragePulseHighTime()
-    {
-      return ( this.totalHighTime / this.fallingEdgeCount.doubleValue() );
-    }
-
-    /**
-     * @return
-     */
-    private double getAveragePulseLowTime()
-    {
-      return ( this.totalLowTime / this.risingEdgeCount.doubleValue() );
-    }
-  }
-
-  /**
-   * Does the actual measurement of the signal.
-   */
-  static final class SignalMeasurer
-  {
-    // VARIABLES
-
-    private final AcquisitionData result;
-    private final int mask;
-    private final long startTimestamp;
-    private final long endTimestamp;
-
-    // CONSTRUCTORS
-
-    /**
-     * Creates a new {@link SignalMeasurer} instance.
-     */
-    public SignalMeasurer( final AcquisitionData aResult, final int aIndex, final long aStartTimestamp,
-        final long aEndTimestamp )
-    {
-      this.result = aResult;
-      this.mask = ( 1 << aIndex );
-      this.startTimestamp = aStartTimestamp;
-      this.endTimestamp = aEndTimestamp;
-    }
-
-    // METHODS
-
-    /**
-     * Executes the actual measurement.
-     * 
-     * @return the measurement information, never <code>null</code>.
-     */
-    public PulseCountInfo run()
-    {
-      final int startIdx = this.result.getSampleIndex( this.startTimestamp );
-      final int endIdx = this.result.getSampleIndex( this.endTimestamp );
-
-      final boolean hasTimingData = this.result.hasTimingData();
-
-      final int[] values = this.result.getValues();
-      final long[] timestamps = this.result.getTimestamps();
-
-      int fallingEdgeCount = 0;
-      long highTime = 0;
-      int risingEdgeCount = 0;
-      long lowTime = 0;
-
-      int i = startIdx;
-      long lastTransition = timestamps[i];
-      int lastBitValue = values[i++] & this.mask;
-
-      for ( ; !Thread.currentThread().isInterrupted() && ( i <= endIdx ); i++ )
-      {
-        final int bitValue = values[i] & this.mask;
-        final Edge edge = Edge.toEdge( lastBitValue, bitValue );
-
-        if ( !edge.isNone() )
-        {
-          final long periodTime = timestamps[i] - lastTransition;
-          lastTransition = timestamps[i];
-
-          if ( edge.isRising() )
-          {
-            // Low to high transition: previously seen a low-state...
-            risingEdgeCount++;
-            lowTime += periodTime;
-          }
-          else
-          /* if ( edge.isFalling() ) */
-          {
-            // High to low transition: previously seen a high-state...
-            fallingEdgeCount++;
-            highTime += periodTime;
-          }
-        }
-
-        lastBitValue = bitValue;
-      }
-
-      final double measureTime = Math.abs( ( this.endTimestamp - this.startTimestamp )
-          / ( double )this.result.getSampleRate() );
-
-      return new PulseCountInfo( measureTime, risingEdgeCount, fallingEdgeCount, lowTime, highTime,
-          this.result.getSampleRate(), hasTimingData );
-    }
-  }
-
-  /**
-   * Provides a {@link SwingWorker} to measure the frequency, dutycycle and such
-   * asynchronously from the UI.
-   */
-  final class SignalMeasurerWorker extends SwingWorker<PulseCountInfo, Boolean>
-  {
-    // VARIABLES
-
-    private final AcquisitionData data;
-    private final int index;
-    private final long startTimestamp;
-    private final long endTimestamp;
-
-    // CONSTRUCTORS
-
-    /**
-     * Creates a new {@link SignalMeasurerWorker} instance.
-     * 
-     * @param aChannel
-     *          the channel to measure;
-     * @param aCursorA
-     *          the cursor denoting the start of measurement;
-     * @param aCursorB
-     *          the cursor denoting the end of measurement.
-     */
-    public SignalMeasurerWorker( AcquisitionData aData, Channel aChannel, Cursor aCursorA, Cursor aCursorB )
-    {
-      this.data = aData;
-      this.index = aChannel.getIndex();
-      this.startTimestamp = aCursorA != null ? aCursorA.getTimestamp() : -1L;
-      this.endTimestamp = aCursorB != null ? aCursorB.getTimestamp() : -1L;
-    }
-
-    // METHODS
-
-    /**
-     * {@inheritDoc}
-     */
-    @Override
-    protected PulseCountInfo doInBackground() throws Exception
-    {
-      long[] timestamps = this.data.getTimestamps();
-
-      long start = this.startTimestamp;
-      if ( start < 0L )
-      {
-        start = timestamps[0];
-      }
-      long end = this.endTimestamp;
-      if ( end < 0L )
-      {
-        end = timestamps[timestamps.length - 1];
-      }
-
-      return new SignalMeasurer( this.data, this.index, start, end ).run();
-    }
-
-    /**
-     * {@inheritDoc}
-     */
-    @Override
-    protected void done()
-    {
-      try
-      {
-        updatePulseCountInformation( get() );
-
-        repaint( 50L );
-      }
-      catch ( Exception exception )
-      {
-        exception.printStackTrace();
-      }
-      finally
-      {
-        PulseCountView.this.indicator.setVisible( false );
-      }
-    }
-  }
-
   // CONSTANTS
 
   public static final String ID = "PulseCounter";
@@ -436,7 +127,7 @@ public class PulseCountView extends AbstractManagedView implements EventHandler
       {
         this.indicator.setVisible( true );
 
-        this.signalMeasurerWorker = new SignalMeasurerWorker( getAcquiredData(), channel, cursorA, cursorB );
+        this.signalMeasurerWorker = new SignalMeasurerWorker( this, getAcquiredData(), channel, cursorA, cursorB );
         this.signalMeasurerWorker.execute();
       }
     }
@@ -502,6 +193,10 @@ public class PulseCountView extends AbstractManagedView implements EventHandler
     this.pci_pulseCount.setText( pulseCountText );
     this.pci_risingEdgeCount.setText( risingCountText );
     this.pci_fallingEdgeCount.setText( fallingCountText );
+
+    repaint( 50L );
+
+    this.indicator.setVisible( false );
   }
 
   /**
@@ -572,7 +267,14 @@ public class PulseCountView extends AbstractManagedView implements EventHandler
     this.pci_risingEdgeCount = new JLabel();
     this.pci_fallingEdgeCount = new JLabel();
 
-    ActionListener actionListener = new PulseCountActionListener();
+    final ActionListener actionListener = new ActionListener()
+    {
+      @Override
+      public void actionPerformed( ActionEvent aEvent )
+      {
+        startPulseCount();
+      }
+    };
 
     this.measureChannel = updateChannelComboBoxModel( new JComboBox() );
     this.measureChannel.setRenderer( new ChannelComboBoxRenderer() );

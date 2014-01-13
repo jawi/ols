@@ -22,6 +22,9 @@ package nl.lxtreme.ols.client2.views;
 
 
 import static nl.lxtreme.ols.client2.ClientConstants.*;
+
+import javax.swing.*;
+
 import nl.lxtreme.ols.client2.Client.JumpDirection;
 import nl.lxtreme.ols.client2.Client.JumpType;
 import nl.lxtreme.ols.client2.actionmanager.*;
@@ -29,7 +32,6 @@ import nl.lxtreme.ols.client2.views.state.*;
 import nl.lxtreme.ols.client2.views.waveform.*;
 import nl.lxtreme.ols.common.acquisition.*;
 import nl.lxtreme.ols.common.session.*;
-import nl.lxtreme.ols.util.swing.*;
 
 import org.apache.felix.dm.*;
 import org.osgi.service.event.*;
@@ -63,14 +65,14 @@ public class ViewController
   // METHODS
 
   /**
-   * Adds a given listener to the list of marker change listeners.
+   * Adds a given listener to the list of cursor change listeners.
    * 
    * @param aListener
    *          the listener to add, cannot be <code>null</code>.
    */
-  public void addMarkerChangeListener( IMarkerChangeListener aListener )
+  public void addCursorChangeListener( CursorChangeListener aListener )
   {
-    this.model.addMarkerChangeListener( aListener );
+    this.model.addCursorChangeListener( aListener );
   }
 
   /**
@@ -121,14 +123,14 @@ public class ViewController
   }
 
   /**
-   * Removes a given listener from the list of marker change listeners.
+   * Removes a given listener from the list of cursor change listeners.
    * 
    * @param aListener
    *          the listener to remove, cannot be <code>null</code>.
    */
-  public void removeMarkerChangeListener( IMarkerChangeListener aListener )
+  public void removeCursorChangeListener( CursorChangeListener aListener )
   {
-    this.model.removeMarkerChangeListener( aListener );
+    this.model.removeCursorChangeListener( aListener );
   }
 
   /**
@@ -262,9 +264,9 @@ public class ViewController
    * This method is called by Felix DM upon starting of this component.
    * </p>
    */
-  protected void start( Component aComponent )
+  protected void start( Component aComponent ) throws Exception
   {
-    SwingComponentUtils.invokeOnEDT( new Runnable()
+    SwingUtilities.invokeAndWait( new Runnable()
     {
       @Override
       public void run()

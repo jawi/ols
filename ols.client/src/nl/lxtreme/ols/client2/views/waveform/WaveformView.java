@@ -62,7 +62,6 @@ public class WaveformView extends BaseView
   {
     // VARIABLES
 
-    private volatile Cursor movingCursor = null;
     private volatile Point lastClickPosition = null;
 
     // METHODS
@@ -133,21 +132,26 @@ public class WaveformView extends BaseView
     public void mouseDragged( MouseEvent aEvent )
     {
       WaveformModel model = ( WaveformModel )WaveformView.this.model;
+      Cursor movingCursor = model.getSelectedCursor();
       MouseEvent event = convertEvent( aEvent );
       Point point = event.getPoint();
 
       // Update the selected element...
       updateSelectedElement( model, point );
 
-      if ( model.areCursorsVisible() && ( this.movingCursor != null ) )
+      if ( model.areCursorsVisible() && ( movingCursor != null ) )
       {
+        Cursor oldCursor = movingCursor.clone();
+        long oldTimestamp = oldCursor.getTimestamp();
+
         long newTimestamp = model.coordinateToTimestamp( point );
+        movingCursor.setTimestamp( newTimestamp );
 
-        repaintCursor( this.movingCursor );
+        repaintCursor( oldTimestamp );
+        repaintCursor( newTimestamp );
 
-        this.movingCursor.setTimestamp( newTimestamp );
-
-        repaintCursor( this.movingCursor );
+        // Fire an event to the interested listeners...
+        model.fireCursorChangeEvent( CursorChangeListener.PROPERTY_TIMESTAMP, oldCursor, movingCursor );
 
         // We're done with the given event...
         aEvent.consume();
@@ -230,11 +234,8 @@ public class WaveformView extends BaseView
     @Override
     public void mousePressed( MouseEvent aEvent )
     {
-      WaveformModel model = ( WaveformModel )WaveformView.this.model;
       MouseEvent event = convertEvent( aEvent );
       Point point = event.getPoint();
-
-      this.movingCursor = model.getSelectedCursor();
 
       if ( ( aEvent.getModifiersEx() & InputEvent.BUTTON1_DOWN_MASK ) != 0 )
       {
@@ -249,7 +250,6 @@ public class WaveformView extends BaseView
     public void mouseReleased( MouseEvent aEvent )
     {
       setCursor( null );
-      this.movingCursor = null;
     }
 
     private MouseEvent convertEvent( final MouseEvent aEvent )
@@ -695,12 +695,23 @@ public class WaveformView extends BaseView
    */
   final void repaintCursor( Cursor aCursor )
   {
+    repaintCursor( aCursor.getTimestamp() );
+  }
+
+  /**
+   * Repaints the area taken up by the given cursor on screen.
+   * 
+   * @param aCursorTimestamp
+   *          the cursor timestamp to repaint, cannot be <code>null</code>.
+   */
+  final void repaintCursor( long aCursorTimestamp )
+  {
     WaveformModel model = ( WaveformModel )this.model;
 
     this.timelineComponent.repaint(); // TODO
 
     Rectangle rect = this.mainComponent.getVisibleRect();
-    rect.x = model.timestampToCoordinate( aCursor.getTimestamp() ) - 1;
+    rect.x = model.timestampToCoordinate( aCursorTimestamp ) - 1;
     rect.width = 2;
 
     this.mainComponent.repaint( rect );
