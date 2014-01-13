@@ -21,7 +21,6 @@
 package nl.lxtreme.ols.client2.views.managed.pulsecount;
 
 
-import static nl.lxtreme.ols.client2.ClientConstants.*;
 import static nl.lxtreme.ols.util.swing.SwingComponentUtils.*;
 
 import java.awt.*;
@@ -40,7 +39,6 @@ import nl.lxtreme.ols.util.swing.*;
 import nl.lxtreme.ols.util.swing.component.*;
 
 import org.osgi.service.event.*;
-import org.osgi.service.event.Event;
 
 import com.jidesoft.docking.*;
 
@@ -638,30 +636,6 @@ public class PulseCountView extends AbstractManagedView implements EventHandler
       setAcquiredData( null );
       updatePulseCountInformation( null );
     }
-  }
-
-  /**
-   * {@inheritDoc}
-   */
-  @Override
-  protected boolean handleEvent( String aTopic, Event aEvent )
-  {
-    String topic = aEvent.getTopic();
-    if ( topic.startsWith( TOPIC_CLIENT_STATE ) )
-    {
-      Object value = aEvent.getProperty( "cursorsVisible" );
-      if ( value != null )
-      {
-        boolean cursorsVisible = Boolean.TRUE.equals( value );
-        setCursorState( cursorsVisible );
-
-        return true;
-      }
-
-      setOtherState( aEvent.getProperty( "controller" ) != null );
-    }
-
-    return false;
   }
 
   /**

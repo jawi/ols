@@ -202,18 +202,12 @@ public abstract class AbstractManagedView extends JPanel implements ManagedView,
   public final void handleEvent( Event aEvent )
   {
     String topic = aEvent.getTopic();
-    if ( topic.startsWith( TOPIC_CLIENT_STATE ) )
+    if ( !handleEvent( topic, aEvent ) && topic.startsWith( TOPIC_CLIENT_STATE ) )
     {
-      String type = ( String )aEvent.getProperty( "type" );
-      if ( "viewChanged".equals( type ) )
-      {
-        ViewController viewController = ( ViewController )aEvent.getProperty( "controller" );
+      ViewController viewController = ( ViewController )aEvent.getProperty( "controller" );
 
-        updateState( viewController );
-      }
+      updateState( viewController );
     }
-
-    handleEvent( topic, aEvent );
   }
 
   /**

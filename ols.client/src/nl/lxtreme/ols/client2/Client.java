@@ -930,7 +930,7 @@ public class Client extends DefaultDockableHolder implements ApplicationCallback
       this.mode &= ~MODE_SNAP_CURSORS;
     }
 
-    postEvent( TOPIC_CLIENT_STATE.concat( "/MODE" ), "snapCursors", aEnabled );
+    postEvent( TOPIC_CLIENT_STATE.concat( "/MODE" ), "snapCursors", aEnabled, "controller", getCurrentViewController() );
     updateManagedState();
   }
 
@@ -949,7 +949,7 @@ public class Client extends DefaultDockableHolder implements ApplicationCallback
       data.setCursorsVisible( aCursorsVisible );
     }
 
-    postEvent( TOPIC_CLIENT_STATE.concat( "/MODE" ), "cursorsVisible", aCursorsVisible );
+    postEvent( TOPIC_CLIENT_STATE.concat( "/MODE" ), "cursorsVisible", aCursorsVisible, "controller", getCurrentViewController() );
     updateManagedState();
     repaint();
   }
@@ -972,7 +972,7 @@ public class Client extends DefaultDockableHolder implements ApplicationCallback
       this.mode &= ~MODE_MEASUREMENT;
     }
 
-    postEvent( TOPIC_CLIENT_STATE.concat( "/MODE" ), "measurementMode", aEnabled );
+    postEvent( TOPIC_CLIENT_STATE.concat( "/MODE" ), "measurementMode", aEnabled, "controller", getCurrentViewController() );
     updateManagedState();
     repaint();
   }

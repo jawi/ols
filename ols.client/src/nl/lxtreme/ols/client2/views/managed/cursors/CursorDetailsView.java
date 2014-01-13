@@ -34,6 +34,7 @@ import nl.lxtreme.ols.common.acquisition.Cursor.LabelStyle;
 import nl.lxtreme.ols.common.acquisition.Cursor;
 import nl.lxtreme.ols.util.swing.component.*;
 import nl.lxtreme.ols.util.swing.component.ClickableLink.LinkListener;
+import nl.lxtreme.ols.util.swing.component.ClickableLink.LinkTextModel;
 
 import com.jidesoft.docking.*;
 
@@ -108,29 +109,37 @@ public class CursorDetailsView extends AbstractManagedView
   {
     JPanel panel = new JPanel( new SpringLayout() );
 
-    for ( Cursor cursor : aCursors )
+    for ( final Cursor cursor : aCursors )
     {
       if ( !cursor.isDefined() )
       {
         continue;
       }
 
-      String label = cursor.getLabel( LabelStyle.INDEX_LABEL );
-      String linkText = cursor.getLabel( LabelStyle.TIME_ONLY );
-
-      ClickableLink link = new ClickableLink( linkText, Long.valueOf( cursor.getTimestamp() ) );
-      link.setLinkListener( new LinkListener()
+      LinkTextModel model = new LinkTextModel()
+      {
+        @Override
+        public String getText()
+        {
+          return cursor.getLabel( LabelStyle.LABEL_TIME );
+        }
+      };
+      LinkListener listener = new LinkListener()
       {
         @Override
         public void linkActivated( Object aLinkId )
         {
-          long timestamp = ( ( Long )aLinkId ).longValue();
+          long timestamp = ( ( Cursor )aLinkId ).getTimestamp();
           aController.scrollToTimestamp( timestamp );
         }
-      } );
+      };
+
+      ClickableLink link = new ClickableLink( model, cursor );
+      link.setLinkListener( listener );
       link.setEnabled( aCursorsVisible );
       link.setForeground( Color.BLUE );
 
+      String label = cursor.getLabel( LabelStyle.INDEX_ONLY );
       panel.add( createRightAlignedLabel( label.concat( ":" ) ) );
       panel.add( link );
     }
