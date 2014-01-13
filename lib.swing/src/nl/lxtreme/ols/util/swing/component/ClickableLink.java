@@ -23,6 +23,7 @@ package nl.lxtreme.ols.util.swing.component;
 
 import java.awt.*;
 import java.awt.event.*;
+import java.beans.*;
 
 import javax.swing.*;
 
@@ -33,6 +34,31 @@ import javax.swing.*;
 public class ClickableLink extends JLabel
 {
   // INNER TYPES
+
+  /**
+   * Default implementation of {@link LinkTextModel}.
+   */
+  public static class DefaultLinkTextModel implements LinkTextModel
+  {
+    private final String text;
+
+    /**
+     * Creates a new {@link DefaultLinkTextModel} instance.
+     */
+    public DefaultLinkTextModel( String aText )
+    {
+      this.text = aText;
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public String getText()
+    {
+      return this.text;
+    }
+  }
 
   /**
    * Will be called by {@link ClickableLink} when it is clicked.
@@ -48,12 +74,26 @@ public class ClickableLink extends JLabel
     void linkActivated( Object aLinkId );
   }
 
+  /**
+   * Used to create dynamic link texts.
+   */
+  public static interface LinkTextModel
+  {
+    /**
+     * Returns the actual text to display in this link.
+     * 
+     * @return the link text, never <code>null</code>.
+     */
+    String getText();
+  }
+
   // CONSTANTS
 
   private static final long serialVersionUID = 1L;
 
   // VARIABLES
 
+  private final LinkTextModel model;
   private final Object linkId;
 
   private MouseListener mouseListener;
@@ -72,11 +112,26 @@ public class ClickableLink extends JLabel
    *          the identifier object to pass to the {@link LinkListener}, if this
    *          link is clicked.
    */
-  public ClickableLink( final String aText, final Object aLinkId )
+  public ClickableLink( LinkTextModel aModel, Object aLinkId )
   {
-    super( aText );
+    super();
 
+    this.model = aModel;
     this.linkId = aLinkId;
+  }
+
+  /**
+   * Creates a new ClickableLink instance.
+   * 
+   * @param aText
+   *          the text of this link, can be <code>null</code>;
+   * @param aLinkId
+   *          the identifier object to pass to the {@link LinkListener}, if this
+   *          link is clicked.
+   */
+  public ClickableLink( String aText, Object aLinkId )
+  {
+    this( new DefaultLinkTextModel( aText ), aLinkId );
   }
 
   // METHODS
@@ -88,6 +143,21 @@ public class ClickableLink extends JLabel
   public void addNotify()
   {
     super.addNotify();
+
+    setOpaque( true );
+
+    addPropertyChangeListener( new PropertyChangeListener()
+    {
+      @Override
+      public void propertyChange( PropertyChangeEvent aEvt )
+      {
+        if ( "Frame.active".equals( aEvt.getPropertyName() ) )
+        {
+          revalidate();
+          repaint( 150L );
+        }
+      }
+    } );
 
     addMouseListener( this.mouseListener = new MouseAdapter()
     {
@@ -132,6 +202,19 @@ public class ClickableLink extends JLabel
    * {@inheritDoc}
    */
   @Override
+  public String getText()
+  {
+    if ( this.model == null )
+    {
+      return "";
+    }
+    return this.model.getText();
+  }
+
+  /**
+   * {@inheritDoc}
+   */
+  @Override
   public void removeNotify()
   {
     removeMouseListener( this.mouseListener );
@@ -149,6 +232,18 @@ public class ClickableLink extends JLabel
   public void setLinkListener( final LinkListener aListener )
   {
     this.linkListener = aListener;
+  }
+
+  /**
+   * {@inheritDoc}
+   */
+  @Override
+  public void setText( String aText )
+  {
+    if ( aText != null && !"".equals( aText.trim() ) )
+    {
+      throw new UnsupportedOperationException( "Use LinkTextModel instead!" );
+    }
   }
 
   /**
@@ -170,6 +265,10 @@ public class ClickableLink extends JLabel
   protected void paintComponent( final Graphics aCanvas )
   {
     Rectangle rect = getVisibleRect();
+
+    Rectangle clip = aCanvas.getClipBounds();
+
+    aCanvas.clearRect( clip.x, clip.y, clip.width, clip.height );
 
     Font f = getFont();
     FontMetrics fm = aCanvas.getFontMetrics( f );
