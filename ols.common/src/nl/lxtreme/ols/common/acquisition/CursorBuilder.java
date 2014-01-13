@@ -165,52 +165,7 @@ public class CursorBuilder
     @Override
     public String getLabel( final LabelStyle aStyle )
     {
-      if ( !isDefined() )
-      {
-        return "";
-      }
-
-      final String timestampText;
-      if ( this.data.hasTimingData() )
-      {
-        double _ts = this.timestamp;
-        if ( this.data.hasTriggerData() )
-        {
-          _ts -= this.data.getTriggerPosition();
-        }
-        _ts = _ts / this.data.getSampleRate();
-
-        timestampText = Unit.Time.toUnit( _ts ).formatHumanReadable( _ts );
-      }
-      else
-      {
-        timestampText = "#" + this.timestamp;
-      }
-
-      Integer index = Integer.valueOf( this.index + 1 );
-
-      switch ( aStyle )
-      {
-        case LABEL_TIME:
-          if ( !hasLabel() )
-          {
-            return timestampText;
-          }
-          return String.format( "%s: %s", label, timestampText );
-        case INDEX_LABEL:
-          if ( !hasLabel() )
-          {
-            return index.toString();
-          }
-          return String.format( "%d: %s", index, getLabel() );
-        case TIME_ONLY:
-          return timestampText;
-        case LABEL_ONLY:
-          return hasLabel() ? getLabel() : "";
-        case INDEX_ONLY:
-        default:
-          return index.toString();
-      }
+      return getLabel( aStyle, this.data );
     }
 
     /**
@@ -299,6 +254,61 @@ public class CursorBuilder
     public void setTimestamp( final long aTimestamp )
     {
       this.timestamp = aTimestamp;
+    }
+
+    /**
+     * @param aStyle
+     * @param aData
+     * @return
+     */
+    final String getLabel( LabelStyle aStyle, AcquisitionData aData )
+    {
+      if ( !isDefined() )
+      {
+        return "";
+      }
+
+      final String timestampText;
+      if ( aData.hasTimingData() )
+      {
+        double _ts = this.timestamp;
+        if ( aData.hasTriggerData() )
+        {
+          _ts -= aData.getTriggerPosition();
+        }
+        _ts = _ts / aData.getSampleRate();
+
+        timestampText = Unit.Time.toUnit( _ts ).formatHumanReadable( _ts );
+      }
+      else
+      {
+        timestampText = "#" + this.timestamp;
+      }
+
+      Integer index = Integer.valueOf( this.index + 1 );
+
+      switch ( aStyle )
+      {
+        case LABEL_TIME:
+          if ( !hasLabel() )
+          {
+            return timestampText;
+          }
+          return String.format( "%s: %s", label, timestampText );
+        case INDEX_LABEL:
+          if ( !hasLabel() )
+          {
+            return index.toString();
+          }
+          return String.format( "%d: %s", index, getLabel() );
+        case TIME_ONLY:
+          return timestampText;
+        case LABEL_ONLY:
+          return hasLabel() ? getLabel() : "";
+        case INDEX_ONLY:
+        default:
+          return index.toString();
+      }
     }
 
     void setAcquisitionData( AcquisitionData aData )
