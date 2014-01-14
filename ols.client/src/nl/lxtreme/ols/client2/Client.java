@@ -76,7 +76,7 @@ import com.jidesoft.swing.*;
  * Represents the main client.
  */
 public class Client extends DefaultDockableHolder implements ApplicationCallback, Closeable, AcquisitionStatusListener,
-    AcquisitionProgressListener, EventHandler, CursorChangeListener
+    AcquisitionProgressListener, EventHandler
 {
   // INNER TYPES
 
@@ -273,15 +273,12 @@ public class Client extends DefaultDockableHolder implements ApplicationCallback
   {
     if ( this.viewControllers.add( aController ) )
     {
-      // Register ourselves as cursor change listener...
-      aController.addCursorChangeListener( this );
-
       SwingComponentUtils.invokeOnEDT( new Runnable()
       {
         @Override
         public void run()
         {
-          String title = aController.getModel().getTitle();
+          String title = aController.getModel().getSessionName();
           BaseView view = aController.getView();
 
           viewsPane.add( title, view );
@@ -404,15 +401,6 @@ public class Client extends DefaultDockableHolder implements ApplicationCallback
         return getCurrentSession().getAcquiredData();
       }
     };
-  }
-
-  /**
-   * {@inheritDoc}
-   */
-  @Override
-  public void cursorChanged( CursorChangeEvent aEvent )
-  {
-    postEvent( TOPIC_CLIENT_STATE.concat( "/CURSOR_CHANGED" ), "cursor", aEvent.getNewValue(), "controller", getCurrentViewController() );
   }
 
   /**
@@ -825,9 +813,6 @@ public class Client extends DefaultDockableHolder implements ApplicationCallback
   {
     if ( this.viewControllers.remove( aController ) )
     {
-      // Register ourselves as cursor change listener...
-      aController.removeCursorChangeListener( this );
-
       SwingComponentUtils.invokeOnEDT( new Runnable()
       {
         @Override

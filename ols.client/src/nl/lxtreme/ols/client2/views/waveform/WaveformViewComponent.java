@@ -34,6 +34,7 @@ import nl.lxtreme.ols.client2.views.*;
 import nl.lxtreme.ols.client2.views.UIMgr.Alignment;
 import nl.lxtreme.ols.client2.views.waveform.WaveformElement.Type;
 import nl.lxtreme.ols.common.acquisition.*;
+import nl.lxtreme.ols.common.acquisition.Cursor;
 import nl.lxtreme.ols.common.annotation.*;
 
 
@@ -263,6 +264,23 @@ final class WaveformViewComponent extends JComponent implements Scrollable
     }
 
     return stroke;
+  }
+
+  /**
+   * Returns the cursor color to paint.
+   * 
+   * @param aCursor
+   *          the cursor to get the color for, cannot be <code>null</code>.
+   * @return a cursor color, never <code>null</code>.
+   */
+  private Color getCursorColor( Cursor aCursor )
+  {
+    Color cursorColor = UIMgr.getCursorColor( aCursor );
+    if ( aCursor.equals( this.model.getSelectedCursor() ) )
+    {
+      cursorColor = cursorColor.brighter();
+    }
+    return cursorColor;
   }
 
   /**

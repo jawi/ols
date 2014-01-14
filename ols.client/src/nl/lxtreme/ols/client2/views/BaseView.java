@@ -180,4 +180,17 @@ public abstract class BaseView extends JComponent
   {
     // Nop
   }
+
+  /**
+   * Posts an asynchronous event.
+   * 
+   * @param aTopic
+   *          the topic on which to post;
+   * @param aProperties
+   *          the event properties.
+   */
+  protected final void postEvent( String aTopic, Object... aProperties )
+  {
+    this.controller.postEvent( aTopic, aProperties );
+  }
 }

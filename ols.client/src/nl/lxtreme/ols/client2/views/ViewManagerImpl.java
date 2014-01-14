@@ -28,6 +28,7 @@ import nl.lxtreme.ols.common.session.*;
 
 import org.apache.felix.dm.*;
 import org.osgi.framework.*;
+import org.osgi.service.event.*;
 import org.osgi.service.log.*;
 
 
@@ -100,6 +101,9 @@ public class ViewManagerImpl implements ViewManager
         .setImplementation( ctrl ) //
         .add( dm.createServiceDependency() //
             .setService( ActionManager.class ) //
+            .setRequired( true ) ) //
+        .add( dm.createServiceDependency() //
+            .setService( EventAdmin.class ) //
             .setRequired( true ) ) //
         .add( dm.createServiceDependency() //
             .setService( LogService.class ) //

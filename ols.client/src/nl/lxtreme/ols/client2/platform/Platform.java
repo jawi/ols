@@ -21,6 +21,8 @@
 package nl.lxtreme.ols.client2.platform;
 
 
+import java.awt.*;
+
 import nl.lxtreme.ols.client2.platform.osx.*;
 
 
@@ -30,6 +32,14 @@ import nl.lxtreme.ols.client2.platform.osx.*;
 public final class Platform
 {
   // METHODS
+
+  /**
+   * Makes the default system sound.
+   */
+  public static void beep()
+  {
+    Toolkit.getDefaultToolkit().beep();
+  }
 
   /**
    * Initializes the platform.

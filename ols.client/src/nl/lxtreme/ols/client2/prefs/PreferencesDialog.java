@@ -54,6 +54,33 @@ public class PreferencesDialog extends JDialog implements StatusAwareCloseableDi
   // INNER TYPES
 
   /**
+   * Provides a combobox renderer for ColorScheme values.
+   */
+  static final class AlignmentRenderer extends EnumItemRenderer<Alignment>
+  {
+    // CONSTANTS
+
+    private static final long serialVersionUID = 1L;
+
+    // METHODS
+
+    @Override
+    protected String getDisplayValue( Alignment aValue )
+    {
+      switch ( aValue )
+      {
+        case BOTTOM:
+          return "Bottom";
+        case CENTER:
+          return "Center";
+        case TOP:
+          return "Top";
+      }
+      return super.getDisplayValue( aValue );
+    }
+  }
+
+  /**
    * Provides a custom combobox model for the current color schemes.
    */
   final class ColorSchemeModel extends AbstractListModel implements ComboBoxModel
@@ -111,33 +138,6 @@ public class PreferencesDialog extends JDialog implements StatusAwareCloseableDi
     }
   }
 
-  /**
-   * Provides a combobox renderer for ColorScheme values.
-   */
-  static final class SignalAlignmentRenderer extends EnumItemRenderer<Alignment>
-  {
-    // CONSTANTS
-
-    private static final long serialVersionUID = 1L;
-
-    // METHODS
-
-    @Override
-    protected String getDisplayValue( Alignment aValue )
-    {
-      switch ( aValue )
-      {
-        case BOTTOM:
-          return "Bottom";
-        case CENTER:
-          return "Center";
-        case TOP:
-          return "Top";
-      }
-      return super.getDisplayValue( aValue );
-    }
-  }
-
   // CONSTANTS
 
   private static final long serialVersionUID = 1L;
@@ -147,6 +147,7 @@ public class PreferencesDialog extends JDialog implements StatusAwareCloseableDi
   private final AtomicBoolean dialogResult;
 
   private JCheckBox mouseWheelZooms;
+  private JCheckBox doubleClickZooms;
   private JCheckBox cursorSnapToEdge;
   private JCheckBox showGroupSummary;
   private JCheckBox showAnalogScope;
@@ -186,6 +187,23 @@ public class PreferencesDialog extends JDialog implements StatusAwareCloseableDi
   // METHODS
 
   /**
+   * Returns the boolean value for the given value representation.
+   * 
+   * @param aValue
+   *          the value to parse as boolean, can be <code>null</code>.
+   * @return a boolean representation for the given value, defaults to
+   *         <code>false</code>.
+   */
+  private static boolean getBoolean( final Object aValue )
+  {
+    if ( aValue instanceof Boolean )
+    {
+      return ( ( Boolean )aValue ).booleanValue();
+    }
+    return Boolean.parseBoolean( String.valueOf( aValue ) );
+  }
+
+  /**
    * {@inheritDoc}
    */
   @Override
@@ -211,10 +229,12 @@ public class PreferencesDialog extends JDialog implements StatusAwareCloseableDi
   }
 
   /**
-   * Display the bundles dialog.
+   * Display the preferences dialog.
    */
   public void showDialog()
   {
+    // This is more complex than other dialog as we need some additional
+    // services before this dialog works properly...
     DependencyManager dm = new DependencyManager( FrameworkUtil.getBundle( getClass() ).getBundleContext() );
     this.component = dm.createComponent();
 
@@ -250,6 +270,10 @@ public class PreferencesDialog extends JDialog implements StatusAwareCloseableDi
     this.mouseWheelZooms.setToolTipText( "Whether the mouse wheel by default zooms in or out, or scrolls the view. Will be applied immediately." );
     this.mouseWheelZooms.setSelected( getBoolean( properties.get( MOUSEWHEEL_ZOOM_DEFAULT ) ) );
 
+    this.doubleClickZooms = new JCheckBox();
+    this.doubleClickZooms.setToolTipText( "Whether double clicking by default zooms in or out, or places the next available cursor. Will be applied immediately." );
+    this.doubleClickZooms.setSelected( getBoolean( properties.get( DOUBLE_CLICK_ZOOM_DEFAULT ) ) );
+
     this.cursorSnapToEdge = new JCheckBox();
     this.cursorSnapToEdge.setToolTipText( "Whether or not cursors by default snap to signal edges. Will be applied immediately." );
     this.cursorSnapToEdge.setSelected( getBoolean( properties.get( SNAP_CURSORS_DEFAULT ) ) );
@@ -280,13 +304,13 @@ public class PreferencesDialog extends JDialog implements StatusAwareCloseableDi
 
     this.signalAlignment = new JComboBox( Alignment.values() );
     this.signalAlignment.setToolTipText( "The vertical alignment of the signals itself. Will be applied after an acquisition." );
-    this.signalAlignment.setSelectedItem( getSignalAlignment( properties.get( SIGNALVIEW_SIGNAL_ALIGNMENT ) ) );
-    this.signalAlignment.setRenderer( new SignalAlignmentRenderer() );
+    this.signalAlignment.setSelectedItem( getAlignment( properties.get( SIGNALVIEW_SIGNAL_ALIGNMENT ) ) );
+    this.signalAlignment.setRenderer( new AlignmentRenderer() );
 
     this.annotationAlignment = new JComboBox( Alignment.values() );
     this.annotationAlignment.setToolTipText( "The vertical aligment of the annotations. Will be applied immediately." );
-    this.annotationAlignment.setSelectedItem( getSignalAlignment( properties.get( SIGNALVIEW_ANNOTATION_ALIGNMENT ) ) );
-    this.annotationAlignment.setRenderer( new SignalAlignmentRenderer() );
+    this.annotationAlignment.setSelectedItem( getAlignment( properties.get( SIGNALVIEW_ANNOTATION_ALIGNMENT ) ) );
+    this.annotationAlignment.setRenderer( new AlignmentRenderer() );
 
     this.colorScheme = new JComboBox( new ColorSchemeModel() );
     this.colorScheme.setToolTipText( "What color scheme is to be used. Will be applied immediately." );
@@ -388,6 +412,7 @@ public class PreferencesDialog extends JDialog implements StatusAwareCloseableDi
     // prior to persisting them...
     Dictionary<Object, Object> properties = this.config.getProperties();
     properties.put( MOUSEWHEEL_ZOOM_DEFAULT, Boolean.toString( this.mouseWheelZooms.isSelected() ) );
+    properties.put( DOUBLE_CLICK_ZOOM_DEFAULT, Boolean.toString( this.doubleClickZooms.isSelected() ) );
     properties.put( SNAP_CURSORS_DEFAULT, Boolean.toString( this.cursorSnapToEdge.isSelected() ) );
     properties.put( GROUP_SUMMARY_VISIBLE_DEFAULT, Boolean.toString( this.showGroupSummary.isSelected() ) );
     properties.put( ANALOG_SCOPE_VISIBLE_DEFAULT, Boolean.toString( this.showAnalogScope.isSelected() ) );
@@ -446,6 +471,9 @@ public class PreferencesDialog extends JDialog implements StatusAwareCloseableDi
     pane.add( createRightAlignedLabel( "Mouse wheel zooms?" ) );
     pane.add( this.mouseWheelZooms );
 
+    pane.add( createRightAlignedLabel( "Double clicking zooms?" ) );
+    pane.add( this.doubleClickZooms );
+
     pane.add( createRightAlignedLabel( "Snap cursor to edge?" ) );
     pane.add( this.cursorSnapToEdge );
 
@@ -483,32 +511,13 @@ public class PreferencesDialog extends JDialog implements StatusAwareCloseableDi
   }
 
   /**
-   * Returns the boolean value for the given value representation.
-   * 
-   * @param aValue
-   *          the value to parse as boolean, can be <code>null</code>.
-   * @return a boolean representation for the given value, defaults to
-   *         <code>false</code>.
-   */
-  private boolean getBoolean( final Object aValue )
-  {
-    if ( aValue instanceof Boolean )
-    {
-      return ( ( Boolean )aValue ).booleanValue();
-    }
-    return Boolean.parseBoolean( String.valueOf( aValue ) );
-  }
-
-  /**
    * Returns the {@link Alignment} for the given value representation.
    * 
    * @param aValue
-   *          the value parse as {@link Alignment}, can be
-   *          <code>null</code>.
-   * @return a {@link Alignment} value, defaults to
-   *         {@link Alignment#CENTER}.
+   *          the value parse as {@link Alignment}, can be <code>null</code>.
+   * @return a {@link Alignment} value, defaults to {@link Alignment#CENTER}.
    */
-  private Alignment getSignalAlignment( Object aValue )
+  private Alignment getAlignment( Object aValue )
   {
     try
     {

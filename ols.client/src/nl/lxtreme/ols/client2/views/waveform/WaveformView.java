@@ -83,28 +83,52 @@ public class WaveformView extends BaseView
 
         if ( clicks == 2 )
         {
+          boolean dblClickZoom = UIManager.getBoolean( DOUBLE_CLICK_ZOOM_DEFAULT );
+          boolean ctrlDown = Platform.isMacOS() ? aEvent.isMetaDown() : aEvent.isControlDown();
+
+          boolean cursorPlaceEvent = !dblClickZoom ^ ctrlDown;
+          boolean zoomEvent = dblClickZoom ^ ctrlDown;
+
+          MouseEvent event = convertEvent( aEvent );
+          Point point = event.getPoint();
+
           if ( model.areCursorsVisible() && ( hoveredCursor != null ) )
           {
             editCursorProperties( hoveredCursor );
             // Consume the event to stop further processing...
             aEvent.consume();
           }
-          else if ( Platform.isMacOS() ? aEvent.isMetaDown() : aEvent.isControlDown() )
+          else if ( cursorPlaceEvent )
           {
             // Add next available cursor...
-            // TODO
+            Cursor cursor = model.getNextAvailableCursor();
+            if ( cursor == null )
+            {
+              Platform.beep();
+            }
+            else
+            {
+              long timestamp = model.coordinateToTimestamp( point );
 
+              cursor.setTimestamp( timestamp );
+
+              // Make the cursor visible on screen...
+              repaintCursor( timestamp );
+
+              // Notify all listeners that something has changed...
+              postCursorChangedEvent( cursor );
+            }
+
+            // Consume the event to stop further processing...
             aEvent.consume();
           }
-          else
+          else if ( zoomEvent )
           {
             // Regular zoom event...
-            MouseEvent event = convertEvent( aEvent );
-            Point point = event.getPoint();
-
             int rotation = ( aEvent.isAltDown() || aEvent.isShiftDown() ) ? 1 : -1;
 
             zoom( rotation, point );
+
             // Consume the event to stop further processing...
             aEvent.consume();
           }
@@ -151,7 +175,7 @@ public class WaveformView extends BaseView
         repaintCursor( newTimestamp );
 
         // Fire an event to the interested listeners...
-        model.fireCursorChangeEvent( CursorChangeListener.PROPERTY_TIMESTAMP, oldCursor, movingCursor );
+        postCursorChangedEvent( movingCursor );
 
         // We're done with the given event...
         aEvent.consume();
@@ -256,6 +280,15 @@ public class WaveformView extends BaseView
     {
       JComponent view = SwingComponentUtils.getDeepestComponentAt( aEvent );
       return SwingUtilities.convertMouseEvent( aEvent.getComponent(), aEvent, view );
+    }
+
+    /**
+     * @param aCursor
+     *          the changed cursor, cannot be <code>null</code>.
+     */
+    private void postCursorChangedEvent( Cursor aCursor )
+    {
+      postEvent( TOPIC_CLIENT_STATE.concat( "/CURSOR_CHANGED" ), "cursor", aCursor.clone(), "controller", controller );
     }
 
     private Cursor updateSelectedCursor( WaveformModel model, Point point )

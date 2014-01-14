@@ -527,6 +527,23 @@ final class WaveformTimelineComponent extends JComponent
   }
 
   /**
+   * Returns the cursor color to paint.
+   * 
+   * @param aCursor
+   *          the cursor to get the color for, cannot be <code>null</code>.
+   * @return a cursor color, never <code>null</code>.
+   */
+  private Color getCursorColor( Cursor aCursor )
+  {
+    Color cursorColor = UIMgr.getCursorColor( aCursor );
+    if ( aCursor.equals( this.model.getSelectedCursor() ) )
+    {
+      cursorColor = cursorColor.brighter();
+    }
+    return cursorColor;
+  }
+
+  /**
    * @param sampleRate
    * @param majorTimestamp
    * @return
@@ -618,12 +635,13 @@ final class WaveformTimelineComponent extends JComponent
     // Phase 4: draw the labels...
     for ( CursorLabel label : labels )
     {
-      final Rectangle boundaries = label.boundaries;
-      final Color cursorColor = getCursorColor( label.cursor );
-      final Color cursorTextColor = ColorUtils.getContrastColor( cursorColor );
+      Rectangle boundaries = label.boundaries;
 
-      final Composite oldComposite = aCanvas.getComposite();
-      final Stroke oldStroke = aCanvas.getStroke();
+      Color cursorColor = getCursorColor( label.cursor );
+      Color cursorTextColor = ColorUtils.getContrastColor( cursorColor );
+
+      Composite oldComposite = aCanvas.getComposite();
+      Stroke oldStroke = aCanvas.getStroke();
 
       aCanvas.setComposite( alphaComposite );
 

@@ -50,6 +50,8 @@ public final class UIMgr
   public static final String SIGNAL_ELEMENT_SPACING = "ols.signal.element.spacer.height";
   /** Whether or not the mouse wheel by defaults zooms in/out. */
   public static final String MOUSEWHEEL_ZOOM_DEFAULT = "ols.mousewheel.zoom.default.boolean";
+  /** Whether or not the double clicking in the waveform view zooms in/out by default. */
+  public static final String DOUBLE_CLICK_ZOOM_DEFAULT = "ols.doubleclick.zoom.default.boolean";
   /** Whether or not the cursors should snap to signal edges. */
   public static final String SNAP_CURSORS_DEFAULT = "ols.snap.cursors.default.boolean";
   /** Whether or not the tool windows are shown by default. */

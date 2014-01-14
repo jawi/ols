@@ -23,11 +23,6 @@ package nl.lxtreme.ols.client2.views;
 
 import java.util.concurrent.atomic.*;
 
-import javax.swing.event.*;
-
-import org.osgi.service.event.*;
-
-import nl.lxtreme.ols.client2.views.CursorChangeListener.CursorChangeEvent;
 import nl.lxtreme.ols.common.acquisition.*;
 import nl.lxtreme.ols.common.annotation.*;
 import nl.lxtreme.ols.common.session.*;
@@ -41,7 +36,6 @@ public class ViewModel
   // VARIABLES
 
   private final Session session;
-  private final EventListenerList listeners;
   private final AtomicReference<Cursor> selectedCursorRef;
 
   // CONSTRUCTORS
@@ -55,52 +49,33 @@ public class ViewModel
   public ViewModel( Session aSession )
   {
     this.session = aSession;
-
-    this.listeners = new EventListenerList();
     this.selectedCursorRef = new AtomicReference<Cursor>();
   }
 
   // METHODS
 
   /**
-   * Adds a given listener to the list of marker change listeners.
-   * 
-   * @param aListener
-   *          the listener to add, cannot be <code>null</code>.
-   */
-  public void addCursorChangeListener( CursorChangeListener aListener )
-  {
-    this.listeners.add( CursorChangeListener.class, aListener );
-  }
-
-  /**
    * @see AcquisitionData#areCursorsVisible()
    */
-  public boolean areCursorsVisible()
+  public final boolean areCursorsVisible()
   {
     return getData().areCursorsVisible();
   }
 
   /**
-   * @param aEvent
+   * @return the annotation data, never <code>null</code>.
    */
-  public void fireCursorChangeEvent( String aPropertyName, Cursor aOldCursor, Cursor aNewCursor )
+  public final AnnotationData getAnnotations()
   {
-    CursorChangeEvent event = new CursorChangeEvent( aPropertyName, aOldCursor, aNewCursor );
-
-    CursorChangeListener[] listeners = this.listeners.getListeners( CursorChangeListener.class );
-    for ( CursorChangeListener listener : listeners )
-    {
-      listener.cursorChanged( event );
-    }
+    return this.session.getAnnotationData();
   }
 
   /**
-   * @return the annotation data, never <code>null</code>.
+   * @return the array with all cursors, never <code>null</code>.
    */
-  public AnnotationData getAnnotations()
+  public final Cursor[] getCursors()
   {
-    return this.session.getAnnotationData();
+    return getData().getCursors();
   }
 
   /**
@@ -108,9 +83,33 @@ public class ViewModel
    * 
    * @return the data, never <code>null</code>.
    */
-  public AcquisitionData getData()
+  public final AcquisitionData getData()
   {
     return this.session.getAcquiredData();
+  }
+
+  /**
+   * @return the next available cursor, or <code>null</code> in case no cursor
+   *         is available.
+   */
+  public final Cursor getNextAvailableCursor()
+  {
+    Cursor[] cursors = getCursors();
+    int i = cursors.length - 1;
+    for ( ; i >= 0; i-- )
+    {
+      if ( cursors[i].isDefined() )
+      {
+        // Highest defined cursor found...
+        break;
+      }
+    }
+    if ( i < 0 || i == cursors.length - 1 )
+    {
+      return null;
+    }
+
+    return cursors[i + 1];
   }
 
   /**
@@ -118,7 +117,7 @@ public class ViewModel
    * 
    * @return a selected cursor, can be <code>null</code>.
    */
-  public Cursor getSelectedCursor()
+  public final Cursor getSelectedCursor()
   {
     return this.selectedCursorRef.get();
   }
@@ -128,33 +127,30 @@ public class ViewModel
    * 
    * @return the session, never <code>null</code>.
    */
-  public Session getSession()
+  public final Session getSession()
   {
     return this.session;
   }
 
   /**
-   * @return a title for this model, never <code>null</code>.
+   * @return the name for the contained session, never <code>null</code>.
    */
-  public String getTitle()
+  public final String getSessionName()
   {
-    return String.format( "Session #%d", this.session.getId() );
+    String name = this.session.getName();
+    if ( name == null )
+    {
+      name = String.format( "Session #%d", this.session.getId() );
+    }
+    return name;
   }
 
   /**
    * @see AcquisitionData#hasTimingData()
    */
-  public boolean hasTimingData()
+  public final boolean hasTimingData()
   {
     return getData().hasTimingData();
-  }
-
-  /**
-   * {@inheritDoc}
-   */
-  public void handleEvent( String aTopic, Event aEvent )
-  {
-    // Nop
   }
 
   /**
@@ -166,23 +162,12 @@ public class ViewModel
   }
 
   /**
-   * Removes a given listener from the list of marker change listeners.
-   * 
-   * @param aListener
-   *          the listener to remove, cannot be <code>null</code>.
-   */
-  public void removeCursorChangeListener( CursorChangeListener aListener )
-  {
-    this.listeners.remove( CursorChangeListener.class, aListener );
-  }
-
-  /**
    * Sets the selected cursor to the one given.
    * 
    * @param aCursor
    *          the selected cursor, can be <code>null</code>.
    */
-  public void setSelectedCursor( Cursor aCursor )
+  public final void setSelectedCursor( Cursor aCursor )
   {
     Cursor old;
     do
@@ -190,5 +175,16 @@ public class ViewModel
       old = this.selectedCursorRef.get();
     }
     while ( !this.selectedCursorRef.compareAndSet( old, aCursor ) );
+  }
+
+  /**
+   * Sets the name of this session.
+   * 
+   * @param aName
+   *          the name of the session to set, can be <code>null</code>.
+   */
+  public final void setSessionName( String aName )
+  {
+    this.session.setName( aName );
   }
 }

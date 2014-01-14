@@ -23,6 +23,8 @@ package nl.lxtreme.ols.client2.views;
 
 import static nl.lxtreme.ols.client2.ClientConstants.*;
 
+import java.util.*;
+
 import javax.swing.*;
 
 import nl.lxtreme.ols.client2.Client.JumpDirection;
@@ -48,7 +50,8 @@ public class ViewController
   private final Session session;
   // Injected by Felix DM...
   private volatile ActionManager actionManager;
-
+  private volatile EventAdmin eventAdmin;
+  // Locally managed...
   private BaseView view;
   private ViewModel model;
 
@@ -63,17 +66,6 @@ public class ViewController
   }
 
   // METHODS
-
-  /**
-   * Adds a given listener to the list of cursor change listeners.
-   * 
-   * @param aListener
-   *          the listener to add, cannot be <code>null</code>.
-   */
-  public void addCursorChangeListener( CursorChangeListener aListener )
-  {
-    this.model.addCursorChangeListener( aListener );
-  }
 
   /**
    * Returns the current value of actionManager.
@@ -110,12 +102,7 @@ public class ViewController
    */
   public void handleEvent( String aTopic, Event aEvent )
   {
-    if ( aTopic.startsWith( TOPIC_CLIENT_STATE ) )
-    {
-      // Client state changed...
-      this.model.handleEvent( aTopic, aEvent );
-    }
-    else if ( aTopic.startsWith( TOPIC_ANNOTATIONS ) )
+    if ( aTopic.startsWith( TOPIC_ANNOTATIONS ) )
     {
       // Annotation added or removed...
       this.view.handleEvent( aTopic, aEvent );
@@ -123,14 +110,22 @@ public class ViewController
   }
 
   /**
-   * Removes a given listener from the list of cursor change listeners.
+   * Posts an asynchronous event.
    * 
-   * @param aListener
-   *          the listener to remove, cannot be <code>null</code>.
+   * @param aTopic
+   *          the topic on which to post;
+   * @param aProperties
+   *          the event properties.
    */
-  public void removeCursorChangeListener( CursorChangeListener aListener )
+  public void postEvent( String aTopic, Object... aProperties )
   {
-    this.model.removeCursorChangeListener( aListener );
+    Map<Object, Object> props = new HashMap<Object, Object>();
+    for ( int i = 0; i < aProperties.length; i += 2 )
+    {
+      props.put( aProperties[i], aProperties[i + 1] );
+    }
+
+    this.eventAdmin.postEvent( new Event( aTopic, props ) );
   }
 
   /**
