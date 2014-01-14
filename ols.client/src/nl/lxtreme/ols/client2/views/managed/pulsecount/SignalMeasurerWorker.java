@@ -100,17 +100,24 @@ final class SignalMeasurerWorker extends SwingWorker<PulseCountInfo, Boolean>
   @Override
   protected void done()
   {
+    PulseCountInfo pulseCountInfo = null;
     try
     {
-      this.pulseCountView.updatePulseCountInformation( get() );
+      pulseCountInfo = get();
     }
     catch ( InterruptedException exception )
     {
       // Ignore, we're already terminating...
     }
+    catch ( CancellationException exception )
+    {
+      // Ignore, update it to the default state below...
+    }
     catch ( ExecutionException exception )
     {
       exception.printStackTrace();
     }
+
+    this.pulseCountView.updatePulseCountInformation( pulseCountInfo );
   }
 }

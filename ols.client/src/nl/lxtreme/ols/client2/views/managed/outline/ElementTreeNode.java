@@ -111,7 +111,7 @@ class ElementTreeNode extends DefaultMutableTreeNode
 
       if ( channel.getGroup() != group || channel.getIndex() != aChildIndex )
       {
-        System.out.println( "TODO" );
+//        System.out.println( "TODO" ); XXX
       }
     }
   }

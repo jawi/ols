@@ -90,20 +90,9 @@ public class PulseCountView extends AbstractManagedView implements EventHandler
   // METHODS
 
   /**
-   * {@inheritDoc}
-   */
-  @Override
-  public void removeNotify()
-  {
-    setAcquiredData( null );
-
-    super.removeNotify();
-  }
-
-  /**
    * Starts a pulse count, if not already busy doing so.
    */
-  final void startPulseCount()
+  final void startPulseCount( AcquisitionData aData )
   {
     Channel channel = ( Channel )this.measureChannel.getSelectedItem();
 
@@ -121,15 +110,18 @@ public class PulseCountView extends AbstractManagedView implements EventHandler
       cursorB = ( Cursor )selectedItem;
     }
 
-    if ( canPerformMeasurement() )
+    if ( this.signalMeasurerWorker != null && !this.signalMeasurerWorker.isDone() )
     {
-      if ( ( this.signalMeasurerWorker == null ) || this.signalMeasurerWorker.isDone() )
-      {
-        this.indicator.setVisible( true );
+      this.signalMeasurerWorker.cancel( true /* mayInterruptIfRunning */);
+      this.signalMeasurerWorker = null;
+    }
 
-        this.signalMeasurerWorker = new SignalMeasurerWorker( this, getAcquiredData(), channel, cursorA, cursorB );
-        this.signalMeasurerWorker.execute();
-      }
+    if ( canPerformMeasurement( aData ) )
+    {
+      this.indicator.setVisible( true );
+
+      this.signalMeasurerWorker = new SignalMeasurerWorker( this, aData, channel, cursorA, cursorB );
+      this.signalMeasurerWorker.execute();
     }
     else
     {
@@ -146,7 +138,7 @@ public class PulseCountView extends AbstractManagedView implements EventHandler
     boolean hasTimingData = true;
     boolean hasPulses = false;
 
-    String timeTextLabel = "\u0394T (B-A):";
+    String timeTextLabel = "<html><body>T<sub>b</sub> - T<sub>a</sub>:</body></html>";
     String timeText = "-";
     String frequencyText = "-";
     String dutyCycleText = "-";
@@ -176,7 +168,7 @@ public class PulseCountView extends AbstractManagedView implements EventHandler
       }
       else
       {
-        timeTextLabel = "\u0394S (B-A):";
+        timeTextLabel = "<html><body>#<sub>b</sub> - #<sub>a</sub>:</body></html>";
         timeText = Integer.toString( aPulseCountInfo.measureTime.intValue() );
 
         pulseCountLabel = "Transitions:";
@@ -193,8 +185,6 @@ public class PulseCountView extends AbstractManagedView implements EventHandler
     this.pci_pulseCount.setText( pulseCountText );
     this.pci_risingEdgeCount.setText( risingCountText );
     this.pci_fallingEdgeCount.setText( fallingCountText );
-
-    repaint( 50L );
 
     this.indicator.setVisible( false );
   }
@@ -258,7 +248,9 @@ public class PulseCountView extends AbstractManagedView implements EventHandler
 
     this.pci_timeLabel = new JLabel();
     this.pci_timeLabel.setHorizontalAlignment( SwingConstants.RIGHT );
+    this.pci_timeLabel.setVerticalAlignment( SwingConstants.BOTTOM );
     this.pci_time = new JLabel();
+    this.pci_time.setVerticalAlignment( SwingConstants.CENTER );
     this.pci_frequency = new JLabel();
     this.pci_dutyCycle = new JLabel();
     this.pci_pulseCountLabel = new JLabel( "# of pulses:" );
@@ -272,7 +264,7 @@ public class PulseCountView extends AbstractManagedView implements EventHandler
       @Override
       public void actionPerformed( ActionEvent aEvent )
       {
-        startPulseCount();
+        startPulseCount( ( AcquisitionData )getClientProperty( "data" ) );
       }
     };
 
@@ -317,6 +309,8 @@ public class PulseCountView extends AbstractManagedView implements EventHandler
   @Override
   protected void doUpdateState( ViewController aController, AcquisitionData aData )
   {
+    putClientProperty( "data", aData );
+
     if ( aController != null )
     {
       setCursorState( aData.areCursorsVisible() );
@@ -325,7 +319,7 @@ public class PulseCountView extends AbstractManagedView implements EventHandler
       updateChannelModel( aData.getChannels() );
       updateCursorModels( aData.getCursors() );
 
-      setAcquiredData( aData );
+      startPulseCount( aData );
     }
     else
     {
@@ -335,8 +329,7 @@ public class PulseCountView extends AbstractManagedView implements EventHandler
       updateChannelModel();
       updateCursorModels();
 
-      setAcquiredData( null );
-      updatePulseCountInformation( null );
+      startPulseCount( null );
     }
   }
 
@@ -351,11 +344,6 @@ public class PulseCountView extends AbstractManagedView implements EventHandler
       public void run()
       {
         updateChannelComboBoxModel( PulseCountView.this.measureChannel, aChannels );
-
-        updatePulseCountInformation( null );
-        startPulseCount();
-
-        repaint( 50L );
       }
     } );
   }
@@ -372,11 +360,6 @@ public class PulseCountView extends AbstractManagedView implements EventHandler
       {
         updateCursorComboBoxModel( PulseCountView.this.cursorA, aCursors );
         updateCursorComboBoxModel( PulseCountView.this.cursorB, aCursors );
-
-        updatePulseCountInformation( null );
-        startPulseCount();
-
-        repaint( 50L );
       }
     } );
   }
@@ -387,8 +370,13 @@ public class PulseCountView extends AbstractManagedView implements EventHandler
    * @return <code>true</code> if a measurement can be performed,
    *         <code>false</code> otherwise.
    */
-  private boolean canPerformMeasurement()
+  private boolean canPerformMeasurement( AcquisitionData aData )
   {
+    if ( aData == null )
+    {
+      return false;
+    }
+
     Channel channel = ( Channel )this.measureChannel.getSelectedItem();
     if ( ( channel == null ) || !channel.isEnabled() )
     {
@@ -420,16 +408,6 @@ public class PulseCountView extends AbstractManagedView implements EventHandler
     }
 
     return ( idxB - idxA ) > 0 || ( idxA == 0 ) || ( idxB == 0 );
-  }
-
-  private AcquisitionData getAcquiredData()
-  {
-    return ( AcquisitionData )getClientProperty( "data" );
-  }
-
-  private void setAcquiredData( AcquisitionData aData )
-  {
-    putClientProperty( "data", aData );
   }
 
   /**
