@@ -59,6 +59,9 @@ public class GotoTriggerAction extends AbstractManagedAction
     putValue( MENU_NAME, ClientConstants.DIAGRAM_MENU );
     putValue( MENU_ORDER, 4 );
     putValue( MENU_SEPARATOR_ABOVE, Boolean.TRUE );
+    
+    putValue( TOOLBAR_GROUP, ClientConstants.JUMP_GROUP );
+    putValue( TOOLBAR_ORDER, 9 );
   }
 
   // METHODS

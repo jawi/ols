@@ -37,4 +37,11 @@ public interface MenuManager
    * @return the menu bar, never <code>null</code>.
    */
   JMenuBar getMenuBar();
+
+  /**
+   * Returns the (managed) tool bar.
+   * 
+   * @return the tool bar, never <code>null</code>.
+   */
+  JPanel getToolBar();
 }

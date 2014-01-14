@@ -99,7 +99,7 @@ public class MeasurementView extends AbstractManagedView
     panel.add( createRightAlignedLabel( "Enabled" ) );
     panel.add( this.enableMeasurementMode );
 
-    this.comps.add( panel.add( createRightAlignedLabel( "Frozen?" ) ) );
+    this.comps.add( panel.add( createRightAlignedLabel( "Frozen" ) ) );
     panel.add( this.measurementFrozen );
 
     this.comps.add( panel.add( createRightAlignedLabel( "Channel:" ) ) );

@@ -82,6 +82,9 @@ public class GotoNthCursorAction extends AbstractManagedAction
 
     putValue( MENU_NAME, ClientConstants.CURSORS_MENU );
     putValue( MENU_ORDER, aIndex );
+    
+    putValue( TOOLBAR_GROUP, ClientConstants.JUMP_GROUP );
+    putValue( TOOLBAR_ORDER, 10 + aIndex );
   }
 
   // METHODS

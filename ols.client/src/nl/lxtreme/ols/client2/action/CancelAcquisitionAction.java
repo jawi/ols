@@ -60,6 +60,9 @@ public class CancelAcquisitionAction extends AbstractManagedAction
 
     putValue( MENU_NAME, ClientConstants.CAPTURE_MENU );
     putValue( MENU_ORDER, 1 );
+    
+    putValue( TOOLBAR_GROUP, ClientConstants.ACQUISITION_GROUP );
+    putValue( TOOLBAR_ORDER, 3 );
   }
 
   // METHODS

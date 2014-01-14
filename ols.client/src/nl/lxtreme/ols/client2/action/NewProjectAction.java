@@ -48,7 +48,7 @@ public class NewProjectAction extends AbstractManagedAction
   {
     super( ID );
 
-    putValue( NAME, "New project ..." );
+    putValue( NAME, "New ..." );
     putValue( SHORT_DESCRIPTION, "Create a new project" );
     putValue( LARGE_ICON_KEY, IconFactory.createIcon( IconLocator.ICON_NEW_PROJECT ) );
 
@@ -71,7 +71,7 @@ public class NewProjectAction extends AbstractManagedAction
 
     // Issue #62: in case the user does NOT confirm to lose its changes, we
     // should bail out immediately, otherwise continue normally...
-    if ( client.isProjectChanged() && //
+    if ( client.isChanged() && //
         !SwingComponentUtils.askConfirmation( client,
             "Current project has been changed.\nDo you really want to lose your changes?" ) )
     {

@@ -69,6 +69,15 @@ public abstract class BaseView extends JComponent
   // METHODS
 
   /**
+   * @return <code>true</code> if zooming is supported by this view,
+   *         <code>false</code> otherwise.
+   */
+  public boolean canZoom()
+  {
+    return false;
+  }
+
+  /**
    * Returns the interval displayed by the current view.
    * 
    * @return a interval.
@@ -81,6 +90,14 @@ public abstract class BaseView extends JComponent
   public double getZoomFactor()
   {
     return 1.0;
+  }
+
+  /**
+   * {@inheritDoc}
+   */
+  public void handleEvent( String aTopic, Event aEvent )
+  {
+    // Nop
   }
 
   /**
@@ -113,14 +130,6 @@ public abstract class BaseView extends JComponent
     {
       super.paint( aGraphics );
     }
-  }
-
-  /**
-   * {@inheritDoc}
-   */
-  public void handleEvent( String aTopic, Event aEvent )
-  {
-    // Nop
   }
 
   /**

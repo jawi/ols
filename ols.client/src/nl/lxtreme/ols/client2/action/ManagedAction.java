@@ -66,6 +66,16 @@ public interface ManagedAction extends Action
    * should be placed.
    */
   String MENU_SEPARATOR_BELOW = "menuSeparatorBelow";
+  /**
+   * Integer value that indicates the order in which the action should be added
+   * to the toolbar.
+   */
+  String TOOLBAR_ORDER = "toolBarOrder";
+  /**
+   * String value that indicates in what group this action should be placed. If
+   * absent, the action is not added to the main toolbar.
+   */
+  String TOOLBAR_GROUP = "toolBarGroup";
 
   // METHODS
 

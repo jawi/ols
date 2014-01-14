@@ -57,6 +57,9 @@ public class ZoomOutAction extends AbstractManagedAction
 
     putValue( MENU_NAME, ClientConstants.DIAGRAM_MENU );
     putValue( MENU_ORDER, 1 );
+    
+    putValue( TOOLBAR_GROUP, ClientConstants.ZOOM_GROUP );
+    putValue( TOOLBAR_ORDER, 6 );
   }
 
   // METHODS
@@ -77,7 +80,7 @@ public class ZoomOutAction extends AbstractManagedAction
   @Override
   public void updateState( Client aClient )
   {
-    setEnabled( aClient.hasAcquiredData() );
+    setEnabled( aClient.hasAcquiredData() && aClient.canZoomView() );
   }
 }
 

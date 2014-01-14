@@ -68,6 +68,15 @@ public class ViewController
   // METHODS
 
   /**
+   * @return <code>true</code> if zooming is supported by the contained view,
+   *         <code>false</code> otherwise.
+   */
+  public boolean canZoomView()
+  {
+    return this.view.canZoom();
+  }
+
+  /**
    * Returns the current value of actionManager.
    * 
    * @return the actionManager

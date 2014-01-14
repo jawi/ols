@@ -62,6 +62,9 @@ public class AcquireDataAction extends AbstractManagedAction
 
     putValue( MENU_NAME, ClientConstants.CAPTURE_MENU );
     putValue( MENU_ORDER, 0 );
+    
+    putValue( TOOLBAR_GROUP, ClientConstants.ACQUISITION_GROUP );
+    putValue( TOOLBAR_ORDER, 2 );
   }
 
   // METHODS

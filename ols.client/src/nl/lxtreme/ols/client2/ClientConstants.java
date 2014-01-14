@@ -55,6 +55,8 @@ public interface ClientConstants
    */
   String TOPIC_SESSIONS = "nl/lxtreme/ols/data/session";
 
+  /* Menu names */
+
   String CAPTURE_MENU = "captureMenu";
   String CURSORS_MENU = "cursorsMenu";
   String DEVICE_MENU = "deviceMenu";
@@ -66,4 +68,21 @@ public interface ClientConstants
   String TOOL_MENU = "toolMenu";
   String WINDOW_MENU = "windowMenu";
   String VIEW_MENU = "viewMenu";
+  
+  /**
+   * Defines the order of main menus.
+   */
+  String[] MENU_NAMES = { FILE_MENU, EDIT_MENU, CAPTURE_MENU, DIAGRAM_MENU, TOOL_MENU, WINDOW_MENU, HELP_MENU };
+
+  /* Toolbar group names */
+
+  String FILE_GROUP = "fileGroup";
+  String ACQUISITION_GROUP = "acquisitionGroup";
+  String ZOOM_GROUP = "zoomGroup";
+  String JUMP_GROUP = "jumpGroup";
+  
+  /**
+   * Defines the order of toolbars.
+   */
+  String[] TOOLBAR_GROUP_NAMES = { FILE_GROUP, ACQUISITION_GROUP, ZOOM_GROUP, JUMP_GROUP };
 }

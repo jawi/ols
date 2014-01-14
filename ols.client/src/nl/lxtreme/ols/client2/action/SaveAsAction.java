@@ -32,31 +32,27 @@ import nl.lxtreme.ols.util.swing.*;
 /**
  * Provides a "save as" functionality for projects.
  */
-public class SaveProjectAsAction extends SaveProjectAction
+public class SaveAsAction extends SaveAction
 {
   // CONSTANTS
 
   private static final long serialVersionUID = 1L;
 
-  public static final String ID = "SaveProjectAs";
+  public static final String ID = "SaveAs";
 
   // CONSTRUCTORS
 
   /**
-   * Creates a new SaveProjectAsAction instance.
-   * 
-   * @param aController
-   *          the controller to use.
+   * Creates a new {@link SaveAsAction} instance.
    */
-  public SaveProjectAsAction()
+  public SaveAsAction()
   {
-    super( ID, IconLocator.ICON_SAVE_PROJECT, "Save project as ...", "Save the current project under a different name" );
+    super( ID, IconLocator.ICON_SAVE_PROJECT, "Save as ...", "Save the current project or data under a different name" );
     putValue( ACCELERATOR_KEY, SwingComponentUtils.createMenuKeyMask( KeyEvent.VK_S, InputEvent.SHIFT_MASK ) );
     putValue( MNEMONIC_KEY, Integer.valueOf( KeyEvent.VK_A ) );
 
     putValue( MENU_NAME, ClientConstants.FILE_MENU );
-    putValue( MENU_ORDER, 3 );
-    putValue( MENU_SEPARATOR_BELOW, Boolean.TRUE );
+    putValue( MENU_ORDER, 4 );
   }
 
   // METHODS

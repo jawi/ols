@@ -24,7 +24,9 @@ package nl.lxtreme.ols.client2.menu;
 import static nl.lxtreme.ols.client2.ClientConstants.*;
 import static nl.lxtreme.ols.client2.action.ManagedAction.*;
 
+import java.awt.*;
 import java.util.*;
+import java.util.List;
 
 import javax.swing.*;
 
@@ -33,7 +35,7 @@ import nl.lxtreme.ols.client2.api.*;
 import nl.lxtreme.ols.client2.platform.*;
 import nl.lxtreme.ols.util.swing.*;
 
-import org.apache.felix.dm.*;
+import org.apache.felix.dm.Component;
 import org.osgi.service.log.*;
 
 
@@ -46,11 +48,13 @@ public class MenuManagerImpl implements MenuManager
   // VARIABLES
 
   private final List<JMenu> menus;
+  private final List<JToolBar> toolbars;
   private final Map<JMenu, ButtonGroup> groups;
   // Injected by Felix DM...
   private volatile LogService log;
   // Locally managed...
   private volatile JMenuBar menuBar;
+  private volatile JPanel toolBar;
 
   // CONSTRUCTORS
 
@@ -60,6 +64,7 @@ public class MenuManagerImpl implements MenuManager
   public MenuManagerImpl()
   {
     this.menus = new ArrayList<JMenu>();
+    this.toolbars = new ArrayList<JToolBar>();
     this.groups = new HashMap<JMenu, ButtonGroup>();
   }
 
@@ -92,7 +97,22 @@ public class MenuManagerImpl implements MenuManager
             {
               addMenuItem( menu, aAction, props );
             }
-            return;
+            break;
+          }
+        }
+
+        String groupName = ( String )props.get( TOOLBAR_GROUP );
+        if ( groupName != null )
+        {
+          for ( JToolBar toolbar : toolbars )
+          {
+            if ( groupName.equals( toolbar.getClientProperty( TOOLBAR_GROUP ) ) )
+            {
+              synchronized ( toolBar.getTreeLock() )
+              {
+                addToolBarItem( toolbar, aAction, props );
+              }
+            }
           }
         }
       }
@@ -144,6 +164,15 @@ public class MenuManagerImpl implements MenuManager
   }
 
   /**
+   * {@inheritDoc}
+   */
+  @Override
+  public JPanel getToolBar()
+  {
+    return this.toolBar;
+  }
+
+  /**
    * Removes a managed action from this menu manager.
    * <p>
    * This method is called by the dependency manager.
@@ -170,7 +199,22 @@ public class MenuManagerImpl implements MenuManager
             {
               removeMenuItem( menu, aAction, props );
             }
-            return;
+            break;
+          }
+        }
+
+        String groupName = ( String )props.get( TOOLBAR_GROUP );
+        if ( groupName != null )
+        {
+          for ( JToolBar toolbar : toolbars )
+          {
+            if ( groupName.equals( toolbar.getClientProperty( TOOLBAR_GROUP ) ) )
+            {
+              synchronized ( toolBar.getTreeLock() )
+              {
+                removeToolBarItem( toolbar, aAction, props );
+              }
+            }
           }
         }
       }
@@ -299,6 +343,21 @@ public class MenuManagerImpl implements MenuManager
     this.menus.add( helpMenu );
   }
 
+  final void createToolBar()
+  {
+    this.toolBar = new JPanel( new FlowLayout( FlowLayout.LEADING ) );
+
+    for ( String name : TOOLBAR_GROUP_NAMES )
+    {
+      JToolBar toolbar = new JToolBar();
+      toolbar.setFloatable( false );
+      toolbar.putClientProperty( TOOLBAR_GROUP, name );
+
+      this.toolbars.add( toolbar );
+      this.toolBar.add( toolbar );
+    }
+  }
+
   /**
    * Called by Felix DM when starting this component.
    * 
@@ -313,6 +372,7 @@ public class MenuManagerImpl implements MenuManager
       public void run()
       {
         createMenuBar();
+        createToolBar();
       }
     } );
   }
@@ -325,15 +385,7 @@ public class MenuManagerImpl implements MenuManager
    */
   void stop( Component aComponent ) throws Exception
   {
-    // SwingUtilities.invokeAndWait( new Runnable()
-    // {
-    // @Override
-    // public void run()
-    // {
-    // menuBar.removeAll();
-    // menuBar = null;
-    // }
-    // } );
+    // Nop
   }
 
   /**
@@ -379,6 +431,28 @@ public class MenuManagerImpl implements MenuManager
 
     // Make sure the order is correct...
     sortMenu( aMenu );
+  }
+
+  /**
+   * Adds a given managed action as toolbar item.
+   * 
+   * @param aToolbar
+   * @param aAction
+   * @param aProperties
+   */
+  private void addToolBarItem( JToolBar aToolbar, ManagedAction aAction, Map<String, ?> aProperties )
+  {
+    JButton button = aToolbar.add( aAction );
+    button.putClientProperty( "id", aAction.getId() );
+    for ( Map.Entry<String, ?> entry : aProperties.entrySet() )
+    {
+      button.putClientProperty( entry.getKey(), entry.getValue() );
+    }
+
+    this.log.log( LogService.LOG_INFO, "Adding toolbar item: " + button.getText() + " (" + aAction.getId() + ")" );
+
+    // Make sure the order is correct...
+    sortToolbar( aToolbar );
   }
 
   /**
@@ -429,6 +503,100 @@ public class MenuManagerImpl implements MenuManager
       {
         aMenu.remove( index - 1 ); // XXX or -0?
       }
+    }
+  }
+
+  /**
+   * Adds a given managed action as toolbar item.
+   * 
+   * @param aToolbar
+   * @param aAction
+   * @param aProperties
+   */
+  private void removeToolBarItem( JToolBar aToolbar, ManagedAction aAction, Map<String, ?> aProperties )
+  {
+    final String id = aAction.getId();
+
+    for ( int i = aToolbar.getComponentCount(); i >= 0; i-- )
+    {
+      JButton item;
+      try
+      {
+        item = ( JButton )aToolbar.getComponent( i );
+        if ( item != null && id.equals( item.getClientProperty( "id" ) ) )
+        {
+          this.log.log( LogService.LOG_INFO, "Removing toolbar item: " + item.getText() + " (" + aAction.getId() + ")" );
+
+          aToolbar.remove( item );
+          break;
+        }
+      }
+      catch ( Exception exception )
+      {
+        // Ignore...
+      }
+    }
+  }
+
+  /**
+   * @param aToolBar
+   *          the toolbar to sort, cannot be <code>null</code>.
+   */
+  private void sortToolbar( JToolBar aToolBar )
+  {
+    List<JButton> comps = new ArrayList<JButton>();
+
+    int count = aToolBar.getComponentCount();
+    for ( int i = 0; i < count; i++ )
+    {
+      JButton comp = ( JButton )aToolBar.getComponent( i );
+      if ( comp != null )
+      {
+        comps.add( comp );
+      }
+    }
+
+    Collections.sort( comps, new Comparator<JButton>()
+    {
+      @Override
+      public int compare( JButton aO1, JButton aO2 )
+      {
+        Integer order1 = ( Integer )aO1.getClientProperty( TOOLBAR_ORDER );
+        Integer order2 = ( Integer )aO2.getClientProperty( TOOLBAR_ORDER );
+
+        if ( order1 != null )
+        {
+          if ( order2 != null )
+          {
+            return order1.compareTo( order2 );
+          }
+          else
+          {
+            return -1;
+          }
+        }
+        else
+        {
+          if ( order2 != null )
+          {
+            return 1;
+          }
+        }
+
+        String name1 = aO1.getText();
+        String name2 = aO2.getText();
+
+        return name1.compareTo( name2 );
+      }
+
+    } );
+
+    aToolBar.removeAll();
+
+    // Add items & separators in correct order...
+    for ( JButton comp : comps )
+    {
+      aToolBar.add( comp );
     }
   }
 

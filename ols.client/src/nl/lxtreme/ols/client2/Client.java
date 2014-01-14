@@ -320,6 +320,20 @@ public class Client extends DefaultDockableHolder implements ApplicationCallback
   }
 
   /**
+   * @return <code>true</code> if zooming is supported by the current view,
+   *         <code>false</code> otherwise.
+   */
+  public boolean canZoomView()
+  {
+    ViewController viewCtrl = getCurrentViewController();
+    if ( viewCtrl != null )
+    {
+      return viewCtrl.canZoomView();
+    }
+    return false;
+  }
+
+  /**
    * Clears all current annotations for all channels.
    */
   public void clearAnnotations()
@@ -725,7 +739,7 @@ public class Client extends DefaultDockableHolder implements ApplicationCallback
    * @return <code>true</code> if the current project is changed,
    *         <code>false</code> otherwise.
    */
-  public boolean isProjectChanged()
+  public boolean isChanged()
   {
     return this.projectManager.isProjectChanged();
   }
@@ -873,7 +887,7 @@ public class Client extends DefaultDockableHolder implements ApplicationCallback
    * @throws IOException
    *           in case of I/O problems reading from the given file.
    */
-  public void saveProjectFile( String aProjectName, File aFile ) throws IOException
+  public void saveProjectFile( File aFile ) throws IOException
   {
     try
     {
@@ -1161,11 +1175,9 @@ public class Client extends DefaultDockableHolder implements ApplicationCallback
   {
     // File menu
     registerAction( new NewProjectAction() );
-    registerAction( new OpenProjectAction() );
-    registerAction( new SaveProjectAction() );
-    registerAction( new SaveProjectAsAction() );
-    registerAction( new OpenDataFileAction() );
-    registerAction( new SaveDataFileAction() );
+    registerAction( new OpenAction() );
+    registerAction( new SaveAction() );
+    registerAction( new SaveAsAction() );
 
     // Capture menu
     registerAction( new AcquireDataAction() );
@@ -1330,6 +1342,8 @@ public class Client extends DefaultDockableHolder implements ApplicationCallback
       {
         postEvent( TOPIC_CLIENT_STATE.concat( "/VIEW_CHANGED" ), "type", "viewChanged", "controller",
             getCurrentViewController() );
+
+        updateManagedState();
       }
     } );
 
@@ -1338,7 +1352,7 @@ public class Client extends DefaultDockableHolder implements ApplicationCallback
     workspace.add( this.viewsPane );
 
     Container contentPane = getContentPane();
-    // contentPane.add( tools, BorderLayout.PAGE_START ); XXX
+    contentPane.add( this.menuManager.getToolBar(), BorderLayout.PAGE_START );
     contentPane.add( dm.getMainContainer(), BorderLayout.CENTER );
     contentPane.add( this.status, BorderLayout.PAGE_END );
 

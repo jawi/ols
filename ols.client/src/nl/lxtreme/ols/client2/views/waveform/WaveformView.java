@@ -469,6 +469,15 @@ public class WaveformView extends BaseView
 
     super.addNotify();
   }
+  
+  /**
+   * {@inheritDoc}
+   */
+  @Override
+  public boolean canZoom()
+  {
+    return true;
+  }
 
   /**
    * {@inheritDoc}
