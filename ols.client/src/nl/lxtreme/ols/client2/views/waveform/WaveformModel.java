@@ -35,7 +35,9 @@ import javax.swing.*;
 
 import nl.lxtreme.ols.client2.Client.JumpDirection;
 import nl.lxtreme.ols.client2.Client.JumpType;
+import nl.lxtreme.ols.client2.action.*;
 import nl.lxtreme.ols.client2.views.*;
+import nl.lxtreme.ols.client2.views.MeasurementInfoBuilder.MeasurementInfo;
 import nl.lxtreme.ols.client2.views.waveform.WaveformElement.Type;
 import nl.lxtreme.ols.client2.views.waveform.WaveformElement.WaveformElementMeasurer;
 import nl.lxtreme.ols.common.acquisition.*;
@@ -210,6 +212,52 @@ public class WaveformModel extends ViewModel
   }
 
   /**
+   * Finds the cursor timestamp using a given mouse location and taking the
+   * "snap cursor" mode into consideration.
+   * 
+   * @param aPoint
+   *          the coordinate of the potential cursor, cannot be
+   *          <code>null</code>.
+   * @return a timestamp, or -1 if no valid timestamp could be determined.
+   */
+  public long findCursorTimestamp( Point aPoint )
+  {
+    long timestamp = coordinateToTimestamp( aPoint );
+    if ( !isCursorSnapMode() )
+    {
+      return timestamp;
+    }
+
+    AcquisitionData data = getData();
+    WaveformElement element = getSelectedElement();
+    int refIdx = data.getSampleIndex( timestamp );
+
+    final int[] values = data.getValues();
+    final long[] timestamps = data.getTimestamps();
+
+    // find the reference time value; which is the "timestamp" under the
+    // cursor...
+    if ( ( refIdx >= 0 ) && ( refIdx < values.length ) )
+    {
+      int mask = element.getMask();
+      int refValue = ( values[refIdx] & mask );
+
+      int idx = refIdx;
+      do
+      {
+        idx--;
+      }
+      while ( ( idx >= 0 ) && ( ( values[idx] & mask ) == refValue ) );
+
+      // convert the found index back to "screen" values...
+      final int tm_idx = Math.max( 0, idx + 1 );
+      return timestamps[tm_idx];
+    }
+
+    return timestamp;
+  }
+
+  /**
    * Finds the waveform element based on a given screen coordinate.
    * 
    * @param aPoint
@@ -244,6 +292,126 @@ public class WaveformModel extends ViewModel
     final Point location = new Point( aClip.x + aClip.width, 0 );
     int index = coordinateToSampleIndex( location );
     return Math.min( index + 1, aLength - 1 );
+  }
+
+  /**
+   * Determines the measurement information for the given mouse position.
+   * 
+   * @param aPoint
+   *          the mouse position to retrieve the measurement information for,
+   *          cannot be <code>null</code>;
+   * @param aElement
+   *          the waveform element to get the measurement information for,
+   *          cannot be <code>null</code>.
+   * @return the measurement information, can be <code>null</code>.
+   */
+  public MeasurementInfo getMeasurementInfo( Point aPoint, WaveformElement aElement )
+  {
+    AcquisitionData data = getData();
+
+    int sampleRate = data.getSampleRate();
+    double zoomFactor = getZoomFactor();
+    // Calculate the "absolute" time based on the mouse position, use a
+    // "over sampling" factor to allow intermediary (between two time stamps)
+    // time value to be shown...
+    double scaleFactor = 100.0 * zoomFactor;
+
+    // Convert mouse position to absolute timestamp...
+    double x = aPoint.x / zoomFactor;
+
+    long timestamp = ( long )Math.ceil( x );
+    int refIdx = data.getSampleIndex( timestamp );
+
+    // If no sample rate is available, we use a factor of 1; which doesn't
+    // make a difference in the result...
+    double refTime;
+    if ( !data.hasTimingData() )
+    {
+      refTime = ( scaleFactor * x ) / scaleFactor;
+    }
+    else
+    {
+      // Take (optional) trigger position into account...
+      if ( data.hasTriggerData() )
+      {
+        x -= data.getTriggerPosition();
+      }
+
+      refTime = ( scaleFactor * x ) / ( scaleFactor * sampleRate );
+    }
+
+    MeasurementInfoBuilder infoBuilder = new MeasurementInfoBuilder( data, zoomFactor );
+    infoBuilder.setReferenceTime( refTime );
+    infoBuilder.setChannel( aElement.getChannel() );
+    infoBuilder.setYposition( aElement.getYposition() + aElement.getOffset() );
+    infoBuilder.setHeight( aElement.getSignalHeight() );
+
+    if ( !aElement.isEnabled() )
+    {
+      return infoBuilder.build();
+    }
+
+    final int[] values = data.getValues();
+    final long[] timestamps = data.getTimestamps();
+
+    // find the reference time value; which is the "timestamp" under the
+    // cursor...
+    if ( ( refIdx >= 0 ) && ( refIdx < values.length ) )
+    {
+      int mask = aElement.getMask();
+      int refValue = ( values[refIdx] & mask );
+
+      int idx = refIdx;
+      do
+      {
+        idx--;
+      }
+      while ( ( idx >= 0 ) && ( ( values[idx] & mask ) == refValue ) );
+
+      // convert the found index back to "screen" values...
+      final int tm_idx = Math.max( 0, idx + 1 );
+      long tm = ( tm_idx == 0 ) ? 0 : timestamps[tm_idx];
+
+      infoBuilder.setTransitionTime( tm );
+
+      // Search for the original value again, to complete the pulse...
+      do
+      {
+        idx--;
+      }
+      while ( ( idx >= 0 ) && ( ( values[idx] & mask ) != refValue ) );
+
+      // convert the found index back to "screen" values...
+      final int ts_idx = Math.max( 0, idx + 1 );
+      long ts = ( ts_idx == 0 ) ? 0 : timestamps[ts_idx];
+
+      infoBuilder.setStartTime( ts );
+
+      idx = refIdx;
+      do
+      {
+        idx++;
+      }
+      while ( ( idx < values.length ) && ( ( values[idx] & mask ) == refValue ) );
+
+      // convert the found index back to "screen" values...
+      final int te_idx = Math.min( idx, timestamps.length - 1 );
+      long te = ( te_idx == 0 ) ? 0 : timestamps[te_idx];
+
+      infoBuilder.setEndTime( te );
+
+      // Determine the width of the "high" part...
+      if ( ( values[ts_idx] & mask ) != 0 )
+      {
+        infoBuilder.setHighTime( Math.abs( tm - ts ) );
+      }
+      else
+      {
+        infoBuilder.setHighTime( Math.abs( te - tm ) );
+      }
+    }
+
+    return infoBuilder.build();
   }
 
   /**
@@ -357,6 +525,26 @@ public class WaveformModel extends ViewModel
   public double getZoomFactor()
   {
     return ( ( WaveformView )this.controller.getView() ).getZoomFactor();
+  }
+
+  /**
+   * @return <code>true</code> if cursors snap mode is enabled,
+   *         <code>false</code> otherwise.
+   */
+  public boolean isCursorSnapMode()
+  {
+    ManagedAction action = this.controller.getActionManager().getAction( SetCursorSnapModeAction.ID );
+    return ( action == null ) ? false : Boolean.TRUE.equals( action.getValue( Action.SELECTED_KEY ) );
+  }
+
+  /**
+   * @return <code>true</code> if measurement mode is enabled,
+   *         <code>false</code> otherwise.
+   */
+  public boolean isMeasurementMode()
+  {
+    ManagedAction action = this.controller.getActionManager().getAction( SetMeasurementModeAction.ID );
+    return ( action == null ) ? false : Boolean.TRUE.equals( action.getValue( Action.SELECTED_KEY ) );
   }
 
   /**

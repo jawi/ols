@@ -30,6 +30,7 @@ import java.awt.*;
 
 import javax.swing.*;
 
+import nl.lxtreme.ols.client2.views.MeasurementInfoBuilder.MeasurementInfo;
 import nl.lxtreme.ols.client2.views.*;
 import nl.lxtreme.ols.client2.views.UIMgr.Alignment;
 import nl.lxtreme.ols.client2.views.waveform.WaveformElement.Type;
@@ -86,7 +87,6 @@ final class WaveformViewComponent extends JComponent implements Scrollable
   /**
    * Creates the rendering hints for this the drawing of arrows.
    */
-  @SuppressWarnings( "unused" )
   private static RenderingHints createArrowRenderingHints()
   {
     RenderingHints hints = new RenderingHints( KEY_INTERPOLATION, VALUE_INTERPOLATION_BICUBIC );
@@ -199,46 +199,39 @@ final class WaveformViewComponent extends JComponent implements Scrollable
   @Override
   protected void paintComponent( Graphics aGraphics )
   {
+    Rectangle clip = aGraphics.getClipBounds();
+    WaveformElement[] elements = this.model.getWaveformElements( clip.y, clip.height, LOOSE_MEASURER );
+
+    Graphics2D canvas = ( Graphics2D )aGraphics.create();
+
     try
     {
-      Rectangle clip = aGraphics.getClipBounds();
-      WaveformElement[] elements = this.model.getWaveformElements( clip.y, clip.height, LOOSE_MEASURER );
-
-      Graphics2D canvas = ( Graphics2D )aGraphics.create();
-
-      try
+      if ( elements.length > 0 )
       {
-        if ( elements.length > 0 )
-        {
-          paintSignals( canvas, elements );
-        }
+        paintSignals( canvas, elements );
       }
-      finally
-      {
-        canvas.dispose();
-        canvas = null;
-      }
-
-      // Use the *original* graphics object, as the one defined above is
-      // translated to some unknown coordinate system...
-      canvas = ( Graphics2D )aGraphics;
-
-      // Draw the cursor "flags"...
-      if ( this.model.areCursorsVisible() )
-      {
-        paintCursors( canvas );
-      }
-
-      // Draw the measurement stuff...
-      // if ( this.model.isMeasurementMode() && MeasurementInfo.isDefined(
-      // this.measurementInfo ) )
-      // {
-      // paintMeasurementArrow( canvas, model, this.measurementInfo );
-      // }
     }
     finally
     {
-      // this.listening = true;
+      canvas.dispose();
+      canvas = null;
+    }
+
+    // Use the *original* graphics object, as the one defined above is
+    // translated to some unknown coordinate system...
+    canvas = ( Graphics2D )aGraphics;
+
+    // Draw the cursor "flags"...
+    if ( this.model.areCursorsVisible() )
+    {
+      paintCursors( canvas );
+    }
+
+    // Draw the measurement stuff...
+    MeasurementInfo measurementInfo = this.model.getMeasurementInfo();
+    if ( this.model.isMeasurementMode() && measurementInfo != null )
+    {
+      paintMeasurementArrow( canvas, measurementInfo );
     }
   }
 
@@ -434,6 +427,36 @@ final class WaveformViewComponent extends JComponent implements Scrollable
   }
 
   /**
+   * Paints the measurement information on the given canvas.
+   * 
+   * @param aCanvas
+   *          the canvas to paint on;
+   * @param aMeasurementInfo
+   *          the measurement information to paint.
+   */
+  private void paintMeasurementArrow( Graphics2D aCanvas, MeasurementInfo aMeasurementInfo )
+  {
+    Rectangle rect = aMeasurementInfo.getRectangle();
+    int x = rect.x;
+    int y = ( int )rect.getCenterY();
+    int w = rect.width;
+    int middlePos = aMeasurementInfo.getMidSamplePos().intValue() - x;
+
+    // Tell Swing how we would like to render ourselves...
+    aCanvas.setRenderingHints( createArrowRenderingHints() );
+
+    aCanvas.setColor( getColor( SIGNALVIEW_MEASUREMENT_ARROW_COLOR, Color.WHITE ) );
+
+    // Allow arrow renderer to start with [0, 0] as coordinate system...
+    aCanvas.translate( x, y );
+
+    ArrowRenderer.render( aCanvas, w, middlePos );
+
+    // Restore to original coordinate system...
+    aCanvas.translate( -x, -y );
+  }
+
+  /**
    * Renders the measurement information arrows.
    * 
    * @param aCanvas
@@ -480,14 +503,14 @@ final class WaveformViewComponent extends JComponent implements Scrollable
    */
   private void paintSignals( Graphics2D aCanvas, WaveformElement[] aElements )
   {
-    final AcquisitionData data = this.model.getData();
-    final AnnotationData annotations = this.model.getAnnotations();
+    AcquisitionData data = this.model.getData();
+    AnnotationData annotations = this.model.getAnnotations();
 
-    final int[] values = data.getValues();
-    final long[] timestamps = data.getTimestamps();
-    final long absLength = data.getAbsoluteLength();
+    int[] values = data.getValues();
+    long[] timestamps = data.getTimestamps();
+    long absLength = data.getAbsoluteLength();
 
-    final Rectangle clip = aCanvas.getClipBounds();
+    Rectangle clip = aCanvas.getClipBounds();
 
     Color background = getColor( SIGNALVIEW_BACKGROUND_COLOR, Color.WHITE );
 

@@ -21,10 +21,12 @@
 package nl.lxtreme.ols.client2.views.managed.measurement;
 
 
+import static nl.lxtreme.ols.client2.ClientConstants.*;
 import static nl.lxtreme.ols.util.swing.SwingComponentUtils.*;
 
 import java.awt.*;
 import java.awt.event.*;
+import java.beans.*;
 import java.util.*;
 import java.util.List;
 
@@ -32,6 +34,7 @@ import javax.swing.*;
 
 import nl.lxtreme.ols.client2.action.*;
 import nl.lxtreme.ols.client2.actionmanager.*;
+import nl.lxtreme.ols.client2.views.MeasurementInfoBuilder.MeasurementInfo;
 import nl.lxtreme.ols.client2.views.*;
 import nl.lxtreme.ols.client2.views.managed.*;
 import nl.lxtreme.ols.common.acquisition.*;
@@ -60,14 +63,15 @@ public class MeasurementView extends AbstractManagedView
   private volatile ActionManager actionManager;
 
   private JCheckBox enableMeasurementMode;
-  private JLabel mi_channel;
-  private JLabel mi_referenceLabel;
-  private JLabel mi_reference;
-  private JLabel mi_period;
-  private JLabel mi_frequency;
-  private JLabel mi_widthHigh;
-  private JLabel mi_widthLow;
-  private JLabel mi_dutyCycle;
+  private JCheckBox measurementFrozen;
+  private JLabel channel;
+  private JLabel referenceLabel;
+  private JLabel reference;
+  private JLabel period;
+  private JLabel frequency;
+  private JLabel widthHigh;
+  private JLabel widthLow;
+  private JLabel dutyCycle;
 
   // CONSTRUCTORS
 
@@ -95,26 +99,29 @@ public class MeasurementView extends AbstractManagedView
     panel.add( createRightAlignedLabel( "Enabled" ) );
     panel.add( this.enableMeasurementMode );
 
-    this.comps.add( panel.add( createRightAlignedLabel( "Channel:" ) ) );
-    this.comps.add( panel.add( this.mi_channel ) );
+    this.comps.add( panel.add( createRightAlignedLabel( "Frozen?" ) ) );
+    panel.add( this.measurementFrozen );
 
-    this.comps.add( panel.add( this.mi_referenceLabel ) );
-    this.comps.add( panel.add( this.mi_reference ) );
+    this.comps.add( panel.add( createRightAlignedLabel( "Channel:" ) ) );
+    this.comps.add( panel.add( this.channel ) );
+
+    this.comps.add( panel.add( this.referenceLabel ) );
+    this.comps.add( panel.add( this.reference ) );
 
     this.comps.add( panel.add( createRightAlignedLabel( "Period:" ) ) );
-    this.comps.add( panel.add( this.mi_period ) );
+    this.comps.add( panel.add( this.period ) );
 
     this.comps.add( panel.add( createRightAlignedLabel( "Frequency:" ) ) );
-    this.comps.add( panel.add( this.mi_frequency ) );
+    this.comps.add( panel.add( this.frequency ) );
 
     this.comps.add( panel.add( createRightAlignedLabel( "Width (H):" ) ) );
-    this.comps.add( panel.add( this.mi_widthHigh ) );
+    this.comps.add( panel.add( this.widthHigh ) );
 
     this.comps.add( panel.add( createRightAlignedLabel( "Width (L):" ) ) );
-    this.comps.add( panel.add( this.mi_widthLow ) );
+    this.comps.add( panel.add( this.widthLow ) );
 
     this.comps.add( panel.add( createRightAlignedLabel( "Duty cycle:" ) ) );
-    this.comps.add( panel.add( this.mi_dutyCycle ) );
+    this.comps.add( panel.add( this.dutyCycle ) );
 
     makeEditorGrid( panel );
 
@@ -123,7 +130,7 @@ public class MeasurementView extends AbstractManagedView
 
     add( panel, BorderLayout.NORTH );
 
-    updateMeasurementInformation( null );
+    updateMeasurementInformation( null, false );
   }
 
   /**
@@ -136,17 +143,23 @@ public class MeasurementView extends AbstractManagedView
     setLayout( new BorderLayout() );
     setName( "Measurement" );
 
-    this.mi_channel = new JLabel();
-    this.mi_referenceLabel = new JLabel( "Time:" );
-    this.mi_referenceLabel.setHorizontalAlignment( SwingConstants.RIGHT );
-    this.mi_reference = new JLabel();
-    this.mi_period = new JLabel();
-    this.mi_frequency = new JLabel();
-    this.mi_widthHigh = new JLabel();
-    this.mi_widthLow = new JLabel();
-    this.mi_dutyCycle = new JLabel();
+    this.channel = new JLabel();
+    this.referenceLabel = new JLabel( "Time:" );
+    this.referenceLabel.setHorizontalAlignment( SwingConstants.RIGHT );
+    this.reference = new JLabel();
+    this.period = new JLabel();
+    this.frequency = new JLabel();
+    this.widthHigh = new JLabel();
+    this.widthLow = new JLabel();
+    this.dutyCycle = new JLabel();
 
-    this.enableMeasurementMode = new JCheckBox( this.actionManager.getAction( SetMeasurementModeAction.ID ) );
+    this.measurementFrozen = new JCheckBox( "" );
+    this.measurementFrozen.setEnabled( false );
+    this.measurementFrozen.setSelected( false );
+
+    ManagedAction setMeasurementModeAction = this.actionManager.getAction( SetMeasurementModeAction.ID );
+
+    this.enableMeasurementMode = new JCheckBox( setMeasurementModeAction );
     this.enableMeasurementMode.setText( "" );
     this.enableMeasurementMode.addActionListener( new ActionListener()
     {
@@ -159,6 +172,14 @@ public class MeasurementView extends AbstractManagedView
     } );
 
     aFrame.setInitIndex( 0 );
+    try
+    {
+      aFrame.setActive( Boolean.TRUE.equals( setMeasurementModeAction.getValue( Action.SELECTED_KEY ) ) );
+    }
+    catch ( PropertyVetoException exception )
+    {
+      // Ignore, we just wanted to give a hint that we should be active...
+    }
 
     aContext.setInitSide( DockContext.DOCK_SIDE_EAST );
     aContext.setInitMode( DockContext.STATE_FRAMEDOCKED );
@@ -170,7 +191,26 @@ public class MeasurementView extends AbstractManagedView
   @Override
   protected void doUpdateState( ViewController aController, AcquisitionData aData )
   {
-    // NOP
+    setState( aController != null );
+    if ( aController == null )
+    {
+      updateMeasurementInformation( null, false );
+    }
+    else
+    {
+      ViewModel model = aController.getModel();
+
+      updateMeasurementInformation( model.getMeasurementInfo(), model.isMeasurementFrozen() );
+    }
+  }
+
+  /**
+   * {@inheritDoc}
+   */
+  @Override
+  protected String[] getEventTopics()
+  {
+    return new String[] { TOPIC_CLIENT_STATE.concat( "/*" ), TOPIC_MEASUREMENTS };
   }
 
   /**
@@ -179,7 +219,25 @@ public class MeasurementView extends AbstractManagedView
   @Override
   protected boolean handleEvent( String aTopic, Event aEvent )
   {
-    // TODO handle measurement events
+    if ( TOPIC_MEASUREMENTS.equals( aTopic ) )
+    {
+      final MeasurementInfo info = ( MeasurementInfo )aEvent.getProperty( "measurement" );
+      final boolean frozen = Boolean.TRUE.equals( aEvent.getProperty( "frozen" ) );
+
+      SwingComponentUtils.invokeOnEDT( new Runnable()
+      {
+        @Override
+        public void run()
+        {
+          setState( true );
+
+          updateMeasurementInformation( info, frozen );
+        }
+      } );
+
+      return true;
+    }
+
     return false;
   }
 
@@ -188,24 +246,17 @@ public class MeasurementView extends AbstractManagedView
    */
   private void setState( final boolean aEnabled )
   {
-    SwingComponentUtils.invokeOnEDT( new Runnable()
+    for ( Component label : MeasurementView.this.comps )
     {
-      @Override
-      public void run()
-      {
-        for ( Component label : MeasurementView.this.comps )
-        {
-          label.setEnabled( aEnabled );
-        }
-      }
-    } );
+      label.setEnabled( aEnabled );
+    }
   }
 
   /**
    * @param aMeasurementInfo
    * @return
    */
-  private void updateMeasurementInformation( final Object aMeasurementInfo )
+  private void updateMeasurementInformation( MeasurementInfo aMeasurementInfo, boolean aFrozen )
   {
     String channelId = "-";
     String reference = "-";
@@ -218,35 +269,36 @@ public class MeasurementView extends AbstractManagedView
 
     if ( aMeasurementInfo != null )
     {
-      // hasTimingData = aMeasurementInfo.hasTimingData();
-      //
-      // channelId = Integer.toString( aMeasurementInfo.getChannelIndex() );
-      // if ( aMeasurementInfo.getChannelLabel() != null )
-      // {
-      // channelId = channelId.concat( ", " ).concat(
-      // aMeasurementInfo.getChannelLabel() );
-      // }
-      //
-      // reference = formatReference( hasTimingData,
-      // aMeasurementInfo.getReferenceTime() );
-      //
-      // if ( hasTimingData )
-      // {
-      // totalWidth = formatTime( aMeasurementInfo.getTotalTime() );
-      // frequency = formatPeriodAsFrequency( aMeasurementInfo.getTotalTime() );
-      // pwHigh = formatTime( aMeasurementInfo.getHighTime() );
-      // pwLow = formatTime( aMeasurementInfo.getLowTime() );
-      // dc = formatDutyCycle( aMeasurementInfo.getDutyCycle() );
-      // }
+      hasTimingData = aMeasurementInfo.hasTimingData();
+      Channel channel = aMeasurementInfo.getChannel();
+
+      channelId = Integer.toString( channel.getIndex() );
+      if ( channel.getLabel() != null )
+      {
+        channelId = channelId.concat( ", " ).concat( channel.getLabel() );
+      }
+
+      reference = formatReference( hasTimingData, aMeasurementInfo.getReferenceTime() );
+
+      if ( hasTimingData )
+      {
+        totalWidth = formatTime( aMeasurementInfo.getTotalTime() );
+        frequency = formatPeriodAsFrequency( aMeasurementInfo.getTotalTime() );
+        pwHigh = formatTime( aMeasurementInfo.getHighTime() );
+        pwLow = formatTime( aMeasurementInfo.getLowTime() );
+        dc = formatDutyCycle( aMeasurementInfo.getDutyCycle() );
+      }
     }
 
-    this.mi_channel.setText( channelId );
-    this.mi_referenceLabel.setText( hasTimingData ? "Time:" : "State:" );
-    this.mi_reference.setText( reference );
-    this.mi_frequency.setText( frequency );
-    this.mi_period.setText( totalWidth );
-    this.mi_widthHigh.setText( pwHigh );
-    this.mi_widthLow.setText( pwLow );
-    this.mi_dutyCycle.setText( dc );
+    this.measurementFrozen.setSelected( aFrozen );
+
+    this.channel.setText( channelId );
+    this.referenceLabel.setText( hasTimingData ? "Time:" : "State:" );
+    this.reference.setText( reference );
+    this.frequency.setText( frequency );
+    this.period.setText( totalWidth );
+    this.widthHigh.setText( pwHigh );
+    this.widthLow.setText( pwLow );
+    this.dutyCycle.setText( dc );
   }
 }

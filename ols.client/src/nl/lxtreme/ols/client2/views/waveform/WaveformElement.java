@@ -214,6 +214,22 @@ final class WaveformElement
   }
 
   /**
+   * Returns the current value of channel.
+   * 
+   * @return the channel, never <code>null</code>.
+   * @throws UnsupportedOperationException
+   *           in case this method is called for non-digital channels.
+   */
+  public Channel getChannel()
+  {
+    if ( this.channel == null )
+    {
+      throw new UnsupportedOperationException( "Not a digital channel!" );
+    }
+    return this.channel;
+  }
+
+  /**
    * Returns the main/foreground color of this signal element.
    * 
    * @return a color, never <code>null</code>.

@@ -38,6 +38,7 @@ import nl.lxtreme.ols.client2.action.*;
 import nl.lxtreme.ols.client2.actionmanager.*;
 import nl.lxtreme.ols.client2.platform.*;
 import nl.lxtreme.ols.client2.views.*;
+import nl.lxtreme.ols.client2.views.MeasurementInfoBuilder.MeasurementInfo;
 import nl.lxtreme.ols.client2.views.waveform.WaveformElement.Type;
 import nl.lxtreme.ols.common.acquisition.*;
 import nl.lxtreme.ols.common.acquisition.Cursor;
@@ -79,18 +80,18 @@ public class WaveformView extends BaseView
 
       if ( source == mainComponent || source == timelineComponent )
       {
-        Cursor hoveredCursor = model.getSelectedCursor();
+        MouseEvent event = convertEvent( aEvent );
+        Point point = event.getPoint();
 
         if ( clicks == 2 )
         {
+          Cursor hoveredCursor = model.getSelectedCursor();
+
           boolean dblClickZoom = UIManager.getBoolean( DOUBLE_CLICK_ZOOM_DEFAULT );
           boolean ctrlDown = Platform.isMacOS() ? aEvent.isMetaDown() : aEvent.isControlDown();
 
           boolean cursorPlaceEvent = !dblClickZoom ^ ctrlDown;
           boolean zoomEvent = dblClickZoom ^ ctrlDown;
-
-          MouseEvent event = convertEvent( aEvent );
-          Point point = event.getPoint();
 
           if ( model.areCursorsVisible() && ( hoveredCursor != null ) )
           {
@@ -108,12 +109,12 @@ public class WaveformView extends BaseView
             }
             else
             {
-              long timestamp = model.coordinateToTimestamp( point );
+              long timestamp = model.findCursorTimestamp( point );
 
               cursor.setTimestamp( timestamp );
 
               // Make the cursor visible on screen...
-              repaintCursor( timestamp );
+              repaintAccumulator.add( cursor );
 
               // Notify all listeners that something has changed...
               postCursorChangedEvent( cursor );
@@ -131,6 +132,22 @@ public class WaveformView extends BaseView
 
             // Consume the event to stop further processing...
             aEvent.consume();
+          }
+        }
+        else if ( clicks == 1 )
+        {
+          if ( model.isMeasurementMode() )
+          {
+            boolean frozen = model.isMeasurementFrozen();
+            if ( aEvent.getButton() == MouseEvent.BUTTON1 )
+            {
+              model.setMeasurementFrozen( !frozen );
+            }
+
+            MeasurementInfo measurementInfo = updateMeasurementInfo( model, point );
+
+            // Fire an event to the interested listeners...
+            postMeasurementInfoEvent( measurementInfo, model.isMeasurementFrozen() );
           }
         }
       }
@@ -168,7 +185,7 @@ public class WaveformView extends BaseView
         Cursor oldCursor = movingCursor.clone();
         long oldTimestamp = oldCursor.getTimestamp();
 
-        long newTimestamp = model.coordinateToTimestamp( point );
+        long newTimestamp = model.findCursorTimestamp( point );
         movingCursor.setTimestamp( newTimestamp );
 
         repaintCursor( oldTimestamp );
@@ -250,6 +267,14 @@ public class WaveformView extends BaseView
       {
         setCursor( CURSOR_MOVE_CURSOR );
       }
+
+      if ( model.isMeasurementMode() && !model.isMeasurementFrozen() )
+      {
+        MeasurementInfo measurementInfo = updateMeasurementInfo( model, point );
+
+        // Fire an event to the interested listeners...
+        postMeasurementInfoEvent( measurementInfo, model.isMeasurementFrozen() );
+      }
     }
 
     /**
@@ -291,47 +316,77 @@ public class WaveformView extends BaseView
       postEvent( TOPIC_CLIENT_STATE.concat( "/CURSOR_CHANGED" ), "cursor", aCursor.clone(), "controller", controller );
     }
 
-    private Cursor updateSelectedCursor( WaveformModel model, Point point )
+    /**
+     * @param aInfo
+     *          the measurement information, cannot be <code>null</code>.
+     */
+    private void postMeasurementInfoEvent( MeasurementInfo aInfo, boolean aFrozen )
     {
-      Cursor oldCursor = model.getSelectedCursor();
-      Cursor newCursor = model.findCursor( point );
+      postEvent( TOPIC_MEASUREMENTS, "measurement", aInfo, "frozen", aFrozen );
+    }
 
-      if ( newCursor != oldCursor )
+    private MeasurementInfo updateMeasurementInfo( WaveformModel aModel, Point aPoint )
+    {
+      MeasurementInfo oldMeasurementInfo = aModel.getMeasurementInfo();
+
+      WaveformElement element = aModel.getSelectedElement();
+      if ( element == null || !Type.CHANNEL.equals( element.getType() ) )
       {
-        model.setSelectedCursor( newCursor );
+        return oldMeasurementInfo;
+      }
 
-        // Repaint the affected areas
-        if ( newCursor != null )
-        {
-          repaintCursor( newCursor );
-        }
-        if ( oldCursor != null )
-        {
-          repaintCursor( oldCursor );
-        }
+      MeasurementInfo measurementInfo = aModel.getMeasurementInfo( aPoint, element );
+
+      if ( oldMeasurementInfo != null )
+      {
+        repaintAccumulator.add( oldMeasurementInfo );
+      }
+
+      aModel.setMeasurementInfo( measurementInfo );
+
+      if ( measurementInfo != null )
+      {
+        repaintAccumulator.add( measurementInfo );
+      }
+
+      return measurementInfo;
+    }
+
+    private Cursor updateSelectedCursor( WaveformModel aModel, Point aPoint )
+    {
+      Cursor oldCursor = aModel.getSelectedCursor();
+      Cursor newCursor = aModel.findCursor( aPoint );
+
+      aModel.setSelectedCursor( newCursor );
+
+      // Repaint the affected areas
+      if ( newCursor != null )
+      {
+        repaintAccumulator.add( newCursor );
+      }
+      if ( oldCursor != null )
+      {
+        repaintAccumulator.add( oldCursor );
       }
 
       return newCursor;
     }
 
-    private void updateSelectedElement( WaveformModel model, Point point )
+    private void updateSelectedElement( WaveformModel aModel, Point aPoint )
     {
-      WaveformElement oldElement = model.getSelectedElement();
-      WaveformElement newElement = model.findWaveformElement( point );
+      WaveformElement oldElement = aModel.getSelectedElement();
+      WaveformElement newElement = aModel.findWaveformElement( aPoint );
 
-      if ( newElement != oldElement )
+      aModel.setSelectedElement( newElement );
+
+      // Repaint the affected areas
+      if ( newElement != null )
       {
-        model.setSelectedElement( newElement );
-
-        // Repaint the affected areas
-        if ( newElement != null )
-        {
-          repaintWaveformLabel( newElement );
-        }
-        if ( oldElement != null )
-        {
-          repaintWaveformLabel( oldElement );
-        }
+        repaintAccumulator.add( newElement );
+      }
+      if ( oldElement != null )
+      {
+        repaintAccumulator.add( oldElement );
       }
     }
   }
@@ -350,7 +405,7 @@ public class WaveformView extends BaseView
         Object obj = aArgs.pop();
         if ( obj instanceof WaveformElement )
         {
-          repaintWaveformElement( ( WaveformElement )obj );
+          repaintWaveformLabel( ( WaveformElement )obj );
         }
         else if ( obj instanceof Annotation )
         {
@@ -359,6 +414,10 @@ public class WaveformView extends BaseView
         else if ( obj instanceof Cursor )
         {
           repaintCursor( ( Cursor )obj );
+        }
+        else if ( obj instanceof MeasurementInfo )
+        {
+          repaintMeasurementInformation( ( MeasurementInfo )obj );
         }
       }
     }
@@ -748,6 +807,19 @@ public class WaveformView extends BaseView
     rect.width = 2;
 
     this.mainComponent.repaint( rect );
+  }
+
+  /**
+   * Repaints the area taken up by the given measurement information on screen.
+   * 
+   * @param aMeasurementInfo
+   *          the measurement information to repaint, cannot be
+   *          <code>null</code>.
+   */
+  final void repaintMeasurementInformation( MeasurementInfo aMeasurementInfo )
+  {
+    Rectangle rect = aMeasurementInfo.getRectangle();
+    this.mainComponent.repaint( rect.x - 1, rect.y - 1, rect.width + 2, rect.height + 2 );
   }
 
   /**

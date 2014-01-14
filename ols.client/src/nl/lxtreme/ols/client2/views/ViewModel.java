@@ -23,6 +23,7 @@ package nl.lxtreme.ols.client2.views;
 
 import java.util.concurrent.atomic.*;
 
+import nl.lxtreme.ols.client2.views.MeasurementInfoBuilder.*;
 import nl.lxtreme.ols.common.acquisition.*;
 import nl.lxtreme.ols.common.annotation.*;
 import nl.lxtreme.ols.common.session.*;
@@ -37,6 +38,8 @@ public class ViewModel
 
   private final Session session;
   private final AtomicReference<Cursor> selectedCursorRef;
+  private final AtomicReference<MeasurementInfo> measurementInfoRef;
+  private final AtomicBoolean measurementFrozen;
 
   // CONSTRUCTORS
 
@@ -50,6 +53,8 @@ public class ViewModel
   {
     this.session = aSession;
     this.selectedCursorRef = new AtomicReference<Cursor>();
+    this.measurementInfoRef = new AtomicReference<MeasurementInfo>();
+    this.measurementFrozen = new AtomicBoolean( false );
   }
 
   // METHODS
@@ -86,6 +91,14 @@ public class ViewModel
   public final AcquisitionData getData()
   {
     return this.session.getAcquiredData();
+  }
+
+  /**
+   * @return the last known measurement information, can be <code>null</code>.
+   */
+  public final MeasurementInfo getMeasurementInfo()
+  {
+    return this.measurementInfoRef.get();
   }
 
   /**
@@ -159,6 +172,48 @@ public class ViewModel
   public void initialize()
   {
     // Nop
+  }
+
+  /**
+   * @return <code>true</code> if the current measurement is frozen, i.e, no
+   *         longer is updated by mouse movements, <code>false</code> otherwise.
+   */
+  public final boolean isMeasurementFrozen()
+  {
+    return this.measurementFrozen.get();
+  }
+
+  /**
+   * Sets whether or not the measurement mode is frozen.
+   * 
+   * @param aFrozen
+   *          <code>true</code> if the measurement mode is frozen,
+   *          <code>false</code> otherwise.
+   */
+  public final void setMeasurementFrozen( boolean aFrozen )
+  {
+    boolean old;
+    do
+    {
+      old = this.measurementFrozen.get();
+    }
+    while ( !this.measurementFrozen.compareAndSet( old, aFrozen ) );
+  }
+
+  /**
+   * Sets the measurement information to the one given.
+   * 
+   * @param aMeasurementInfo
+   *          the measurement information to set, can be <code>null</code>.
+   */
+  public final void setMeasurementInfo( MeasurementInfo aMeasurementInfo )
+  {
+    MeasurementInfo old;
+    do
+    {
+      old = this.measurementInfoRef.get();
+    }
+    while ( !this.measurementInfoRef.compareAndSet( old, aMeasurementInfo ) );
   }
 
   /**
