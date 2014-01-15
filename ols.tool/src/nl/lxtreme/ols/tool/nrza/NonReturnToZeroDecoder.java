@@ -26,8 +26,6 @@ import java.awt.*;
 import nl.lxtreme.ols.common.acquisition.*;
 import nl.lxtreme.ols.tool.api.*;
 
-import org.osgi.framework.*;
-
 
 /**
  * Provides a non-return to zero decoder, which is simply a data- and a
@@ -35,10 +33,6 @@ import org.osgi.framework.*;
  */
 public class NonReturnToZeroDecoder implements Tool<AcquisitionData>
 {
-  // VARIABLES
-
-  private volatile BundleContext context;
-
   // METHODS
 
   /**
@@ -74,6 +68,6 @@ public class NonReturnToZeroDecoder implements Tool<AcquisitionData>
   @Override
   public void invoke( final Window aParent, final ToolContext aContext )
   {
-    new NonReturnToZeroDecoderDialog( aParent, aContext, this.context, this ).showDialog();
+    new NonReturnToZeroDecoderDialog( aParent, this, aContext ).showDialog();
   }
 }

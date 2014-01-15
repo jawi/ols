@@ -33,8 +33,6 @@ import nl.lxtreme.ols.tool.base.*;
 import nl.lxtreme.ols.tool.base.ToolUtils.RestorableAction;
 import nl.lxtreme.ols.util.swing.*;
 
-import org.osgi.framework.*;
-
 
 /**
  * Denotes the configuration dialog for the manchester line decoder tool.
@@ -59,14 +57,12 @@ public class ManchesterDecoderDialog extends BaseToolDialog<AcquisitionData>
    * Creates a new LineDecoderToolDialog instance.
    * 
    * @param aOwner
-   * @param aContext
-   * @param aBundleContext
    * @param aTool
+   * @param aContext
    */
-  public ManchesterDecoderDialog( final Window aOwner, final ToolContext aContext, final BundleContext aBundleContext,
-      final Tool<AcquisitionData> aTool )
+  public ManchesterDecoderDialog( Window aOwner, ManchesterDecoder aTool, ToolContext aContext )
   {
-    super( aOwner, aContext, aBundleContext, aTool );
+    super( aOwner, aTool, aContext );
 
     initDialog();
 

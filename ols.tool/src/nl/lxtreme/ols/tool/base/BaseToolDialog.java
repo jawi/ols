@@ -121,12 +121,12 @@ public abstract class BaseToolDialog<RESULT_TYPE> extends JFrame implements Tool
    * 
    * @param aOwner
    *          the owning window of this dialog;
-   * @param aTitle
-   *          the title of this dialog;
    * @param aContext
    *          the tool context to use in this dialog.
+   * @param aTitle
+   *          the title of this dialog;
    */
-  protected BaseToolDialog( Window aOwner, ToolContext aContext, BundleContext aBundleContext, Tool<RESULT_TYPE> aTool )
+  protected BaseToolDialog( Window aOwner, Tool<RESULT_TYPE> aTool, ToolContext aContext )
   {
     super( aTool.getName() );
 
@@ -152,7 +152,7 @@ public abstract class BaseToolDialog<RESULT_TYPE> extends JFrame implements Tool
     this.toolFutureTask.cancel( true /* mayInterruptIfRunning */);
     this.toolFutureTask = null;
 
-    this.logService.log( LogService.LOG_INFO, "Cancelled tool " + this.tool.getName() + " ..." );
+    this.logService.log( LogService.LOG_INFO, "Cancelled tool " + getToolName() + " ..." );
   }
 
   /**
@@ -226,6 +226,8 @@ public abstract class BaseToolDialog<RESULT_TYPE> extends JFrame implements Tool
           onToolEnded( BaseToolDialog.this.lastResult );
         }
       } );
+      
+      logInfo( "Tool %s finished successfully...", getToolName() );
 
       AcquisitionData data = null;
       if ( this.lastResult instanceof AcquisitionData )
@@ -254,6 +256,8 @@ public abstract class BaseToolDialog<RESULT_TYPE> extends JFrame implements Tool
           onToolFailed( exception );
         }
       } );
+      
+      logWarning( "Tool %s failed...", exception, getToolName() );
 
       postToolFinishedEvent( timeTaken, null, exception );
 
@@ -274,6 +278,8 @@ public abstract class BaseToolDialog<RESULT_TYPE> extends JFrame implements Tool
           onToolStarted();
         }
       } );
+      
+      logInfo( "Tool %s started...", getToolName() );
 
       postToolStartedEvent();
     }
@@ -294,7 +300,7 @@ public abstract class BaseToolDialog<RESULT_TYPE> extends JFrame implements Tool
       throw new IllegalArgumentException( "No data present to invoke tool on!" );
     }
 
-    this.logService.log( LogService.LOG_INFO, "Invoking tool " + this.tool.getName() + " ..." );
+    this.logService.log( LogService.LOG_INFO, "Invoking tool " + getToolName() + " ..." );
 
     boolean settingsValid = validateToolSettings();
     if ( settingsValid )
@@ -304,7 +310,7 @@ public abstract class BaseToolDialog<RESULT_TYPE> extends JFrame implements Tool
       prepareToolTask( this.toolTask );
 
       this.toolFutureTask = this.taskExecutor.execute( this.toolTask,
-          Collections.singletonMap( "toolName", this.tool.getName() ) );
+          Collections.singletonMap( "toolName", getToolName() ) );
     }
 
     return settingsValid;
@@ -329,7 +335,7 @@ public abstract class BaseToolDialog<RESULT_TYPE> extends JFrame implements Tool
 
     Properties props = new Properties();
     props.put( EventConstants.EVENT_TOPIC, TaskExecutionService.EVENT_TOPIC );
-    props.put( EventConstants.EVENT_FILTER, "(toolName=" + this.tool.getName() + ")" );
+    props.put( EventConstants.EVENT_FILTER, "(toolName=" + getToolName() + ")" );
 
     DependencyManager dm = new DependencyManager( context );
     // @formatter:off
@@ -458,6 +464,26 @@ public abstract class BaseToolDialog<RESULT_TYPE> extends JFrame implements Tool
     }
   }
 
+  protected final void logDebug( String aMessage, Object... aArgs )
+  {
+    this.logService.log( LogService.LOG_DEBUG, String.format( aMessage, aArgs ) );
+  }
+
+  protected final void logInfo( String aMessage, Object... aArgs )
+  {
+    this.logService.log( LogService.LOG_INFO, String.format( aMessage, aArgs ) );
+  }
+
+  protected final void logWarning( String aMessage, Exception aException, Object... aArgs )
+  {
+    this.logService.log( LogService.LOG_WARNING, String.format( aMessage, aArgs ), aException );
+  }
+
+  protected final void logWarning( String aMessage, Object... aArgs )
+  {
+    this.logService.log( LogService.LOG_WARNING, String.format( aMessage, aArgs ) );
+  }
+
   /**
    * Called right before this dialog is made invisible.
    */
@@ -582,6 +608,16 @@ public abstract class BaseToolDialog<RESULT_TYPE> extends JFrame implements Tool
     return cb;
   }
 
+  private String getToolName()
+  {
+    String name = this.tool.getName();
+    if ( name.endsWith( "..." ) )
+    {
+      name = name.substring( 0, name.length() - 3 );
+    }
+    return name.trim();
+  }
+
   /**
    * Posts an asynchronous event that a tool has finished its job.
    * 
@@ -594,7 +630,7 @@ public abstract class BaseToolDialog<RESULT_TYPE> extends JFrame implements Tool
   {
     Map<Object, Object> props = new Properties();
     props.put( TTF_EXECUTION_TIME, aTime );
-    props.put( TTF_TOOL_NAME, this.tool.getName() );
+    props.put( TTF_TOOL_NAME, getToolName() );
     if ( aData != null )
     {
       props.put( TTF_DATA, aData );
@@ -608,17 +644,6 @@ public abstract class BaseToolDialog<RESULT_TYPE> extends JFrame implements Tool
   }
 
   /**
-   * Posts an asynchronous event that a tool has started its job.
-   */
-  private void postToolStartedEvent()
-  {
-    Map<Object, Object> props = new Properties();
-    props.put( TTF_TOOL_NAME, this.tool.getName() );
-
-    this.eventAdmin.postEvent( new Event( TOPIC_TOOL_FINISHED, props ) );
-  }
-
-  /**
    * Posts an asynchronous event that a tool has made progress.
    * 
    * @param aProgress
@@ -627,9 +652,20 @@ public abstract class BaseToolDialog<RESULT_TYPE> extends JFrame implements Tool
   private void postToolProgressEvent( int aProgress )
   {
     Map<Object, Object> props = new Properties();
-    props.put( TTP_TOOL_NAME, this.tool.getName() );
+    props.put( TTP_TOOL_NAME, getToolName() );
     props.put( TTP_PROGRESS, aProgress );
 
     this.eventAdmin.postEvent( new Event( TOPIC_TOOL_PROGRESS, props ) );
+  }
+
+  /**
+   * Posts an asynchronous event that a tool has started its job.
+   */
+  private void postToolStartedEvent()
+  {
+    Map<Object, Object> props = new Properties();
+    props.put( TTS_TOOL_NAME, getToolName() );
+
+    this.eventAdmin.postEvent( new Event( TOPIC_TOOL_STARTED, props ) );
   }
 }

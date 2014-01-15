@@ -25,25 +25,19 @@ import java.awt.*;
 
 import nl.lxtreme.ols.tool.api.*;
 
-import org.osgi.framework.*;
-
 
 /**
  * Provides an UART/RS-232 analysis tool.
  */
 public class UARTAnalyser implements Tool<UARTDataSet>
 {
-  // VARIABLES
-
-  private volatile BundleContext context;
-
   // METHODS
 
   /**
    * {@inheritDoc}
    */
   @Override
-  public UARTAnalyserTask createToolTask( final ToolContext aContext, final ToolProgressListener aProgressListener )
+  public UARTAnalyserTask createToolTask( ToolContext aContext, ToolProgressListener aProgressListener )
   {
     return new UARTAnalyserTask( aContext, aProgressListener );
   }
@@ -72,7 +66,7 @@ public class UARTAnalyser implements Tool<UARTDataSet>
   @Override
   public void invoke( final Window aParent, final ToolContext aContext )
   {
-    new UARTProtocolAnalysisDialog( aParent, aContext, this.context, this ).showDialog();
+    new UARTProtocolAnalysisDialog( aParent, this, aContext ).showDialog();
   }
 }
 

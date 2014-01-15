@@ -30,7 +30,6 @@ import java.math.*;
 import java.text.*;
 import java.util.*;
 import java.util.List;
-import java.util.logging.*;
 
 import javax.swing.*;
 
@@ -45,8 +44,6 @@ import nl.lxtreme.ols.tool.base.ExportUtils.HtmlFileExporter;
 import nl.lxtreme.ols.tool.base.ToolUtils.RestorableAction;
 import nl.lxtreme.ols.util.swing.*;
 
-import org.osgi.framework.*;
-
 
 /**
  * The Dialog Class for configuring the JTAG protocol analysis settings.
@@ -58,8 +55,6 @@ public final class JTAGProtocolAnalysisDialog extends BaseToolDialog<JTAGDataSet
   // CONSTANTS
 
   private static final long serialVersionUID = 1L;
-
-  private static final Logger LOG = Logger.getLogger( JTAGProtocolAnalysisDialog.class.getName() );
 
   // VARIABLES
 
@@ -80,17 +75,14 @@ public final class JTAGProtocolAnalysisDialog extends BaseToolDialog<JTAGDataSet
    * 
    * @param aOwner
    *          the owner of this dialog;
-   * @param aToolContext
-   *          the tool context;
-   * @param aContext
-   *          the OSGi bundle context to use;
    * @param aTool
    *          the {@link JTAGAnalyser} tool.
+   * @param aToolContext
+   *          the tool context;
    */
-  public JTAGProtocolAnalysisDialog( final Window aOwner, final ToolContext aToolContext, final BundleContext aContext,
-      final JTAGAnalyser aTool )
+  public JTAGProtocolAnalysisDialog( Window aOwner, JTAGAnalyser aTool, ToolContext aToolContext )
   {
-    super( aOwner, aToolContext, aContext, aTool );
+    super( aOwner, aTool, aToolContext );
 
     initDialog();
 
@@ -310,7 +302,7 @@ public final class JTAGProtocolAnalysisDialog extends BaseToolDialog<JTAGDataSet
     final int channelCount = getData().getChannelCount();
 
     final JPanel settings = new JPanel( new SpringLayout() );
-    
+
     addDecoderAreaPane( settings );
 
     SpringLayoutUtils.addSeparator( settings, "Settings" );
@@ -449,7 +441,7 @@ public final class JTAGProtocolAnalysisDialog extends BaseToolDialog<JTAGDataSet
     }
     catch ( final IOException exception )
     {
-      LOG.log( Level.WARNING, "CSV export failed!", exception );
+      logWarning( "CSV export failed!", exception );
     }
   }
 
@@ -467,7 +459,7 @@ public final class JTAGProtocolAnalysisDialog extends BaseToolDialog<JTAGDataSet
     }
     catch ( final IOException exception )
     {
-      LOG.log( Level.WARNING, "HTML export failed!", exception );
+      logWarning( "HTML export failed!", exception );
     }
   }
 
@@ -481,8 +473,6 @@ public final class JTAGProtocolAnalysisDialog extends BaseToolDialog<JTAGDataSet
    */
   private String toHtmlPage( final File aFile, final JTAGDataSet aAnalysisResult ) throws IOException
   {
-    LOG.log( Level.INFO, "toHtmlPage" );
-
     final MacroResolver macroResolver = new MacroResolver()
     {
       @Override
@@ -490,15 +480,11 @@ public final class JTAGProtocolAnalysisDialog extends BaseToolDialog<JTAGDataSet
       {
         if ( "date-now".equals( aMacro ) )
         {
-          LOG.log( Level.INFO, "toHtmlPage date-now" );
-
           final DateFormat df = DateFormat.getDateInstance( DateFormat.LONG );
           return df.format( new Date() );
         }
         else if ( "decoded-data".equals( aMacro ) )
         {
-          LOG.log( Level.INFO, "toHtmlPage decoded-data" );
-
           final List<JTAGData> dataSet = aAnalysisResult.getData();
           Element tr;
 

@@ -26,18 +26,12 @@ import java.awt.*;
 import nl.lxtreme.ols.common.acquisition.*;
 import nl.lxtreme.ols.tool.api.*;
 
-import org.osgi.framework.*;
-
 
 /**
  * Provides a state analysis tool (??? not sure what it does though ???).
  */
 public class StateAnalyser implements Tool<AcquisitionData>
 {
-  // VARIABLES
-
-  private volatile BundleContext context;
-
   // METHODS
 
   /**
@@ -73,7 +67,7 @@ public class StateAnalyser implements Tool<AcquisitionData>
   @Override
   public void invoke( final Window aParent, final ToolContext aContext )
   {
-    new StateAnalysisDialog( aParent, aContext, this.context, this ).showDialog();
+    new StateAnalysisDialog( aParent, this, aContext ).showDialog();
   }
 }
 

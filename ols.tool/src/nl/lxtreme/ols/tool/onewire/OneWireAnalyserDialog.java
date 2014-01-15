@@ -20,6 +20,7 @@
  */
 package nl.lxtreme.ols.tool.onewire;
 
+
 import static nl.lxtreme.ols.tool.base.ExportUtils.HtmlExporter.*;
 import static nl.lxtreme.ols.tool.onewire.OneWireAnalyserTask.*;
 import static nl.lxtreme.ols.util.swing.SwingComponentUtils.*;
@@ -41,8 +42,6 @@ import nl.lxtreme.ols.tool.base.ExportUtils.HtmlExporter.MacroResolver;
 import nl.lxtreme.ols.tool.base.ExportUtils.HtmlFileExporter;
 import nl.lxtreme.ols.tool.base.ToolUtils.RestorableAction;
 import nl.lxtreme.ols.util.swing.*;
-
-import org.osgi.framework.*;
 
 
 /**
@@ -71,17 +70,14 @@ public class OneWireAnalyserDialog extends BaseToolDialog<OneWireDataSet> implem
    * 
    * @param aOwner
    *          the owner of this dialog;
-   * @param aToolContext
-   *          the tool context;
-   * @param aContext
-   *          the OSGi bundle context to use;
    * @param aTool
    *          the {@link OneWireAnalyser} tool.
+   * @param aToolContext
+   *          the tool context;
    */
-  public OneWireAnalyserDialog( final Window aOwner, final ToolContext aToolContext, final BundleContext aContext,
-      final OneWireAnalyser aTool )
+  public OneWireAnalyserDialog( Window aOwner, OneWireAnalyser aTool, ToolContext aToolContext )
   {
-    super( aOwner, aToolContext, aContext, aTool );
+    super( aOwner, aTool, aToolContext );
 
     initDialog();
 
@@ -294,7 +290,7 @@ public class OneWireAnalyserDialog extends BaseToolDialog<OneWireDataSet> implem
     final String modes[] = new String[] { "Standard", "Overdrive" };
 
     final JPanel panel = new JPanel( new SpringLayout() );
-    
+
     addDecoderAreaPane( panel );
 
     SpringLayoutUtils.addSeparator( panel, "Settings" );

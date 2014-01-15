@@ -26,18 +26,12 @@ import java.awt.*;
 import nl.lxtreme.ols.common.acquisition.*;
 import nl.lxtreme.ols.tool.api.*;
 
-import org.osgi.framework.*;
-
 
 /**
  * Provides a {@link ManchesterDecoder} instance.
  */
 public class ManchesterDecoder implements Tool<AcquisitionData>
 {
-  // VARIABLES
-
-  private volatile BundleContext context;
-
   // METHODS
 
   /**
@@ -74,6 +68,6 @@ public class ManchesterDecoder implements Tool<AcquisitionData>
   @Override
   public void invoke( final Window aParent, final ToolContext aContext )
   {
-    new ManchesterDecoderDialog( aParent, aContext, this.context, this ).showDialog();
+    new ManchesterDecoderDialog( aParent, this, aContext ).showDialog();
   }
 }

@@ -25,8 +25,6 @@ import java.awt.*;
 
 import nl.lxtreme.ols.tool.api.*;
 
-import org.osgi.framework.*;
-
 
 /**
  * Provides a JTAG analyser tool.
@@ -35,10 +33,6 @@ import org.osgi.framework.*;
  */
 public class JTAGAnalyser implements Tool<JTAGDataSet>
 {
-  // VARIABLES
-
-  private volatile BundleContext context;
-
   // METHODS
 
   /**
@@ -74,7 +68,7 @@ public class JTAGAnalyser implements Tool<JTAGDataSet>
   @Override
   public void invoke( final Window aParent, final ToolContext aContext )
   {
-    new JTAGProtocolAnalysisDialog( aParent, aContext, this.context, this ).showDialog();
+    new JTAGProtocolAnalysisDialog( aParent, this, aContext ).showDialog();
   }
 }
 

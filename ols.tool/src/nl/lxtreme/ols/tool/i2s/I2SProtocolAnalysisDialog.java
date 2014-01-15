@@ -29,7 +29,6 @@ import java.io.*;
 import java.text.*;
 import java.util.*;
 import java.util.List;
-import java.util.logging.*;
 
 import javax.swing.*;
 
@@ -44,8 +43,6 @@ import nl.lxtreme.ols.tool.base.ExportUtils.HtmlFileExporter;
 import nl.lxtreme.ols.tool.base.ToolUtils.RestorableAction;
 import nl.lxtreme.ols.util.swing.*;
 
-import org.osgi.framework.*;
-
 
 /**
  * Provides a main dialog for the I2S analyser.
@@ -57,8 +54,6 @@ public final class I2SProtocolAnalysisDialog extends BaseToolDialog<I2SDataSet> 
   // CONSTANTS
 
   private static final long serialVersionUID = 1L;
-
-  private static final Logger LOG = Logger.getLogger( I2SProtocolAnalysisDialog.class.getName() );
 
   // VARIABLES
 
@@ -77,17 +72,14 @@ public final class I2SProtocolAnalysisDialog extends BaseToolDialog<I2SDataSet> 
    * 
    * @param aOwner
    *          the owner of this dialog;
-   * @param aToolContext
-   *          the tool context;
-   * @param aContext
-   *          the OSGi bundle context to use;
    * @param aTool
    *          the {@link I2SAnalyser} tool.
+   * @param aToolContext
+   *          the tool context;
    */
-  public I2SProtocolAnalysisDialog( final Window aOwner, final ToolContext aToolContext, final BundleContext aContext,
-      final I2SAnalyser aTool )
+  public I2SProtocolAnalysisDialog( Window aOwner, I2SAnalyser aTool, ToolContext aToolContext )
   {
-    super( aOwner, aToolContext, aContext, aTool );
+    super( aOwner, aTool, aToolContext );
 
     initDialog();
 
@@ -300,7 +292,7 @@ public final class I2SProtocolAnalysisDialog extends BaseToolDialog<I2SDataSet> 
     final int channelCount = getData().getChannelCount();
 
     final JPanel panel = new JPanel( new SpringLayout() );
-    
+
     addDecoderAreaPane( panel );
 
     SpringLayoutUtils.addSeparator( panel, "Settings" );
@@ -416,7 +408,7 @@ public final class I2SProtocolAnalysisDialog extends BaseToolDialog<I2SDataSet> 
     }
     catch ( final IOException exception )
     {
-      LOG.log( Level.WARNING, "CSV export failed!", exception );
+      logWarning( "CSV export failed!", exception );
     }
   }
 
@@ -434,7 +426,7 @@ public final class I2SProtocolAnalysisDialog extends BaseToolDialog<I2SDataSet> 
     }
     catch ( final IOException exception )
     {
-      LOG.log( Level.WARNING, "HTML export failed!", exception );
+      logWarning( "HTML export failed!", exception );
     }
   }
 

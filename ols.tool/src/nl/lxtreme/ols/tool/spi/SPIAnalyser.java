@@ -25,18 +25,12 @@ import java.awt.*;
 
 import nl.lxtreme.ols.tool.api.*;
 
-import org.osgi.framework.*;
-
 
 /**
  * Provides a SPI analyser tool.
  */
 public class SPIAnalyser implements Tool<SPIDataSet>
 {
-  // VARIABLES
-
-  private volatile BundleContext context;
-
   // METHODS
 
   /**
@@ -72,7 +66,7 @@ public class SPIAnalyser implements Tool<SPIDataSet>
   @Override
   public void invoke( final Window aParent, final ToolContext aContext )
   {
-    new SPIProtocolAnalysisDialog( aParent, aContext, this.context, this ).showDialog();
+    new SPIProtocolAnalysisDialog( aParent, this, aContext ).showDialog();
   }
 }
 

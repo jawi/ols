@@ -30,7 +30,6 @@ import java.io.*;
 import java.text.*;
 import java.util.*;
 import java.util.List;
-import java.util.logging.*;
 
 import javax.swing.*;
 
@@ -51,8 +50,6 @@ import nl.lxtreme.ols.tool.uart.AsyncSerialDataDecoder.Parity;
 import nl.lxtreme.ols.tool.uart.AsyncSerialDataDecoder.StopBits;
 import nl.lxtreme.ols.util.swing.*;
 import nl.lxtreme.ols.util.swing.component.*;
-
-import org.osgi.framework.*;
 
 
 /**
@@ -228,8 +225,6 @@ public final class UARTProtocolAnalysisDialog extends BaseToolDialog<UARTDataSet
 
   private static final long serialVersionUID = 1L;
 
-  private static final Logger LOG = Logger.getLogger( UARTProtocolAnalysisDialog.class.getName() );
-
   // VARIABLES
 
   private JComboBox rxd;
@@ -261,17 +256,14 @@ public final class UARTProtocolAnalysisDialog extends BaseToolDialog<UARTDataSet
    * 
    * @param aOwner
    *          the owner of this dialog;
-   * @param aToolContext
-   *          the tool context;
-   * @param aContext
-   *          the OSGi bundle context to use;
    * @param aTool
    *          the {@link UARTAnalyser} tool.
+   * @param aToolContext
+   *          the tool context;
    */
-  public UARTProtocolAnalysisDialog( final Window aOwner, final ToolContext aToolContext, final BundleContext aContext,
-      final UARTAnalyser aTool )
+  public UARTProtocolAnalysisDialog( Window aOwner, UARTAnalyser aTool, ToolContext aToolContext )
   {
-    super( aOwner, aToolContext, aContext, aTool );
+    super( aOwner, aTool, aToolContext );
 
     initDialog();
 
@@ -576,7 +568,7 @@ public final class UARTProtocolAnalysisDialog extends BaseToolDialog<UARTDataSet
     }
 
     final JPanel settings = new JPanel( new SpringLayout() );
-    
+
     addDecoderAreaPane( settings );
 
     SpringLayoutUtils.addSeparator( settings, "Settings" );
@@ -802,7 +794,7 @@ public final class UARTProtocolAnalysisDialog extends BaseToolDialog<UARTDataSet
     }
     catch ( final IOException exception )
     {
-      LOG.log( Level.WARNING, "CSV export failed!", exception );
+      logWarning( "CSV export failed!", exception );
     }
   }
 
@@ -820,7 +812,7 @@ public final class UARTProtocolAnalysisDialog extends BaseToolDialog<UARTDataSet
     }
     catch ( final IOException exception )
     {
-      LOG.log( Level.WARNING, "HTML export failed!", exception );
+      logWarning( "HTML export failed!", exception );
     }
   }
 

@@ -32,8 +32,6 @@ import nl.lxtreme.ols.tool.base.ToolUtils.RestorableAction;
 import nl.lxtreme.ols.util.swing.*;
 import nl.lxtreme.ols.util.swing.component.*;
 
-import org.osgi.framework.*;
-
 
 /**
  * @author jawi
@@ -89,17 +87,14 @@ public final class StateAnalysisDialog extends BaseToolDialog<AcquisitionData>
    * 
    * @param aOwner
    *          the owner of this dialog;
-   * @param aToolContext
-   *          the tool context;
-   * @param aContext
-   *          the OSGi bundle context to use;
    * @param aTool
    *          the {@link StateAnalyser} tool.
+   * @param aToolContext
+   *          the tool context;
    */
-  public StateAnalysisDialog( final Window aOwner, final ToolContext aToolContext, final BundleContext aContext,
-      final StateAnalyser aTool )
+  public StateAnalysisDialog( Window aOwner, StateAnalyser aTool, ToolContext aToolContext )
   {
-    super( aOwner, aToolContext, aContext, aTool );
+    super( aOwner, aTool, aToolContext );
 
     initDialog();
 

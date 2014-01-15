@@ -106,7 +106,7 @@ public final class Asm45ProtocolAnalysisDialog extends BaseToolDialog<Asm45DataS
   public Asm45ProtocolAnalysisDialog( final Window aOwner, final ToolContext aToolContext,
       final BundleContext aContext, final Asm45Analyser aTool )
   {
-    super( aOwner, aToolContext, aContext, aTool );
+    super( aOwner, aTool, aToolContext );
 
     initDialog();
 

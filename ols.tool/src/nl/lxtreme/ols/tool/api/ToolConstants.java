@@ -40,8 +40,11 @@ public interface ToolConstants
   /** Topic where "tool finished" events are posted. */
   String TOPIC_TOOL_FINISHED = TOPIC_TOOL_BASE.concat( "/FINISHED" );
 
+  /** The name of the tool that sent the {@link #TOPIC_TOOL_STARTED} event. */
+  String TTS_TOOL_NAME = "toolName";
+
   /** The name of the tool that sent the {@link #TOPIC_TOOL_PROGRESS} event. */
-  String TTP_TOOL_NAME = "toolName";
+  String TTP_TOOL_NAME = TTS_TOOL_NAME;
   /** The progress (integer value from 0..100) in a {@link #TOPIC_TOOL_PROGRESS} event. */
   String TTP_PROGRESS = "progress";
   

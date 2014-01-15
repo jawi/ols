@@ -25,18 +25,12 @@ import java.awt.*;
 
 import nl.lxtreme.ols.tool.api.*;
 
-import org.osgi.framework.*;
-
 
 /**
  * Provides an I2C analyser tool.
  */
 public class I2CAnalyser implements Tool<I2CDataSet>
 {
-  // VARIABLES
-
-  private volatile BundleContext context;
-
   // METHODS
 
   /**
@@ -72,7 +66,7 @@ public class I2CAnalyser implements Tool<I2CDataSet>
   @Override
   public void invoke( final Window aParent, final ToolContext aContext )
   {
-    new I2CProtocolAnalysisDialog( aParent, aContext, this.context, this ).showDialog();
+    new I2CProtocolAnalysisDialog( aParent, this, aContext ).showDialog();
   }
 }
 

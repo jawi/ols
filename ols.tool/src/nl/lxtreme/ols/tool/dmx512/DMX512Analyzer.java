@@ -25,19 +25,12 @@ import java.awt.*;
 
 import nl.lxtreme.ols.tool.api.*;
 
-import org.osgi.framework.*;
-
 
 /**
  * Provides a DMX512 analyzer tools.
  */
 public class DMX512Analyzer implements Tool<DMX512DataSet>
 {
-  // VARIABLES
-
-  // Injected by DependencyManager...
-  private volatile BundleContext context;
-
   // METHODS
 
   /**
@@ -72,8 +65,8 @@ public class DMX512Analyzer implements Tool<DMX512DataSet>
    * {@inheritDoc}
    */
   @Override
-  public void invoke( final Window aParent, final ToolContext aContext )
+  public void invoke( Window aParent, ToolContext aContext )
   {
-    new DMX512AnalyzerDialog( aParent, aContext, this.context, this ).showDialog();
+    new DMX512AnalyzerDialog( aParent, this, aContext ).showDialog();
   }
 }

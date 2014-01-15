@@ -33,8 +33,6 @@ import nl.lxtreme.ols.tool.base.*;
 import nl.lxtreme.ols.tool.base.ToolUtils.RestorableAction;
 import nl.lxtreme.ols.util.swing.*;
 
-import org.osgi.framework.*;
-
 
 /**
  * Denotes the configuration dialog for the NRZA line decoder tool.
@@ -60,14 +58,12 @@ public class NonReturnToZeroDecoderDialog extends BaseToolDialog<AcquisitionData
    * Creates a new {@link NonReturnToZeroDecoderDialog} instance.
    * 
    * @param aOwner
-   * @param aContext
-   * @param aBundleContext
    * @param aTool
+   * @param aContext
    */
-  public NonReturnToZeroDecoderDialog( final Window aOwner, final ToolContext aContext,
-      final BundleContext aBundleContext, final Tool<AcquisitionData> aTool )
+  public NonReturnToZeroDecoderDialog( Window aOwner, NonReturnToZeroDecoder aTool, ToolContext aContext )
   {
-    super( aOwner, aContext, aBundleContext, aTool );
+    super( aOwner, aTool, aContext );
 
     initDialog();
 

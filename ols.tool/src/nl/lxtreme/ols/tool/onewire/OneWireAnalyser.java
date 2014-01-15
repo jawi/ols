@@ -25,19 +25,12 @@ import java.awt.*;
 
 import nl.lxtreme.ols.tool.api.*;
 
-import org.osgi.framework.*;
-
 
 /**
  * Provides a 1-wire analyser tool.
  */
 public class OneWireAnalyser implements Tool<OneWireDataSet>
 {
-  // VARIABLES
-
-  // Injected by DependencyManager...
-  private volatile BundleContext context;
-
   // METHODS
 
   /**
@@ -73,7 +66,7 @@ public class OneWireAnalyser implements Tool<OneWireDataSet>
   @Override
   public void invoke( final Window aParent, final ToolContext aToolContext )
   {
-    new OneWireAnalyserDialog( aParent, aToolContext, this.context, this ).showDialog();
+    new OneWireAnalyserDialog( aParent, this, aToolContext ).showDialog();
   }
 }
 

@@ -29,7 +29,6 @@ import java.io.*;
 import java.text.*;
 import java.util.*;
 import java.util.List;
-import java.util.logging.*;
 
 import javax.swing.*;
 
@@ -44,8 +43,6 @@ import nl.lxtreme.ols.tool.base.ExportUtils.HtmlFileExporter;
 import nl.lxtreme.ols.tool.base.ToolUtils.RestorableAction;
 import nl.lxtreme.ols.util.swing.*;
 
-import org.osgi.framework.*;
-
 
 /**
  * The Dialog Class
@@ -55,8 +52,6 @@ public final class DMX512AnalyzerDialog extends BaseToolDialog<DMX512DataSet> im
   // CONSTANTS
 
   private static final long serialVersionUID = 1L;
-
-  private static final Logger LOG = Logger.getLogger( DMX512AnalyzerDialog.class.getName() );
 
   // VARIABLES
 
@@ -74,17 +69,14 @@ public final class DMX512AnalyzerDialog extends BaseToolDialog<DMX512DataSet> im
    * 
    * @param aOwner
    *          the owner of this dialog;
-   * @param aToolContext
-   *          the tool context;
-   * @param aContext
-   *          the OSGi bundle context to use;
    * @param aTool
    *          the {@link DMX512Analyzer} tool.
+   * @param aToolContext
+   *          the tool context;
    */
-  public DMX512AnalyzerDialog( final Window aOwner, final ToolContext aToolContext, final BundleContext aContext,
-      final DMX512Analyzer aTool )
+  public DMX512AnalyzerDialog( Window aOwner, DMX512Analyzer aTool, ToolContext aToolContext )
   {
-    super( aOwner, aToolContext, aContext, aTool );
+    super( aOwner, aTool, aToolContext );
 
     initDialog();
 
@@ -303,7 +295,7 @@ public final class DMX512AnalyzerDialog extends BaseToolDialog<DMX512DataSet> im
     final int channelCount = getData().getChannelCount();
 
     final JPanel settings = new JPanel( new SpringLayout() );
-    
+
     addDecoderAreaPane( settings );
 
     SpringLayoutUtils.addSeparator( settings, "Settings" );
@@ -415,7 +407,7 @@ public final class DMX512AnalyzerDialog extends BaseToolDialog<DMX512DataSet> im
     }
     catch ( final IOException exception )
     {
-      LOG.log( Level.WARNING, "CSV export failed!", exception );
+      logWarning( "CSV export failed!", exception );
     }
   }
 
@@ -433,7 +425,7 @@ public final class DMX512AnalyzerDialog extends BaseToolDialog<DMX512DataSet> im
     }
     catch ( final IOException exception )
     {
-      LOG.log( Level.WARNING, "HTML export failed!", exception );
+      logWarning( "HTML export failed!", exception );
     }
   }
 
