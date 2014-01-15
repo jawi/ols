@@ -24,29 +24,25 @@ package nl.lxtreme.ols.acquisition;
 import java.io.*;
 import java.util.*;
 
+import nl.lxtreme.ols.device.api.*;
+
 
 /**
  * Denotes a service for acquiring data from a device.
  */
 public interface AcquisitionService
 {
-  // METHODS
+  // INNER TYPES
 
   /**
-   * Acquires data from the given device using the last known configuration.
-   * 
-   * @param aDeviceName
-   *          the name of the device from which data should be acquired, cannot
-   *          be <code>null</code>;
-   * @throws IOException
-   *           in case of I/O problems during the acquisition of data;
-   * @throws IllegalArgumentException
-   *           in case the given device was <code>null</code> or did not resolve
-   *           to an existing device.
-   * @throws IllegalStateException
-   *           in case no configuration was known for the given device.
+   * Denotes the various states a {@link Device} can be in.
    */
-  void acquireData( String aDeviceName ) throws IOException;
+  public static enum DeviceState
+  {
+    READY, ACQUIRING, CANCELLED;
+  }
+
+  // METHODS
 
   /**
    * Acquires data from the given device using the given configuration.
@@ -65,20 +61,20 @@ public interface AcquisitionService
   void acquireData( Map<String, ? extends Serializable> aConfig, String aDeviceName ) throws IOException;
 
   /**
-   * Configures the device with the given name.
+   * Acquires data from the given device using the last known configuration.
    * 
-   * @param aParent
-   *          the parent window to use, can be <code>null</code>;
    * @param aDeviceName
    *          the name of the device from which data should be acquired, cannot
    *          be <code>null</code>;
-   * @return the device configuration, or <code>null</code> if the device is not
-   *         set up (for example, due to the user cancelling the dialog).
+   * @throws IOException
+   *           in case of I/O problems during the acquisition of data;
    * @throws IllegalArgumentException
-   *           in case the given configuration or device was <code>null</code>
-   *           or did not resolve to an exisiting device.
+   *           in case the given device was <code>null</code> or did not resolve
+   *           to an existing device.
+   * @throws IllegalStateException
+   *           in case no configuration was known for the given device.
    */
-  Map<String, ? extends Serializable> configureDevice( java.awt.Window aParent, String aDeviceName );
+  void acquireData( String aDeviceName ) throws IOException;
 
   /**
    * Signals that the current acquisition should be cancelled.
@@ -97,6 +93,32 @@ public interface AcquisitionService
   void cancelAcquisition( String aDeviceName ) throws IOException, IllegalStateException;
 
   /**
+   * Configures the device with the given name.
+   * 
+   * @param aParent
+   *          the parent window to use, can be <code>null</code>;
+   * @param aDeviceName
+   *          the name of the device from which data should be acquired, cannot
+   *          be <code>null</code>;
+   * @return the device configuration, or <code>null</code> if the device is not
+   *         set up (for example, due to the user cancelling the dialog).
+   * @throws IllegalArgumentException
+   *           in case the given configuration or device was <code>null</code>
+   *           or did not resolve to an exisiting device.
+   */
+  Map<String, ? extends Serializable> configureDevice( java.awt.Window aParent, String aDeviceName );
+
+  /**
+   * Returns the state of the device with a given name,
+   * 
+   * @param aDeviceName
+   *          the name of the device to return the status for, cannot be
+   *          <code>null</code>;
+   * @return the device state, never <code>null</code>.
+   */
+  DeviceState getState( String aDeviceName );
+
+  /**
    * Returns whether or not this device controller is acquiring data for a given
    * device.
    * 
@@ -106,7 +128,9 @@ public interface AcquisitionService
    * @return <code>true</code> if this device controller is currently acquiring
    *         data (or waiting to start capturing due to a trigger),
    *         <code>false</code> otherwise.
+   * @deprecated use {@link #getState(String)} instead.
    */
+  @Deprecated
   boolean isAcquiring( String aDeviceName );
 
   /**

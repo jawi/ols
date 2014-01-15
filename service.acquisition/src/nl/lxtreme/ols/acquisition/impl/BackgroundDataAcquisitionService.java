@@ -143,14 +143,7 @@ public class BackgroundDataAcquisitionService implements AcquisitionService, Eve
       throw new IllegalStateException( "No acquisition in progress!" );
     }
 
-    try
-    {
-      this.acquisitionFutureTask.cancel( true /* mayInterruptIfRunning */);
-    }
-    finally
-    {
-      this.acquisitionFutureTask = null;
-    }
+    this.acquisitionFutureTask.cancel( true /* mayInterruptIfRunning */);
   }
 
   /**
@@ -166,6 +159,27 @@ public class BackgroundDataAcquisitionService implements AcquisitionService, Eve
     }
 
     return device.setupDevice();
+  }
+
+  /**
+   * {@inheritDoc}
+   */
+  @Override
+  public DeviceState getState( String aDeviceName )
+  {
+    if ( this.acquisitionFutureTask != null )
+    {
+      if ( this.acquisitionFutureTask.isCancelled() )
+      {
+        return DeviceState.CANCELLED;
+      }
+      else if ( !this.acquisitionFutureTask.isDone() )
+      {
+        return DeviceState.ACQUIRING;
+      }
+    }
+    // future is null or done...
+    return DeviceState.READY;
   }
 
   /**
@@ -212,7 +226,8 @@ public class BackgroundDataAcquisitionService implements AcquisitionService, Eve
   @Override
   public boolean isAcquiring( String aDeviceName )
   {
-    return ( this.acquisitionFutureTask != null ) && !this.acquisitionFutureTask.isDone();
+    return ( this.acquisitionFutureTask != null ) && !this.acquisitionFutureTask.isCancelled()
+        && !this.acquisitionFutureTask.isDone();
   }
 
   /**
