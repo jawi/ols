@@ -69,6 +69,18 @@ public class JTextStatusBar extends JStatusBar
   }
 
   /**
+   * Sets the indeterminate state of the progress bar.
+   * 
+   * @param aVisible
+   *          <code>true</code> if the progress bar is in indeterminate mode,
+   *          <code>false</code> if it is in determine mode.
+   */
+  public void setProgressBarIndeterminate( final boolean aVisible )
+  {
+    this.progressBar.setIndeterminate( aVisible );
+  }
+
+  /**
    * Sets the text of this status bar.
    * 
    * @param aText
