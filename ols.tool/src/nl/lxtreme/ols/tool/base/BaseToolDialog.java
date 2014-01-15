@@ -21,12 +21,13 @@
 package nl.lxtreme.ols.tool.base;
 
 
+import static nl.lxtreme.ols.tool.api.ToolConstants.*;
 import static nl.lxtreme.ols.util.swing.SwingComponentUtils.*;
 
 import java.awt.*;
 import java.awt.Dialog.ModalExclusionType;
-import java.awt.event.*;
 import java.awt.Cursor;
+import java.awt.event.*;
 import java.util.*;
 import java.util.concurrent.*;
 
@@ -40,16 +41,19 @@ import nl.lxtreme.ols.util.swing.*;
 import nl.lxtreme.ols.util.swing.StandardActionFactory.CloseAction.Closeable;
 import nl.lxtreme.ols.util.swing.Configurable;
 
+import org.apache.felix.dm.*;
+import org.apache.felix.dm.Component;
 import org.osgi.framework.*;
 import org.osgi.service.event.*;
 import org.osgi.service.event.Event;
+import org.osgi.service.log.*;
 
 
 /**
  * Provides a base tool dialog.
  */
-public abstract class BaseToolDialog<RESULT_TYPE> extends JFrame implements ToolDialog, EventHandler, Configurable,
-    Closeable
+public abstract class BaseToolDialog<RESULT_TYPE> extends JFrame implements ToolDialog, ToolProgressListener,
+    EventHandler, Configurable, Closeable
 {
   // INNER TYPES
 
@@ -61,7 +65,7 @@ public abstract class BaseToolDialog<RESULT_TYPE> extends JFrame implements Tool
     private static final long serialVersionUID = 1L;
 
     @Override
-    public Component getListCellRendererComponent( final JList aList, final Object aValue, final int aIndex,
+    public java.awt.Component getListCellRendererComponent( final JList aList, final Object aValue, final int aIndex,
         final boolean aIsSelected, final boolean aCellHasFocus )
     {
       String text;
@@ -95,25 +99,22 @@ public abstract class BaseToolDialog<RESULT_TYPE> extends JFrame implements Tool
 
   private final ToolContext context;
   private final Tool<RESULT_TYPE> tool;
-  private final BundleContext bundleContext;
 
-  private final TaskExecutionServiceTracker taskExecutionService;
-  private final ToolProgressListenerServiceTracker toolProgressListener;
-
-  private ServiceRegistration serviceReg;
+  // Injected by Felix DM...
+  private volatile EventAdmin eventAdmin;
+  private volatile LogService logService;
+  private volatile TaskExecutionService taskExecutor;
+  // Locally managed
+  private volatile Component component;
   private volatile Future<RESULT_TYPE> toolFutureTask;
   private volatile ToolTask<RESULT_TYPE> toolTask;
   private volatile RESULT_TYPE lastResult;
 
-  // CONSTRUCTORS
-
   private JCheckBox decodeAll;
-
-  // METHODS
-
   private JComboBox markerA;
-
   private JComboBox markerB;
+
+  // CONSTRUCTORS
 
   /**
    * Creates a new {@link BaseToolDialog} instance that is document modal.
@@ -125,20 +126,17 @@ public abstract class BaseToolDialog<RESULT_TYPE> extends JFrame implements Tool
    * @param aContext
    *          the tool context to use in this dialog.
    */
-  protected BaseToolDialog( final Window aOwner, final ToolContext aContext, final BundleContext aBundleContext,
-      final Tool<RESULT_TYPE> aTool )
+  protected BaseToolDialog( Window aOwner, ToolContext aContext, BundleContext aBundleContext, Tool<RESULT_TYPE> aTool )
   {
     super( aTool.getName() );
 
     this.context = aContext;
-    this.bundleContext = aBundleContext;
     this.tool = aTool;
 
     setModalExclusionType( ModalExclusionType.NO_EXCLUDE );
-
-    this.taskExecutionService = new TaskExecutionServiceTracker( aBundleContext );
-    this.toolProgressListener = new ToolProgressListenerServiceTracker( aBundleContext );
   }
+
+  // METHODS
 
   /**
    * {@inheritDoc}
@@ -153,6 +151,8 @@ public abstract class BaseToolDialog<RESULT_TYPE> extends JFrame implements Tool
 
     this.toolFutureTask.cancel( true /* mayInterruptIfRunning */);
     this.toolFutureTask = null;
+
+    this.logService.log( LogService.LOG_INFO, "Cancelled tool " + this.tool.getName() + " ..." );
   }
 
   /**
@@ -161,23 +161,16 @@ public abstract class BaseToolDialog<RESULT_TYPE> extends JFrame implements Tool
   @Override
   public final void close()
   {
-    this.taskExecutionService.close();
-    this.toolProgressListener.close();
-
-    try
-    {
-      this.serviceReg.unregister();
-      this.serviceReg = null;
-    }
-    catch ( IllegalStateException exception )
-    {
-      // Ignore; we're closing anyway...
-    }
-
     onBeforeCloseDialog();
 
     setVisible( false );
     dispose();
+
+    if ( this.component != null )
+    {
+      DependencyManager dm = this.component.getDependencyManager();
+      dm.remove( component );
+    }
   }
 
   /**
@@ -219,7 +212,7 @@ public abstract class BaseToolDialog<RESULT_TYPE> extends JFrame implements Tool
     if ( "success".equals( status ) )
     {
       this.lastResult = ( RESULT_TYPE )aEvent.getProperty( "result" );
-      // Long timeTaken = ( Long )aEvent.getProperty( "time" );
+      Long timeTaken = ( Long )aEvent.getProperty( "time" );
 
       SwingComponentUtils.invokeOnEDT( new Runnable()
       {
@@ -234,13 +227,20 @@ public abstract class BaseToolDialog<RESULT_TYPE> extends JFrame implements Tool
         }
       } );
 
+      AcquisitionData data = null;
+      if ( this.lastResult instanceof AcquisitionData )
+      {
+        data = ( AcquisitionData )this.lastResult;
+      }
+      postToolFinishedEvent( timeTaken, data, null );
+
       this.toolFutureTask = null;
       this.toolTask = null;
     }
     else if ( "failure".equals( status ) )
     {
       final Exception exception = ( Exception )aEvent.getProperty( "exception" );
-      // Long timeTaken = ( Long )aEvent.getProperty( "time" );
+      Long timeTaken = ( Long )aEvent.getProperty( "time" );
 
       SwingComponentUtils.invokeOnEDT( new Runnable()
       {
@@ -254,6 +254,8 @@ public abstract class BaseToolDialog<RESULT_TYPE> extends JFrame implements Tool
           onToolFailed( exception );
         }
       } );
+
+      postToolFinishedEvent( timeTaken, null, exception );
 
       this.toolFutureTask = null;
       this.toolTask = null;
@@ -272,6 +274,8 @@ public abstract class BaseToolDialog<RESULT_TYPE> extends JFrame implements Tool
           onToolStarted();
         }
       } );
+
+      postToolStartedEvent();
     }
   }
 
@@ -285,17 +289,34 @@ public abstract class BaseToolDialog<RESULT_TYPE> extends JFrame implements Tool
     {
       throw new IllegalStateException( "Tool is already running!" );
     }
+    if ( getData() == null )
+    {
+      throw new IllegalArgumentException( "No data present to invoke tool on!" );
+    }
+
+    this.logService.log( LogService.LOG_INFO, "Invoking tool " + this.tool.getName() + " ..." );
 
     boolean settingsValid = validateToolSettings();
     if ( settingsValid )
     {
-      this.toolTask = this.tool.createToolTask( this.context, this.toolProgressListener );
+      this.toolTask = this.tool.createToolTask( this.context, this );
+
       prepareToolTask( this.toolTask );
 
-      this.toolFutureTask = this.taskExecutionService.execute( this.toolTask,
+      this.toolFutureTask = this.taskExecutor.execute( this.toolTask,
           Collections.singletonMap( "toolName", this.tool.getName() ) );
     }
+
     return settingsValid;
+  }
+
+  /**
+   * {@inheritDoc}
+   */
+  @Override
+  public void setProgress( int aPercentage )
+  {
+    postToolProgressEvent( aPercentage );
   }
 
   /**
@@ -304,18 +325,40 @@ public abstract class BaseToolDialog<RESULT_TYPE> extends JFrame implements Tool
   @Override
   public final void showDialog()
   {
+    BundleContext context = FrameworkUtil.getBundle( getClass() ).getBundleContext();
+
     Properties props = new Properties();
     props.put( EventConstants.EVENT_TOPIC, TaskExecutionService.EVENT_TOPIC );
     props.put( EventConstants.EVENT_FILTER, "(toolName=" + this.tool.getName() + ")" );
 
-    this.serviceReg = this.bundleContext.registerService( EventHandler.class.getName(), this, props );
+    DependencyManager dm = new DependencyManager( context );
+    // @formatter:off
+    this.component = dm.createComponent()
+      .setInterface( new String[] { EventHandler.class.getName() }, props )
+      .setAutoConfig( Component.class, false )
+      .setImplementation( this )
+      .add( dm.createServiceDependency().setService( EventAdmin.class ).setInstanceBound( true ).setRequired( true ) )
+      .add( dm.createServiceDependency().setService( LogService.class ).setInstanceBound( true ).setRequired( false ) )
+      .add( dm.createServiceDependency().setService( TaskExecutionService.class ).setInstanceBound( true ).setRequired( true ) );
+    // @formatter:on
+    dm.add( this.component );
+  }
 
-    this.taskExecutionService.open();
-    this.toolProgressListener.open();
+  /**
+   * Called by Felix DM when starting this component.
+   */
+  final void start( Component aComponent ) throws Exception
+  {
+    SwingUtilities.invokeLater( new Runnable()
+    {
+      @Override
+      public void run()
+      {
+        onBeforeShowDialog();
 
-    onBeforeShowDialog();
-
-    setVisible( true );
+        setVisible( true );
+      }
+    } );
   }
 
   protected final void addDecoderAreaPane( JPanel panel )
@@ -367,16 +410,6 @@ public abstract class BaseToolDialog<RESULT_TYPE> extends JFrame implements Tool
 
     panel.add( markerBLabel );
     panel.add( this.markerB );
-  }
-
-  /**
-   * Returns the current value of bundleContext.
-   * 
-   * @return the bundleContext
-   */
-  protected final BundleContext getBundleContext()
-  {
-    return this.bundleContext;
   }
 
   /**
@@ -547,5 +580,56 @@ public abstract class BaseToolDialog<RESULT_TYPE> extends JFrame implements Tool
     }
     cb.setRenderer( new CursorComboBoxRenderer() );
     return cb;
+  }
+
+  /**
+   * Posts an asynchronous event that a tool has finished its job.
+   * 
+   * @param aData
+   *          the (optional) acquisition data;
+   * @param aException
+   *          the (optional) failure reason.
+   */
+  private void postToolFinishedEvent( Long aTime, AcquisitionData aData, Exception aException )
+  {
+    Map<Object, Object> props = new Properties();
+    props.put( TTF_EXECUTION_TIME, aTime );
+    props.put( TTF_TOOL_NAME, this.tool.getName() );
+    if ( aData != null )
+    {
+      props.put( TTF_DATA, aData );
+    }
+    if ( aException != null )
+    {
+      props.put( TTF_EXCEPTION, aException );
+    }
+
+    this.eventAdmin.postEvent( new Event( TOPIC_TOOL_FINISHED, props ) );
+  }
+
+  /**
+   * Posts an asynchronous event that a tool has started its job.
+   */
+  private void postToolStartedEvent()
+  {
+    Map<Object, Object> props = new Properties();
+    props.put( TTF_TOOL_NAME, this.tool.getName() );
+
+    this.eventAdmin.postEvent( new Event( TOPIC_TOOL_FINISHED, props ) );
+  }
+
+  /**
+   * Posts an asynchronous event that a tool has made progress.
+   * 
+   * @param aProgress
+   *          the progress of the tool, as integer value.
+   */
+  private void postToolProgressEvent( int aProgress )
+  {
+    Map<Object, Object> props = new Properties();
+    props.put( TTP_TOOL_NAME, this.tool.getName() );
+    props.put( TTP_PROGRESS, aProgress );
+
+    this.eventAdmin.postEvent( new Event( TOPIC_TOOL_PROGRESS, props ) );
   }
 }

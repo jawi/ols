@@ -21,6 +21,10 @@
 package nl.lxtreme.ols.client2.session;
 
 
+import static nl.lxtreme.ols.tool.api.ToolConstants.*;
+import static nl.lxtreme.ols.common.OlsConstants.*;
+
+import java.io.*;
 import java.util.*;
 import java.util.concurrent.*;
 import java.util.concurrent.atomic.*;
@@ -37,7 +41,7 @@ import org.osgi.service.log.*;
 /**
  * Default implementation of {@link SessionProvider}.
  */
-public class SessionProviderImpl implements SessionProvider, AcquisitionDataListener
+public class SessionProviderImpl implements SessionProvider, EventHandler
 {
   // VARIABLES
 
@@ -55,23 +59,10 @@ public class SessionProviderImpl implements SessionProvider, AcquisitionDataList
   public SessionProviderImpl()
   {
     this.sessions = new ConcurrentHashMap<Session, Component>();
-    this.sessionIdCounter = new AtomicInteger( 1 );
+    this.sessionIdCounter = new AtomicInteger( 0 );
   }
 
   // METHODS
-
-  /**
-   * {@inheritDoc}
-   */
-  @Override
-  public void acquisitionComplete( AcquisitionData aData )
-  {
-    if ( this.log != null )
-    {
-      this.log.log( LogService.LOG_INFO, "Creating new session for acquired data..." );
-    }
-    addSession( new SessionImpl( this.sessionIdCounter.getAndIncrement(), this, aData ) );
-  }
 
   /**
    * @param aSession
@@ -105,6 +96,52 @@ public class SessionProviderImpl implements SessionProvider, AcquisitionDataList
   }
 
   /**
+   * {@inheritDoc}
+   */
+  @Override
+  public void handleEvent( Event aEvent )
+  {
+    String topic = aEvent.getTopic();
+    if ( TOPIC_ACQUISITION_COMPLETE.equals( topic ) )
+    {
+      AcquisitionData data = ( AcquisitionData )aEvent.getProperty( TAC_DATA );
+
+      if ( this.log != null )
+      {
+        this.log.log( LogService.LOG_INFO, "Creating new session for acquired data..." );
+      }
+
+      addSession( new SessionImpl( this.sessionIdCounter.incrementAndGet(), this, data ) );
+    }
+    else if ( TOPIC_TOOL_FINISHED.equals( topic ) )
+    {
+      AcquisitionData data = ( AcquisitionData )aEvent.getProperty( TTF_DATA );
+      if ( data != null )
+      {
+        if ( this.log != null )
+        {
+          this.log.log( LogService.LOG_INFO, "Creating new session for tool data..." );
+        }
+
+        addSession( new SessionImpl( this.sessionIdCounter.incrementAndGet(), this, data ) );
+      }
+    }
+    else if ( TOPIC_DATA_LOADED.equals( topic ) )
+    {
+      AcquisitionData data = ( AcquisitionData )aEvent.getProperty( TDL_DATA );
+      String name = ( String )aEvent.getProperty( TDL_NAME );
+      File file = ( File )aEvent.getProperty( TDL_FILE );
+
+      if ( this.log != null )
+      {
+        this.log.log( LogService.LOG_INFO, "Creating new session for loaded data..." );
+      }
+
+      addSession( new SessionImpl( this.sessionIdCounter.incrementAndGet(), this, data, name, file ) );
+    }
+  }
+
+  /**
    * @param aSession
    *          the session to remove, cannot be <code>null</code>.
    */
@@ -121,6 +158,7 @@ public class SessionProviderImpl implements SessionProvider, AcquisitionDataList
   private Properties createSessionProps( Session aSession )
   {
     Properties props = new Properties();
+    props.put( "id", aSession.getId() );
     props.put( "time", System.currentTimeMillis() );
     return props;
   }

@@ -65,6 +65,9 @@ public class Activator extends DependencyActivatorBase
         .setInterface( interfaces, props ) //
         .setImplementation( BackgroundDataAcquisitionService.class ) //
         .add( createServiceDependency() //
+            .setService( EventAdmin.class ) //
+            .setRequired( true ) ) //
+        .add( createServiceDependency() //
             .setService( TaskExecutionService.class ) //
             .setRequired( true ) ) //
         .add( createServiceDependency() //
@@ -78,10 +81,6 @@ public class Activator extends DependencyActivatorBase
         .add( createServiceDependency() //
             .setService( AcquisitionStatusListener.class ) //
             .setCallbacks( "addAcquisitionStatusListener", "removeAcquisitionStatusListener" ) //
-            .setRequired( false ) ) //
-        .add( createServiceDependency() //
-            .setService( AcquisitionDataListener.class ) //
-            .setCallbacks( "addAcquisitionDataListener", "removeAcquisitionDataListener" ) //
             .setRequired( false ) ) //
         );
   }

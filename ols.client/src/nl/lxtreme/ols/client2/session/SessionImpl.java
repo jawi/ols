@@ -23,6 +23,7 @@ package nl.lxtreme.ols.client2.session;
 
 import static nl.lxtreme.ols.client2.ClientConstants.*;
 
+import java.io.*;
 import java.util.*;
 import java.util.concurrent.*;
 
@@ -53,6 +54,7 @@ public class SessionImpl implements Session, AnnotationData
   private volatile LogService logService;
   // Locally managed...
   private volatile String name;
+  private volatile File file;
 
   // CONSTRUCTORS
 
@@ -61,9 +63,19 @@ public class SessionImpl implements Session, AnnotationData
    */
   public SessionImpl( int aId, SessionProviderImpl aProvider, AcquisitionData aData )
   {
+    this( aId, aProvider, aData, null, null );
+  }
+
+  /**
+   * Creates a new {@link SessionImpl} instance.
+   */
+  public SessionImpl( int aId, SessionProviderImpl aProvider, AcquisitionData aData, String aName, File aFile )
+  {
     this.id = aId;
     this.provider = aProvider;
     this.data = aData;
+    this.name = aName;
+    this.file = aFile;
 
     this.annotations = new ConcurrentHashMap<Channel, SortedSet<Annotation>>();
   }
@@ -240,6 +252,15 @@ public class SessionImpl implements Session, AnnotationData
    * {@inheritDoc}
    */
   @Override
+  public File getFile()
+  {
+    return this.file;
+  }
+
+  /**
+   * {@inheritDoc}
+   */
+  @Override
   public int getId()
   {
     return this.id;
@@ -272,6 +293,17 @@ public class SessionImpl implements Session, AnnotationData
       }
     }
     return false;
+  }
+
+  /**
+   * {@inheritDoc}
+   */
+  @Override
+  public void setFile( File aFile )
+  {
+    this.file = aFile;
+
+    postEvent( TOPIC_SESSIONS.concat( "/CHANGE" ), "session", this );
   }
 
   /**

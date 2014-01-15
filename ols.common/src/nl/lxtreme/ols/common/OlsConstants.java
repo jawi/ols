@@ -29,18 +29,37 @@ public interface OlsConstants
   // METHODS
 
   /** indicates that rate or trigger position are not available */
-  public final static int NOT_AVAILABLE = -1;
+  int NOT_AVAILABLE = -1;
 
   /** The maximum number of cursors that can be set. */
-  public static final int MAX_CURSORS = 10;
+  int MAX_CURSORS = 10;
 
   /** The maximum number of channels. */
-  public static final int MAX_CHANNELS = 32;
+  int MAX_CHANNELS = 32;
 
   /** The number of channels per block. */
-  public static final int CHANNELS_PER_BLOCK = 8;
+  int CHANNELS_PER_BLOCK = 8;
 
   /** The maximum number of blocks. */
-  public static final int MAX_BLOCKS = MAX_CHANNELS / CHANNELS_PER_BLOCK;
+  int MAX_BLOCKS = MAX_CHANNELS / CHANNELS_PER_BLOCK;
+
+  /** Topic prefix used for all acquisition-related events. */
+  String TOPIC_DATA_BASE = "nl/lxtreme/ols/data";
+  
+  /** Topic prefix used for all acquisition-related events. */
+  String TOPIC_ACQUISITION_BASE = TOPIC_DATA_BASE.concat( "/acquisition" );
+  /** Topic where "acquisition complete" events are posted. */
+  String TOPIC_ACQUISITION_COMPLETE = TOPIC_ACQUISITION_BASE.concat( "/COMPLETE" );
+  /** The acquired data in a {@link #TOPIC_ACQUISITION_COMPLETE} event. */
+  String TAC_DATA = "data";
+
+  /** Topic where "acquisition complete" events are posted. */
+  String TOPIC_DATA_LOADED = TOPIC_DATA_BASE.concat( "/LOADED" );
+  /** The acquired data in a {@link #TOPIC_DATA_LOADED} event. */
+  String TDL_DATA = TAC_DATA;
+  /** The (optional) name in a {@link #TOPIC_DATA_LOADED} event. */
+  String TDL_NAME = "name";
+  /** The (optional) file in a {@link #TOPIC_DATA_LOADED} event. */
+  String TDL_FILE = "file";
 
 }

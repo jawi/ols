@@ -32,6 +32,7 @@ import java.util.concurrent.*;
 import javax.swing.*;
 import javax.swing.filechooser.*;
 
+import nl.lxtreme.ols.client2.icons.*;
 import nl.lxtreme.ols.client2.views.*;
 import nl.lxtreme.ols.client2.views.managed.*;
 import nl.lxtreme.ols.client2.views.managed.annotations.export.*;
@@ -200,7 +201,8 @@ public class AnnotationsView extends AbstractManagedView
     setLayout( new BorderLayout() );
     setName( "Annotations" );
 
-    this.exportButton = new JButton( "Export" );
+    this.exportButton = new JButton( IconFactory.createIcon( IconLocator.ICON_SMALL_EXPORT ) );
+    this.exportButton.setToolTipText( "Export annotation to file" );
     this.exportButton.setEnabled( false );
     this.exportButton.addActionListener( new ActionListener()
     {
@@ -275,6 +277,9 @@ public class AnnotationsView extends AbstractManagedView
     }
 
     this.table.setModel( this.tableModel );
+
+    // Make the structure direct in order to get a direct visual clue...
+    this.tableModel.updateStructure();
 
     updateButtonState();
   }

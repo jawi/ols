@@ -77,6 +77,24 @@ public class ViewController
   }
 
   /**
+   * Disposes this view controller and all of its resources.
+   * <p>
+   * After calling this method, one can no longer use this controller, nor its
+   * model or its view!
+   * </p>
+   */
+  public void dispose()
+  {
+    if ( this.model != null )
+    {
+      this.model.getSession().close();
+    }
+
+    this.model = null;
+    this.view = null;
+  }
+
+  /**
    * Returns the current value of actionManager.
    * 
    * @return the actionManager

@@ -33,7 +33,6 @@ import nl.lxtreme.ols.util.swing.*;
 import nl.lxtreme.ols.util.swing.component.*;
 
 import org.osgi.framework.*;
-import org.osgi.util.tracker.*;
 
 
 /**
@@ -79,8 +78,6 @@ public final class StateAnalysisDialog extends BaseToolDialog<AcquisitionData>
 
   // VARIABLES
 
-  private final ServiceTracker acquisitionDataListenerHelper;
-
   private JComboBox edgeSelect;
   private JComboBox channelSelect;
   private RestorableAction runAction;
@@ -103,8 +100,6 @@ public final class StateAnalysisDialog extends BaseToolDialog<AcquisitionData>
       final StateAnalyser aTool )
   {
     super( aOwner, aToolContext, aContext, aTool );
-
-    this.acquisitionDataListenerHelper = new ServiceTracker( aContext, AcquisitionDataListener.class.getName(), null );
 
     initDialog();
 
@@ -148,34 +143,8 @@ public final class StateAnalysisDialog extends BaseToolDialog<AcquisitionData>
    * {@inheritDoc}
    */
   @Override
-  protected void onBeforeCloseDialog()
-  {
-    this.acquisitionDataListenerHelper.close();
-  }
-
-  /**
-   * {@inheritDoc}
-   */
-  @Override
-  protected void onBeforeShowDialog()
-  {
-    this.acquisitionDataListenerHelper.open( true /* trackAllServices */);
-  }
-
-  /**
-   * {@inheritDoc}
-   */
-  @Override
   protected void onToolEnded( final AcquisitionData aResult )
   {
-    Object[] services = this.acquisitionDataListenerHelper.getServices();
-    if ( services != null )
-    {
-      for ( Object service : services )
-      {
-        ( ( AcquisitionDataListener )service ).acquisitionComplete( aResult );
-      }
-    }
     // Close this dialog & dispose everything...
     close();
   }

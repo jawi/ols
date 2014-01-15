@@ -26,10 +26,10 @@ import nl.lxtreme.ols.common.annotation.*;
 
 
 /**
- * Denotes the context in which a tool is to be run.
+ * Denotes the context in which a tool can be run.
  * <p>
- * For example, it provides the information about which range of samples should
- * be analysed.
+ * For example, it provides means to access the acquired data, and to add or
+ * clear annotations.
  * </p>
  */
 public interface ToolContext
@@ -57,7 +57,8 @@ public interface ToolContext
   /**
    * Returns the acquisition result for use in the tool.
    * 
-   * @return the data to be analyzed, never <code>null</code>.
+   * @return the data to be analyzed, can be <code>null</code> in case there is
+   *         no data available to analyze.
    */
   AcquisitionData getData();
 }

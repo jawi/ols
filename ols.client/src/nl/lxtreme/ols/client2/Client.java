@@ -22,6 +22,7 @@ package nl.lxtreme.ols.client2;
 
 
 import static nl.lxtreme.ols.client2.ClientConstants.*;
+import static nl.lxtreme.ols.common.OlsConstants.*;
 
 import java.awt.*;
 import java.awt.event.*;
@@ -371,6 +372,19 @@ public class Client extends DefaultDockableHolder implements ApplicationCallback
   }
 
   /**
+   * Closes all available sessions.
+   */
+  public void closeAllSessions()
+  {
+    for ( ViewController viewCtrl : this.viewControllers )
+    {
+      viewCtrl.dispose();
+    }
+
+    updateManagedState();
+  }
+
+  /**
    * Closes the current session, if any is available.
    */
   public void closeCurrentSession()
@@ -395,24 +409,33 @@ public class Client extends DefaultDockableHolder implements ApplicationCallback
       @Override
       public void addAnnotation( Annotation aAnnotation )
       {
-        AnnotationData annotationData = getCurrentSession().getAnnotationData();
-        annotationData.add( aAnnotation );
+        Session session = getCurrentSession();
+        if ( session != null )
+        {
+          AnnotationData annotationData = session.getAnnotationData();
+          annotationData.add( aAnnotation );
+        }
       }
 
       @Override
       public void clearAnnotations( int... aChannelIdxs )
       {
-        AnnotationData annotationData = getCurrentSession().getAnnotationData();
-        for ( int channelIdx : aChannelIdxs )
+        Session session = getCurrentSession();
+        if ( session != null )
         {
-          annotationData.clear( channelIdx );
+          AnnotationData annotationData = session.getAnnotationData();
+          for ( int channelIdx : aChannelIdxs )
+          {
+            annotationData.clear( channelIdx );
+          }
         }
       }
 
       @Override
       public AcquisitionData getData()
       {
-        return getCurrentSession().getAcquiredData();
+        Session session = getCurrentSession();
+        return ( session != null ) ? session.getAcquiredData() : null;
       }
     };
   }
@@ -524,9 +547,14 @@ public class Client extends DefaultDockableHolder implements ApplicationCallback
    * @return the filename of the current project, can be <code>null</code> in
    *         case the project is not yet saved.
    */
-  public File getProjectFile()
+  public File getFile()
   {
-    return this.projectManager.getProjectFile();
+    Session session = getCurrentSession();
+    if ( session != null )
+    {
+      return session.getFile();
+    }
+    return null;
   }
 
   /**
@@ -696,6 +724,15 @@ public class Client extends DefaultDockableHolder implements ApplicationCallback
   }
 
   /**
+   * @return <code>true</code> if the current project is changed,
+   *         <code>false</code> otherwise.
+   */
+  public boolean isChanged()
+  {
+    return false; // XXX
+  }
+
+  /**
    * @return <code>true</code> if cursors are to be snapped to the nearest
    *         signal transition, <code>false</code> if they can be placed freely.
    */
@@ -736,30 +773,6 @@ public class Client extends DefaultDockableHolder implements ApplicationCallback
   }
 
   /**
-   * @return <code>true</code> if the current project is changed,
-   *         <code>false</code> otherwise.
-   */
-  public boolean isChanged()
-  {
-    return this.projectManager.isProjectChanged();
-  }
-
-  /**
-   * Starts a new project.
-   */
-  public void newProject()
-  {
-    try
-    {
-      this.projectManager.createNewProject();
-    }
-    finally
-    {
-      updateManagedState();
-    }
-  }
-
-  /**
    * Opens a given file as data file.
    * 
    * @param aFile
@@ -769,9 +782,17 @@ public class Client extends DefaultDockableHolder implements ApplicationCallback
    */
   public void openDataFile( File aFile ) throws IOException
   {
+    FileReader reader = new FileReader( aFile );
     try
     {
-      this.projectManager.loadDataFile( aFile );
+      AcquisitionDataBuilder builder = new AcquisitionDataBuilder();
+
+      OlsDataHelper.read( reader, builder );
+      reader.close();
+
+      String name = getProjectName( aFile );
+
+      postEvent( TOPIC_DATA_LOADED, TDL_NAME, name, TDL_FILE, aFile, TDL_DATA, builder.build() );
     }
     finally
     {
@@ -869,9 +890,17 @@ public class Client extends DefaultDockableHolder implements ApplicationCallback
    */
   public void saveDataFile( File aFile ) throws IOException
   {
+    Session session = getCurrentSession();
+    if ( session == null )
+    {
+      return;
+    }
+
+    FileWriter writer = new FileWriter( aFile );
     try
     {
-      this.projectManager.saveDataFile( aFile, getCurrentSession() );
+      OlsDataHelper.write( writer, session.getAcquiredData() );
+      writer.close();
     }
     finally
     {
@@ -1174,7 +1203,6 @@ public class Client extends DefaultDockableHolder implements ApplicationCallback
   final void registerManagedActions()
   {
     // File menu
-    registerAction( new NewProjectAction() );
     registerAction( new OpenAction() );
     registerAction( new SaveAction() );
     registerAction( new SaveAsAction() );
@@ -1462,6 +1490,11 @@ public class Client extends DefaultDockableHolder implements ApplicationCallback
     }
 
     return this.viewControllers.get( idx );
+  }
+
+  private String getProjectName( File aFile )
+  {
+    return SwingComponentUtils.stripFileExtension( aFile )[0];
   }
 
   /**

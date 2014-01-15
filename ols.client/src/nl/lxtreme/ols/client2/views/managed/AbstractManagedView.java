@@ -263,7 +263,10 @@ public abstract class AbstractManagedView extends JPanel implements ManagedView,
         else
         {
           ViewModel model = aController.getModel();
-          doUpdateState( aController, model.getData() );
+          if ( model != null )
+          {
+            doUpdateState( aController, model.getData() );
+          }
         }
       }
     } );

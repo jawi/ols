@@ -1,5 +1,5 @@
 /*
- * OpenBench LogicSniffer / SUMP project
+ * OpenBench LogicSniffer / SUMP project 
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -15,44 +15,40 @@
  * with this program; if not, write to the Free Software Foundation, Inc.,
  * 51 Franklin St, Fifth Floor, Boston, MA 02110, USA
  *
- * 
- * Copyright (C) 2010-2011 - J.W. Janssen, http://www.lxtreme.nl
+ * Copyright (C) 2006-2010 Michael Poppitz, www.sump.org
+ * Copyright (C) 2010 J.W. Janssen, www.lxtreme.nl
  */
 package nl.lxtreme.ols.client2.action;
 
 
 import java.awt.event.*;
-import java.io.*;
 
 import nl.lxtreme.ols.client2.*;
-import nl.lxtreme.ols.client2.icons.*;
 import nl.lxtreme.ols.util.swing.*;
 
 
 /**
- * Provides a "save as" functionality for projects.
+ * Closes the current session.
  */
-public class SaveAsAction extends SaveAction
+public class CloseAllSessionsAction extends AbstractManagedAction
 {
   // CONSTANTS
 
   private static final long serialVersionUID = 1L;
 
-  public static final String ID = "SaveAs";
+  public static final String ID = "CloseAllSessions";
 
   // CONSTRUCTORS
 
   /**
-   * Creates a new {@link SaveAsAction} instance.
+   * Creates a new {@link CloseAllSessionsAction} instance.
    */
-  public SaveAsAction()
+  public CloseAllSessionsAction()
   {
-    super( ID, IconLocator.ICON_SAVE_PROJECT, "Save as ...", "Save the current project or data under a different name" );
-    putValue( ACCELERATOR_KEY, SwingComponentUtils.createMenuKeyMask( KeyEvent.VK_S, InputEvent.SHIFT_MASK ) );
-    putValue( MNEMONIC_KEY, Integer.valueOf( KeyEvent.VK_A ) );
+    super( ID );
 
-    putValue( MENU_NAME, ClientConstants.FILE_MENU );
-    putValue( MENU_ORDER, 4 );
+    putValue( NAME, "Close all sessions" );
+    putValue( ACCELERATOR_KEY, SwingComponentUtils.createMenuKeyMask( KeyEvent.VK_W, KeyEvent.SHIFT_DOWN_MASK ) );
   }
 
   // METHODS
@@ -61,17 +57,18 @@ public class SaveAsAction extends SaveAction
    * {@inheritDoc}
    */
   @Override
+  public void actionPerformed( final ActionEvent aEvent )
+  {
+    Client client = getClient( aEvent );
+    client.closeAllSessions();
+  }
+
+  /**
+   * {@inheritDoc}
+   */
+  @Override
   public void updateState( Client aClient )
   {
-    setEnabled( aClient.hasAcquiredData() && aClient.getFile() != null );
-  }
-
-  @Override
-  protected boolean showFileChooserDialogNeeded( File aFile )
-  {
-    // Always should the file chooser dialog...
-    return true;
+    setEnabled( aClient.getSessionCount() > 0 );
   }
 }
-
-/* EOF */

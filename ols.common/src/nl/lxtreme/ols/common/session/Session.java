@@ -21,6 +21,8 @@
 package nl.lxtreme.ols.common.session;
 
 
+import java.io.*;
+
 import nl.lxtreme.ols.common.acquisition.*;
 import nl.lxtreme.ols.common.annotation.*;
 
@@ -49,6 +51,12 @@ public interface Session
   AnnotationData getAnnotationData();
 
   /**
+   * @return the (optional) file where the data of this session is persisted,
+   *         can be <code>null</code>.
+   */
+  File getFile();
+
+  /**
    * @return a session identifier, >= 0.
    */
   int getId();
@@ -59,11 +67,17 @@ public interface Session
   String getName();
 
   /**
+   * @param aFile
+   *          the file where the data of this session should be persisted, can
+   *          be <code>null</code>.
+   */
+  void setFile( File aFile );
+
+  /**
    * Sets the name for this session.
    * 
    * @param aName
    *          a session name, can be <code>null</code>.
    */
   void setName( String aName );
-
 }

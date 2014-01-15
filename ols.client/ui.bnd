@@ -13,6 +13,8 @@ Private-Package: \
 	nl.lxtreme.ols.client2.bundles,\
 	nl.lxtreme.ols.client2.colorscheme,\
 	nl.lxtreme.ols.client2.icons,\
+	nl.lxtreme.ols.client2.icons.x16,\
+	nl.lxtreme.ols.client2.icons.x32,\
 	nl.lxtreme.ols.client2.menu,\
 	nl.lxtreme.ols.client2.platform,\
 	nl.lxtreme.ols.client2.platform.osx,\

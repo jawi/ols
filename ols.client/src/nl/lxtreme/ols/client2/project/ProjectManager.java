@@ -34,24 +34,6 @@ public interface ProjectManager
   // METHODS
 
   /**
-   * Creates a new project.
-   * 
-   * @return a new project, managed by this manager.
-   */
-  void createNewProject();
-
-  /**
-   * @return the current project file, if defined, otherwise <code>null</code>.
-   */
-  File getProjectFile();
-
-  /**
-   * @return <code>true</code> if the current project is changed,
-   *         <code>false</code> otherwise.
-   */
-  boolean isProjectChanged();
-
-  /**
    * Loads acquired data from a given file.
    * 
    * @param aFile

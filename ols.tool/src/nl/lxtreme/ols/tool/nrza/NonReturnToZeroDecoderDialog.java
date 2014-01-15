@@ -34,7 +34,6 @@ import nl.lxtreme.ols.tool.base.ToolUtils.RestorableAction;
 import nl.lxtreme.ols.util.swing.*;
 
 import org.osgi.framework.*;
-import org.osgi.util.tracker.*;
 
 
 /**
@@ -47,8 +46,6 @@ public class NonReturnToZeroDecoderDialog extends BaseToolDialog<AcquisitionData
   private static final long serialVersionUID = 1L;
 
   // VARIABLES
-
-  private final ServiceTracker acquisitionDataListenerHelper;
 
   private JComboBox dataLine;
   private JComboBox clockLine;
@@ -71,9 +68,6 @@ public class NonReturnToZeroDecoderDialog extends BaseToolDialog<AcquisitionData
       final BundleContext aBundleContext, final Tool<AcquisitionData> aTool )
   {
     super( aOwner, aContext, aBundleContext, aTool );
-
-    this.acquisitionDataListenerHelper = new ServiceTracker( aBundleContext, AcquisitionDataListener.class.getName(),
-        null );
 
     initDialog();
 
@@ -119,18 +113,8 @@ public class NonReturnToZeroDecoderDialog extends BaseToolDialog<AcquisitionData
   @Override
   protected void onToolEnded( final AcquisitionData aResult )
   {
-    Object[] services = this.acquisitionDataListenerHelper.getServices();
-    if ( services != null )
-    {
-      for ( Object service : services )
-      {
-        ( ( AcquisitionDataListener )service ).acquisitionComplete( aResult );
-      }
-    }
     this.closeAction.setEnabled( true );
     this.runAnalysisAction.restore();
-
-    this.acquisitionDataListenerHelper.close();
   }
 
   /**
@@ -140,7 +124,6 @@ public class NonReturnToZeroDecoderDialog extends BaseToolDialog<AcquisitionData
   protected void onToolStarted()
   {
     this.closeAction.setEnabled( false );
-    this.acquisitionDataListenerHelper.open();
   }
 
   /**
@@ -164,7 +147,7 @@ public class NonReturnToZeroDecoderDialog extends BaseToolDialog<AcquisitionData
   private JComponent createSettingsPane( final JPanel aSubSettingsPanel )
   {
     final JPanel panel = new JPanel( new SpringLayout() );
-    
+
     addDecoderAreaPane( panel );
 
     SpringLayoutUtils.addSeparator( panel, "General settings" );

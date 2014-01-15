@@ -88,7 +88,7 @@ public class SaveAction extends AbstractManagedAction
   {
     Client client = getClient( aEvent );
 
-    File file = client.getProjectFile();
+    File file = client.getFile();
     if ( showFileChooserDialogNeeded( file ) )
     {
       file = showFileSaveDialog( client, new FileNameExtensionFilter( "OLS client files", OLS_FILE_EXTENSION, OLS_PROJECT_EXTENSION ) );

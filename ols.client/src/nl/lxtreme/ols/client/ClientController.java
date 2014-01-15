@@ -56,8 +56,10 @@ import com.jidesoft.plaf.*;
 /**
  * Denotes a front-end controller for the client.
  */
-public final class ClientController implements ActionProvider, AcquisitionProgressListener, AcquisitionStatusListener,
-    AcquisitionDataListener /*, ApplicationCallback*/
+public final class ClientController implements ActionProvider, AcquisitionProgressListener, AcquisitionStatusListener
+/*
+ * ,, AcquisitionDataListener ApplicationCallback
+ */
 {
   // INNER TYPES
 
@@ -179,7 +181,7 @@ public final class ClientController implements ActionProvider, AcquisitionProgre
     @Override
     public void addAnnotation( Annotation aAnnotation )
     {
-//      this.model.addAnnotation( aAnnotation ); XXX
+      // this.model.addAnnotation( aAnnotation ); XXX
 
       scheduleRepaintEvent();
     }
@@ -190,7 +192,7 @@ public final class ClientController implements ActionProvider, AcquisitionProgre
     @Override
     public void clearAnnotations( int... aChannelIdxs )
     {
-//      this.model.clearAnnotations( aChannelIdxs ); XXX
+      // this.model.clearAnnotations( aChannelIdxs ); XXX
 
       scheduleRepaintEvent();
     }
@@ -241,7 +243,7 @@ public final class ClientController implements ActionProvider, AcquisitionProgre
   private volatile ProjectManager projectManager;
   private volatile DataAcquisitionService dataAcquisitionService;
   private volatile MainFrame mainFrame;
-//  private volatile UIColorSchemeManager colorSchemeManager;
+  // private volatile UIColorSchemeManager colorSchemeManager;
 
   private volatile long acquisitionStartTime;
 
@@ -267,7 +269,6 @@ public final class ClientController implements ActionProvider, AcquisitionProgre
   /**
    * {@inheritDoc}
    */
-  @Override
   public void acquisitionComplete( final AcquisitionData aData )
   {
     try
@@ -512,7 +513,8 @@ public final class ClientController implements ActionProvider, AcquisitionProgre
 
   public void clearAnnotations()
   {
-//    getSignalDiagramController().getSignalDiagramModel().clearAllAnnotations(); XXX
+    // getSignalDiagramController().getSignalDiagramModel().clearAllAnnotations();
+    // XXX
 
     scheduleRepaintEvent();
   }
@@ -1226,36 +1228,38 @@ public final class ClientController implements ActionProvider, AcquisitionProgre
    */
   public void showPreferencesDialog( final Window aParent )
   {
-//    final PreferencesDialog dialog = new PreferencesDialog( aParent, this.colorSchemeManager );
-//
-//    final Bundle thisBundle = getBundle();
-//    final DependencyManager dm = new DependencyManager( thisBundle.getBundleContext() );
-//    final Component comp = dm.createComponent();
-//
-//    comp.setImplementation( dialog ).add( dm.createServiceDependency() //
-//        .setService( ConfigurationAdmin.class ) //
-//        .setInstanceBound( true ) //
-//        .setRequired( true ) ) //
-//        .addStateListener( new ComponentStateAdapter()
-//        {
-//          @Override
-//          public void started( final Component aComponent )
-//          {
-//            if ( dialog.showDialog() )
-//            {
-//              // Update the default settings (if needed)...
-//              updateDefaultSettings();
-//
-//              // Ensure all UI-related changes are immediately visible...
-//              repaintMainFrame();
-//            }
-//
-//            // All changes are persisted automatically...
-//            dm.remove( comp );
-//          }
-//        } );
-//
-//    dm.add( comp );
+    // final PreferencesDialog dialog = new PreferencesDialog( aParent,
+    // this.colorSchemeManager );
+    //
+    // final Bundle thisBundle = getBundle();
+    // final DependencyManager dm = new DependencyManager(
+    // thisBundle.getBundleContext() );
+    // final Component comp = dm.createComponent();
+    //
+    // comp.setImplementation( dialog ).add( dm.createServiceDependency() //
+    // .setService( ConfigurationAdmin.class ) //
+    // .setInstanceBound( true ) //
+    // .setRequired( true ) ) //
+    // .addStateListener( new ComponentStateAdapter()
+    // {
+    // @Override
+    // public void started( final Component aComponent )
+    // {
+    // if ( dialog.showDialog() )
+    // {
+    // // Update the default settings (if needed)...
+    // updateDefaultSettings();
+    //
+    // // Ensure all UI-related changes are immediately visible...
+    // repaintMainFrame();
+    // }
+    //
+    // // All changes are persisted automatically...
+    // dm.remove( comp );
+    // }
+    // } );
+    //
+    // dm.add( comp );
   }
 
   /**
@@ -1559,7 +1563,8 @@ public final class ClientController implements ActionProvider, AcquisitionProgre
         final Device device = getDevice();
 
         final boolean deviceControllerSet = ( device != null );
-        final boolean deviceCapturing = ( acquisitionService != null ) && acquisitionService.isAcquiring( getDevice().getName() );
+        final boolean deviceCapturing = ( acquisitionService != null )
+            && acquisitionService.isAcquiring( getDevice().getName() );
         final boolean deviceSetup = deviceControllerSet && !deviceCapturing && device.isSetup();
 
         getAction( CaptureAction.ID ).setEnabled( deviceControllerSet );

@@ -37,6 +37,7 @@ import nl.lxtreme.ols.client2.project.*;
 import nl.lxtreme.ols.client2.session.*;
 import nl.lxtreme.ols.client2.usersettings.*;
 import nl.lxtreme.ols.client2.views.*;
+import nl.lxtreme.ols.common.*;
 import nl.lxtreme.ols.common.acquisition.*;
 import nl.lxtreme.ols.common.session.*;
 import nl.lxtreme.ols.device.api.*;
@@ -316,7 +317,10 @@ public class Activator extends DependencyActivatorBase
         .setInterface( ProjectManager.class.getName(), null ) //
         .setImplementation( ProjectManagerImpl.class ) //
         .add( createServiceDependency() //
-            .setService( SessionProvider.class ) //
+            .setService( EventAdmin.class ) //
+            .setRequired( true ) ) //
+        .add( createServiceDependency() //
+            .setService( UserSettingProvider.class ) //
             .setRequired( true ) ) //
         .add( createServiceDependency() //
             .setService( LogService.class ) //
@@ -326,8 +330,11 @@ public class Activator extends DependencyActivatorBase
 
   private void createSessionProvider( DependencyManager aManager )
   {
+    Properties props = new Properties();
+    props.put( EventConstants.EVENT_TOPIC, OlsConstants.TOPIC_DATA_BASE.concat( "/*" ) );
+
     aManager.add( createComponent().setInterface( //
-        new String[] { SessionProvider.class.getName(), AcquisitionDataListener.class.getName() }, null ) //
+        new String[] { SessionProvider.class.getName(), EventHandler.class.getName() }, props ) //
         .setImplementation( SessionProviderImpl.class ) //
         .add( createServiceDependency() //
             .setService( LogService.class ) //

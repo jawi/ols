@@ -34,7 +34,6 @@ import nl.lxtreme.ols.tool.base.ToolUtils.RestorableAction;
 import nl.lxtreme.ols.util.swing.*;
 
 import org.osgi.framework.*;
-import org.osgi.util.tracker.*;
 
 
 /**
@@ -47,8 +46,6 @@ public class ManchesterDecoderDialog extends BaseToolDialog<AcquisitionData>
   private static final long serialVersionUID = 1L;
 
   // VARIABLES
-
-  private final ServiceTracker acquisitionDataListenerHelper;
 
   private JComboBox dataLine;
   private JCheckBox inverted;
@@ -70,9 +67,6 @@ public class ManchesterDecoderDialog extends BaseToolDialog<AcquisitionData>
       final Tool<AcquisitionData> aTool )
   {
     super( aOwner, aContext, aBundleContext, aTool );
-
-    this.acquisitionDataListenerHelper = new ServiceTracker( aBundleContext, AcquisitionDataListener.class.getName(),
-        null );
 
     initDialog();
 
@@ -114,20 +108,10 @@ public class ManchesterDecoderDialog extends BaseToolDialog<AcquisitionData>
    * {@inheritDoc}
    */
   @Override
-  protected void onToolEnded( final AcquisitionData aResult )
+  protected void onToolEnded( AcquisitionData aResult )
   {
-    Object[] services = this.acquisitionDataListenerHelper.getServices();
-    if ( services != null )
-    {
-      for ( Object service : services )
-      {
-        ( ( AcquisitionDataListener )service ).acquisitionComplete( aResult );
-      }
-    }
     this.closeAction.setEnabled( true );
     this.runAnalysisAction.restore();
-
-    this.acquisitionDataListenerHelper.close();
   }
 
   /**
@@ -137,7 +121,6 @@ public class ManchesterDecoderDialog extends BaseToolDialog<AcquisitionData>
   protected void onToolStarted()
   {
     this.closeAction.setEnabled( false );
-    this.acquisitionDataListenerHelper.open();
   }
 
   /**
@@ -160,7 +143,7 @@ public class ManchesterDecoderDialog extends BaseToolDialog<AcquisitionData>
   private JComponent createSettingsPane( final JPanel aSubSettingsPanel )
   {
     final JPanel panel = new JPanel( new SpringLayout() );
-    
+
     addDecoderAreaPane( panel );
 
     SpringLayoutUtils.addSeparator( panel, "General settings" );

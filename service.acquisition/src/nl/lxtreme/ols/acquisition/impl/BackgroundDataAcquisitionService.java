@@ -21,6 +21,8 @@
 package nl.lxtreme.ols.acquisition.impl;
 
 
+import static nl.lxtreme.ols.common.OlsConstants.*;
+
 import java.io.*;
 import java.util.*;
 import java.util.concurrent.*;
@@ -48,11 +50,11 @@ public class BackgroundDataAcquisitionService implements DataAcquisitionService,
 
   private final List<AcquisitionProgressListener> acquisitionProgressListeners;
   private final List<AcquisitionStatusListener> acquisitionStatusListeners;
-  private final List<AcquisitionDataListener> acquisitionDataListeners;
   private final ConcurrentMap<String, Device> devices;
   private final Map<String, Map<String, ? extends Serializable>> deviceConfigs;
 
   private volatile Future<?> acquisitionFutureTask;
+  private volatile EventAdmin eventAdmin;
 
   // CONSTRUCTORS
 
@@ -63,7 +65,6 @@ public class BackgroundDataAcquisitionService implements DataAcquisitionService,
   {
     this.acquisitionProgressListeners = new CopyOnWriteArrayList<AcquisitionProgressListener>();
     this.acquisitionStatusListeners = new CopyOnWriteArrayList<AcquisitionStatusListener>();
-    this.acquisitionDataListeners = new CopyOnWriteArrayList<AcquisitionDataListener>();
 
     this.deviceConfigs = new HashMap<String, Map<String, ? extends Serializable>>();
     this.devices = new ConcurrentHashMap<String, Device>();
@@ -123,20 +124,6 @@ public class BackgroundDataAcquisitionService implements DataAcquisitionService,
     }
 
     acquireData( config, aDeviceName );
-  }
-
-  /**
-   * Adds a new {@link AcquisitionDataListener} to the list of listeners.
-   * <p>
-   * Called by the dependency manager.
-   * </p>
-   * 
-   * @param aListener
-   *          the listener to add.
-   */
-  public void addAcquisitionDataListener( final AcquisitionDataListener aListener )
-  {
-    this.acquisitionDataListeners.add( aListener );
   }
 
   /**
@@ -236,20 +223,6 @@ public class BackgroundDataAcquisitionService implements DataAcquisitionService,
   }
 
   /**
-   * Removes a given {@link AcquisitionDataListener} from the list of listeners.
-   * <p>
-   * Called by the dependency manager.
-   * </p>
-   * 
-   * @param aListener
-   *          the listener to remove.
-   */
-  public void removeAcquisitionDataListener( final AcquisitionDataListener aListener )
-  {
-    this.acquisitionDataListeners.remove( aListener );
-  }
-
-  /**
    * Removes a given {@link AcquisitionProgressListener} from the list of
    * listeners.
    * <p>
@@ -345,12 +318,14 @@ public class BackgroundDataAcquisitionService implements DataAcquisitionService,
   /**
    * @param result
    */
-  void fireAcquisitionCompleteEvent( final AcquisitionData result )
+  void fireAcquisitionCompleteEvent( AcquisitionData result )
   {
-    final Iterator<AcquisitionDataListener> dataListenerIter = this.acquisitionDataListeners.iterator();
-    while ( dataListenerIter.hasNext() )
+    if ( this.eventAdmin != null )
     {
-      dataListenerIter.next().acquisitionComplete( result );
+      Map<Object, Object> props = new Properties();
+      props.put( TAC_DATA, result );
+
+      this.eventAdmin.postEvent( new Event( TOPIC_ACQUISITION_COMPLETE, props ) );
     }
   }
 
