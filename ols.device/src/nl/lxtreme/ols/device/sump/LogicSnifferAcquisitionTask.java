@@ -151,7 +151,7 @@ public class LogicSnifferAcquisitionTask implements SumpProtocolConstants, Task<
       {
         // Make sure to flush any pending information we did not read for some
         // reason...
-        if ( this.inputStream != null )
+        if ( this.inputStream != null && this.config.isFlushOnCloseNeeded() )
         {
           this.inputStream.flush();
         }
@@ -346,40 +346,29 @@ public class LogicSnifferAcquisitionTask implements SumpProtocolConstants, Task<
 
     boolean cancelled = false;
 
+    int offset = 0;
+    int zerosRead = 0;
+    int count = length;
+
     try
     {
-      int offset = 0;
-      int zerosRead = 0;
-      int count = length;
-
       while ( ( offset >= 0 ) && ( offset < length ) )
       {
         int read = this.inputStream.readRawData( rawData, offset, count );
-        // check whether we're interrupted, and let the interrupted state be
-        // cleared...
+
         if ( Thread.interrupted() )
         {
-          // Check what we need to do...
-          if ( cancelled )
+          // We've been interrupted, check what we need to do...
+          if ( this.config.isRleEnabled() && !cancelled )
           {
-            // Already cancelled, break out the loop...
-            Thread.currentThread().interrupt();
-            break;
+            this.outputStream.writeCmdFinishNow();
           }
           else
           {
-            if ( this.config.isRleEnabled() )
-            {
-              this.outputStream.writeCmdFinishNow();
-            }
-            else
-            {
-              // Restore the interrupted flag...
-              Thread.currentThread().interrupt();
-              break;
-            }
-            cancelled = true;
+            // Already cancelled or not using RLE, break out the loop...
+            break;
           }
+          cancelled = true;
         }
 
         if ( read < 0 )
@@ -407,19 +396,15 @@ public class LogicSnifferAcquisitionTask implements SumpProtocolConstants, Task<
     }
     catch ( InterruptedIOException exception )
     {
-      Thread.currentThread().interrupt();
+      // We're stopping already...
     }
     finally
     {
+      close();
+
       this.acquisitionProgressListener.acquisitionInProgress( 100 );
     }
 
-    if ( Thread.currentThread().isInterrupted() )
-    {
-      // We're interrupted while read samples, do not proceed...
-      throw new InterruptedException();
-    }
-
-    return new SumpAcquisitionDataBuilder( this.config ).build( rawData, this.acquisitionProgressListener );
+    return new SumpAcquisitionDataBuilder( this.config ).build( rawData, offset, this.acquisitionProgressListener );
   }
 }

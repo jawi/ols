@@ -80,13 +80,14 @@ public class SumpDevice implements Device
       throw new IllegalArgumentException( "Invalid device configuration!" );
     }
 
-    SumpConfig config = new SumpConfig( aConfig );
-    if ( !config.isValid() )
+    this.config = new SumpConfig( aConfig );
+    if ( !this.config.isValid() )
     {
-//      throw new IllegalArgumentException( "Invalid device configuration!" );
+      // TODO
+      // throw new IllegalArgumentException( "Invalid device configuration!" );
     }
 
-    return this.taskExecutionService.execute( new LogicSnifferAcquisitionTask( config, getStreamConnection(),
+    return this.taskExecutionService.execute( new LogicSnifferAcquisitionTask( this.config, getStreamConnection(),
         aProgressListener ), Collections.singletonMap( "type", "acquisition" ) );
   }
 

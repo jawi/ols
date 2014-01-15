@@ -21,8 +21,6 @@
 package nl.lxtreme.ols.device.sump;
 
 
-import static nl.lxtreme.ols.device.sump.SumpConstants.*;
-
 import java.util.logging.*;
 
 import nl.lxtreme.ols.common.acquisition.*;
@@ -60,139 +58,151 @@ public class SumpAcquisitionDataBuilder
    * 
    * @param aSampleData
    *          the raw sample data to process;
+   * @param aRawSampleCount
+   *          the number of samples read as given in the sample data, >= 0;
    * @param aListener
    *          the progress listener to use.
    * @return a new {@link AcquisitionData} containing the processed sample data,
    *         never <code>null</code>.
    */
-  public AcquisitionData build( byte[] aSampleData, AcquisitionProgressListener aListener )
+  public AcquisitionData build( byte[] aSampleData, int aRawSampleCount, AcquisitionProgressListener aListener )
   {
-    final AcquisitionDataBuilder builder = new AcquisitionDataBuilder();
+    // Normalize the raw data into the sample data, as expected...
+    int[] samples = reverseSamplesIfNeeded( normalizeSamples( aSampleData, aRawSampleCount ) );
+
+    // Restart the progress bar...
+    aListener.acquisitionInProgress( 0 );
+
+    AcquisitionDataBuilder builder = new AcquisitionDataBuilder();
     builder.setSampleRate( this.config.getSampleRate() );
     // Issue #98: use the *enabled* channel count, not the total channel
     // count...
     builder.setChannelCount( this.config.getEnabledChannelCount() );
     builder.setEnabledChannelMask( this.config.getEnabledChannelMask() );
 
-    if ( this.config.isTriggerEnabled() )
+    if ( this.config.isRleEnabled() )
     {
-      builder.setTriggerPosition( this.config.getTriggerPosition() );
+      addRleEncodedSamples( builder, samples, aListener );
     }
-
-    final int groupCount = this.config.getGroupCount();
-
-    // Restart the progress bar...
-    aListener.acquisitionInProgress( 0 );
-
-    // enabled group count is "automatically" corrected for DDR/Demux mode...
-    final int width = getRLEDataWidth();
-    int rleCountValue = ( int )( 1L << ( width - 1 ) );
-    int rleCountMask = rleCountValue - 1;
-
-    // Normalize the raw data into the sample data, as expected...
-    int[] samples = new int[this.config.getSampleCount()];
-    for ( int i = 0, j = 0; i < samples.length; i++ )
+    else
     {
-      for ( int g = 0; g < groupCount; g++ )
-      {
-        if ( this.config.isGroupEnabled( g ) )
-        {
-          samples[i] |= ( ( aSampleData[j++] & 0xff ) << ( 8 * g ) );
-        }
-      }
-    }
-
-    if ( this.config.isLastSampleSentFirst() )
-    {
-      // Reverse all samples, as they are send backwards (original SUMP
-      // protocol)...
-      for ( int left = 0, right = samples.length - 1; left < right; left++, right-- )
-      {
-        // exchange the first and last
-        int temp = samples[left];
-        samples[left] = samples[right];
-        samples[right] = temp;
-      }
-    }
-
-    // Normalize the raw data into the sample data, as expected...
-    long lastTime = 0L;
-    long time = 0L;
-
-    for ( int i = 0; i < samples.length; i++ )
-    {
-      int sampleValue = samples[i];
-
-      if ( !this.config.isRleEnabled() )
-      {
-        builder.addSample( time++, sampleValue );
-      }
-      else
-      {
-        int normalSampleValue = normalizeSampleValue( sampleValue );
-
-        if ( ( normalSampleValue & rleCountValue ) != 0 )
-        {
-          long count = ( normalSampleValue & rleCountMask );
-
-          if ( this.config.isDoubleDataRateEnabled() && ( i < ( samples.length - 1 ) ) )
-          {
-            // In case of "double data rate", the RLE-counts are encoded as 16-
-            // resp. 32-bit values, so we need to take two samples for each
-            // count (as they are 8- or 16-bits in DDR mode).
-            // This should also solve issue #31...
-
-            // Issue #55: double the RLE-count as we're using DDR mode which
-            // takes two samples in one time period...
-            long ddrCount = ( count << width ) | normalizeSampleValue( samples[++i] );
-            count = 2L * ddrCount;
-          }
-
-          if ( time > 0 )
-          {
-            time += count;
-          }
-        }
-        else
-        {
-          // TODO this code needs some additional TLC...
-          if ( lastTime > 0 && ( lastTime == time ) )
-          {
-            LOG.warning( String.format( "SPURIOUS SAMPLE @ %d (%d) : %d.%n", i, time, sampleValue ) );
-            builder.addSample( ++time, sampleValue );
-          }
-          else
-          {
-            if ( time > 0 && lastTime == 0 )
-            {
-              // ensure we always start at time 0...
-              builder.addSample( lastTime, sampleValue );
-            }
-            builder.addSample( time, sampleValue );
-          }
-          lastTime = time;
-        }
-
-        time++;
-      }
-
-      aListener.acquisitionInProgress( ( i * 100 ) / aSampleData.length );
+      addPlainSamples( builder, samples, aListener );
     }
 
     return builder.build();
   }
 
   /**
-   * @return the data width, in bits.
+   * Adds a given array of sample data as non-RLE encoded samples to a given
+   * {@link AcquisitionDataBuilder}.
+   * 
+   * @param aBuilder
+   *          the builder to add the samples to;
+   * @param aSamples
+   *          the samples to add;
+   * @param aListener
+   *          the listener to report progress to.
    */
-  private int getRLEDataWidth()
+  private void addPlainSamples( AcquisitionDataBuilder aBuilder, int[] aSamples, AcquisitionProgressListener aListener )
   {
-    int enabledGroups = this.config.getEnabledGroupCount();
-    if ( this.config.isDoubleDataRateEnabled() )
+    if ( this.config.isTriggerEnabled() )
     {
-      Math.min( MAX_CHANNEL_GROUPS_DDR, enabledGroups );
+      aBuilder.setTriggerPosition( this.config.getTriggerPosition() );
     }
-    return enabledGroups * 8;
+
+    int length = aSamples.length;
+    int blocks = Math.max( 1, length / 100 );
+
+    long time = 0L;
+    for ( int i = 0; i < length; i++ )
+    {
+      int sampleValue = aSamples[i];
+
+      aBuilder.addSample( time++, sampleValue );
+
+      if ( ( i % blocks ) == 0 )
+      {
+        aListener.acquisitionInProgress( ( i * 100 ) / length );
+      }
+    }
+  }
+
+  /**
+   * Adds a given array of sample data as RLE encoded samples to a given
+   * {@link AcquisitionDataBuilder}.
+   * 
+   * @param aBuilder
+   *          the builder to add the samples to;
+   * @param aSamples
+   *          the RLE-encoded samples to add;
+   * @param aListener
+   *          the listener to report progress to.
+   */
+  private void addRleEncodedSamples( AcquisitionDataBuilder aBuilder, int[] aSamples,
+      AcquisitionProgressListener aListener )
+  {
+    boolean ddrMode = this.config.isDoubleDataRateEnabled();
+
+    boolean triggerSet = !this.config.isTriggerEnabled();
+    int triggerPosition = this.config.getTriggerPosition();
+
+    // enabled group count is "automatically" corrected for DDR/Demux mode...
+    int width = 8 * this.config.getEnabledGroupCount();
+    int rleCountValue = ( int )( 1L << ( width - 1 ) );
+    int rleCountMask = rleCountValue - 1;
+
+    int length = aSamples.length;
+    int blocks = Math.max( 1, length / 100 );
+
+    long time = 0L;
+    for ( int i = 0; i < length; i++ )
+    {
+      int sampleValue = aSamples[i];
+      int normalSampleValue = normalizeRleSample( sampleValue );
+
+      if ( ( normalSampleValue & rleCountValue ) != 0 )
+      {
+        long count = ( normalSampleValue & rleCountMask );
+
+        if ( ddrMode && ( i < ( aSamples.length - 1 ) ) )
+        {
+          // In case of "double data rate", the RLE-counts are encoded as 16-
+          // resp. 32-bit values, so we need to take two samples for each
+          // count (as they are 8- or 16-bits in DDR mode).
+          // This should also solve issue #31...
+
+          // Issue #55: double the RLE-count as we're using DDR mode which
+          // takes two samples in one time period...
+          long ddrCount = ( count << width ) | normalizeRleSample( aSamples[++i] );
+          count = 2L * ddrCount;
+        }
+
+        if ( time > 0 )
+        {
+          time += count;
+        }
+        else
+        {
+          LOG.warning( "Ignoring RLE count without preceeding sample value @ " + Long.toString( count ) );
+        }
+      }
+      else
+      {
+        if ( i >= triggerPosition && !triggerSet )
+        {
+          aBuilder.setTriggerPosition( time );
+        }
+
+        aBuilder.addSample( time, sampleValue );
+      }
+
+      time++;
+
+      if ( ( i % blocks ) == 0 )
+      {
+        aListener.acquisitionInProgress( ( i * 100 ) / length );
+      }
+    }
   }
 
   /**
@@ -203,7 +213,7 @@ public class SumpAcquisitionDataBuilder
    *          the original sample to normalize.
    * @return the normalized sample value.
    */
-  private int normalizeSampleValue( final int aSampleValue )
+  private int normalizeRleSample( int aSampleValue )
   {
     int groupCount = this.config.getGroupCount();
     int compdata = 0;
@@ -220,5 +230,63 @@ public class SumpAcquisitionDataBuilder
       indata >>= 8;
     }
     return compdata;
+  }
+
+  /**
+   * Normalizes the given raw sample data to mask out the unused channel groups
+   * and get sample values in the correct width and format.
+   * 
+   * @param aSampleData
+   * @param aRawSampleCount
+   * @return the normalized sample data, never <code>null</code>.
+   */
+  private int[] normalizeSamples( byte[] aSampleData, int aRawSampleCount )
+  {
+    int groupCount = this.config.getGroupCount();
+
+    int enabledGroupCount = this.config.getEnabledGroupCount();
+    // Determine the number of samples read...
+    int sampleCount = ( int )Math.floor( aRawSampleCount / ( double )enabledGroupCount );
+
+    int[] samples = new int[sampleCount];
+    for ( int i = 0, j = 0; i < samples.length; i++ )
+    {
+      for ( int g = 0; g < groupCount; g++ )
+      {
+        if ( this.config.isGroupEnabled( g ) )
+        {
+          samples[i] |= ( ( aSampleData[j++] & 0xff ) << ( 8 * g ) );
+        }
+      }
+    }
+    return samples;
+  }
+
+  /**
+   * Reverses the order of the given sample buffer, if needed according to our
+   * configuration.
+   * 
+   * @param aSamples
+   *          the samples to optionally reverse, cannot be <code>null</code>.
+   * @return the given samples.
+   */
+  private int[] reverseSamplesIfNeeded( int[] aSamples )
+  {
+    if ( !this.config.isLastSampleSentFirst() )
+    {
+      return aSamples;
+    }
+
+    // Reverse all samples, as they are send backwards (original SUMP
+    // protocol)...
+    for ( int left = 0, right = aSamples.length - 1; left < right; left++, right-- )
+    {
+      // exchange the first and last
+      int temp = aSamples[left];
+      aSamples[left] = aSamples[right];
+      aSamples[right] = temp;
+    }
+
+    return aSamples;
   }
 }

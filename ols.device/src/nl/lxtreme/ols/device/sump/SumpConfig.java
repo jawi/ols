@@ -347,6 +347,17 @@ public final class SumpConfig extends HashMap<String, Serializable>
   }
 
   /**
+   * @return <code>true</code> if a flush of the input stream upon closing of
+   *         the device is needed, <code>false</code> otherwise.
+   */
+  public boolean isFlushOnCloseNeeded()
+  {
+    // On the Pipistrello, this can take a *long* time, which is not aiding the
+    // user experience...
+    return getSampleCount() < 256 * 1024;
+  }
+
+  /**
    * @return <code>true</code> if this configuration is valid,
    *         <code>false</code> otherwise.
    */

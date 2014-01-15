@@ -72,9 +72,17 @@ public class SumpResultReader implements Closeable, SumpProtocolConstants
   {
     if ( this.inputStream != null )
     {
-      while ( ( this.inputStream.available() > 0 ) && ( this.inputStream.read() >= 0 ) )
+      LOG.fine( "Flusing input..." );
+
+      byte[] buf = new byte[1024 * 1024]; // 1 MB
+      int read = 0;
+      do
       {
+        read = this.inputStream.read( buf );
       }
+      while ( read > 0 );
+
+      LOG.fine( "Flusing complete..." );
     }
   }
 
