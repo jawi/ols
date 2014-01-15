@@ -76,7 +76,7 @@ final class ClockedCounterGenerator implements IDataGenerator
     aBuilder.add( group );
 
     int value = 0, counter = 0, dir = -1;
-    for ( int i = 0; i < aSampleCount; i++ )
+    for ( int i = 0; !Thread.currentThread().isInterrupted() && i < aSampleCount; i++ )
     {
       if ( ( value & clockMask ) == 0 )
       {

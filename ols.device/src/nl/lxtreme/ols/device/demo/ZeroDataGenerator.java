@@ -51,7 +51,7 @@ final class ZeroDataGenerator implements IDataGenerator
     aBuilder.setSampleRate( SR_1MHZ );
     aBuilder.setTriggerPosition( ( int )( aSampleCount * 0.25 ) );
 
-    for ( int i = 0; i < aSampleCount; i++ )
+    for ( int i = 0; !Thread.currentThread().isInterrupted() && i < aSampleCount; i++ )
     {
       aBuilder.addSample( i, 0 );
 

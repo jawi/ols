@@ -78,7 +78,8 @@ final class I2CGenerator implements IDataGenerator
    * {@inheritDoc}
    */
   @Override
-  public void generate( int aChannelCount, int aSampleCount, AcquisitionDataBuilder aBuilder, AcquisitionProgressListener aProgressListener )
+  public void generate( int aChannelCount, int aSampleCount, AcquisitionDataBuilder aBuilder,
+      AcquisitionProgressListener aProgressListener )
   {
     writeBitStream( "Hello World, this is a sample I2C bit stream!" );
 
@@ -87,7 +88,7 @@ final class I2CGenerator implements IDataGenerator
     aBuilder.setTriggerPosition( this.trigger );
 
     int size = this.data.size();
-    for ( int i = 0; i < size; i++ )
+    for ( int i = 0; !Thread.currentThread().isInterrupted() && i < size; i++ )
     {
       aBuilder.addSample( i, this.data.get( i ).intValue() );
 

@@ -46,17 +46,18 @@ final class RandomDataGenerator implements IDataGenerator
    * {@inheritDoc}
    */
   @Override
-  public void generate( int aChannelCount, int aSampleCount, AcquisitionDataBuilder aBuilder, AcquisitionProgressListener aProgressListener )
+  public void generate( int aChannelCount, int aSampleCount, AcquisitionDataBuilder aBuilder,
+      AcquisitionProgressListener aProgressListener )
   {
     Random rnd = new Random();
-    
+
     int mask = ( int )( ( 1L << aChannelCount ) - 1L );
-    
+
     aBuilder.setSampleRate( SR_1GHZ );
     aBuilder.setChannelCount( aChannelCount );
     aBuilder.setEnabledChannelMask( mask );
 
-    for ( int i = 0; i < aSampleCount; i++ )
+    for ( int i = 0; !Thread.currentThread().isInterrupted() && i < aSampleCount; i++ )
     {
       aBuilder.addSample( i, rnd.nextInt() & mask );
 

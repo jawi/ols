@@ -58,7 +58,7 @@ final class OneWireGenerator implements IDataGenerator
   {
     this( true );
   }
-  
+
   /**
    * Creates a new {@link OneWireGenerator} instance.
    * 
@@ -119,22 +119,23 @@ final class OneWireGenerator implements IDataGenerator
    * {@inheritDoc}
    */
   @Override
-  public void generate( int aChannelCount, int aSampleCount, AcquisitionDataBuilder aBuilder, AcquisitionProgressListener aProgressListener )
+  public void generate( int aChannelCount, int aSampleCount, AcquisitionDataBuilder aBuilder,
+      AcquisitionProgressListener aProgressListener )
   {
-    writeBitStream(  "Hello World, this is a sample 1-wire bit stream!" );
-    
+    writeBitStream( "Hello World, this is a sample 1-wire bit stream!" );
+
     aBuilder.setChannelCount( aChannelCount );
     aBuilder.setSampleRate( this.sampleRate );
     aBuilder.setTriggerPosition( this.trigger );
 
     int size = this.data.size();
-    for ( int i = 0; i < size; i++ )
+    for ( int i = 0; !Thread.currentThread().isInterrupted() && i < size; i++ )
     {
       aBuilder.addSample( i, this.data.get( i ).intValue() );
-      
+
       aProgressListener.acquisitionInProgress( i * 100 / size );
     }
-    
+
     this.data.clear();
   }
 

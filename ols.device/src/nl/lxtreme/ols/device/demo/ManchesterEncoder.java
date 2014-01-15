@@ -94,13 +94,13 @@ final class ManchesterEncoder implements IDataGenerator
     aBuilder.setTriggerPosition( this.trigger );
 
     int size = this.data.size();
-    for ( int i = 0; i < size; i++ )
+    for ( int i = 0; !Thread.currentThread().isInterrupted() && i < size; i++ )
     {
       aBuilder.addSample( i, this.data.get( i ).intValue() );
 
       aProgressListener.acquisitionInProgress( i * 100 / size );
     }
-    
+
     this.data.clear();
   }
 

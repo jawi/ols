@@ -80,7 +80,7 @@ final class BurstGenerator implements IDataGenerator
     int value = 0, counter = 0, dir = -1, cursor = 0;
     long ts = 0;
 
-    for ( int i = 0; i < aSampleCount; i++, ts++ )
+    for ( int i = 0; !Thread.currentThread().isInterrupted() && i < aSampleCount; i++, ts++ )
     {
       if ( ( value & clockMask ) == 0 )
       {

@@ -55,7 +55,7 @@ final class SawtoothDataGenerator implements IDataGenerator
 
     // Make a single group with all channels...
     ChannelGroupBuilder group = aBuilder.createChannelGroup().setIndex( 0 ).setName( "Sawtooth" );
-    for ( int i = 0; i < aChannelCount; i++ )
+    for ( int i = 0; !Thread.currentThread().isInterrupted() && i < aChannelCount; i++ )
     {
       group.addChannel( i );
     }

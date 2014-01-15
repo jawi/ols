@@ -65,7 +65,7 @@ final class SineDataGenerator implements IDataGenerator
     final double half = ( max / 2.0 );
     final double factor = ( ( 2.0 * Math.PI ) / max );
 
-    for ( int i = 0; i < aSampleCount; i++ )
+    for ( int i = 0; !Thread.currentThread().isInterrupted() && i < aSampleCount; i++ )
     {
       aBuilder.addSample( i, ( int )( half + ( half * Math.sin( i * factor ) ) ) );
 

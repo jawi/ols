@@ -52,7 +52,7 @@ final class OddEvenGenerator implements IDataGenerator
     aBuilder.setEnabledChannelMask( 0xFF00 );
     aBuilder.setTriggerPosition( ( int )( aSampleCount * 0.25 ) );
 
-    for ( int i = 0; i < aSampleCount; i++ )
+    for ( int i = 0; !Thread.currentThread().isInterrupted() && i < aSampleCount; i++ )
     {
       aBuilder.addSample( i, ( ( i % 2 ) == 0 ) ? 0x5500 : 0xAA00 );
 

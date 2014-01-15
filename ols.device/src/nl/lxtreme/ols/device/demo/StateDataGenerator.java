@@ -56,8 +56,7 @@ final class StateDataGenerator implements IDataGenerator
    * {@inheritDoc}
    */
   @Override
-  public void generate( int aChannelCount, int aSampleCount, AcquisitionDataBuilder aBuilder,
-      AcquisitionProgressListener aProgressListener )
+  public void generate( int aChannelCount, int aSampleCount, AcquisitionDataBuilder aBuilder, AcquisitionProgressListener aProgressListener )
   {
     int channelCount = Math.max( 16, aChannelCount );
 
@@ -65,17 +64,18 @@ final class StateDataGenerator implements IDataGenerator
     aBuilder.setSampleRate( OlsConstants.NOT_AVAILABLE );
     aBuilder.setTriggerPosition( 0 );
 
-    aBuilder.add( aBuilder.createChannelGroup().setIndex( 1 ).setName( "Data" ).addChannel( 0, 1, 2, 3 ) )
-        .add( aBuilder.createChannelGroup().setIndex( 0 ).setName( "Addr" ).addChannel( 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15 ) );
+    aBuilder.add( aBuilder.createChannelGroup().setIndex( 1 ).setName( "Data" ).addChannel( 0, 1, 2, 3 ) ).add(
+        aBuilder.createChannelGroup().setIndex( 0 ).setName( "Addr" )
+            .addChannel( 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15 ) );
 
     Random rnd = new Random();
-    
+
     int data = 0, addr = 0;
-    for ( int i = 0; i < aSampleCount; i++ )
+    for ( int i = 0; !Thread.currentThread().isInterrupted() && i < aSampleCount; i++ )
     {
       aBuilder.addSample( i, ( addr << 4 ) | data );
-      
-      addr = ( addr + 1 ) % 4096; 
+
+      addr = ( addr + 1 ) % 4096;
       data = rnd.nextInt( 16 );
 
       aProgressListener.acquisitionInProgress( i * 100 / aSampleCount );
