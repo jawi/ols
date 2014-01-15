@@ -37,6 +37,7 @@ import javax.swing.*;
 import javax.swing.event.*;
 
 import nl.lxtreme.ols.acquisition.*;
+import nl.lxtreme.ols.acquisition.AcquisitionService.DeviceState;
 import nl.lxtreme.ols.client2.about.*;
 import nl.lxtreme.ols.client2.action.*;
 import nl.lxtreme.ols.client2.actionmanager.*;
@@ -138,7 +139,8 @@ public class Client extends DefaultDockableHolder implements ApplicationCallback
         Object value = aArgs.pop();
         if ( value instanceof Integer )
         {
-          setProgress( ( ( Integer )value ).intValue() );
+          int percentage = ( ( Integer )value ).intValue();
+          setProgress( percentage );
         }
         else if ( value instanceof String )
         {
@@ -236,10 +238,17 @@ public class Client extends DefaultDockableHolder implements ApplicationCallback
 
     String deviceName = this.selectedDeviceName;
 
-    Map<String, ? extends Serializable> config = this.acquisitionService.configureDevice( aParent, deviceName );
-    if ( config != null )
+    try
     {
-      this.acquisitionService.acquireData( config, deviceName );
+      Map<String, ? extends Serializable> config = this.acquisitionService.configureDevice( aParent, deviceName );
+      if ( config != null )
+      {
+        this.acquisitionService.acquireData( config, deviceName );
+      }
+    }
+    finally
+    {
+      updateManagedState();
     }
   }
 
@@ -296,7 +305,19 @@ public class Client extends DefaultDockableHolder implements ApplicationCallback
     {
       throw new IllegalStateException( "No device selected!" );
     }
-    this.acquisitionService.cancelAcquisition( this.selectedDeviceName );
+
+    String deviceName = this.selectedDeviceName;
+
+    try
+    {
+      this.statusUpdater.add( -1, "Acquisition cancelled for " + deviceName + " ..." );
+
+      this.acquisitionService.cancelAcquisition( deviceName );
+    }
+    finally
+    {
+      updateManagedState();
+    }
   }
 
   /**
@@ -546,6 +567,21 @@ public class Client extends DefaultDockableHolder implements ApplicationCallback
   }
 
   /**
+   * Returns the state of a device.
+   * 
+   * @return the device state, or <code>null</code> if no device is selected.
+   */
+  public DeviceState getDeviceState()
+  {
+    if ( !isDeviceSelected() )
+    {
+      return null;
+    }
+
+    return this.acquisitionService.getState( this.selectedDeviceName );
+  }
+
+  /**
    * @return the filename of the current project, can be <code>null</code> in
    *         case the project is not yet saved.
    */
@@ -669,7 +705,9 @@ public class Client extends DefaultDockableHolder implements ApplicationCallback
     {
       String toolName = ( String )aEvent.getProperty( TTS_TOOL_NAME );
 
-      this.statusUpdater.add( 0, new Object[] { "Tool %s started ...", toolName } );
+      this.statusUpdater.add( 0, new Object[] { "Tool %1$s started on %2$tF %2$tT...", toolName, new Date() } );
+
+      setCursor( java.awt.Cursor.getPredefinedCursor( java.awt.Cursor.WAIT_CURSOR ) );
     }
     else if ( TOPIC_TOOL_PROGRESS.equals( topic ) )
     {
@@ -683,26 +721,32 @@ public class Client extends DefaultDockableHolder implements ApplicationCallback
 
       if ( exception == null )
       {
-        this.statusUpdater.add(
-            100,
-            new Object[] { "Tool %s completed its task in %s.", toolName,
-                Unit.Time.MS.format( executionTime.doubleValue(), 2 ) } );
+        // @formatter:off
+        this.statusUpdater.add( 100, new Object[] { "Tool %s completed its task in %s.", toolName, Unit.Time.MS.format( executionTime.doubleValue(), 2 ) } );
+        // @formatter:on
       }
       else
       {
-        this.statusUpdater.add( 100,
-            new Object[] { "Tool %s failed with reason %s.", toolName, exception.getMessage() } );
+        // @formatter:off
+        this.statusUpdater.add( 100, new Object[] { "Tool %s failed with reason %s.", toolName, exception.getMessage() } );
+        // @formatter:on
       }
 
       this.statusUpdater.add( 0 );
+
+      setCursor( null );
     }
     else
     {
       if ( TOPIC_ACQUISITION_STARTED.equals( topic ) )
       {
-        this.statusUpdater.add( 0, new Object[] { "Acquisition started for %s", getSelectedDeviceName() } );
+        // @formatter:off
+        this.statusUpdater.add( 0, new Object[] { "Acquisition started for %1$s on %2$tF %2$tT...", getSelectedDeviceName(), new Date() } );
+        // @formatter:on
 
         updateManagedState();
+
+        setCursor( java.awt.Cursor.getPredefinedCursor( java.awt.Cursor.WAIT_CURSOR ) );
       }
       else if ( TOPIC_ACQUISITION_PROGRESS.equals( topic ) )
       {
@@ -727,6 +771,8 @@ public class Client extends DefaultDockableHolder implements ApplicationCallback
         }
 
         updateManagedState();
+
+        setCursor( null );
       }
 
       ViewController viewCtrl = getCurrentViewController();
@@ -775,21 +821,6 @@ public class Client extends DefaultDockableHolder implements ApplicationCallback
   public boolean hasPreferences()
   {
     return true;
-  }
-
-  /**
-   * Tests whether or not an acquisition is in progress.
-   * 
-   * @return <code>true</code> if there is an acquisition in progress,
-   *         <code>false</code> otherwise.
-   */
-  public boolean isAcquiring()
-  {
-    if ( !isDeviceSelected() )
-    {
-      return false;
-    }
-    return this.acquisitionService.isAcquiring( this.selectedDeviceName );
   }
 
   /**
@@ -950,7 +981,16 @@ public class Client extends DefaultDockableHolder implements ApplicationCallback
     {
       throw new IllegalStateException( "Device not setup!" );
     }
-    this.acquisitionService.acquireData( this.selectedDeviceName );
+
+    String deviceName = this.selectedDeviceName;
+    try
+    {
+      this.acquisitionService.acquireData( deviceName );
+    }
+    finally
+    {
+      updateManagedState();
+    }
   }
 
   /**
@@ -1314,10 +1354,12 @@ public class Client extends DefaultDockableHolder implements ApplicationCallback
    * Updates the progress bar to the given percentage.
    * 
    * @param aPercentage
-   *          the percentage to set, >= 0 && <= 100.
+   *          the percentage to set, &gt;= 0 && &lt;= 100. If given a value &lt;
+   *          0, the progress bar will be set in indeterminate mode.
    */
   final void setProgress( final int aPercentage )
   {
+    this.status.setProgressBarIndeterminate( aPercentage < 0 );
     this.status.setProgress( aPercentage );
   }
 

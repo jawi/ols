@@ -26,6 +26,7 @@ import java.io.*;
 
 import javax.swing.*;
 
+import nl.lxtreme.ols.acquisition.AcquisitionService.*;
 import nl.lxtreme.ols.client2.*;
 import nl.lxtreme.ols.client2.icons.*;
 import nl.lxtreme.ols.util.swing.*;
@@ -62,7 +63,7 @@ public class AcquireDataAction extends AbstractManagedAction
 
     putValue( MENU_NAME, ClientConstants.CAPTURE_MENU );
     putValue( MENU_ORDER, 0 );
-    
+
     putValue( TOOLBAR_GROUP, ClientConstants.ACQUISITION_GROUP );
     putValue( TOOLBAR_ORDER, 2 );
   }
@@ -103,7 +104,8 @@ public class AcquireDataAction extends AbstractManagedAction
   @Override
   public void updateState( Client aClient )
   {
-    setEnabled( aClient.isDeviceSelected() );
+    DeviceState state = aClient.getDeviceState();
+    setEnabled( DeviceState.READY.equals( state ) );
   }
 
   private void handleException( Client aClient, Exception aException )

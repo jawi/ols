@@ -26,6 +26,7 @@ import java.io.*;
 
 import javax.swing.*;
 
+import nl.lxtreme.ols.acquisition.AcquisitionService.*;
 import nl.lxtreme.ols.client2.*;
 import nl.lxtreme.ols.client2.icons.*;
 import nl.lxtreme.ols.util.swing.component.*;
@@ -95,7 +96,8 @@ public class CancelAcquisitionAction extends AbstractManagedAction
   @Override
   public void updateState( Client aClient )
   {
-    setEnabled( aClient.isAcquiring() );
+    DeviceState state = aClient.getDeviceState();
+    setEnabled( DeviceState.ACQUIRING.equals( state ) );
   }
 
   private void handleException( Client aClient, Exception aException )

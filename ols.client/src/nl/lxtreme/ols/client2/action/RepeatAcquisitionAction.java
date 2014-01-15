@@ -26,6 +26,7 @@ import java.io.*;
 
 import javax.swing.*;
 
+import nl.lxtreme.ols.acquisition.AcquisitionService.*;
 import nl.lxtreme.ols.client2.*;
 import nl.lxtreme.ols.client2.icons.*;
 import nl.lxtreme.ols.util.swing.*;
@@ -107,7 +108,8 @@ public class RepeatAcquisitionAction extends AbstractManagedAction
   @Override
   public void updateState( Client aClient )
   {
-    setEnabled( aClient.isDeviceSelected() && aClient.isDeviceSetup() );
+    DeviceState state = aClient.getDeviceState();
+    setEnabled( aClient.isDeviceSetup() && DeviceState.READY.equals( state ) );
   }
 
   private void handleException( Client aClient, Exception aException )
