@@ -153,7 +153,7 @@ public class LogicSnifferAcquisitionTask implements SumpProtocolConstants, Task<
         // reason...
         if ( this.inputStream != null && this.config.isFlushOnCloseNeeded() )
         {
-          this.inputStream.flush();
+          flush();
         }
 
         // try to make sure device is reset...
@@ -191,6 +191,27 @@ public class LogicSnifferAcquisitionTask implements SumpProtocolConstants, Task<
           this.inputStream = null;
         }
       }
+    }
+  }
+
+  /**
+   * @throws IOException
+   */
+  protected void flush() throws IOException
+  {
+    if ( this.inputStream != null )
+    {
+      LOG.fine( "Flusing input..." );
+
+      byte[] buf = new byte[1024 * 1024]; // 1 MB
+      int read = 0;
+      do
+      {
+        read = this.inputStream.readRawData( buf, 0, buf.length );
+      }
+      while ( read > 0 );
+
+      LOG.fine( "Flusing complete..." );
     }
   }
 
@@ -242,7 +263,7 @@ public class LogicSnifferAcquisitionTask implements SumpProtocolConstants, Task<
 
       // We don't expect any data, so flush all data pending in the given
       // input stream. See issue #34.
-      this.inputStream.flush();
+      flush();
     }
     catch ( InterruptedIOException exception )
     {
@@ -285,7 +306,7 @@ public class LogicSnifferAcquisitionTask implements SumpProtocolConstants, Task<
     do
     {
       // Make sure nothing is left in our input buffer...
-      this.inputStream.flush();
+      flush();
 
       // reset the device first; to ensure it is in the proper initial state...
       this.outputStream.writeCmdReset();

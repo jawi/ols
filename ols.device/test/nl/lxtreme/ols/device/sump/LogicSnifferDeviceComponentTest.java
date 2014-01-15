@@ -119,8 +119,9 @@ public class LogicSnifferDeviceComponentTest
   @Before
   public void setUp() throws Exception
   {
-    final DeviceProfile deviceProfile = VirtualLogicSnifferDevice.createDeviceProfile( "VirtualLS", "\"Virtual LogicSniffer\"", true );
-    
+    final DeviceProfile deviceProfile = VirtualLogicSnifferDevice.createDeviceProfile( "VirtualLS",
+        "\"Virtual LogicSniffer\"", true );
+
     SumpConfigBuilder builder = new SumpConfigBuilder( deviceProfile );
     builder.setAltNumberSchemeEnabled( false ); // don't care
     builder.setClockSource( CaptureClockSource.INTERNAL ); // don't care
@@ -132,7 +133,7 @@ public class LogicSnifferDeviceComponentTest
     builder.setSampleCount( this.readCounter );
     builder.setSampleRate( this.sampleRate );
     builder.setTriggerEnabled( this.triggerEnabled );
-    
+
     this.device = new VirtualLogicSnifferDevice( builder.build() );
   }
 
@@ -150,14 +151,16 @@ public class LogicSnifferDeviceComponentTest
    * {@link org.sump.device.logicsniffer.LogicSnifferAcquisitionTask#doInBackground()}
    * .
    */
-  @Test/*( timeout = 1000 ) */
+  @Test( timeout = 2000 )
   public void testVerifyFlagsAndSentData() throws Exception
   {
     final boolean ddrMode = this.device.getConfig().isDoubleDataRateEnabled();
     final boolean isGroup1disabled = ( this.enabledChannelsMask & 0x000000FF ) == 0;
     final boolean isGroup2disabled = ( this.enabledChannelsMask & 0x0000FF00 ) == 0;
-    final boolean isGroup3disabled = ( ( this.enabledChannelsMask & 0x00FF0000 ) == 0 ) || ( ddrMode && isGroup1disabled );
-    final boolean isGroup4disabled = ( ( this.enabledChannelsMask & 0xFF000000 ) == 0 ) || ( ddrMode && isGroup2disabled );
+    final boolean isGroup3disabled = ( ( this.enabledChannelsMask & 0x00FF0000 ) == 0 )
+        || ( ddrMode && isGroup1disabled );
+    final boolean isGroup4disabled = ( ( this.enabledChannelsMask & 0xFF000000 ) == 0 )
+        || ( ddrMode && isGroup2disabled );
 
     final AcquisitionData result = this.device.call();
 
@@ -176,7 +179,8 @@ public class LogicSnifferDeviceComponentTest
     this.device.assertFlagState( SumpCommandWriter.FLAG_FILTER, false );
 
     this.device.assertSampleRate( this.sampleRate );
-//    this.device.assertReadAndDelayCount( this.readCounter, this.delayCounter );
+    // this.device.assertReadAndDelayCount( this.readCounter, this.delayCounter
+    // );
     this.device.assertConstantDataStream( result, this.expectedSampleValue, this.readCounter );
   }
 }

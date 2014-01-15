@@ -66,27 +66,6 @@ public class SumpResultReader implements Closeable, SumpProtocolConstants
   }
 
   /**
-   * @throws IOException
-   */
-  public void flush() throws IOException
-  {
-    if ( this.inputStream != null )
-    {
-      LOG.fine( "Flusing input..." );
-
-      byte[] buf = new byte[1024 * 1024]; // 1 MB
-      int read = 0;
-      do
-      {
-        read = this.inputStream.read( buf );
-      }
-      while ( read > 0 );
-
-      LOG.fine( "Flusing complete..." );
-    }
-  }
-
-  /**
    * @return the found device ID, or -1 if no suitable device ID was found.
    * @throws IOException
    */

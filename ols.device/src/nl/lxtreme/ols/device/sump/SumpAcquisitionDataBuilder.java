@@ -194,9 +194,9 @@ public class SumpAcquisitionDataBuilder
         }
 
         aBuilder.addSample( time, sampleValue );
+        
+        time++;
       }
-
-      time++;
 
       if ( ( i % blocks ) == 0 )
       {

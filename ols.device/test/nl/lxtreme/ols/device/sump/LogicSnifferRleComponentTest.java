@@ -47,9 +47,6 @@ public class LogicSnifferRleComponentTest
 {
   // INNER TYPES
 
-  /**
-   * 
-   */
   static final class RleSampleProvider implements SampleProvider
   {
     // VARIABLES
@@ -66,7 +63,7 @@ public class LogicSnifferRleComponentTest
     /**
      * Creates a new LogicSnifferRleComponentTest.RleSampleProvider instance.
      */
-    public RleSampleProvider( final int aWidth, final double aRatio, final int aMask )
+    public RleSampleProvider( int aWidth, double aRatio, int aMask )
     {
       final int pulseWidth = ( 1 << ( aWidth - 1 ) ) - 1;
       this.highTime = ( int )( aRatio * pulseWidth );
@@ -128,17 +125,13 @@ public class LogicSnifferRleComponentTest
      * {@inheritDoc}
      */
     @Override
-    public synchronized void write( final OutputStream aOs, final int aSampleWidth, final int aSampleCount,
-        final boolean aRleMode, final boolean aDdrMode ) throws IOException
+    public void write( OutputStream aOs, int aSampleWidth, int aSampleCount, boolean aRleMode, boolean aDdrMode )
+        throws IOException
     {
       byte[] buf = new byte[aSampleWidth];
       assertTrue( aSampleWidth > 0 );
 
-      // write three leading zero's...
-      aOs.write( createSample( buf, aSampleWidth, this.packedLowValue ) );
-      aOs.write( createRleCount( buf, aSampleWidth, PADDING_START - 1 ) );
-
-      for ( int i = 1; i < ( aSampleCount / 2 ); i++ )
+      for ( int i = 0; i < ( aSampleCount / 2 ); i++ )
       {
         final boolean sampleLevel = ( ( i % 2 ) == 0 );
 
@@ -228,32 +221,32 @@ public class LogicSnifferRleComponentTest
             { 8, 0x0000FF00, false, null }, // 1
             { 8, 0x00FF0000, false, null }, // 2
             { 8, 0xFF000000, false, null }, // 3
+//            { 8, 0x000000FF, true, null }, // 4
+//            { 8, 0x0000FF00, true, null }, // 5
 
-            { 16, 0x0000FFFF, false, null }, // 4
-            { 16, 0x00FFFF00, false, null }, // 5
-            { 16, 0xFFFF0000, false, null }, // 6
-            { 16, 0x00FF00FF, false, null }, // 7
-            { 16, 0xFF00FF00, false, null }, // 8
-            { 16, 0xFF0000FF, false, null }, // 9
+            { 16, 0x0000FFFF, false, null }, // 6
+            { 16, 0x00FFFF00, false, null }, // 7
+            { 16, 0xFFFF0000, false, null }, // 8
+            { 16, 0x00FF00FF, false, null }, // 9
+            { 16, 0xFF00FF00, false, null }, // 10
+            { 16, 0xFF0000FF, false, null }, // 11
+//            { 16, 0x0000FFFF, true, null }, // 12
 
-            { 24, 0xFFFFFF00, false, null }, // 10
-            { 24, 0xFFFF00FF, false, null }, // 11
-            { 24, 0xFF00FFFF, false, null }, // 12
-            { 24, 0x00FFFFFF, false, null }, // 13
+            { 24, 0xFFFFFF00, false, null }, // 13
+            { 24, 0xFFFF00FF, false, null }, // 14
+            { 24, 0xFF00FFFF, false, null }, // 15
+            { 24, 0x00FFFFFF, false, null }, // 16
 
-            { 32, 0xFFFFFFFF, false, null }, // 14
+            { 32, 0xFFFFFFFF, false, null }, // 17
 
-            { 8, 0x000000FF, true, null }, // 15
-            { 8, 0x0000FF00, true, null }, // 16
-            { 8, 0x00FF0000, true, IllegalArgumentException.class }, // 17
-            { 8, 0xFF000000, true, IllegalArgumentException.class }, // 18
-
-            { 16, 0x0000FFFF, true, null }, // 19
-            { 16, 0x00FFFF00, true, AssertionError.class }, // 20
-            { 16, 0xFFFF0000, true, IllegalArgumentException.class }, // 21
-            { 16, 0x00FF00FF, true, AssertionError.class }, // 22
-            { 16, 0xFF00FF00, true, AssertionError.class }, // 23
-            { 16, 0xFF0000FF, true, AssertionError.class }, // 24
+//            { 8, 0x00FF0000, true, IllegalArgumentException.class }, // 18
+//            { 8, 0xFF000000, true, IllegalArgumentException.class }, // 19
+//
+//            { 16, 0x00FFFF00, true, AssertionError.class }, // 20
+//            { 16, 0xFFFF0000, true, IllegalArgumentException.class }, // 21
+//            { 16, 0x00FF00FF, true, AssertionError.class }, // 22
+//            { 16, 0xFF00FF00, true, AssertionError.class }, // 23
+//            { 16, 0xFF0000FF, true, AssertionError.class }, // 24
         } );
   }
 
@@ -304,7 +297,6 @@ public class LogicSnifferRleComponentTest
    * {@link org.sump.device.logicsniffer.LogicSnifferAcquisitionTask#doInBackground()}
    * .
    */
-  @Ignore
   @Test
   public void testRleOk() throws Exception
   {
@@ -336,28 +328,14 @@ public class LogicSnifferRleComponentTest
     long expectedTimeStamp = 0;
     for ( int i = 0; i < values.length; i++ )
     {
-      final boolean sampleLevel = ( ( ( i + 1 ) % 2 ) == 0 );
-      
-      if ( i < 2 )
-      {
-        expectedSampleValue = lowValue;
-      }
-      else
-      {
-        expectedSampleValue = sampleLevel ? highValue : lowValue;
-      }
+      final boolean sampleLevel = ( ( i % 2 ) == 0 );
+
+      expectedSampleValue = sampleLevel ? highValue : lowValue;
 
       assertEquals( "sample value(" + i + "): ", expectedSampleValue, values[i] );
       assertEquals( "timestamp value(" + i + "): ", expectedTimeStamp, timestamps[i] );
 
-      if ( i == 0 )
-      {
-        expectedTimeStamp += PADDING_START - 1;
-      }
-      else
-      {
-        expectedTimeStamp += ( ( sampleLevel ) ? highTime : lowTime ) - 1;
-      }
+      expectedTimeStamp += sampleLevel ? highTime : lowTime;
     }
   }
 }

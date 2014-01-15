@@ -76,7 +76,6 @@ public class VirtualLogicSnifferDevice extends LogicSnifferAcquisitionTask
     private final OutputStream os;
     private final SampleProvider sampleProvider;
 
-    private volatile boolean running;
     private volatile int sizeValue;
     private volatile int sampleWidth;
     private volatile int enabledGroups;
@@ -88,7 +87,7 @@ public class VirtualLogicSnifferDevice extends LogicSnifferAcquisitionTask
     /**
      * Creates a new StreamReader instance.
      */
-    public IOHelper( final InputStream aIS, final OutputStream aOS, final SampleProvider aSampleProvider )
+    public IOHelper( InputStream aIS, OutputStream aOS, SampleProvider aSampleProvider )
     {
       super( "IOHelper" );
       this.is = aIS;
@@ -104,13 +103,11 @@ public class VirtualLogicSnifferDevice extends LogicSnifferAcquisitionTask
     @Override
     public void run()
     {
-      this.running = true;
-
       byte[] parameters = new byte[4];
       int command;
       int parameterValue;
 
-      do
+      while ( !isInterrupted() )
       {
         try
         {
@@ -206,19 +203,16 @@ public class VirtualLogicSnifferDevice extends LogicSnifferAcquisitionTask
         }
         catch ( Exception exception )
         {
-          this.running = false;
           throw new RuntimeException( exception );
         }
       }
-      while ( this.running && !isInterrupted() );
     }
 
     /**
      * Stops this runnable.
      */
-    public synchronized void terminate()
+    public void terminate()
     {
-      this.running = false;
       interrupt();
     }
 
@@ -301,8 +295,6 @@ public class VirtualLogicSnifferDevice extends LogicSnifferAcquisitionTask
         delayCount = ( ( this.sizeValue >> 16 ) & 0xFFFF ) << 2;
       }
       setReadAndDelay( readCount, delayCount );
-      
-      System.out.printf("Writing %d samples...%n", readCount);
 
       this.sampleProvider.write( this.os, this.sampleWidth, readCount, this.rleMode, this.ddrMode );
     }
@@ -366,6 +358,7 @@ public class VirtualLogicSnifferDevice extends LogicSnifferAcquisitionTask
   private final InputStream inputStream;
   private final IOHelper streamReader;
 
+  private volatile StreamConnection connection;
   private volatile int dividerValue;
   private volatile int delayCount;
   private volatile int readCount;
@@ -376,7 +369,7 @@ public class VirtualLogicSnifferDevice extends LogicSnifferAcquisitionTask
   /**
    * Creates a new VirtualLogicSnifferDevice instance.
    */
-  public VirtualLogicSnifferDevice( final SumpConfig aConfig ) throws IOException
+  public VirtualLogicSnifferDevice( SumpConfig aConfig ) throws IOException
   {
     this( aConfig, new SimpleSampleProvider() );
   }
@@ -384,7 +377,7 @@ public class VirtualLogicSnifferDevice extends LogicSnifferAcquisitionTask
   /**
    * Creates a new VirtualLogicSnifferDevice instance.
    */
-  public VirtualLogicSnifferDevice( final SumpConfig aConfig, final SampleProvider aSampleProvider ) throws IOException
+  public VirtualLogicSnifferDevice( SumpConfig aConfig, SampleProvider aSampleProvider ) throws IOException
   {
     super( aConfig, null /* aConnection */, new NullAcquisitionProgressListener() );
 
@@ -407,7 +400,8 @@ public class VirtualLogicSnifferDevice extends LogicSnifferAcquisitionTask
   /**
    * @return
    */
-  public static DeviceProfile createDeviceProfile( final String aType, final String aMetadataKeys, final boolean aLastSampleFirst )
+  public static DeviceProfile createDeviceProfile( final String aType, final String aMetadataKeys,
+      final boolean aLastSampleFirst )
   {
     Map<String, String> properties = new HashMap<String, String>();
     properties.put( DEVICE_CAPTURECLOCK, "INTERNAL" );
@@ -500,30 +494,6 @@ public class VirtualLogicSnifferDevice extends LogicSnifferAcquisitionTask
   }
 
   /**
-   * Closes this virtual device.
-   */
-  @Override
-  public synchronized void close()
-  {
-    this.streamReader.terminate();
-
-    do
-    {
-      try
-      {
-        this.streamReader.join();
-      }
-      catch ( InterruptedException exception )
-      {
-        Thread.currentThread().interrupt();
-      }
-    }
-    while ( this.streamReader.isAlive() );
-
-    // super.close();
-  }
-
-  /**
    * Sets the divider as written to the device.
    * 
    * @param aDividerValue
@@ -560,52 +530,88 @@ public class VirtualLogicSnifferDevice extends LogicSnifferAcquisitionTask
   }
 
   /**
+   * Closes this virtual device.
+   */
+  @Override
+  protected void close()
+  {
+    super.close();
+
+    this.streamReader.terminate();
+
+    do
+    {
+      try
+      {
+        this.streamReader.join();
+      }
+      catch ( InterruptedException exception )
+      {
+        Thread.currentThread().interrupt();
+      }
+    }
+    while ( this.streamReader.isAlive() );
+  }
+
+  /**
+   * {@inheritDoc}
+   */
+  @Override
+  protected void flush() throws IOException
+  {
+    // Nop; not needed in this case; enabling this will cause a blocking read
+    // and a test timeout...
+  }
+
+  /**
    * {@inheritDoc}
    */
   @Override
   protected StreamConnection getStreamConnection()
   {
-    final StreamConnection connection = new StreamConnection()
+    if ( this.connection == null )
     {
-      // VARIABLES
-
-      private final InputStream is = VirtualLogicSnifferDevice.this.inputStream;
-      private final OutputStream os = VirtualLogicSnifferDevice.this.outputStream;
-
-      // METHODS
-
-      @Override
-      public void close() throws IOException
+      this.connection = new StreamConnection()
       {
-        TestUtils.closeSilently( this.is );
-        TestUtils.closeSilently( this.os );
-      }
+        // VARIABLES
 
-      @Override
-      public DataInputStream openDataInputStream() throws IOException
-      {
-        return new DataInputStream( openInputStream() );
-      }
+        private final InputStream is = VirtualLogicSnifferDevice.this.inputStream;
+        private final OutputStream os = VirtualLogicSnifferDevice.this.outputStream;
 
-      @Override
-      public DataOutputStream openDataOutputStream() throws IOException
-      {
-        return new DataOutputStream( openOutputStream() );
-      }
+        // METHODS
 
-      @Override
-      public InputStream openInputStream() throws IOException
-      {
-        return this.is;
-      }
+        @Override
+        public void close() throws IOException
+        {
+          TestUtils.closeSilently( this.is );
+          TestUtils.closeSilently( this.os );
+        }
 
-      @Override
-      public OutputStream openOutputStream() throws IOException
-      {
-        return this.os;
-      }
-    };
+        @Override
+        public DataInputStream openDataInputStream() throws IOException
+        {
+          return new DataInputStream( openInputStream() );
+        }
 
-    return connection;
+        @Override
+        public DataOutputStream openDataOutputStream() throws IOException
+        {
+          return new DataOutputStream( openOutputStream() );
+        }
+
+        @Override
+        public InputStream openInputStream() throws IOException
+        {
+          return this.is;
+        }
+
+        @Override
+        public OutputStream openOutputStream() throws IOException
+        {
+          return this.os;
+        }
+      };
+    }
+    return this.connection;
   }
 }

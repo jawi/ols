@@ -165,7 +165,7 @@ public class LogicSnifferEnabledGroupTest
   /**
    * Test method for GitHub issue #57.
    */
-  @Test
+  @Test( timeout = 2000 )
   public void testEnableChannelGroupsWithDdrOk() throws Exception
   {
     if ( this.expectedException == null )
