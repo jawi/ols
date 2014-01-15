@@ -23,6 +23,7 @@ package nl.lxtreme.ols.client2;
 
 import static nl.lxtreme.ols.client2.ClientConstants.*;
 import static nl.lxtreme.ols.common.OlsConstants.*;
+import static nl.lxtreme.ols.tool.api.ToolConstants.*;
 
 import java.awt.*;
 import java.awt.event.*;
@@ -126,13 +127,35 @@ public class Client extends DefaultDockableHolder implements ApplicationCallback
    * A runnable implementation that accumulates several calls to avoid an
    * avalanche of events on the EDT.
    */
-  final class ProgressUpdatingRunnable extends AccumulatingRunnable<Integer>
+  final class StatusUpdatingRunnable extends AccumulatingRunnable<Object>
   {
     @Override
-    protected void run( final Deque<Integer> aArgs )
+    protected void run( final Deque<Object> aArgs )
     {
-      final Integer percentage = aArgs.getLast();
-      setProgress( percentage.intValue() );
+      for ( int i = 0, max = aArgs.size(); i < max; i++ )
+      {
+        Object value = aArgs.pop();
+        if ( value instanceof Integer )
+        {
+          setProgress( ( ( Integer )value ).intValue() );
+        }
+        else if ( value instanceof String )
+        {
+          setStatus( ( String )value );
+        }
+        else if ( value instanceof Object[] )
+        {
+          Object[] array = ( Object[] )value;
+          if ( array.length > 1 )
+          {
+            setStatus( array[0].toString(), Arrays.copyOfRange( array, 1, array.length ) );
+          }
+          else
+          {
+            setStatus( array[0].toString() );
+          }
+        }
+      }
     }
   }
 
@@ -148,7 +171,7 @@ public class Client extends DefaultDockableHolder implements ApplicationCallback
   private final List<ManagedAction> registeredActions;
   private final List<ManagedView> registeredViews;
   private final List<ViewController> viewControllers;
-  private final ProgressUpdatingRunnable progressUpdater;
+  private final StatusUpdatingRunnable statusUpdater;
 
   // Injected by Felix DM...
   private volatile EventAdmin eventAdmin;
@@ -185,7 +208,7 @@ public class Client extends DefaultDockableHolder implements ApplicationCallback
     this.registeredActions = new CopyOnWriteArrayList<ManagedAction>();
     this.registeredViews = new CopyOnWriteArrayList<ManagedView>();
     this.viewControllers = new CopyOnWriteArrayList<ViewController>();
-    this.progressUpdater = new ProgressUpdatingRunnable();
+    this.statusUpdater = new StatusUpdatingRunnable();
 
     this.mode = 0;
   }
@@ -250,7 +273,7 @@ public class Client extends DefaultDockableHolder implements ApplicationCallback
   @Override
   public void acquisitionInProgress( int aPercentage )
   {
-    this.progressUpdater.add( Integer.valueOf( aPercentage ) );
+    this.statusUpdater.add( aPercentage );
   }
 
   /**
@@ -259,8 +282,8 @@ public class Client extends DefaultDockableHolder implements ApplicationCallback
   @Override
   public void acquisitionStarted()
   {
-    setStatus( "Acquisition started for %s", getSelectedDeviceName() );
-    setProgress( 0 );
+    this.statusUpdater.add( 0, new Object[] { "Acquisition started for %s", getSelectedDeviceName() } );
+
     updateManagedState();
   }
 
@@ -661,10 +684,42 @@ public class Client extends DefaultDockableHolder implements ApplicationCallback
   @Override
   public void handleEvent( Event aEvent )
   {
-    ViewController viewCtrl = getCurrentViewController();
-    if ( viewCtrl != null )
+    String topic = aEvent.getTopic();
+    // We're in charge of all tool-related events...
+    if ( TOPIC_TOOL_STARTED.equals( topic ) )
     {
-      viewCtrl.handleEvent( aEvent.getTopic(), aEvent );
+      String toolName = ( String )aEvent.getProperty( TTS_TOOL_NAME );
+
+      this.statusUpdater.add( 0, new Object[] { "Tool %s started ...", toolName } );
+    }
+    else if ( TOPIC_TOOL_PROGRESS.equals( topic ) )
+    {
+      this.statusUpdater.add( ( Integer )aEvent.getProperty( TTP_PROGRESS ) );
+    }
+    else if ( TOPIC_TOOL_FINISHED.equals( topic ) )
+    {
+      String toolName = ( String )aEvent.getProperty( TTF_TOOL_NAME );
+      Long executionTime = ( Long )aEvent.getProperty( TTF_EXECUTION_TIME );
+      Exception exception = ( Exception )aEvent.getProperty( TTF_EXCEPTION );
+
+      if ( exception == null )
+      {
+        this.statusUpdater.add( 100, new Object[] { "Tool %s completed its task in %s.", toolName, Unit.Time.MS.format( executionTime.doubleValue(), 2 ) } );
+      }
+      else
+      {
+        this.statusUpdater.add( 100, new Object[] { "Tool %s failed with reason %s.", toolName, exception.getMessage() } );
+      }
+
+      this.statusUpdater.add( 0 );
+    }
+    else
+    {
+      ViewController viewCtrl = getCurrentViewController();
+      if ( viewCtrl != null )
+      {
+        viewCtrl.handleEvent( topic, aEvent );
+      }
     }
   }
 
