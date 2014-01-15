@@ -31,6 +31,10 @@ import nl.lxtreme.ols.tool.api.*;
  */
 public class UARTAnalyser implements Tool<UARTDataSet>
 {
+  // CONSTANTS
+
+  static final String NAME = "UART analyser";
+
   // METHODS
 
   /**
@@ -57,7 +61,7 @@ public class UARTAnalyser implements Tool<UARTDataSet>
   @Override
   public String getName()
   {
-    return "UART analyser ...";
+    return NAME.concat( " ..." );
   }
 
   /**

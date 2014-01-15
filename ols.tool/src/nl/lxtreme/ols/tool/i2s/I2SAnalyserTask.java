@@ -151,6 +151,15 @@ public class I2SAnalyserTask implements ToolTask<I2SDataSet>
   }
 
   /**
+   * {@inheritDoc}
+   */
+  @Override
+  public String getName()
+  {
+    return I2SAnalyser.NAME;
+  }
+
+  /**
    * @param aClockIdx
    */
   public void setClockIndex( final int aClockIdx )

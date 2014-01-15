@@ -33,6 +33,10 @@ import nl.lxtreme.ols.tool.api.*;
  */
 public class JTAGAnalyser implements Tool<JTAGDataSet>
 {
+  // CONSTANTS
+
+  static final String NAME = "JTAG analyser";
+
   // METHODS
 
   /**
@@ -59,7 +63,7 @@ public class JTAGAnalyser implements Tool<JTAGDataSet>
   @Override
   public String getName()
   {
-    return "JTAG analyser ...";
+    return NAME.concat( " ..." );
   }
 
   /**

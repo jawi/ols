@@ -27,6 +27,7 @@ import javax.swing.*;
 
 import nl.lxtreme.ols.client2.*;
 import nl.lxtreme.ols.client2.icons.*;
+import nl.lxtreme.ols.common.acquisition.*;
 
 
 /**
@@ -82,7 +83,8 @@ public class GotoTriggerAction extends AbstractManagedAction
   @Override
   public void updateState( Client aClient )
   {
-    setEnabled( aClient.hasAcquiredData() && aClient.getAcquiredData().hasTriggerData() );
+    AcquisitionData acquiredData = aClient.getAcquiredData();
+    setEnabled( acquiredData != null && acquiredData.hasTriggerData() );
   }
 }
 

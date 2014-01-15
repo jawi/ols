@@ -31,6 +31,10 @@ import nl.lxtreme.ols.tool.api.*;
  */
 public class OneWireAnalyser implements Tool<OneWireDataSet>
 {
+  // CONSTANTS
+
+  static final String NAME = "1-Wire analyser";
+
   // METHODS
 
   /**
@@ -57,7 +61,7 @@ public class OneWireAnalyser implements Tool<OneWireDataSet>
   @Override
   public String getName()
   {
-    return "1-Wire protocol analyser ...";
+    return NAME.concat( " ..." );
   }
 
   /**

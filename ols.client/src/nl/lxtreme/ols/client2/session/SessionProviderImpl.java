@@ -20,9 +20,9 @@
  */
 package nl.lxtreme.ols.client2.session;
 
-
-import static nl.lxtreme.ols.tool.api.ToolConstants.*;
+import static nl.lxtreme.ols.acquisition.AcquisitionConstants.*;
 import static nl.lxtreme.ols.common.OlsConstants.*;
+import static nl.lxtreme.ols.tool.api.ToolConstants.*;
 
 import java.io.*;
 import java.util.*;
@@ -102,7 +102,7 @@ public class SessionProviderImpl implements SessionProvider, EventHandler
   public void handleEvent( Event aEvent )
   {
     String topic = aEvent.getTopic();
-    if ( TOPIC_ACQUISITION_COMPLETE.equals( topic ) )
+    if ( TOPIC_ACQUISITION_FINISHED.equals( topic ) )
     {
       AcquisitionData data = ( AcquisitionData )aEvent.getProperty( TAC_DATA );
 

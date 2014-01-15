@@ -202,9 +202,9 @@ public abstract class AbstractManagedView extends JPanel implements ManagedView,
   public final void handleEvent( Event aEvent )
   {
     String topic = aEvent.getTopic();
-    if ( !handleEvent( topic, aEvent ) && topic.startsWith( TOPIC_CLIENT_STATE ) )
+    if ( !handleEvent( topic, aEvent ) && topic.startsWith( TOPIC_CLIENT_STATE_BASE ) )
     {
-      ViewController viewController = ( ViewController )aEvent.getProperty( "controller" );
+      ViewController viewController = ( ViewController )aEvent.getProperty( CS_CONTROLLER );
 
       updateState( viewController );
     }
@@ -312,7 +312,7 @@ public abstract class AbstractManagedView extends JPanel implements ManagedView,
    */
   protected String[] getEventTopics()
   {
-    return new String[] { TOPIC_CLIENT_STATE.concat( "/*" ) };
+    return new String[] { TOPIC_CLIENT_STATE_BASE.concat( "/*" ) };
   }
 
   /**

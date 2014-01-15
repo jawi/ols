@@ -28,7 +28,7 @@ import java.util.*;
 /**
  * Denotes a service for acquiring data from a device.
  */
-public interface DataAcquisitionService
+public interface AcquisitionService
 {
   // METHODS
 

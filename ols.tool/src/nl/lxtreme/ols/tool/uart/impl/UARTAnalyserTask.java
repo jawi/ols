@@ -318,6 +318,15 @@ public class UARTAnalyserTask implements ToolTask<UARTDataSet>
   }
 
   /**
+   * {@inheritDoc}
+   */
+  @Override
+  public String getName()
+  {
+    return UARTAnalyser.NAME;
+  }
+
+  /**
    * Sets baudRate to the given value.
    * 
    * @param aBaudRate

@@ -32,6 +32,10 @@ import nl.lxtreme.ols.tool.api.*;
  */
 public class ManchesterDecoder implements Tool<AcquisitionData>
 {
+  // CONSTANTS
+
+  static final String NAME = "Manchester decoder";
+
   // METHODS
 
   /**
@@ -59,7 +63,7 @@ public class ManchesterDecoder implements Tool<AcquisitionData>
   @Override
   public String getName()
   {
-    return "Manchester line decoder ...";
+    return NAME.concat( " ..." );
   }
 
   /**

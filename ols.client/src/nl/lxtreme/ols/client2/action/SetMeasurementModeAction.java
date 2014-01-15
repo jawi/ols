@@ -26,6 +26,7 @@ import java.awt.event.*;
 import javax.swing.*;
 
 import nl.lxtreme.ols.client2.*;
+import nl.lxtreme.ols.common.acquisition.*;
 
 
 /**
@@ -91,6 +92,7 @@ public class SetMeasurementModeAction extends AbstractManagedAction
       putValue( SHORT_DESCRIPTION, "Enables the measurement mode." );
     }
 
-    setEnabled( aClient.hasAcquiredData() && aClient.getAcquiredData().hasTimingData() );
+    AcquisitionData acquiredData = aClient.getAcquiredData();
+    setEnabled( acquiredData != null && acquiredData.hasTimingData() );
   }
 }

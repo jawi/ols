@@ -40,7 +40,14 @@ public interface ClientConstants
   /**
    * EventAdmin topic used to post events about changes in the client state.
    */
-  String TOPIC_CLIENT_STATE = "nl/lxtreme/ols/client/state";
+  String TOPIC_CLIENT_STATE_BASE = "nl/lxtreme/ols/client/state";
+
+  String TOPIC_CLIENT_STATE_MODE = TOPIC_CLIENT_STATE_BASE.concat( "/MODE" );
+  String TOPIC_CLIENT_STATE_CURSOR_CHANGED = TOPIC_CLIENT_STATE_BASE.concat( "/CURSOR_CHANGED" );
+  String TOPIC_CLIENT_STATE_VIEW_CHANGED = TOPIC_CLIENT_STATE_BASE.concat( "/VIEW_CHANGED" );
+  
+  String CS_CONTROLLER = "controller";
+
   /**
    * EventAdmin topic used to post events about measurements.
    */
@@ -68,7 +75,7 @@ public interface ClientConstants
   String TOOL_MENU = "toolMenu";
   String WINDOW_MENU = "windowMenu";
   String VIEW_MENU = "viewMenu";
-  
+
   /**
    * Defines the order of main menus.
    */
@@ -80,7 +87,7 @@ public interface ClientConstants
   String ACQUISITION_GROUP = "acquisitionGroup";
   String ZOOM_GROUP = "zoomGroup";
   String JUMP_GROUP = "jumpGroup";
-  
+
   /**
    * Defines the order of toolbars.
    */

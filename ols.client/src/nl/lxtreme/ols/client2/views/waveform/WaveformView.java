@@ -313,7 +313,7 @@ public class WaveformView extends BaseView
      */
     private void postCursorChangedEvent( Cursor aCursor )
     {
-      postEvent( TOPIC_CLIENT_STATE.concat( "/CURSOR_CHANGED" ), "cursor", aCursor.clone(), "controller", controller );
+      postEvent( TOPIC_CLIENT_STATE_CURSOR_CHANGED, "cursor", aCursor.clone(), "controller", controller );
     }
 
     /**

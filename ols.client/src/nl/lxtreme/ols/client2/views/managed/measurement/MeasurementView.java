@@ -210,7 +210,7 @@ public class MeasurementView extends AbstractManagedView
   @Override
   protected String[] getEventTopics()
   {
-    return new String[] { TOPIC_CLIENT_STATE.concat( "/*" ), TOPIC_MEASUREMENTS };
+    return new String[] { TOPIC_CLIENT_STATE_BASE.concat( "/*" ), TOPIC_MEASUREMENTS };
   }
 
   /**

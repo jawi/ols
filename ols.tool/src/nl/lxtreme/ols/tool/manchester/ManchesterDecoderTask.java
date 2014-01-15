@@ -266,6 +266,15 @@ public class ManchesterDecoderTask implements ToolTask<AcquisitionData>
   }
 
   /**
+   * {@inheritDoc}
+   */
+  @Override
+  public String getName()
+  {
+    return ManchesterDecoder.NAME;
+  }
+
+  /**
    * Sets dataIdx to the given value.
    * 
    * @param aDataIdx

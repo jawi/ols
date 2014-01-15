@@ -32,6 +32,10 @@ import nl.lxtreme.ols.tool.api.*;
  */
 public class StateAnalyser implements Tool<AcquisitionData>
 {
+  // CONSTANTS
+
+  static final String NAME = "State analyser";
+
   // METHODS
 
   /**
@@ -58,7 +62,7 @@ public class StateAnalyser implements Tool<AcquisitionData>
   @Override
   public String getName()
   {
-    return "State analyser ...";
+    return NAME.concat( " ..." );
   }
 
   /**

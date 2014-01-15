@@ -24,13 +24,13 @@ package nl.lxtreme.ols.acquisition.impl;
 import java.util.*;
 
 import nl.lxtreme.ols.acquisition.*;
-import nl.lxtreme.ols.common.acquisition.*;
 import nl.lxtreme.ols.device.api.*;
 import nl.lxtreme.ols.task.execution.*;
 
 import org.apache.felix.dm.*;
 import org.osgi.framework.*;
 import org.osgi.service.event.*;
+import org.osgi.service.log.*;
 
 
 /**
@@ -56,10 +56,10 @@ public class Activator extends DependencyActivatorBase
   public void init( final BundleContext aContext, final DependencyManager aManager ) throws Exception
   {
     Properties props = new Properties();
-    props.put( EventConstants.EVENT_TOPIC, TaskExecutionService.EVENT_TOPIC );
+    props.put( EventConstants.EVENT_TOPIC, TaskConstants.TOPIC_TASK_EXECUTION_BASE.concat( "/*" ) );
     props.put( EventConstants.EVENT_FILTER, "(type=acquisition)" );
 
-    String[] interfaces = new String[] { DataAcquisitionService.class.getName(), EventHandler.class.getName() };
+    String[] interfaces = new String[] { AcquisitionService.class.getName(), EventHandler.class.getName() };
 
     aManager.add( createComponent() //
         .setInterface( interfaces, props ) //
@@ -71,16 +71,11 @@ public class Activator extends DependencyActivatorBase
             .setService( TaskExecutionService.class ) //
             .setRequired( true ) ) //
         .add( createServiceDependency() //
+            .setService( LogService.class ) //
+            .setRequired( false ) ) //
+        .add( createServiceDependency() //
             .setService( Device.class ) //
             .setCallbacks( "addDevice", "removeDevice" ) //
-            .setRequired( false ) ) //
-        .add( createServiceDependency() //
-            .setService( AcquisitionProgressListener.class ) //
-            .setCallbacks( "addAcquisitionProgressListener", "removeAcquisitionProgressListener" ) //
-            .setRequired( false ) ) //
-        .add( createServiceDependency() //
-            .setService( AcquisitionStatusListener.class ) //
-            .setCallbacks( "addAcquisitionStatusListener", "removeAcquisitionStatusListener" ) //
             .setRequired( false ) ) //
         );
   }

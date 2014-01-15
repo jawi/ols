@@ -30,10 +30,6 @@ import java.util.concurrent.*;
  */
 public interface TaskExecutionService
 {
-  // CONSTANTS
-
-  String EVENT_TOPIC = "nl/lxtreme/ols/task/execution";
-
   // METHODS
 
   /**

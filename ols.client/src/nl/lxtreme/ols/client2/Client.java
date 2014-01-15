@@ -21,6 +21,7 @@
 package nl.lxtreme.ols.client2;
 
 
+import static nl.lxtreme.ols.acquisition.AcquisitionConstants.*;
 import static nl.lxtreme.ols.client2.ClientConstants.*;
 import static nl.lxtreme.ols.common.OlsConstants.*;
 import static nl.lxtreme.ols.tool.api.ToolConstants.*;
@@ -58,6 +59,7 @@ import nl.lxtreme.ols.common.acquisition.*;
 import nl.lxtreme.ols.common.acquisition.Cursor;
 import nl.lxtreme.ols.common.annotation.*;
 import nl.lxtreme.ols.common.session.*;
+import nl.lxtreme.ols.export.api.*;
 import nl.lxtreme.ols.tool.api.*;
 import nl.lxtreme.ols.util.swing.*;
 import nl.lxtreme.ols.util.swing.StandardActionFactory.CloseAction.Closeable;
@@ -77,8 +79,7 @@ import com.jidesoft.swing.*;
 /**
  * Represents the main client.
  */
-public class Client extends DefaultDockableHolder implements ApplicationCallback, Closeable, AcquisitionStatusListener,
-    AcquisitionProgressListener, EventHandler
+public class Client extends DefaultDockableHolder implements ApplicationCallback, Closeable, EventHandler
 {
   // INNER TYPES
 
@@ -177,7 +178,7 @@ public class Client extends DefaultDockableHolder implements ApplicationCallback
   private volatile EventAdmin eventAdmin;
   private volatile ActionManager actionManager;
   private volatile MenuManager menuManager;
-  private volatile DataAcquisitionService acquisitionService;
+  private volatile AcquisitionService acquisitionService;
   private volatile UserSettingProvider userSettingProvider;
   private volatile ProjectManager projectManager;
   private volatile ViewManager viewManager;
@@ -240,51 +241,6 @@ public class Client extends DefaultDockableHolder implements ApplicationCallback
     {
       this.acquisitionService.acquireData( config, deviceName );
     }
-  }
-
-  /**
-   * {@inheritDoc}
-   */
-  @Override
-  public void acquisitionEnded( AcquisitionResultStatus aStatus )
-  {
-    if ( aStatus.isAborted() )
-    {
-      setStatus( "Acquisition aborted..." );
-    }
-    else if ( aStatus.isFailed() )
-    {
-      setStatus( "Acquisition failed for %s, possible reason: %s", getSelectedDeviceName(), aStatus.getMessage() );
-    }
-    else
-    {
-      setStatus( "Acquisition ended for %s and took %s...", getSelectedDeviceName(),
-          Unit.Time.format( aStatus.getTime() / 1.0e3 ) );
-    }
-
-    setProgress( 100 );
-    updateManagedState();
-    setProgress( 0 );
-  }
-
-  /**
-   * {@inheritDoc}
-   */
-  @Override
-  public void acquisitionInProgress( int aPercentage )
-  {
-    this.statusUpdater.add( aPercentage );
-  }
-
-  /**
-   * {@inheritDoc}
-   */
-  @Override
-  public void acquisitionStarted()
-  {
-    this.statusUpdater.add( 0, new Object[] { "Acquisition started for %s", getSelectedDeviceName() } );
-
-    updateManagedState();
   }
 
   /**
@@ -486,6 +442,29 @@ public class Client extends DefaultDockableHolder implements ApplicationCallback
     else
     {
       System.exit( 0 );
+    }
+  }
+
+  /**
+   * Exports the current acquired data to a file using the given exporter.
+   * 
+   * @param aExporter
+   * @param aFile
+   * @throws IOException
+   */
+  public void exportData( Exporter aExporter, File aFile ) throws IOException
+  {
+    try
+    {
+      FileOutputStream os = new FileOutputStream( aFile );
+
+      aExporter.export( getAcquiredData(), getDockingManager().getMainContainer(), os );
+
+      this.statusUpdater.add( String.format( "Export to %s succesful ...", aExporter.getName() ) );
+    }
+    finally
+    {
+      updateManagedState();
     }
   }
 
@@ -704,17 +683,52 @@ public class Client extends DefaultDockableHolder implements ApplicationCallback
 
       if ( exception == null )
       {
-        this.statusUpdater.add( 100, new Object[] { "Tool %s completed its task in %s.", toolName, Unit.Time.MS.format( executionTime.doubleValue(), 2 ) } );
+        this.statusUpdater.add(
+            100,
+            new Object[] { "Tool %s completed its task in %s.", toolName,
+                Unit.Time.MS.format( executionTime.doubleValue(), 2 ) } );
       }
       else
       {
-        this.statusUpdater.add( 100, new Object[] { "Tool %s failed with reason %s.", toolName, exception.getMessage() } );
+        this.statusUpdater.add( 100,
+            new Object[] { "Tool %s failed with reason %s.", toolName, exception.getMessage() } );
       }
 
       this.statusUpdater.add( 0 );
     }
     else
     {
+      if ( TOPIC_ACQUISITION_STARTED.equals( topic ) )
+      {
+        this.statusUpdater.add( 0, new Object[] { "Acquisition started for %s", getSelectedDeviceName() } );
+
+        updateManagedState();
+      }
+      else if ( TOPIC_ACQUISITION_PROGRESS.equals( topic ) )
+      {
+        Integer percentage = ( Integer )aEvent.getProperty( TAP_PROGRESS );
+
+        this.statusUpdater.add( percentage );
+      }
+      else if ( TOPIC_ACQUISITION_FINISHED.equals( topic ) )
+      {
+        Long executionTime = ( Long )aEvent.getProperty( TAC_EXECUTION_TIME );
+        Exception exception = ( Exception )aEvent.getProperty( TAC_EXCEPTION );
+
+        if ( exception != null )
+        {
+          this.statusUpdater.add( 0, new Object[] { "Acquisition failed for %s, possible reason: %s",
+              getSelectedDeviceName(), exception.getMessage() } );
+        }
+        else
+        {
+          this.statusUpdater.add( 0, new Object[] { "Acquisition ended for %s and took %s...", getSelectedDeviceName(),
+              Unit.Time.MS.format( executionTime.doubleValue(), 2 ) } );
+        }
+
+        updateManagedState();
+      }
+
       ViewController viewCtrl = getCurrentViewController();
       if ( viewCtrl != null )
       {
@@ -848,6 +862,8 @@ public class Client extends DefaultDockableHolder implements ApplicationCallback
       String name = getProjectName( aFile );
 
       postEvent( TOPIC_DATA_LOADED, TDL_NAME, name, TDL_FILE, aFile, TDL_DATA, builder.build() );
+
+      this.statusUpdater.add( String.format( "Data file %s opened...", aFile.getName() ) );
     }
     finally
     {
@@ -868,6 +884,8 @@ public class Client extends DefaultDockableHolder implements ApplicationCallback
     try
     {
       this.projectManager.loadProject( aFile );
+
+      this.statusUpdater.add( String.format( "Project file %s opened...", aFile.getName() ) );
     }
     finally
     {
@@ -1028,7 +1046,7 @@ public class Client extends DefaultDockableHolder implements ApplicationCallback
       this.mode &= ~MODE_SNAP_CURSORS;
     }
 
-    postEvent( TOPIC_CLIENT_STATE.concat( "/MODE" ), "snapCursors", aEnabled, "controller", getCurrentViewController() );
+    postClientStateChangeEvent( TOPIC_CLIENT_STATE_MODE, "snapCursors", aEnabled );
     updateManagedState();
   }
 
@@ -1047,8 +1065,7 @@ public class Client extends DefaultDockableHolder implements ApplicationCallback
       data.setCursorsVisible( aCursorsVisible );
     }
 
-    postEvent( TOPIC_CLIENT_STATE.concat( "/MODE" ), "cursorsVisible", aCursorsVisible, "controller",
-        getCurrentViewController() );
+    postClientStateChangeEvent( TOPIC_CLIENT_STATE_MODE, "cursorsVisible", aCursorsVisible );
     updateManagedState();
     repaint();
   }
@@ -1071,46 +1088,9 @@ public class Client extends DefaultDockableHolder implements ApplicationCallback
       this.mode &= ~MODE_MEASUREMENT;
     }
 
-    postEvent( TOPIC_CLIENT_STATE.concat( "/MODE" ), "measurementMode", aEnabled, "controller",
-        getCurrentViewController() );
+    postClientStateChangeEvent( TOPIC_CLIENT_STATE_MODE, "measurementMode", aEnabled );
     updateManagedState();
     repaint();
-  }
-
-  /**
-   * Updates the progress bar to the given percentage.
-   * 
-   * @param aPercentage
-   *          the percentage to set, >= 0 && <= 100.
-   */
-  public void setProgress( final int aPercentage )
-  {
-    SwingComponentUtils.invokeOnEDT( new Runnable()
-    {
-      @Override
-      public void run()
-      {
-        status.setProgress( aPercentage );
-      }
-    } );
-  }
-
-  /**
-   * Sets the status text to a given (formatted) message.
-   * 
-   * @param aMessage
-   * @param aArguments
-   */
-  public void setStatus( final String aMessage, final Object... aArguments )
-  {
-    SwingComponentUtils.invokeOnEDT( new Runnable()
-    {
-      @Override
-      public void run()
-      {
-        status.setText( String.format( aMessage, aArguments ) );
-      }
-    } );
   }
 
   /**
@@ -1252,6 +1232,16 @@ public class Client extends DefaultDockableHolder implements ApplicationCallback
     }
   }
 
+  final void postClientStateChangeEvent( String aTopic )
+  {
+    postEvent( aTopic, CS_CONTROLLER, getCurrentViewController() );
+  }
+
+  final void postClientStateChangeEvent( String aTopic, String aKey, Object aValue )
+  {
+    postEvent( aTopic, CS_CONTROLLER, getCurrentViewController(), aKey, aValue );
+  }
+
   /**
    * Register all client-specific actions.
    */
@@ -1318,6 +1308,28 @@ public class Client extends DefaultDockableHolder implements ApplicationCallback
     registerView( new PulseCountView() );
     registerView( new ChannelOutlineView() );
     registerView( new AnnotationsView() );
+  }
+
+  /**
+   * Updates the progress bar to the given percentage.
+   * 
+   * @param aPercentage
+   *          the percentage to set, >= 0 && <= 100.
+   */
+  final void setProgress( final int aPercentage )
+  {
+    this.status.setProgress( aPercentage );
+  }
+
+  /**
+   * Sets the status text to a given (formatted) message.
+   * 
+   * @param aMessage
+   * @param aArguments
+   */
+  final void setStatus( final String aMessage, final Object... aArguments )
+  {
+    this.status.setText( String.format( aMessage, aArguments ) );
   }
 
   /**
@@ -1423,8 +1435,7 @@ public class Client extends DefaultDockableHolder implements ApplicationCallback
       @Override
       public void stateChanged( ChangeEvent aEvent )
       {
-        postEvent( TOPIC_CLIENT_STATE.concat( "/VIEW_CHANGED" ), "type", "viewChanged", "controller",
-            getCurrentViewController() );
+        postClientStateChangeEvent( TOPIC_CLIENT_STATE_VIEW_CHANGED );
 
         updateManagedState();
       }

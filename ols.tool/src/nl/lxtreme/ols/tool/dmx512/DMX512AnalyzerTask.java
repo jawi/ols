@@ -229,6 +229,15 @@ public class DMX512AnalyzerTask implements ToolTask<DMX512DataSet>
   }
 
   /**
+   * {@inheritDoc}
+   */
+  @Override
+  public String getName()
+  {
+    return DMX512Analyzer.NAME;
+  }
+
+  /**
    * Sets channel index of the data line.
    * 
    * @param aDataLine

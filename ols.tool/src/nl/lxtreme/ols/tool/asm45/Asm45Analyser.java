@@ -35,6 +35,10 @@ import org.osgi.framework.*;
  */
 public class Asm45Analyser implements Tool<Asm45DataSet>
 {
+  // CONSTANTS
+
+  static final String NAME = "Asm45 bus analyser";
+
   // VARIABLES
 
   private volatile BundleContext context;
@@ -65,7 +69,7 @@ public class Asm45Analyser implements Tool<Asm45DataSet>
   @Override
   public String getName()
   {
-    return "Asm45 bus analyser ...";
+    return NAME.concat( " ..." );
   }
 
   /**

@@ -166,6 +166,15 @@ public class SPIAnalyserTask implements ToolTask<SPIDataSet>
   }
 
   /**
+   * {@inheritDoc}
+   */
+  @Override
+  public String getName()
+  {
+    return SPIAnalyser.NAME;
+  }
+
+  /**
    * Removes the given property change listener.
    *
    * @param aListener

@@ -21,6 +21,8 @@
 package nl.lxtreme.ols.client2.action;
 
 
+import static nl.lxtreme.ols.util.swing.SwingComponentUtils.*;
+
 import java.awt.event.*;
 import java.io.*;
 import java.util.logging.*;
@@ -30,7 +32,6 @@ import javax.swing.filechooser.*;
 
 import nl.lxtreme.ols.client2.*;
 import nl.lxtreme.ols.export.api.*;
-import nl.lxtreme.ols.util.swing.*;
 import nl.lxtreme.ols.util.swing.component.*;
 
 
@@ -106,53 +107,28 @@ public class ExportDataAction extends AbstractManagedAction
     String[] extensions = this.exporter.getFilenameExtentions();
     String preferredExtension = ( extensions.length == 0 ) ? "" : extensions[0];
 
-    File exportFileName = SwingComponentUtils.showFileSaveDialog( client, new FileNameExtensionFilter(
-        "Valid export format(s)", extensions ) );
+    File exportFileName = showFileSaveDialog( client, new FileNameExtensionFilter( "Valid export format(s)", extensions ) );
     if ( exportFileName == null )
     {
       return;
     }
 
-    File actualFile = SwingComponentUtils.setFileExtension( exportFileName, preferredExtension );
+    File actualFile = setFileExtension( exportFileName, preferredExtension );
 
     if ( LOG.isLoggable( Level.INFO ) )
     {
       LOG.info( "Exporting data to file: " + actualFile.getName() + " using " + exporterName );
     }
 
-    OutputStream os = null;
-
     try
     {
-      os = new FileOutputStream( actualFile );
-
-      this.exporter.export( client.getAcquiredData(), client.getDockingManager().getMainContainer(), os );
-
-      client.setStatus( "Export to %s succesful ...", exporterName );
+      client.exportData( this.exporter, actualFile );
     }
     catch ( IOException exception )
     {
       LOG.log( Level.WARNING, "Export to " + exporterName + " failed!", exception );
 
       JErrorDialog.showDialog( client, "Export data to " + exporterName + " failed!", exception );
-
-      client.setStatus( "Export to %s failed ...", exporterName );
-    }
-    finally
-    {
-      try
-      {
-        if ( os != null )
-        {
-          os.close();
-        }
-      }
-      catch ( IOException exception )
-      {
-        // Ignore...
-      }
-
-      client.updateManagedState();
     }
   }
 

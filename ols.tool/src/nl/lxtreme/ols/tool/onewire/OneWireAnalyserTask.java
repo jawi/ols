@@ -134,6 +134,15 @@ public class OneWireAnalyserTask implements ToolTask<OneWireDataSet>
   }
 
   /**
+   * {@inheritDoc}
+   */
+  @Override
+  public String getName()
+  {
+    return OneWireAnalyser.NAME;
+  }
+
+  /**
    * Sets the decoding area.
    * 
    * @param aStartOfDecode

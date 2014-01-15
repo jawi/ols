@@ -467,6 +467,15 @@ public class Asm45AnalyserTask implements ToolTask<Asm45DataSet>
     return asm45DataSet;
   }
 
+  /**
+   * {@inheritDoc}
+   */
+  @Override
+  public String getName()
+  {
+    return Asm45Analyser.NAME;
+  }
+
   public void setDecodingArea( int aStartOfDecode, int aEndOfDecode )
   {
     this.startOfDecode = aStartOfDecode;

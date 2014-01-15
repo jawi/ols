@@ -31,6 +31,10 @@ import nl.lxtreme.ols.tool.api.*;
  */
 public class SPIAnalyser implements Tool<SPIDataSet>
 {
+  // CONSTANTS
+
+  static final String NAME = "SPI analyser";
+
   // METHODS
 
   /**
@@ -57,7 +61,7 @@ public class SPIAnalyser implements Tool<SPIDataSet>
   @Override
   public String getName()
   {
-    return "SPI analyser ...";
+    return NAME.concat( " ..." );
   }
 
   /**

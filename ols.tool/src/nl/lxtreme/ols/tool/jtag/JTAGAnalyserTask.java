@@ -112,6 +112,15 @@ public class JTAGAnalyserTask implements ToolTask<JTAGDataSet>
   }
 
   /**
+   * {@inheritDoc}
+   */
+  @Override
+  public String getName()
+  {
+    return JTAGAnalyser.NAME;
+  }
+
+  /**
    * Sets the decoding area.
    * 
    * @param aStartOfDecode

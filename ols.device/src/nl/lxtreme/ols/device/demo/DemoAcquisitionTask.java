@@ -68,4 +68,13 @@ public class DemoAcquisitionTask implements Task<AcquisitionData>
 
     return builder.build();
   }
+
+  /**
+   * {@inheritDoc}
+   */
+  @Override
+  public String getName()
+  {
+    return "Demo Acquisition Task";
+  }
 }

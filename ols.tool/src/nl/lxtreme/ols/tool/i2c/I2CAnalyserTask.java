@@ -338,6 +338,15 @@ public class I2CAnalyserTask implements ToolTask<I2CDataSet>
   }
 
   /**
+   * {@inheritDoc}
+   */
+  @Override
+  public String getName()
+  {
+    return I2CAnalyser.NAME;
+  }
+
+  /**
    * Removes the given property change listener.
    *
    * @param aListener

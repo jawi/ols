@@ -31,6 +31,10 @@ import nl.lxtreme.ols.tool.api.*;
  */
 public class I2SAnalyser implements Tool<I2SDataSet>
 {
+  // CONSTANTS
+
+  static final String NAME = "I2S analyser";
+
   // METHODS
 
   /**
@@ -57,7 +61,7 @@ public class I2SAnalyser implements Tool<I2SDataSet>
   @Override
   public String getName()
   {
-    return "I2S bus analyser ...";
+    return NAME.concat( " ..." );
   }
 
   /**

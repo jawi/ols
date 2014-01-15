@@ -21,6 +21,7 @@
 package nl.lxtreme.ols.task.execution.impl;
 
 
+import static nl.lxtreme.ols.task.execution.TaskConstants.*;
 import java.util.*;
 import java.util.concurrent.*;
 
@@ -101,11 +102,11 @@ public class BackgroundTaskExecutionService implements TaskExecutionService
     {
       props.putAll( aProperties );
     }
-    props.put( "status", "success" );
-    props.put( "result", aResult );
-    props.put( "time", aTimeTaken );
+    props.put( TEF_TASK_NAME, aTask.getName() );
+    props.put( TEF_RESULT, aResult );
+    props.put( TEF_EXECUTION_TIME, aTimeTaken );
 
-    this.eventAdmin.postEvent( new Event( EVENT_TOPIC, props ) );
+    this.eventAdmin.postEvent( new Event( TOPIC_TASK_EXECUTION_FINISHED, props ) );
   }
 
   /**
@@ -121,11 +122,11 @@ public class BackgroundTaskExecutionService implements TaskExecutionService
     {
       props.putAll( aProperties );
     }
-    props.put( "status", "failure" );
-    props.put( "exception", aException );
-    props.put( "time", aTimeTaken );
+    props.put( TEF_TASK_NAME, aTask.getName() );
+    props.put( TEF_EXCEPTION, aException );
+    props.put( TEF_EXECUTION_TIME, aTimeTaken );
 
-    this.eventAdmin.postEvent( new Event( EVENT_TOPIC, props ) );
+    this.eventAdmin.postEvent( new Event( TOPIC_TASK_EXECUTION_FINISHED, props ) );
   }
 
   /**
@@ -140,10 +141,10 @@ public class BackgroundTaskExecutionService implements TaskExecutionService
     {
       props.putAll( aProperties );
     }
-    props.put( "status", "started" );
-    props.put( "time", aStartTime );
+    props.put( TES_TASK_NAME, aTask.getName() );
+    props.put( TES_START_TIME, aStartTime );
 
-    this.eventAdmin.postEvent( new Event( EVENT_TOPIC, props ) );
+    this.eventAdmin.postEvent( new Event( TOPIC_TASK_EXECUTION_STARTED, props ) );
   }
 
   /**

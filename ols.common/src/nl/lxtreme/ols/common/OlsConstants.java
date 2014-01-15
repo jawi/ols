@@ -45,18 +45,11 @@ public interface OlsConstants
 
   /** Topic prefix used for all acquisition-related events. */
   String TOPIC_DATA_BASE = "nl/lxtreme/ols/data";
-  
-  /** Topic prefix used for all acquisition-related events. */
-  String TOPIC_ACQUISITION_BASE = TOPIC_DATA_BASE.concat( "/acquisition" );
-  /** Topic where "acquisition complete" events are posted. */
-  String TOPIC_ACQUISITION_COMPLETE = TOPIC_ACQUISITION_BASE.concat( "/COMPLETE" );
-  /** The acquired data in a {@link #TOPIC_ACQUISITION_COMPLETE} event. */
-  String TAC_DATA = "data";
 
   /** Topic where "acquisition complete" events are posted. */
   String TOPIC_DATA_LOADED = TOPIC_DATA_BASE.concat( "/LOADED" );
   /** The acquired data in a {@link #TOPIC_DATA_LOADED} event. */
-  String TDL_DATA = TAC_DATA;
+  String TDL_DATA = "data";
   /** The (optional) name in a {@link #TOPIC_DATA_LOADED} event. */
   String TDL_NAME = "name";
   /** The (optional) file in a {@link #TOPIC_DATA_LOADED} event. */

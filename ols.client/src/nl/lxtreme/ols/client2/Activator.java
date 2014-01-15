@@ -38,7 +38,6 @@ import nl.lxtreme.ols.client2.session.*;
 import nl.lxtreme.ols.client2.usersettings.*;
 import nl.lxtreme.ols.client2.views.*;
 import nl.lxtreme.ols.common.*;
-import nl.lxtreme.ols.common.acquisition.*;
 import nl.lxtreme.ols.common.session.*;
 import nl.lxtreme.ols.device.api.*;
 import nl.lxtreme.ols.export.api.*;
@@ -192,8 +191,7 @@ public class Activator extends DependencyActivatorBase
     Properties props = new Properties();
     props.put( EventConstants.EVENT_TOPIC, "nl/lxtreme/ols/*" );
 
-    String[] serviceNames = { AcquisitionStatusListener.class.getName(), AcquisitionProgressListener.class.getName(),
-        EventHandler.class.getName() };
+    String[] serviceNames = { EventHandler.class.getName() };
     aManager.add( createComponent() //
         .setInterface( serviceNames, props ) //
         .setImplementation( clientRef.get() ) //
@@ -208,7 +206,7 @@ public class Activator extends DependencyActivatorBase
             .setService( ViewManager.class ) //
             .setRequired( true ) ) //
         .add( createServiceDependency() //
-            .setService( DataAcquisitionService.class ) //
+            .setService( AcquisitionService.class ) //
             .setRequired( true ) ) //
         .add( createServiceDependency() //
             .setService( ActionManager.class ) //

@@ -21,7 +21,7 @@
 package nl.lxtreme.ols.task.execution.impl;
 
 
-import static nl.lxtreme.ols.task.execution.TaskExecutionService.*;
+import static nl.lxtreme.ols.task.execution.TaskConstants.*;
 import static org.junit.Assert.*;
 import static org.mockito.Matchers.*;
 import static org.mockito.Mockito.*;
@@ -48,10 +48,12 @@ public class BackgroundTaskExecutionServiceTest
 
   static class EventMatcher extends ArgumentMatcher<Event>
   {
+    private final String topic;
     private final Object[] props;
 
-    public EventMatcher( Object... aProperties )
+    public EventMatcher( String aTopic, Object... aProperties )
     {
+      this.topic = aTopic;
       this.props = aProperties;
     }
 
@@ -59,7 +61,7 @@ public class BackgroundTaskExecutionServiceTest
     public boolean matches( Object aArgument )
     {
       Event event = ( Event )aArgument;
-      if ( !EVENT_TOPIC.equals( event.getTopic() ) )
+      if ( !this.topic.equals( event.getTopic() ) )
       {
         return false;
       }
@@ -68,7 +70,15 @@ public class BackgroundTaskExecutionServiceTest
         String name = String.valueOf( props[i] );
         Object value = props[i + 1];
 
-        if ( !value.equals( event.getProperty( name ) ) )
+        Object prop = event.getProperty( name );
+        if ( TEF_EXCEPTION.equals( name ) )
+        {
+          if ( !( ( Class<?> )value ).isInstance( prop ) )
+          {
+            return false;
+          }
+        }
+        else if ( !( value == prop || ( value != null && value.equals( prop ) ) ) )
         {
           return false;
         }
@@ -86,12 +96,13 @@ public class BackgroundTaskExecutionServiceTest
    */
   private static final int THROW_EXCEPTION = -1;
   private static final int INFINITE_BLOCKING_CALL = -2;
+  private static final int INTERRUPTABLE_BLOCKING_CALL = -3;
+
+  private static final Exception TEST_EXCEPTION = new EOFException();
 
   // VARIABLES
 
-  private static final int INTERRUPTABLE_BLOCKING_CALL = -3;
   private EventAdmin eventAdmin;
-
   private LogService logService;
 
   // METHODS
@@ -161,8 +172,8 @@ public class BackgroundTaskExecutionServiceTest
 
     sleep( 50 ); // sleep long enough to allow callbacks to be invoked...
 
-    inOrder.verify( this.eventAdmin ).postEvent( argThat( new EventMatcher( "status", "started" ) ) );
-    inOrder.verify( this.eventAdmin ).postEvent( argThat( new EventMatcher( "status", "failure" ) ) );
+    inOrder.verify( this.eventAdmin ).postEvent( argThat( new EventMatcher( TOPIC_TASK_EXECUTION_STARTED ) ) );
+    inOrder.verify( this.eventAdmin ).postEvent( argThat( new EventMatcher( TOPIC_TASK_EXECUTION_FINISHED, TEF_EXCEPTION, InterruptedException.class ) ) );
     inOrder.verifyNoMoreInteractions();
 
     assertTrue( future.isCancelled() );
@@ -190,8 +201,8 @@ public class BackgroundTaskExecutionServiceTest
 
     sleep( 50 ); // sleep long enough to allow callbacks to be invoked...
 
-    inOrder.verify( this.eventAdmin ).postEvent( argThat( new EventMatcher( "status", "started" ) ) );
-    inOrder.verify( this.eventAdmin ).postEvent( argThat( new EventMatcher( "status", "failure" ) ) );
+    inOrder.verify( this.eventAdmin ).postEvent( argThat( new EventMatcher( TOPIC_TASK_EXECUTION_STARTED ) ) );
+    inOrder.verify( this.eventAdmin ).postEvent( argThat( new EventMatcher( TOPIC_TASK_EXECUTION_FINISHED, TEF_EXCEPTION, InterruptedException.class ) ) );
     inOrder.verifyNoMoreInteractions();
 
     assertFalse( future.isCancelled() );
@@ -219,8 +230,8 @@ public class BackgroundTaskExecutionServiceTest
 
     sleep( 50 ); // sleep long enough to allow callbacks to be invoked...
 
-    inOrder.verify( this.eventAdmin ).postEvent( argThat( new EventMatcher( "status", "started" ) ) );
-    inOrder.verify( this.eventAdmin ).postEvent( argThat( new EventMatcher( "status", "success" ) ) );
+    inOrder.verify( this.eventAdmin ).postEvent( argThat( new EventMatcher( TOPIC_TASK_EXECUTION_STARTED ) ) );
+    inOrder.verify( this.eventAdmin ).postEvent( argThat( new EventMatcher( TOPIC_TASK_EXECUTION_FINISHED, TEF_RESULT, null ) ) );
     inOrder.verifyNoMoreInteractions();
 
     assertFalse( future.isCancelled() );
@@ -244,8 +255,8 @@ public class BackgroundTaskExecutionServiceTest
 
     sleep( 200 ); // sleep long enough for the entire method to complete...
 
-    inOrder.verify( this.eventAdmin ).postEvent( argThat( new EventMatcher( "status", "started" ) ) );
-    inOrder.verify( this.eventAdmin ).postEvent( argThat( new EventMatcher( "status", "success" ) ) );
+    inOrder.verify( this.eventAdmin ).postEvent( argThat( new EventMatcher( TOPIC_TASK_EXECUTION_STARTED ) ) );
+    inOrder.verify( this.eventAdmin ).postEvent( argThat( new EventMatcher( TOPIC_TASK_EXECUTION_FINISHED, TEF_RESULT, null ) ) );
     inOrder.verifyNoMoreInteractions();
 
     assertFalse( future.isCancelled() );
@@ -269,8 +280,8 @@ public class BackgroundTaskExecutionServiceTest
 
     sleep( 10 );
 
-    inOrder.verify( this.eventAdmin ).postEvent( argThat( new EventMatcher( "status", "started" ) ) );
-    inOrder.verify( this.eventAdmin ).postEvent( argThat( new EventMatcher( "status", "failure" ) ) );
+    inOrder.verify( this.eventAdmin ).postEvent( argThat( new EventMatcher( TOPIC_TASK_EXECUTION_STARTED ) ) );
+    inOrder.verify( this.eventAdmin ).postEvent( argThat( new EventMatcher( TOPIC_TASK_EXECUTION_FINISHED, TEF_EXCEPTION, EOFException.class ) ) );
     inOrder.verifyNoMoreInteractions();
 
     assertTrue( future.isDone() );
@@ -303,6 +314,12 @@ public class BackgroundTaskExecutionServiceTest
        * {@inheritDoc}
        */
       @Override
+      public String getName()
+      {
+        return "task-" + Long.toHexString( System.currentTimeMillis() );
+      }
+
+      @Override
       public Object call() throws Exception
       {
         if ( aTimeout > 0 )
@@ -312,7 +329,7 @@ public class BackgroundTaskExecutionServiceTest
         else if ( aTimeout == THROW_EXCEPTION )
         {
           // Use a specific exception we can test for...
-          throw new EOFException( "Hello World!" );
+          throw TEST_EXCEPTION;
         }
         else if ( aTimeout == INTERRUPTABLE_BLOCKING_CALL )
         {

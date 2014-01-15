@@ -290,7 +290,7 @@ public class AnnotationsView extends AbstractManagedView
   @Override
   protected String[] getEventTopics()
   {
-    return new String[] { TOPIC_CLIENT_STATE.concat( "/*" ), TOPIC_ANNOTATIONS.concat( "/*" ) };
+    return new String[] { TOPIC_CLIENT_STATE_BASE.concat( "/*" ), TOPIC_ANNOTATIONS.concat( "/*" ) };
   }
 
   /**

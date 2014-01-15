@@ -130,6 +130,15 @@ public final class GenericDeviceAcquisitionTask implements Task<AcquisitionData>
   }
 
   /**
+   * {@inheritDoc}
+   */
+  @Override
+  public String getName()
+  {
+    return "Generic Acquisition Task";
+  }
+
+  /**
    * Reads <code>channels</code> / 8 bytes from stream and compiles them into a
    * single integer.
    * 

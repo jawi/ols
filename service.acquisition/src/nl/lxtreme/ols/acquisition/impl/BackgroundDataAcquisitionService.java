@@ -21,40 +21,35 @@
 package nl.lxtreme.ols.acquisition.impl;
 
 
-import static nl.lxtreme.ols.common.OlsConstants.*;
+import static nl.lxtreme.ols.acquisition.AcquisitionConstants.*;
+import static nl.lxtreme.ols.task.execution.TaskConstants.*;
 
 import java.io.*;
 import java.util.*;
 import java.util.concurrent.*;
-import java.util.logging.*;
 
 import nl.lxtreme.ols.acquisition.*;
 import nl.lxtreme.ols.common.acquisition.*;
-import nl.lxtreme.ols.common.acquisition.AcquisitionResultStatus.ResultStatus;
 import nl.lxtreme.ols.device.api.*;
 
 import org.osgi.service.event.*;
+import org.osgi.service.log.*;
 
 
 /**
- * Provides a {@link DataAcquisitionService} that performs the acquisition in
- * the background.
+ * Provides a {@link AcquisitionService} that performs the acquisition in the
+ * background.
  */
-public class BackgroundDataAcquisitionService implements DataAcquisitionService, EventHandler
+public class BackgroundDataAcquisitionService implements AcquisitionService, EventHandler
 {
-  // CONSTANTS
-
-  private static final Logger LOG = Logger.getLogger( BackgroundDataAcquisitionService.class.getName() );
-
   // VARIABLES
 
-  private final List<AcquisitionProgressListener> acquisitionProgressListeners;
-  private final List<AcquisitionStatusListener> acquisitionStatusListeners;
   private final ConcurrentMap<String, Device> devices;
   private final Map<String, Map<String, ? extends Serializable>> deviceConfigs;
 
   private volatile Future<?> acquisitionFutureTask;
   private volatile EventAdmin eventAdmin;
+  private volatile LogService logService;
 
   // CONSTRUCTORS
 
@@ -63,9 +58,6 @@ public class BackgroundDataAcquisitionService implements DataAcquisitionService,
    */
   public BackgroundDataAcquisitionService()
   {
-    this.acquisitionProgressListeners = new CopyOnWriteArrayList<AcquisitionProgressListener>();
-    this.acquisitionStatusListeners = new CopyOnWriteArrayList<AcquisitionStatusListener>();
-
     this.deviceConfigs = new HashMap<String, Map<String, ? extends Serializable>>();
     this.devices = new ConcurrentHashMap<String, Device>();
   }
@@ -76,7 +68,7 @@ public class BackgroundDataAcquisitionService implements DataAcquisitionService,
    * {@inheritDoc}
    */
   @Override
-  public void acquireData( Map<String, ? extends Serializable> aConfig, String aDeviceName ) throws IOException
+  public void acquireData( Map<String, ? extends Serializable> aConfig, final String aDeviceName ) throws IOException
   {
     if ( aConfig == null )
     {
@@ -101,7 +93,7 @@ public class BackgroundDataAcquisitionService implements DataAcquisitionService,
       @Override
       public void acquisitionInProgress( final int aPercentage )
       {
-        fireAcquisitionInProgressEvent( aPercentage );
+        fireAcquisitionInProgressEvent( aDeviceName, aPercentage );
       }
     } );
   }
@@ -124,34 +116,6 @@ public class BackgroundDataAcquisitionService implements DataAcquisitionService,
     }
 
     acquireData( config, aDeviceName );
-  }
-
-  /**
-   * Adds a new {@link AcquisitionProgressListener} to the list of listeners.
-   * <p>
-   * Called by the dependency manager.
-   * </p>
-   * 
-   * @param aListener
-   *          the listener to add.
-   */
-  public void addAcquisitionProgressListener( final AcquisitionProgressListener aListener )
-  {
-    this.acquisitionProgressListeners.add( aListener );
-  }
-
-  /**
-   * Adds a new {@link AcquisitionStatusListener} to the list of listeners.
-   * <p>
-   * Called by the dependency manager.
-   * </p>
-   * 
-   * @param aListener
-   *          the listener to add.
-   */
-  public void addAcquisitionStatusListener( final AcquisitionStatusListener aListener )
-  {
-    this.acquisitionStatusListeners.add( aListener );
   }
 
   /**
@@ -208,6 +172,44 @@ public class BackgroundDataAcquisitionService implements DataAcquisitionService,
    * {@inheritDoc}
    */
   @Override
+  public void handleEvent( Event aEvent )
+  {
+    String topic = aEvent.getTopic();
+    if ( TOPIC_TASK_EXECUTION_STARTED.equals( topic ) )
+    {
+      String deviceName = ( String )aEvent.getProperty( TES_TASK_NAME );
+
+      fireAcquisitionStartedEvent( deviceName );
+
+      this.logService.log( LogService.LOG_INFO, "Device " + deviceName + " started acquisition..." );
+    }
+    else if ( TOPIC_TASK_EXECUTION_FINISHED.equals( topic ) )
+    {
+      String deviceName = ( String )aEvent.getProperty( TEF_TASK_NAME );
+      AcquisitionData result = ( AcquisitionData )aEvent.getProperty( TEF_RESULT );
+      Long executionTime = ( Long )aEvent.getProperty( TEF_EXECUTION_TIME );
+      Exception exception = ( Exception )aEvent.getProperty( TEF_EXCEPTION );
+
+      if ( exception != null )
+      {
+        // Failure...
+        this.logService.log( LogService.LOG_WARNING, "Acquisition failed for device " + deviceName, exception );
+      }
+      else
+      {
+        this.logService.log( LogService.LOG_INFO, "Acquisition successful for device " + deviceName );
+      }
+
+      fireAcquisitionCompleteEvent( deviceName, executionTime, result, exception );
+
+      this.acquisitionFutureTask = null;
+    }
+  }
+
+  /**
+   * {@inheritDoc}
+   */
+  @Override
   public boolean isAcquiring( String aDeviceName )
   {
     return ( this.acquisitionFutureTask != null ) && !this.acquisitionFutureTask.isDone();
@@ -220,36 +222,6 @@ public class BackgroundDataAcquisitionService implements DataAcquisitionService,
   public boolean isDeviceSetup( String aDeviceName )
   {
     return this.deviceConfigs.get( aDeviceName ) != null;
-  }
-
-  /**
-   * Removes a given {@link AcquisitionProgressListener} from the list of
-   * listeners.
-   * <p>
-   * Called by the dependency manager.
-   * </p>
-   * 
-   * @param aListener
-   *          the listener to remove.
-   */
-  public void removeAcquisitionProgressListener( final AcquisitionProgressListener aListener )
-  {
-    this.acquisitionProgressListeners.remove( aListener );
-  }
-
-  /**
-   * Removes a given {@link AcquisitionStatusListener} from the list of
-   * listeners.
-   * <p>
-   * Called by the dependency manager.
-   * </p>
-   * 
-   * @param aListener
-   *          the listener to remove.
-   */
-  public void removeAcquisitionStatusListener( final AcquisitionStatusListener aListener )
-  {
-    this.acquisitionStatusListeners.remove( aListener );
   }
 
   /**
@@ -282,86 +254,46 @@ public class BackgroundDataAcquisitionService implements DataAcquisitionService,
   }
 
   /**
-   * {@inheritDoc}
-   */
-  @Override
-  public void handleEvent( Event aEvent )
-  {
-    String status = ( String )aEvent.getProperty( "status" );
-    if ( "success".equals( status ) )
-    {
-      AcquisitionData result = ( AcquisitionData )aEvent.getProperty( "result" );
-      Long timeTaken = ( Long )aEvent.getProperty( "time" );
-
-      fireAcquisitionCompleteEvent( result );
-
-      fireAcquisitionEndedEvent( new AcquisitionResultStatus( ResultStatus.NORMAL, timeTaken ) );
-
-      LOG.log( Level.INFO, "Acquisition successful!" );
-    }
-    else if ( "failure".equals( status ) )
-    {
-      Exception exception = ( Exception )aEvent.getProperty( "exception" );
-      Long timeTaken = ( Long )aEvent.getProperty( "time" );
-
-      fireAcquisitionEndedEvent( AcquisitionResultStatus.create( exception, timeTaken ) );
-
-      LOG.log( Level.WARNING, "Acquisition failed!", exception );
-
-    }
-    else if ( "started".equals( status ) )
-    {
-      fireAcquisitionStartedEvent();
-    }
-  }
-
-  /**
    * @param result
    */
-  void fireAcquisitionCompleteEvent( AcquisitionData result )
+  private void fireAcquisitionCompleteEvent( String aDeviceName, Long aExecutionTime, AcquisitionData aResult,
+      Exception aException )
   {
-    if ( this.eventAdmin != null )
+    Map<Object, Object> props = new Properties();
+    props.put( TAC_DEVICE_NAME, aDeviceName );
+    props.put( TAC_EXECUTION_TIME, aExecutionTime );
+    if ( aResult != null )
     {
-      Map<Object, Object> props = new Properties();
-      props.put( TAC_DATA, result );
-
-      this.eventAdmin.postEvent( new Event( TOPIC_ACQUISITION_COMPLETE, props ) );
+      props.put( TAC_DATA, aResult );
     }
-  }
-
-  /**
-   * @param status
-   */
-  void fireAcquisitionEndedEvent( final AcquisitionResultStatus status )
-  {
-    final Iterator<AcquisitionStatusListener> statusListenerIter = this.acquisitionStatusListeners.iterator();
-    while ( statusListenerIter.hasNext() )
+    if ( aException != null )
     {
-      statusListenerIter.next().acquisitionEnded( status );
+      props.put( TAC_EXCEPTION, aException );
     }
+
+    this.eventAdmin.postEvent( new Event( TOPIC_ACQUISITION_FINISHED, props ) );
   }
 
   /**
    * @param aPercentage
    */
-  void fireAcquisitionInProgressEvent( final int aPercentage )
+  private void fireAcquisitionInProgressEvent( String aDeviceName, int aPercentage )
   {
-    Iterator<AcquisitionProgressListener> iter = this.acquisitionProgressListeners.iterator();
-    while ( iter.hasNext() )
-    {
-      iter.next().acquisitionInProgress( aPercentage );
-    }
+    Map<Object, Object> props = new Properties();
+    props.put( TAP_DEVICE_NAME, aDeviceName );
+    props.put( TAP_PROGRESS, aPercentage );
+
+    this.eventAdmin.postEvent( new Event( TOPIC_ACQUISITION_PROGRESS, props ) );
   }
 
   /**
    * @param status
    */
-  void fireAcquisitionStartedEvent()
+  private void fireAcquisitionStartedEvent( String aDeviceName )
   {
-    final Iterator<AcquisitionStatusListener> statusListenerIter = this.acquisitionStatusListeners.iterator();
-    while ( statusListenerIter.hasNext() )
-    {
-      statusListenerIter.next().acquisitionStarted();
-    }
+    Map<Object, Object> props = new Properties();
+    props.put( TAS_DEVICE_NAME, aDeviceName );
+
+    this.eventAdmin.postEvent( new Event( TOPIC_ACQUISITION_STARTED, props ) );
   }
 }

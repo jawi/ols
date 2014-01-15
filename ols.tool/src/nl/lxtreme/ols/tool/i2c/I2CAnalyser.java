@@ -31,6 +31,10 @@ import nl.lxtreme.ols.tool.api.*;
  */
 public class I2CAnalyser implements Tool<I2CDataSet>
 {
+  // CONSTANTS
+
+  static final String NAME = "I2C analyser";
+
   // METHODS
 
   /**
@@ -57,7 +61,7 @@ public class I2CAnalyser implements Tool<I2CDataSet>
   @Override
   public String getName()
   {
-    return "I2C protocol analyser ...";
+    return NAME.concat( " ..." );
   }
 
   /**

@@ -113,6 +113,15 @@ public class NonReturnToZeroDecoderTask implements ToolTask<AcquisitionData>
     return null;
   }
 
+  /**
+   * {@inheritDoc}
+   */
+  @Override
+  public String getName()
+  {
+    return NonReturnToZeroDecoder.NAME;
+  }
+
   public void setClockIdx( int aClockIdx )
   {
     this.clockIdx = aClockIdx;

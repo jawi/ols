@@ -114,6 +114,15 @@ public class StateAnalysisTask implements ToolTask<AcquisitionData>
   }
 
   /**
+   * {@inheritDoc}
+   */
+  @Override
+  public String getName()
+  {
+    return StateAnalyser.NAME;
+  }
+
+  /**
    * @param aEdge
    *          the level to set, cannot be <code>null</code>.
    */

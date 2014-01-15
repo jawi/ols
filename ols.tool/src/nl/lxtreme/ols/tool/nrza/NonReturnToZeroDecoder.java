@@ -33,6 +33,10 @@ import nl.lxtreme.ols.tool.api.*;
  */
 public class NonReturnToZeroDecoder implements Tool<AcquisitionData>
 {
+  // CONSTANTS
+
+  static final String NAME = "Non-return to zero decoder";
+
   // METHODS
 
   /**
@@ -59,7 +63,7 @@ public class NonReturnToZeroDecoder implements Tool<AcquisitionData>
   @Override
   public String getName()
   {
-    return "Non-return to zero decoder...";
+    return NAME.concat( " ..." );
   }
 
   /**

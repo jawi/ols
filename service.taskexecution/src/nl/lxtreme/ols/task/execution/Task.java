@@ -32,5 +32,9 @@ import java.util.concurrent.*;
  */
 public interface Task<RESULT_TYPE> extends Callable<RESULT_TYPE>
 {
-  // No additional methods...
+  /**
+   * @return a symbolic name for this task, to report status information to
+   *         external listeners, never <code>null</code>.
+   */
+  String getName();
 }

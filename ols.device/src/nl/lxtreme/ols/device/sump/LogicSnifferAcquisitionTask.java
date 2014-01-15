@@ -102,6 +102,15 @@ public class LogicSnifferAcquisitionTask implements SumpProtocolConstants, Task<
   }
 
   /**
+   * {@inheritDoc}
+   */
+  @Override
+  public String getName()
+  {
+    return "SUMP Acquisition Task";
+  }
+
+  /**
    * Configures the device and arms it so that it starts capturing. Performs a
    * self-test on the OLS device.
    * <p>

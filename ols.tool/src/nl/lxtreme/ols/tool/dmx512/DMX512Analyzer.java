@@ -31,6 +31,10 @@ import nl.lxtreme.ols.tool.api.*;
  */
 public class DMX512Analyzer implements Tool<DMX512DataSet>
 {
+  // CONSTANTS
+
+  static final String NAME = "DMX512 analyser";
+
   // METHODS
 
   /**
@@ -58,7 +62,7 @@ public class DMX512Analyzer implements Tool<DMX512DataSet>
   @Override
   public String getName()
   {
-    return "DMX512 analyser ...";
+    return NAME.concat( " ..." );
   }
 
   /**

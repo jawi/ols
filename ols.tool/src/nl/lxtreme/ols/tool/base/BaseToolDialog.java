@@ -21,6 +21,7 @@
 package nl.lxtreme.ols.tool.base;
 
 
+import static nl.lxtreme.ols.task.execution.TaskConstants.*;
 import static nl.lxtreme.ols.tool.api.ToolConstants.*;
 import static nl.lxtreme.ols.util.swing.SwingComponentUtils.*;
 
@@ -94,6 +95,8 @@ public abstract class BaseToolDialog<RESULT_TYPE> extends JFrame implements Tool
   protected static final Insets LABEL_INSETS = new Insets( 4, 4, 4, 2 );
   /** Provides insets (padding) that can be used for components. */
   protected static final Insets COMP_INSETS = new Insets( 4, 2, 4, 4 );
+
+  private static final String PROP_TOOL_NAME = "toolName";
 
   // VARIABLES
 
@@ -208,64 +211,11 @@ public abstract class BaseToolDialog<RESULT_TYPE> extends JFrame implements Tool
   @SuppressWarnings( "unchecked" )
   public void handleEvent( Event aEvent )
   {
-    String status = ( String )aEvent.getProperty( "status" );
-    if ( "success".equals( status ) )
+    String topic = aEvent.getTopic();
+    if ( TOPIC_TASK_EXECUTION_STARTED.equals( topic ) )
     {
-      this.lastResult = ( RESULT_TYPE )aEvent.getProperty( "result" );
-      Long timeTaken = ( Long )aEvent.getProperty( "time" );
+      String toolName = ( String )aEvent.getProperty( TES_TASK_NAME );
 
-      SwingComponentUtils.invokeOnEDT( new Runnable()
-      {
-        @Override
-        public void run()
-        {
-          setCursor( Cursor.getPredefinedCursor( Cursor.DEFAULT_CURSOR ) );
-
-          setControlsEnabled( true );
-
-          onToolEnded( BaseToolDialog.this.lastResult );
-        }
-      } );
-      
-      logInfo( "Tool %s finished successfully...", getToolName() );
-
-      AcquisitionData data = null;
-      if ( this.lastResult instanceof AcquisitionData )
-      {
-        data = ( AcquisitionData )this.lastResult;
-      }
-      postToolFinishedEvent( timeTaken, data, null );
-
-      this.toolFutureTask = null;
-      this.toolTask = null;
-    }
-    else if ( "failure".equals( status ) )
-    {
-      final Exception exception = ( Exception )aEvent.getProperty( "exception" );
-      Long timeTaken = ( Long )aEvent.getProperty( "time" );
-
-      SwingComponentUtils.invokeOnEDT( new Runnable()
-      {
-        @Override
-        public void run()
-        {
-          setCursor( Cursor.getPredefinedCursor( Cursor.DEFAULT_CURSOR ) );
-
-          setControlsEnabled( true );
-
-          onToolFailed( exception );
-        }
-      } );
-      
-      logWarning( "Tool %s failed...", exception, getToolName() );
-
-      postToolFinishedEvent( timeTaken, null, exception );
-
-      this.toolFutureTask = null;
-      this.toolTask = null;
-    }
-    else if ( "started".equals( status ) )
-    {
       SwingComponentUtils.invokeOnEDT( new Runnable()
       {
         @Override
@@ -278,10 +228,58 @@ public abstract class BaseToolDialog<RESULT_TYPE> extends JFrame implements Tool
           onToolStarted();
         }
       } );
-      
-      logInfo( "Tool %s started...", getToolName() );
 
-      postToolStartedEvent();
+      logInfo( "Tool %s started...", toolName );
+
+      postToolStartedEvent( toolName );
+    }
+    else if ( TOPIC_TASK_EXECUTION_FINISHED.equals( topic ) )
+    {
+      this.lastResult = ( RESULT_TYPE )aEvent.getProperty( TEF_RESULT );
+
+      String toolName = ( String )aEvent.getProperty( TEF_TASK_NAME );
+      final Exception exception = ( Exception )aEvent.getProperty( TEF_EXCEPTION );
+      Long executionTime = ( Long )aEvent.getProperty( TEF_EXECUTION_TIME );
+
+      SwingComponentUtils.invokeOnEDT( new Runnable()
+      {
+        @Override
+        public void run()
+        {
+          setCursor( Cursor.getPredefinedCursor( Cursor.DEFAULT_CURSOR ) );
+
+          setControlsEnabled( true );
+
+          if ( exception != null )
+          {
+            onToolFailed( exception );
+          }
+          else
+          {
+            onToolEnded( BaseToolDialog.this.lastResult );
+          }
+        }
+      } );
+
+      if ( exception != null )
+      {
+        logWarning( "Tool %s failed...", exception, toolName );
+      }
+      else
+      {
+        logInfo( "Tool %s finished successfully...", toolName );
+      }
+
+      AcquisitionData data = null;
+      if ( this.lastResult instanceof AcquisitionData )
+      {
+        data = ( AcquisitionData )this.lastResult;
+      }
+
+      postToolFinishedEvent( toolName, executionTime, data, exception );
+
+      this.toolFutureTask = null;
+      this.toolTask = null;
     }
   }
 
@@ -310,7 +308,7 @@ public abstract class BaseToolDialog<RESULT_TYPE> extends JFrame implements Tool
       prepareToolTask( this.toolTask );
 
       this.toolFutureTask = this.taskExecutor.execute( this.toolTask,
-          Collections.singletonMap( "toolName", getToolName() ) );
+          Collections.singletonMap( PROP_TOOL_NAME, getToolName() ) );
     }
 
     return settingsValid;
@@ -322,7 +320,7 @@ public abstract class BaseToolDialog<RESULT_TYPE> extends JFrame implements Tool
   @Override
   public void setProgress( int aPercentage )
   {
-    postToolProgressEvent( aPercentage );
+    postToolProgressEvent( getToolName(), aPercentage );
   }
 
   /**
@@ -334,8 +332,8 @@ public abstract class BaseToolDialog<RESULT_TYPE> extends JFrame implements Tool
     BundleContext context = FrameworkUtil.getBundle( getClass() ).getBundleContext();
 
     Properties props = new Properties();
-    props.put( EventConstants.EVENT_TOPIC, TaskExecutionService.EVENT_TOPIC );
-    props.put( EventConstants.EVENT_FILTER, "(toolName=" + getToolName() + ")" );
+    props.put( EventConstants.EVENT_TOPIC, TOPIC_TASK_EXECUTION_BASE.concat( "/*" ) );
+    props.put( EventConstants.EVENT_FILTER, String.format( "(%s=%s)", PROP_TOOL_NAME, getToolName() ) );
 
     DependencyManager dm = new DependencyManager( context );
     // @formatter:off
@@ -608,6 +606,9 @@ public abstract class BaseToolDialog<RESULT_TYPE> extends JFrame implements Tool
     return cb;
   }
 
+  /**
+   * @return a name for this tool, never <code>null</code>.
+   */
   private String getToolName()
   {
     String name = this.tool.getName();
@@ -626,11 +627,11 @@ public abstract class BaseToolDialog<RESULT_TYPE> extends JFrame implements Tool
    * @param aException
    *          the (optional) failure reason.
    */
-  private void postToolFinishedEvent( Long aTime, AcquisitionData aData, Exception aException )
+  private void postToolFinishedEvent( String aToolName, Long aTime, AcquisitionData aData, Exception aException )
   {
     Map<Object, Object> props = new Properties();
     props.put( TTF_EXECUTION_TIME, aTime );
-    props.put( TTF_TOOL_NAME, getToolName() );
+    props.put( TTF_TOOL_NAME, aToolName );
     if ( aData != null )
     {
       props.put( TTF_DATA, aData );
@@ -649,10 +650,10 @@ public abstract class BaseToolDialog<RESULT_TYPE> extends JFrame implements Tool
    * @param aProgress
    *          the progress of the tool, as integer value.
    */
-  private void postToolProgressEvent( int aProgress )
+  private void postToolProgressEvent( String aToolName, int aProgress )
   {
     Map<Object, Object> props = new Properties();
-    props.put( TTP_TOOL_NAME, getToolName() );
+    props.put( TTP_TOOL_NAME, aToolName );
     props.put( TTP_PROGRESS, aProgress );
 
     this.eventAdmin.postEvent( new Event( TOPIC_TOOL_PROGRESS, props ) );
@@ -661,10 +662,10 @@ public abstract class BaseToolDialog<RESULT_TYPE> extends JFrame implements Tool
   /**
    * Posts an asynchronous event that a tool has started its job.
    */
-  private void postToolStartedEvent()
+  private void postToolStartedEvent( String aToolName )
   {
     Map<Object, Object> props = new Properties();
-    props.put( TTS_TOOL_NAME, getToolName() );
+    props.put( TTS_TOOL_NAME, aToolName );
 
     this.eventAdmin.postEvent( new Event( TOPIC_TOOL_STARTED, props ) );
   }

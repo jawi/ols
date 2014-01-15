@@ -56,10 +56,7 @@ import com.jidesoft.plaf.*;
 /**
  * Denotes a front-end controller for the client.
  */
-public final class ClientController implements ActionProvider, AcquisitionProgressListener, AcquisitionStatusListener
-/*
- * ,, AcquisitionDataListener ApplicationCallback
- */
+public final class ClientController implements ActionProvider
 {
   // INNER TYPES
 
@@ -241,7 +238,7 @@ public final class ClientController implements ActionProvider, AcquisitionProgre
   private final AccumulatingRepaintingRunnable repaintAccumulatingRunnable;
 
   private volatile ProjectManager projectManager;
-  private volatile DataAcquisitionService dataAcquisitionService;
+  private volatile AcquisitionService dataAcquisitionService;
   private volatile MainFrame mainFrame;
   // private volatile UIColorSchemeManager colorSchemeManager;
 
@@ -293,32 +290,30 @@ public final class ClientController implements ActionProvider, AcquisitionProgre
   /**
    * {@inheritDoc}
    */
-  @Override
-  public void acquisitionEnded( final AcquisitionResultStatus aStatus )
+  public void acquisitionEnded( final Object aStatus )
   {
-    if ( aStatus.isAborted() )
-    {
-      setStatusOnEDT( "Capture aborted! {0}", aStatus.getMessage() );
-    }
-    else if ( aStatus.isFailed() )
-    {
-      setStatusOnEDT( "Capture failed! {0}", aStatus.getMessage() );
-    }
-    else
-    {
-      long time = System.currentTimeMillis() - this.acquisitionStartTime;
-
-      setStatusOnEDT( "Capture finished at {0,date,medium} {0,time,medium}, and took {1}.", new Date(),
-          Unit.Time.format( time / 1.0e3 ) );
-    }
-
-    updateActionsOnEDT();
+//    if ( aStatus.isAborted() )
+//    {
+//      setStatusOnEDT( "Capture aborted! {0}", aStatus.getMessage() );
+//    }
+//    else if ( aStatus.isFailed() )
+//    {
+//      setStatusOnEDT( "Capture failed! {0}", aStatus.getMessage() );
+//    }
+//    else
+//    {
+//      long time = System.currentTimeMillis() - this.acquisitionStartTime;
+//
+//      setStatusOnEDT( "Capture finished at {0,date,medium} {0,time,medium}, and took {1}.", new Date(),
+//          Unit.Time.format( time / 1.0e3 ) );
+//    }
+//
+//    updateActionsOnEDT();
   }
 
   /**
    * {@inheritDoc}
    */
-  @Override
   public void acquisitionInProgress( final int aPercentage )
   {
     this.progressAccumulatingRunnable.add( Integer.valueOf( aPercentage ) );
@@ -327,7 +322,6 @@ public final class ClientController implements ActionProvider, AcquisitionProgre
   /**
    * {@inheritDoc}
    */
-  @Override
   public void acquisitionStarted()
   {
     this.acquisitionStartTime = System.currentTimeMillis();
@@ -424,7 +418,7 @@ public final class ClientController implements ActionProvider, AcquisitionProgre
    */
   public void cancelCapture()
   {
-    final DataAcquisitionService acquisitionService = getDataAcquisitionService();
+    final AcquisitionService acquisitionService = getDataAcquisitionService();
     final Device device = getDevice();
     if ( ( device == null ) || ( acquisitionService == null ) )
     {
@@ -454,7 +448,7 @@ public final class ClientController implements ActionProvider, AcquisitionProgre
    */
   public boolean captureData( final Window aParent )
   {
-    final DataAcquisitionService acquisitionService = getDataAcquisitionService();
+    final AcquisitionService acquisitionService = getDataAcquisitionService();
     final Device device = getDevice();
     if ( ( device == null ) || ( acquisitionService == null ) )
     {
@@ -1067,7 +1061,7 @@ public final class ClientController implements ActionProvider, AcquisitionProgre
    */
   public void repeatCaptureData()
   {
-    final DataAcquisitionService acquisitionService = getDataAcquisitionService();
+    final AcquisitionService acquisitionService = getDataAcquisitionService();
     final Device devCtrl = getDevice();
 
     if ( ( devCtrl == null ) || ( acquisitionService == null ) )
@@ -1559,7 +1553,7 @@ public final class ClientController implements ActionProvider, AcquisitionProgre
       @Override
       public void run()
       {
-        final DataAcquisitionService acquisitionService = getDataAcquisitionService();
+        final AcquisitionService acquisitionService = getDataAcquisitionService();
         final Device device = getDevice();
 
         final boolean deviceControllerSet = ( device != null );
@@ -1742,7 +1736,7 @@ public final class ClientController implements ActionProvider, AcquisitionProgre
    * 
    * @return a data acquisition service, never <code>null</code>.
    */
-  private DataAcquisitionService getDataAcquisitionService()
+  private AcquisitionService getDataAcquisitionService()
   {
     return this.dataAcquisitionService;
   }
