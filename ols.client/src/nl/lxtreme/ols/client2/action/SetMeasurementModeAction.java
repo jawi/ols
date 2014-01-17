@@ -68,10 +68,10 @@ public class SetMeasurementModeAction extends AbstractManagedAction
   @Override
   public void actionPerformed( final ActionEvent aEvent )
   {
-    AbstractButton source = ( AbstractButton )aEvent.getSource();
+    AbstractButton button = ( AbstractButton )aEvent.getSource();
 
     Client client = getClient( aEvent );
-    client.setMeasurementMode( source.isSelected() );
+    client.setMeasurementMode( button.isSelected() );
   }
 
   /**

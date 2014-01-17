@@ -469,7 +469,7 @@ public class WaveformView extends BaseView
 
     super.addNotify();
   }
-  
+
   /**
    * {@inheritDoc}
    */
@@ -595,6 +595,9 @@ public class WaveformView extends BaseView
     scrollPane.setInheritsPopupMenu( true );
 
     add( scrollPane, BorderLayout.CENTER );
+
+    // Make sure we've got a defined zoom level...
+    this.zoomController.restoreZoomLevel();
 
     registerKeyBindings();
   }
@@ -791,17 +794,6 @@ public class WaveformView extends BaseView
   /**
    * Repaints the area taken up by the given cursor on screen.
    * 
-   * @param aCursor
-   *          the cursor to repaint, cannot be <code>null</code>.
-   */
-  final void repaintCursor( Cursor aCursor )
-  {
-    repaintCursor( aCursor.getTimestamp() );
-  }
-
-  /**
-   * Repaints the area taken up by the given cursor on screen.
-   * 
    * @param aCursorTimestamp
    *          the cursor timestamp to repaint, cannot be <code>null</code>.
    */
@@ -870,6 +862,18 @@ public class WaveformView extends BaseView
         this.labelComponent.repaint( rect );
       }
     }
+  }
+
+  /**
+   * Repaints the area taken up by the given cursor on screen.
+   * 
+   * @param aCursor
+   *          the cursor to repaint, cannot be <code>null</code>.
+   */
+  @Override
+  protected void repaintCursor( Cursor aCursor )
+  {
+    repaintCursor( aCursor.getTimestamp() );
   }
 
   /**

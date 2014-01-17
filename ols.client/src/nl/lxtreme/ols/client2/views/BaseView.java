@@ -30,6 +30,7 @@ import nl.lxtreme.ols.client2.Client.JumpType;
 import nl.lxtreme.ols.client2.views.state.*;
 import nl.lxtreme.ols.client2.views.waveform.*;
 import nl.lxtreme.ols.common.*;
+import nl.lxtreme.ols.common.acquisition.Cursor;
 
 import org.osgi.service.event.Event;
 
@@ -186,6 +187,17 @@ public abstract class BaseView extends JComponent
    * Zooms out.
    */
   public void zoomOut()
+  {
+    // Nop
+  }
+
+  /**
+   * Repaints the area taken up by the given cursor on screen.
+   * 
+   * @param aCursor
+   *          the cursor to repaint, cannot be <code>null</code>.
+   */
+  protected void repaintCursor( Cursor aCursor )
   {
     // Nop
   }

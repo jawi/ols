@@ -117,7 +117,7 @@ public class ViewModel
         break;
       }
     }
-    if ( i < 0 || i == cursors.length - 1 )
+    if ( i == cursors.length - 1 )
     {
       return null;
     }

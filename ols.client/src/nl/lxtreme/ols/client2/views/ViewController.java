@@ -178,6 +178,23 @@ public class ViewController
   }
 
   /**
+   * Sets the selected cursor to the one given.
+   * 
+   * @param aCursor
+   *          the selected cursor, can be <code>null</code>.
+   */
+  public void setSelectedCursor( Cursor aCursor )
+  {
+    Cursor oldCursor = this.model.getSelectedCursor();
+    if ( oldCursor != null )
+    {
+      this.view.repaintCursor( oldCursor );
+    }
+    this.model.setSelectedCursor( aCursor );
+    this.view.repaintCursor( aCursor );
+  }
+
+  /**
    * Performs a "smart" jump in a given direction.
    * 
    * @param aType

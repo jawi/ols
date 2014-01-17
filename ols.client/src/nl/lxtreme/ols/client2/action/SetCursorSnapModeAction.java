@@ -63,10 +63,10 @@ public class SetCursorSnapModeAction extends AbstractManagedAction
   @Override
   public void actionPerformed( final ActionEvent aEvent )
   {
-    JCheckBoxMenuItem menuItem = ( JCheckBoxMenuItem )aEvent.getSource();
+    AbstractButton button = ( AbstractButton )aEvent.getSource();
 
     Client client = getClient( aEvent );
-    client.setCursorSnapMode( menuItem.isSelected() );
+    client.setCursorSnapMode( button.isSelected() );
   }
 
   /**

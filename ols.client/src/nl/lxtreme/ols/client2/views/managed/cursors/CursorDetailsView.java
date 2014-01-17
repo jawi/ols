@@ -21,20 +21,19 @@
 package nl.lxtreme.ols.client2.views.managed.cursors;
 
 
-import static nl.lxtreme.ols.util.swing.SwingComponentUtils.*;
-
 import java.awt.*;
+import java.awt.event.*;
 
 import javax.swing.*;
+import javax.swing.table.*;
 
+import nl.lxtreme.ols.client2.action.*;
+import nl.lxtreme.ols.client2.actionmanager.*;
 import nl.lxtreme.ols.client2.views.*;
 import nl.lxtreme.ols.client2.views.managed.*;
 import nl.lxtreme.ols.common.acquisition.*;
-import nl.lxtreme.ols.common.acquisition.Cursor.LabelStyle;
 import nl.lxtreme.ols.common.acquisition.Cursor;
 import nl.lxtreme.ols.util.swing.component.*;
-import nl.lxtreme.ols.util.swing.component.ClickableLink.LinkListener;
-import nl.lxtreme.ols.util.swing.component.ClickableLink.LinkTextModel;
 
 import com.jidesoft.docking.*;
 
@@ -50,6 +49,14 @@ public class CursorDetailsView extends AbstractManagedView
 
   private static final long serialVersionUID = 1L;
 
+  // VARIABLES
+
+  // Injected by Felix DM...
+  private volatile ActionManager actionManager;
+
+  private JLxTable table;
+  private MouseListener listener;
+
   // CONSTRUCTORS
 
   /**
@@ -63,12 +70,26 @@ public class CursorDetailsView extends AbstractManagedView
   // METHODS
 
   /**
+   * Jumps to the cursor denoted by a given row index in the current table.
+   * 
+   * @param aController
+   * @param aRowIndex
+   */
+  final void jumpToCursor( ViewController aController, int aRowIndex )
+  {
+    CursorTableModel model = ( CursorTableModel )this.table.getModel();
+    Cursor cursor = model.getCursor( aRowIndex );
+
+    aController.scrollToTimestamp( cursor.getTimestamp() );
+  }
+
+  /**
    * {@inheritDoc}
    */
   @Override
   protected void build()
   {
-    updateViewText( null, false );
+    add( new JScrollPane( this.table ), BorderLayout.CENTER );
   }
 
   /**
@@ -81,6 +102,30 @@ public class CursorDetailsView extends AbstractManagedView
     setLayout( new BorderLayout() );
     setName( "Cursor details" );
 
+    this.table = new JLxTable( new CursorTableModel() );
+    this.table.setAutoResizeMode( JTable.AUTO_RESIZE_LAST_COLUMN );
+    this.table.setAutoCreateColumnsFromModel( false );
+    this.table.setIntercellSpacing( new Dimension( 2, 2 ) );
+    this.table.setColumnSelectionAllowed( false );
+    this.table.setCellSelectionEnabled( false );
+    this.table.setRowSelectionAllowed( true );
+    this.table.setAutoCreateRowSorter( true );
+    this.table.setFillsViewportHeight( true );
+    this.table.setShowGrid( false );
+
+    TableColumnModel columnModel = this.table.getColumnModel();
+    columnModel.getColumn( 0 ).setPreferredWidth( 25 );
+    columnModel.getColumn( 1 ).setPreferredWidth( 100 );
+
+    JCheckBox cursorsVisible = new JCheckBox( this.actionManager.getAction( SetCursorsVisibleAction.ID ) );
+    JCheckBox snapCursors = new JCheckBox( this.actionManager.getAction( SetCursorSnapModeAction.ID ) );
+
+    JToolBar toolBar = new JToolBar( JToolBar.VERTICAL );
+    toolBar.setFloatable( false );
+    toolBar.add( cursorsVisible );
+    toolBar.add( snapCursors );
+
+    aFrame.setTitleBarComponent( toolBar );
     aFrame.setInitIndex( 0 );
 
     aContext.setInitSide( DockContext.DOCK_SIDE_EAST );
@@ -107,55 +152,61 @@ public class CursorDetailsView extends AbstractManagedView
 
   private void updateViewText( final ViewController aController, boolean aCursorsVisible, Cursor... aCursors )
   {
-    JPanel panel = new JPanel( new SpringLayout() );
-
-    for ( final Cursor cursor : aCursors )
+    CursorTableModel tableModel = new CursorTableModel( aCursors );
+    // Update only when necessary...
+    if ( !tableModel.equals( this.table.getModel() ) )
     {
-      if ( !cursor.isDefined() )
+      // Remove old listener (contains a reference to our old view
+      // controller!)...
+      if ( this.listener != null )
       {
-        continue;
+        this.table.removeMouseListener( this.listener );
       }
 
-      LinkTextModel model = new LinkTextModel()
+      // Update the entire model...
+      this.table.setModel( tableModel );
+
+      // Create & install new listener using the given view controller...
+      this.listener = new MouseAdapter()
       {
         @Override
-        public String getText()
+        public void mouseClicked( final MouseEvent aEvent )
         {
-          return cursor.getLabel( LabelStyle.LABEL_TIME );
+          JTable source = ( JTable )aEvent.getSource();
+          int rowIdx = source.getSelectedRow();
+          if ( ( aEvent.getClickCount() == 2 ) && ( rowIdx >= 0 ) )
+          {
+            // double clicked on a row...
+            jumpToCursor( aController, rowIdx );
+          }
         }
       };
-      LinkListener listener = new LinkListener()
+      this.table.addMouseListener( this.listener );
+
+      // Add a custom selection model that also highlights the selected cursor
+      // in the main view...
+      this.table.setSelectionModel( new DefaultListSelectionModel()
       {
+        private static final long serialVersionUID = 1L;
+
         @Override
-        public void linkActivated( Object aLinkId )
+        public void setSelectionInterval( int aIndex0, int aIndex1 )
         {
-          long timestamp = ( ( Cursor )aLinkId ).getTimestamp();
-          aController.scrollToTimestamp( timestamp );
+          super.setSelectionInterval( aIndex0, aIndex1 );
+
+          CursorTableModel model = ( CursorTableModel )table.getModel();
+          Cursor selectedCursor = model.getCursor( aIndex1 );
+
+          aController.setSelectedCursor( selectedCursor );
         }
-      };
-
-      ClickableLink link = new ClickableLink( model, cursor );
-      link.setLinkListener( listener );
-      link.setEnabled( aCursorsVisible );
-      link.setForeground( Color.BLUE );
-
-      String label = cursor.getLabel( LabelStyle.INDEX_ONLY );
-      panel.add( createRightAlignedLabel( label.concat( ":" ) ) );
-      panel.add( link );
+      } );
     }
-
-    if ( panel.getComponentCount() == 0 )
+    else
     {
-      panel.add( createRightAlignedLabel( "No" ) );
-      panel.add( new JLabel( "cursors defined." ) );
+      // Model itself is not changed, simply update the table contents...
+      ( ( CursorTableModel )this.table.getModel() ).fireTableDataChanged();
     }
 
-    makeEditorGrid( panel );
-
-    removeAll();
-    add( panel, BorderLayout.NORTH );
-
-    validate();
-    repaint();
+    this.table.setEnabled( aCursorsVisible );
   }
 }

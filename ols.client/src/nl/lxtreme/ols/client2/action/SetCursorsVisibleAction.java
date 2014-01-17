@@ -66,10 +66,10 @@ public class SetCursorsVisibleAction extends AbstractManagedAction
   @Override
   public void actionPerformed( final ActionEvent aEvent )
   {
-    JCheckBoxMenuItem menuItem = ( JCheckBoxMenuItem )aEvent.getSource();
+    AbstractButton button = ( AbstractButton )aEvent.getSource();
 
     Client client = getClient( aEvent );
-    client.setCursorsVisible( menuItem.isSelected() );
+    client.setCursorsVisible( button.isSelected() );
   }
 
   /**
