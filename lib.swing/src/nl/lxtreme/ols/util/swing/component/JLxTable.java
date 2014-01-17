@@ -300,6 +300,9 @@ public class JLxTable extends JTable
       comp = adapter.render( comp, value, isSelected );
     }
 
+    // Disable the component in case this table is not enabled...
+    comp.setEnabled( isEnabled() );
+
     return comp;
   }
 
@@ -344,6 +347,19 @@ public class JLxTable extends JTable
     TableColumn column = getColumnModel().getColumn( aColumnIndex );
     column.setHeaderValue( aValue );
     getTableHeader().repaint( 50L );
+  }
+
+  /**
+   * Overridden in order to preserve the column widths.
+   * 
+   * @see JTable#setModel(TableModel)
+   */
+  @Override
+  public void setModel( TableModel aDataModel )
+  {
+    int[] widths = getColumnWidths();
+    super.setModel( aDataModel );
+    setColumnWidths( widths );
   }
 
   /**
@@ -398,5 +414,33 @@ public class JLxTable extends JTable
   protected DataFlavor[] getTableDataFlavors()
   {
     return null;
+  }
+
+  /**
+   * @return the current widths of the columns, as array, never
+   *         <code>null</code>.
+   */
+  private int[] getColumnWidths()
+  {
+    TableColumnModel columnModel = getColumnModel();
+    int[] widths = new int[columnModel.getColumnCount()];
+    for ( int i = 0; i < widths.length; i++ )
+    {
+      widths[i] = columnModel.getColumn( i ).getWidth();
+    }
+    return widths;
+  }
+
+  /**
+   * @param aWidths
+   *          the array with column widths to apply.
+   */
+  private void setColumnWidths( int... aWidths )
+  {
+    TableColumnModel columnModel = getColumnModel();
+    for ( int i = 0; i < aWidths.length; i++ )
+    {
+      columnModel.getColumn( i ).setWidth( aWidths[i] );
+    }
   }
 }
