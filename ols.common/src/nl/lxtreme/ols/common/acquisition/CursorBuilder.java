@@ -24,6 +24,7 @@ package nl.lxtreme.ols.common.acquisition;
 import java.awt.*;
 
 import nl.lxtreme.ols.common.*;
+import nl.lxtreme.ols.common.Unit.Value;
 
 
 /**
@@ -278,7 +279,8 @@ public class CursorBuilder
         }
         _ts = _ts / aData.getSampleRate();
 
-        timestampText = Unit.Time.toUnit( _ts ).formatHumanReadable( _ts );
+        Value ts = Value.asTime( _ts );
+        timestampText = ts.toString();
       }
       else
       {

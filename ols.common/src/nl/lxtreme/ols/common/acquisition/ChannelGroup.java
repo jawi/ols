@@ -32,12 +32,11 @@ public interface ChannelGroup extends Comparable<ChannelGroup>
   // METHODS
 
   /**
-   * Returns the color for this channel group, if specified.
+   * Returns the number of channels in this channel group.
    * 
-   * @return a {@link Color}, or <code>null</code> in case the default color
-   *         should be used (UI-specific).
+   * @return the number of channels in this group, > 0.
    */
-  Color getColor();
+  int getChannelCount();
 
   /**
    * Returns the channels present in this channel group.
@@ -47,6 +46,14 @@ public interface ChannelGroup extends Comparable<ChannelGroup>
   Channel[] getChannels();
 
   /**
+   * Returns the color for this channel group, if specified.
+   * 
+   * @return a {@link Color}, or <code>null</code> in case the default color
+   *         should be used (UI-specific).
+   */
+  Color getColor();
+
+  /**
    * The logical index of this channel group.
    * 
    * @return an index, >= 0.
@@ -54,11 +61,33 @@ public interface ChannelGroup extends Comparable<ChannelGroup>
   int getIndex();
 
   /**
+   * Returns the bit-mask to use for this channel group that includes all of its
+   * channels (bitwise OR).
+   * 
+   * @return a bit-mask, >= 1.
+   */
+  int getMask();
+
+  /**
    * The name of this channel group.
    * 
    * @return a name, never <code>null</code>.
    */
   String getName();
+
+  /**
+   * Returns the value of this channel group according to a given sample value
+   * and the known mask.
+   * <p>
+   * This method should combine the values of this individual channels in their
+   * logical order (= order defined).
+   * </p>
+   * 
+   * @param aSampleValue
+   *          the sample value to extract this channel group's value from.
+   * @return the value of this channel group.
+   */
+  int getValue( int aSampleValue );
 
   /**
    * Sets the color for this channel group.

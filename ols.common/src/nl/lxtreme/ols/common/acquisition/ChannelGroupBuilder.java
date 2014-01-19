@@ -112,6 +112,15 @@ public class ChannelGroupBuilder
      * {@inheritDoc}
      */
     @Override
+    public int getChannelCount()
+    {
+      return this.channels.size();
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
     public Channel[] getChannels()
     {
       return this.channels.toArray( new Channel[this.channels.size()] );
@@ -139,9 +148,46 @@ public class ChannelGroupBuilder
      * {@inheritDoc}
      */
     @Override
+    public int getMask()
+    {
+      int result = 0;
+
+      for ( Channel ch : getChannels() )
+      {
+        result |= ch.getMask();
+      }
+
+      return result;
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
     public String getName()
     {
       return this.name;
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public int getValue( int aSampleValue )
+    {
+      int result = 0;
+
+      Channel[] chs = getChannels();
+      for ( int i = chs.length - 1; i >= 0; i-- )
+      {
+        result <<= 1;
+        if ( ( chs[i].getValue( aSampleValue ) ) != 0 )
+        {
+          result |= 1;
+        }
+      }
+
+      return result;
     }
 
     /**

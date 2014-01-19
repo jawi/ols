@@ -68,6 +68,16 @@ public interface Channel extends Comparable<Channel>
   int getMask();
 
   /**
+   * Returns the value of this channel according to a given sample value and the
+   * known mask.
+   * 
+   * @param aSampleValue
+   *          the sample value to extract this channel's value from.
+   * @return the value of this channel.
+   */
+  int getValue( int aSampleValue );
+
+  /**
    * Returns whether or not this channel has a name.
    * 
    * @return <code>true</code> if a name is given to this channel,

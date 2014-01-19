@@ -21,7 +21,11 @@
 package nl.lxtreme.ols.common;
 
 
+import static java.util.FormattableFlags.*;
+
 import java.awt.*;
+import java.util.*;
+import java.util.Formatter;
 import java.util.logging.*;
 
 import javax.swing.*;
@@ -30,7 +34,7 @@ import javax.swing.*;
 /**
  * Provides a common base class for all unit-related utility classes.
  */
-public final class Unit
+public interface Unit
 {
   // INNER TYPES
 
@@ -38,7 +42,7 @@ public final class Unit
    * Represents a frequency unit that has a displayable representation and a
    * scale factor to convert it from/to Hertz.
    */
-  public static enum Frequency
+  public static enum Frequency implements Unit
   {
     // CONSTANTS
 
@@ -79,68 +83,33 @@ public final class Unit
     // METHODS
 
     /**
-     * Convenience method to directly get a displayable represention of a given
-     * frequency.
-     * <p>
-     * This method does the same as calling:
-     * <code>toUnit( aFrequency ).format( aFrequency, 3 );</code>.
-     * </p>
-     * 
-     * @param aFrequency
-     *          the frequency to get a displayable representation for.
-     * @return a string representation of the given frequency, never
-     *         <code>null</code>.
-     */
-    public static String format( final double aFrequency )
-    {
-      return toUnit( aFrequency ).format( aFrequency, 3 );
-    }
-
-    /**
      * Converts a given period to a {@link FrequencyUnit} instance.
      * 
      * @param aFrequency
      *          the frequency to convert to a {@link FrequencyUnit}.
      * @return a {@link FrequencyUnit} instance, never <code>null</code>.
      */
-    public static Frequency toUnit( final double aFrequency )
+    public static Frequency toUnit( double aFrequency )
     {
       final Frequency[] freqs = values();
       final double frequency = Math.abs( aFrequency );
 
+      if ( frequency < ZERO_THRESHOLD )
+      {
+        // Normalize zero to the base unit...
+        return HZ;
+      }
+
       int i = freqs.length - 1;
       for ( ; i >= 0; i-- )
       {
-        if ( frequency >= freqs[i].getFactor() )
+        if ( frequency >= freqs[i].getScale() )
         {
           break;
         }
       }
 
       return freqs[Math.max( i, 0 )];
-    }
-
-    /**
-     * Returns the given frequency as string representation using this frequency
-     * unit's display name.
-     * 
-     * @param aFrequency
-     *          the frequency to convert to a string representation;
-     * @param aScale
-     *          the scale (= number of digits after decimal separator) to use in
-     *          the string representation.
-     * @return a string representation of the given frequency, like "1.234kHz",
-     *         never <code>null</code>.
-     */
-    public String format( final double aFrequency, final int aScale )
-    {
-      // For *very* small frequencies, we simply always yield zero...
-      if ( Math.abs( aFrequency ) < ZERO_THRESHOLD )
-      {
-        return Unit.format( 0.0, aScale, HZ.getDisplayName() );
-      }
-
-      return Unit.format( aFrequency / getFactor(), aScale, getDisplayName() );
     }
 
     /**
@@ -158,7 +127,7 @@ public final class Unit
      * 
      * @return a scale factor, >= 1.0.
      */
-    public double getFactor()
+    public double getScale()
     {
       return this.factor;
     }
@@ -168,7 +137,7 @@ public final class Unit
    * Represents a size unit (SI-standard) that has a displayable representation
    * and has a scale factor.
    */
-  public static enum SizeSI
+  public static enum SizeSI implements Unit
   {
     // CONSTANTS
 
@@ -184,7 +153,7 @@ public final class Unit
     TB( "T", 1099511627776.0 );
 
     /** Constant used to determine whether we should show "0B". */
-    public static final double ZERO_THRESHOLD = 1.0e-1;
+    public static final double ZERO_THRESHOLD = 1.0e-2;
     /** All units are in bytes. */
     private static final String BASE_UNIT = "B";
 
@@ -207,24 +176,6 @@ public final class Unit
     // METHODS
 
     /**
-     * Convenience method to directly get a displayable represention of a given
-     * size.
-     * <p>
-     * This method does the same as calling:
-     * <code>toUnit( aSize ).format( aSize, 2 );</code>.
-     * </p>
-     * 
-     * @param aSize
-     *          the size to get a displayable representation for.
-     * @return a string representation of the given size, never
-     *         <code>null</code>.
-     */
-    public static String format( final double aSize )
-    {
-      return toUnit( aSize ).format( aSize, 2 );
-    }
-
-    /**
      * Returns a {@link SizeSI} instance usable for representing the given size.
      * 
      * @param aSize
@@ -236,39 +187,22 @@ public final class Unit
       SizeSI[] sizes = values();
       double size = Math.abs( aSize );
 
+      if ( size < ZERO_THRESHOLD )
+      {
+        // Normalize zero to the base unit...
+        return B;
+      }
+
       int i = sizes.length - 1;
       for ( ; i >= 0; i-- )
       {
-        if ( size >= sizes[i].getFactor() )
+        if ( size >= sizes[i].getScale() )
         {
           break;
         }
       }
 
       return sizes[Math.max( i, 0 )];
-    }
-
-    /**
-     * Returns the given size as string representation using this size unit's
-     * display name.
-     * 
-     * @param aSize
-     *          the size to convert to a string representation;
-     * @param aScale
-     *          the scale (= number of digits after decimal separator) to use in
-     *          the string representation.
-     * @return a string representation of the given size, like "1.44MB", never
-     *         <code>null</code>.
-     */
-    public String format( final double aSize, final int aScale )
-    {
-      // For *very* small sizes, we simply always yield zero...
-      if ( Math.abs( aSize ) < ZERO_THRESHOLD )
-      {
-        return Unit.format( 0.0, aScale, B.getDisplayName() );
-      }
-
-      return Unit.format( aSize / getFactor(), aScale, getDisplayName() );
     }
 
     /**
@@ -286,7 +220,7 @@ public final class Unit
      * 
      * @return the factor
      */
-    public double getFactor()
+    public double getScale()
     {
       return this.factor;
     }
@@ -296,7 +230,7 @@ public final class Unit
    * Represents a unit of time, in seconds, that can be displayed has a scale
    * factor.
    */
-  public static enum Time
+  public static enum Time implements Unit
   {
     // CONSTANTS
 
@@ -337,25 +271,6 @@ public final class Unit
     // METHODS
 
     /**
-     * Convenience method to directly get a displayable represention of a given
-     * time value.
-     * <p>
-     * This method does the same as calling:
-     * <code>toUnit( aTime ).format( aTime, 3 );</code>.
-     * </p>
-     * 
-     * @param aTime
-     *          the time value (in seconds) to get a displayable representation
-     *          for.
-     * @return a string representation of the given time, never
-     *         <code>null</code>.
-     */
-    public static String format( final double aTime )
-    {
-      return toUnit( aTime ).format( aTime, 2 );
-    }
-
-    /**
      * Converts a given time value (as double representation, in seconds) to a
      * more suitable unit of time.
      * 
@@ -363,71 +278,27 @@ public final class Unit
      *          the time value (in seconds) to return the unit of time for.
      * @return a {@link Time}, never <code>null</code>.
      */
-    public static Time toUnit( final double aTimeValue )
+    public static Time toUnit( double aTimeValue )
     {
-      double absTime = Math.abs( aTimeValue );
       final Time[] values = values();
+      double absTime = Math.abs( aTimeValue );
+
+      if ( absTime < ZERO_THRESHOLD )
+      {
+        // Normalize zero to the base unit...
+        return S;
+      }
 
       int i = 0;
       for ( ; i < values.length; i++ )
       {
-        if ( absTime >= values[i].getFactor() )
+        if ( absTime >= values[i].getScale() )
         {
           break;
         }
       }
 
       return values[Math.min( i, values.length - 1 )];
-    }
-
-    /**
-     * Returns the given time as string representation using this time unit's
-     * display name and a fixed number of digits after the decimal separator.
-     * 
-     * @param aTime
-     *          the time (in seconds) to convert to a string representation;
-     * @param aScale
-     *          the scale (= number of digits after decimal separator) to use in
-     *          the string representation.
-     * @return a string representation of the given time, like "1.453ms", never
-     *         <code>null</code>.
-     */
-    public String format( final double aTime, final int aScale )
-    {
-      // For *very* small sizes, we simply always yield zero...
-      if ( Math.abs( aTime ) < ZERO_THRESHOLD )
-      {
-        return Unit.format( 0.0, aScale, S.getDisplayName() );
-      }
-
-      return Unit.format( aTime / getFactor(), aScale, getDisplayName() );
-    }
-
-    /**
-     * Returns the given time as string representation using this time unit's
-     * display name and the least number of digits after the decimal separator.
-     * 
-     * @param aTime
-     *          the time (in seconds) to convert to a string representation;
-     * @param aScale
-     *          the scale (= number of digits after decimal separator) to use in
-     *          the string representation.
-     * @return a string representation of the given time, like "1.453ms", never
-     *         <code>null</code>.
-     */
-    public String formatHumanReadable( final double aTime )
-    {
-      // For *very* small sizes, we simply always yield zero...
-      if ( Math.abs( aTime ) < ZERO_THRESHOLD )
-      {
-        return Unit.format( 0.0, 1, S.getDisplayName() );
-      }
-
-      final Double time = Double.valueOf( aTime / getFactor() );
-      String formattedTime = String.format( "%.9f", time );
-      formattedTime = formattedTime.replaceAll( "(\\d)0+$", "$1" );
-
-      return Unit.format( formattedTime, getDisplayName() );
     }
 
     /**
@@ -445,7 +316,7 @@ public final class Unit
      * 
      * @return the factor
      */
-    public double getFactor()
+    public double getScale()
     {
       return this.factor;
     }
@@ -482,95 +353,388 @@ public final class Unit
     }
   }
 
-  // CONSTANTS
+  /**
+   * Represents a value in a certain {@link Unit}.
+   */
+  public static class Value implements Formattable
+  {
+    // CONSTANTS
 
-  /** Plain space. */
-  private static final char SPACE = ' ';
-  /** Non-breaking space (wide). */
-  private static final char NB = '\u00a0';
-  /** Thin space. */
-  private static final char THIN = '\u2009';
-  /** Hair space. */
-  private static final char HAIR = '\u200a';
+    /** Plain space. */
+    private static final char SPACE = ' ';
+    /** Non-breaking space (wide). */
+    private static final char NB = '\u00a0';
+    /** Thin space. */
+    private static final char THIN = '\u2009';
+    /** Hair space. */
+    private static final char HAIR = '\u200a';
 
-  /** The separator to use between a value and a unit. */
-  static volatile Character SEPARATOR = null;
+    // VARIABLES
+
+    private final Unit unit;
+    private final double value;
+
+    // CONSTRUCTORS
+
+    /**
+     * Creates a new {@link Value} instance.
+     */
+    public Value( double aValue, Unit aUnit )
+    {
+      if ( aUnit == null )
+      {
+        throw new IllegalArgumentException( "Unit cannot be null!" );
+      }
+      this.value = aValue;
+      this.unit = aUnit;
+    }
+
+    // METHODS
+
+    /**
+     * Returns a given value as a {@link Value} and determines the correct
+     * {@link Frequency} unit.
+     * 
+     * @param aValue
+     *          the value to convert to a {@link Frequency} unit, in Hertz.
+     * @return a new {@link Value} instance, never <code>null</code>.
+     */
+    public static Value asFrequency( Number aValue )
+    {
+      if ( aValue == null )
+      {
+        throw new IllegalArgumentException( "Value cannot be null!" );
+      }
+      double value = aValue.doubleValue();
+      Frequency actualUnit = Frequency.toUnit( value );
+      return new Value( value / actualUnit.getScale(), actualUnit );
+    }
+
+    /**
+     * Returns a given value as a {@link Value} with a given {@link Frequency}
+     * unit.
+     * 
+     * @param aValue
+     *          the value to convert to a {@link Frequency} unit.
+     * @return a new {@link Value} instance, never <code>null</code>.
+     */
+    public static Value asFrequency( Number aValue, Frequency aUnit )
+    {
+      if ( aValue == null )
+      {
+        throw new IllegalArgumentException( "Value cannot be null!" );
+      }
+      double value = aValue.doubleValue();
+      return new Value( value, aUnit );
+    }
+
+    /**
+     * Returns a given value as a {@link Value} and detects the correct
+     * {@link SizeSI} unit.
+     * 
+     * @param aValue
+     *          the value to convert to a {@link SizeSI} unit.
+     * @return a new {@link Value} instance, never <code>null</code>.
+     */
+    public static Value asSizeSI( Number aValue )
+    {
+      if ( aValue == null )
+      {
+        throw new IllegalArgumentException( "Value cannot be null!" );
+      }
+      double value = aValue.doubleValue();
+      SizeSI actualUnit = SizeSI.toUnit( value );
+      return new Value( value / actualUnit.getScale(), actualUnit );
+    }
+
+    /**
+     * Returns a given value as a {@link Value} with a given {@link SizeSI}
+     * unit.
+     * 
+     * @param aValue
+     *          the value to convert to a {@link SizeSI} unit.
+     * @return a new {@link Value} instance, never <code>null</code>.
+     */
+    public static Value asSizeSI( Number aValue, SizeSI aUnit )
+    {
+      if ( aValue == null )
+      {
+        throw new IllegalArgumentException( "Value cannot be null!" );
+      }
+      double value = aValue.doubleValue();
+      return new Value( value, aUnit );
+    }
+
+    /**
+     * Returns a given value as a {@link Value} and detects the correct
+     * {@link Time} unit.
+     * 
+     * @param aValue
+     *          the value to convert to a {@link Time} unit.
+     * @return a new {@link Value} instance, never <code>null</code>.
+     */
+    public static Value asTime( Number aValue )
+    {
+      if ( aValue == null )
+      {
+        throw new IllegalArgumentException( "Value cannot be null!" );
+      }
+      double value = aValue.doubleValue();
+      Time actualUnit = Time.toUnit( value );
+      return new Value( value / actualUnit.getScale(), actualUnit );
+    }
+
+    /**
+     * Returns a given value as a {@link Value} with a given {@link Time} unit.
+     * 
+     * @param aValue
+     *          the value to convert to a {@link Time} unit.
+     * @return a new {@link Value} instance, never <code>null</code>.
+     */
+    public static Value asTime( Number aValue, Time aUnit )
+    {
+      if ( aValue == null )
+      {
+        throw new IllegalArgumentException( "Value cannot be null!" );
+      }
+      double value = aValue.doubleValue();
+      return new Value( value, aUnit );
+    }
+
+    /**
+     * Calculate the "optimal" separator to use for separating a value and a
+     * unit.
+     */
+    public static Character getSeparator()
+    {
+      Logger logger = Logger.getLogger( Unit.class.getName() );
+
+      char sep;
+      if ( GraphicsEnvironment.isHeadless() )
+      {
+        // Cannot determine the optimal result, use a sensible default...
+        logger.fine( "Using SPACE (headless fallback)..." );
+
+        sep = SPACE;
+      }
+      else
+      {
+        Font font = UIManager.getFont( "Label.font" );
+
+        if ( font.canDisplay( HAIR ) )
+        {
+          logger.fine( "Using HAIR..." );
+
+          sep = HAIR;
+        }
+        else if ( font.canDisplay( THIN ) )
+        {
+          logger.fine( "Using THIN..." );
+
+          sep = THIN;
+        }
+        else if ( font.canDisplay( NB ) )
+        {
+          logger.fine( "Using NB..." );
+
+          sep = NB;
+        }
+        else
+        {
+          logger.fine( "Using SPACE (fallback)..." );
+
+          sep = SPACE;
+        }
+      }
+
+      return Character.valueOf( sep );
+    }
+
+    /**
+     * Converts this value to another value with the given unit.
+     * 
+     * @param aUnit
+     * @return a new {@link Value} instance, never <code>null</code>.
+     */
+    public Value convert( Unit aUnit )
+    {
+      if ( aUnit == null )
+      {
+        throw new IllegalArgumentException( "Unit cannot be null!" );
+      }
+      if ( aUnit.getClass() != this.unit.getClass() )
+      {
+        throw new IllegalArgumentException( "Unit must be equal to " + this.unit );
+      }
+      if ( aUnit == this.unit )
+      {
+        return this;
+      }
+
+      double result = this.value;
+
+      int start = this.unit.ordinal();
+      int end = aUnit.ordinal();
+
+      if ( start < end )
+      {
+        // e.g. MB -> B
+        result /= Math.pow( 10, 3 * ( end - start ) );
+      }
+      else if ( start > end )
+      {
+        // e.g. MB -> TB
+        result *= Math.pow( 10, 3 * ( start - end ) );
+      }
+
+      return new Value( result, aUnit );
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public boolean equals( Object obj )
+    {
+      if ( this == obj )
+      {
+        return true;
+      }
+      if ( obj == null )
+      {
+        return false;
+      }
+      if ( getClass() != obj.getClass() )
+      {
+        return false;
+      }
+      Value other = ( Value )obj;
+      if ( this.unit == null )
+      {
+        if ( other.unit != null )
+        {
+          return false;
+        }
+      }
+      else if ( !this.unit.equals( other.unit ) )
+      {
+        return false;
+      }
+      if ( Double.doubleToLongBits( this.value ) != Double.doubleToLongBits( other.value ) )
+      {
+        return false;
+      }
+      return true;
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public void formatTo( Formatter aFormatter, int aFlags, int aWidth, int aPrecision )
+    {
+      StringBuilder sb = new StringBuilder();
+      sb.append( "%1$" );
+
+      if ( aWidth < 0 && aPrecision < 0 )
+      {
+        sb.append( 's' );
+      }
+      else
+      {
+        if ( ( aFlags & ALTERNATE ) != 0 )
+        {
+          sb.append( '#' );
+        }
+        if ( ( aFlags & LEFT_JUSTIFY ) != 0 )
+        {
+          sb.append( '-' );
+        }
+        if ( aWidth >= 0 )
+        {
+          sb.append( aWidth );
+        }
+        if ( aPrecision >= 0 )
+        {
+          sb.append( '.' ).append( aPrecision );
+        }
+        sb.append( 'f' );
+      }
+
+      // Separator...
+      if ( ( aFlags & ALTERNATE ) != 0 )
+      {
+        sb.append( getSeparator() );
+      }
+      else
+      {
+        sb.append( ' ' );
+      }
+      sb.append( "%2$s" );
+
+      aFormatter.format( sb.toString(), this.value, this.unit.getDisplayName() );
+    }
+
+    /**
+     * Returns the current value of unit.
+     * 
+     * @return the unit
+     */
+    public Unit getUnit()
+    {
+      return this.unit;
+    }
+
+    /**
+     * Returns the current value of value.
+     * 
+     * @return the value
+     */
+    public double getValue()
+    {
+      return this.value;
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public int hashCode()
+    {
+      final int prime = 31;
+      int result = 1;
+      result = prime * result + ( ( this.unit == null ) ? 0 : this.unit.hashCode() );
+      long temp;
+      temp = Double.doubleToLongBits( this.value );
+      result = prime * result + ( int )( temp ^ ( temp >>> 32 ) );
+      return result;
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public String toString()
+    {
+      return String.format( "%s", this );
+    }
+  }
 
   // METHODS
 
   /**
-   * Formats a given value with a given scale and adding a given unit.
+   * @return a display name for this unit, like "kHz" or "ms".
    */
-  static String format( double aValue, int aScale, String aUnit )
-  {
-    if ( Double.isNaN( aValue ) || Double.isInfinite( aValue ) )
-    {
-      return "-";
-    }
-
-    String formatSpec = String.format( "%%.%df%c%%s", Integer.valueOf( aScale ), getSeparator() );
-    return String.format( formatSpec, Double.valueOf( aValue ), aUnit );
-  }
+  String getDisplayName();
 
   /**
-   * Formats a given value with a given value and adding a given unit.
+   * @return a scale factor one needs to multiple a value with to get to the
+   *         base unit.
    */
-  static String format( String aValue, String aUnit )
-  {
-    return String.format( "%s%c%s", aValue, getSeparator(), aUnit );
-  }
+  double getScale();
 
   /**
-   * Calculate the "optimal" separator to use for separating a value and a unit.
+   * @return the ordinal index of this unit, >= 0.
    */
-  private static Character getSeparator()
-  {
-    if ( SEPARATOR != null )
-    {
-      return SEPARATOR;
-    }
-
-    Logger logger = Logger.getLogger( Unit.class.getName() );
-
-    char sep;
-    if ( GraphicsEnvironment.isHeadless() )
-    {
-      // Cannot determine the optimal result, use a sensible default...
-      logger.fine( "Using SPACE (headless fallback)..." );
-
-      sep = SPACE;
-    }
-    else
-    {
-      Font font = UIManager.getFont( "Label.font" );
-
-      if ( font.canDisplay( HAIR ) )
-      {
-        logger.fine( "Using HAIR..." );
-
-        sep = HAIR;
-      }
-      else if ( font.canDisplay( THIN ) )
-      {
-        logger.fine( "Using THIN..." );
-
-        sep = THIN;
-      }
-      else if ( font.canDisplay( NB ) )
-      {
-        logger.fine( "Using NB..." );
-
-        sep = NB;
-      }
-      else
-      {
-        logger.fine( "Using SPACE (fallback)..." );
-
-        sep = SPACE;
-      }
-    }
-
-    SEPARATOR = Character.valueOf( sep );
-    return SEPARATOR;
-  }
+  int ordinal();
 }

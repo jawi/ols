@@ -69,20 +69,10 @@ public class CursorTest
 
     assertEquals( "1", cursor.getLabel( LabelStyle.INDEX_ONLY, data ) );
     assertEquals( "label", cursor.getLabel( LabelStyle.LABEL_ONLY, data ) );
-    assertEqualsWithTimeUnit( "1.0 s", cursor.getLabel( LabelStyle.TIME_ONLY, data ) );
+    assertEquals( "1.0 s", cursor.getLabel( LabelStyle.TIME_ONLY, data ) );
 
     assertEquals( "1: label", cursor.getLabel( LabelStyle.INDEX_LABEL, data ) );
-    assertEqualsWithTimeUnit( "label: 1.0 s", cursor.getLabel( LabelStyle.LABEL_TIME, data ) );
-  }
-
-  private void assertEqualsWithTimeUnit( String aExpected, String aActual )
-  {
-    assertNotNull( aActual );
-
-    String expected = aExpected.replaceAll( "\\W+", " " );
-    String actual = aActual.replaceAll( "\\W+", " " );
-
-    assertEquals( expected, actual );
+    assertEquals( "label: 1.0 s", cursor.getLabel( LabelStyle.LABEL_TIME, data ) );
   }
 
   private CursorImpl createCursor( int aIndex, long aTimestamp, String aLabel, Color aColor )

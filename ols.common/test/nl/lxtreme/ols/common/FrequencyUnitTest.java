@@ -21,9 +21,11 @@
 package nl.lxtreme.ols.common;
 
 
-import java.util.*;
-
+import static nl.lxtreme.ols.common.Unit.Frequency.*;
+import static nl.lxtreme.ols.common.Unit.Value.*;
+import static org.junit.Assert.*;
 import nl.lxtreme.ols.common.Unit.Frequency;
+import nl.lxtreme.ols.common.Unit.Value;
 
 import org.junit.*;
 
@@ -31,53 +33,100 @@ import org.junit.*;
 /**
  * Test cases for {@link Frequency}.
  */
-public class FrequencyUnitTest extends UnitTestBase
+public class FrequencyUnitTest
 {
   // METHODS
 
   /**
-   * Forces the use of English locales for this test.
+   * Tests {@link Value#asFrequency(Number)} and
+   * {@link Value#asFrequency(Number, Frequency)}.
    */
-  @Before
-  public void setUp()
+  @Test
+  public void testAsFrequencyOk()
   {
-    Locale.setDefault( Locale.US );
+    assertEquals( new Value( 1.0, HZ ), asFrequency( 1.0 ) );
+    assertEquals( new Value( 1.001, KHZ ), asFrequency( 1.001e3 ) );
+    assertEquals( new Value( 1.0, MHZ ), asFrequency( 1.0e6 ) );
+    assertEquals( new Value( 1.0e6, HZ ), asFrequency( 1.0e6, HZ ) );
   }
 
   /**
-   * Test method for
-   * {@link Frequency#format(double, int)}.
+   * Tests {@link Value#asFrequency(Number)}.
    */
-  @Test
-  public void testFormatAutoScaleOk()
+  @Test( expected = IllegalArgumentException.class )
+  public void testAsFrequencyWithNullValueFail()
   {
-    assertUnitEquals( "0.000", "Hz", Frequency.format( 0 ) );
-    assertUnitEquals( "1.000", "mHz", Frequency.format( 1.0e-3 ) );
-    assertUnitEquals( "1.000", "Hz", Frequency.format( 1.0 ) );
-    assertUnitEquals( "1.000", "kHz", Frequency.format( 1.0e3 ) );
-    assertUnitEquals( "1.000", "MHz", Frequency.format( 1.0e6 ) );
-    assertUnitEquals( "1.000", "GHz", Frequency.format( 1.0e9 ) );
-    assertUnitEquals( "1.000", "THz", Frequency.format( 1.0e12 ) );
-    assertUnitEquals( "-1.000", "THz", Frequency.format( -1.0e12 ) );
-    assertUnitEquals( "100.000", "THz", Frequency.format( 1.0e14 ) );
-    assertUnitEquals( "333.333", "kHz", Frequency.format( 333333.3333333333 ) );
+    asFrequency( null );
   }
 
   /**
-   * Test method for
-   * {@link nl.lxtreme.ols.api.util.Frequency#format(double, int)}.
+   * Tests {@link Value#asFrequency(Number, Frequency)}.
+   */
+  @Test( expected = IllegalArgumentException.class )
+  public void testAsFrequencyWithNullUnitFail()
+  {
+    asFrequency( 1.0, null );
+  }
+
+  /**
+   * Tests {@link Value#convert(Unit)} for {@link Frequency} units.
    */
   @Test
-  public void testFormatOk()
+  public void testConvertToUnitOk()
   {
-    assertUnitEquals( "0.000", "Hz", Frequency.GHZ.format( 0, 3 ) );
-    assertUnitEquals( "1.000", "mHz", Frequency.MiHZ.format( 1.0e-3, 3 ) );
-    assertUnitEquals( "0.001", "kHz", Frequency.KHZ.format( 1.0, 3 ) );
-    assertUnitEquals( "1.000", "kHz", Frequency.KHZ.format( 1.0e3, 3 ) );
-    assertUnitEquals( "1.000", "MHz", Frequency.MHZ.format( 1.0e6, 3 ) );
-    assertUnitEquals( "1.000", "GHz", Frequency.GHZ.format( 1.0e9, 3 ) );
-    assertUnitEquals( "1.000", "THz", Frequency.THZ.format( 1.0e12, 3 ) );
-    assertUnitEquals( "100.000", "THz", Frequency.THZ.format( 1.0e14, 3 ) );
-    assertUnitEquals( "333.333", "kHz", Frequency.KHZ.format( 333333.3333333333, 3 ) );
+    assertEquals( asFrequency( 1.0, HZ ), asFrequency( 1.0, HZ ).convert( HZ ) );
+
+    assertEquals( asFrequency( 1.0e-15, THZ ), asFrequency( 1.0, MiHZ ).convert( THZ ) );
+    assertEquals( asFrequency( 1.0e15, MiHZ ), asFrequency( 1.0, THZ ).convert( MiHZ ) );
+
+    assertEquals( asFrequency( 1.0e-12, GHZ ), asFrequency( 1.0, MiHZ ).convert( GHZ ) );
+    assertEquals( asFrequency( 1.0e12, MiHZ ), asFrequency( 1.0, GHZ ).convert( MiHZ ) );
+
+    assertEquals( asFrequency( 1.0e-9, MHZ ), asFrequency( 1.0, MiHZ ).convert( MHZ ) );
+    assertEquals( asFrequency( 1.0e9, MiHZ ), asFrequency( 1.0, MHZ ).convert( MiHZ ) );
+
+    assertEquals( asFrequency( 1.0e-6, KHZ ), asFrequency( 1.0, MiHZ ).convert( KHZ ) );
+    assertEquals( asFrequency( 1.0e6, MiHZ ), asFrequency( 1.0, KHZ ).convert( MiHZ ) );
+
+    assertEquals( asFrequency( 1.0e-3, HZ ), asFrequency( 1.0, MiHZ ).convert( HZ ) );
+    assertEquals( asFrequency( 1.0e3, MiHZ ), asFrequency( 1.0, HZ ).convert( MiHZ ) );
+
+    assertEquals( asFrequency( 1.0e-3, KHZ ), asFrequency( 1.0, HZ ).convert( KHZ ) );
+    assertEquals( asFrequency( 1.0e3, HZ ), asFrequency( 1.0, KHZ ).convert( HZ ) );
+
+    assertEquals( asFrequency( 1.0e-6, MHZ ), asFrequency( 1.0, HZ ).convert( MHZ ) );
+    assertEquals( asFrequency( 1.0e6, HZ ), asFrequency( 1.0, MHZ ).convert( HZ ) );
+
+    assertEquals( asFrequency( 1.0e-9, GHZ ), asFrequency( 1.0, HZ ).convert( GHZ ) );
+    assertEquals( asFrequency( 1.0e9, HZ ), asFrequency( 1.0, GHZ ).convert( HZ ) );
+
+    assertEquals( asFrequency( 1.0e-12, THZ ), asFrequency( 1.0, HZ ).convert( THZ ) );
+    assertEquals( asFrequency( 1.0e12, HZ ), asFrequency( 1.0, THZ ).convert( HZ ) );
+
+    assertEquals( asFrequency( 1.0e-6, THZ ), asFrequency( 1.0, MHZ ).convert( THZ ) );
+    assertEquals( asFrequency( 1.0e6, MHZ ), asFrequency( 1.0, THZ ).convert( MHZ ) );
+  }
+
+  /**
+   * Tests {@link Value#convert(Unit)}.
+   */
+  @Test( expected = IllegalArgumentException.class )
+  public void testConvertWithNullToUnitFail()
+  {
+    asFrequency( 1.0 ).convert( null );
+  }
+
+  /**
+   * Tests {@link Value#formatTo(java.util.Formatter, int, int, int)} for
+   * {@link Frequency} units.
+   */
+  @Test
+  public void testFormatFrequencyOk()
+  {
+    assertEquals( "0.0 Hz", String.format( "%s", Value.asFrequency( 0.0 ) ) );
+    assertEquals( "1.23 kHz", String.format( "%s", new Value( 1.23, KHZ ) ) );
+    assertEquals( "1.230 kHz", String.format( "%.3s", new Value( 1.23, KHZ ) ) );
+    assertEquals( " 1.23 kHz", String.format( "%5.2s", new Value( 1.23, KHZ ) ) );
+    assertEquals( "1.23  kHz", String.format( "%-5.2s", new Value( 1.23, KHZ ) ) );
   }
 }

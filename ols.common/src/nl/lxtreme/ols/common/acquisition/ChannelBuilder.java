@@ -160,6 +160,15 @@ public class ChannelBuilder
      * {@inheritDoc}
      */
     @Override
+    public int getValue( int aSampleValue )
+    {
+      return ( aSampleValue & this.mask );
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
     public int hashCode()
     {
       final int prime = 31;
