@@ -22,6 +22,7 @@ package nl.lxtreme.ols.client2.views.managed.measurement;
 
 
 import static nl.lxtreme.ols.client2.ClientConstants.*;
+import static nl.lxtreme.ols.client2.views.ViewUtils.*;
 import static nl.lxtreme.ols.util.swing.SwingComponentUtils.*;
 
 import java.awt.*;

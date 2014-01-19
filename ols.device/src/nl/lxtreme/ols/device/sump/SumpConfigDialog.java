@@ -21,9 +21,9 @@
 package nl.lxtreme.ols.device.sump;
 
 
-import static nl.lxtreme.ols.device.sump.SumpConstants.*;
 import static nl.lxtreme.ols.common.OlsConstants.*;
 import static nl.lxtreme.ols.device.sump.ConfigDialogHelper.*;
+import static nl.lxtreme.ols.device.sump.SumpConstants.*;
 import static nl.lxtreme.ols.util.swing.SwingComponentUtils.*;
 
 import java.awt.*;
@@ -35,7 +35,7 @@ import javax.swing.*;
 import javax.swing.event.*;
 import javax.swing.plaf.basic.*;
 
-import nl.lxtreme.ols.common.*;
+import nl.lxtreme.ols.common.Unit.Value;
 import nl.lxtreme.ols.device.sump.profile.*;
 import nl.lxtreme.ols.device.sump.profile.DeviceProfile.CaptureClockSource;
 import nl.lxtreme.ols.device.sump.profile.DeviceProfile.DeviceInterface;
@@ -69,12 +69,11 @@ public final class SumpConfigDialog extends JDialog implements Configurable, Clo
       Object value = aValue;
       if ( value instanceof Integer )
       {
-        double size = ( ( Integer )value ).doubleValue();
-        double sampleRate = getSelectedSampleRate();
-        double time = size / sampleRate;
+        Value capSize = Value.asSizeSI( ( Integer )value );
+        Value capTime = Value.asTime( capSize.getValue() / ( double )getSelectedSampleRate() );
 
-        value = String.format( "<html>%s&nbsp;&nbsp;<span style='color:gray;font-size:0.85em;'>(%s)</span></html>",
-            Unit.SizeSI.format( size ), Unit.Time.format( time ) );
+        value = String.format( "<html>%#s&nbsp;&nbsp;<span style='color:gray;font-size:0.85em;'>(%#s)</span></html>",
+            capSize, capTime );
       }
       return super.getListCellRendererComponent( aList, value, aIndex, aIsSelected, aCellHasFocus );
     }
@@ -94,7 +93,8 @@ public final class SumpConfigDialog extends JDialog implements Configurable, Clo
       Object value = aValue;
       if ( value instanceof Integer )
       {
-        value = Unit.Frequency.format( ( ( Integer )value ).doubleValue() );
+        Value freq = Value.asFrequency( ( Integer )value );
+        value = freq.toString();
       }
       return super.getListCellRendererComponent( aList, value, aIndex, aIsSelected, aCellHasFocus );
     }

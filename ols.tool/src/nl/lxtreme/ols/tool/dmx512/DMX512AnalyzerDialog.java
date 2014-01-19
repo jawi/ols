@@ -32,7 +32,6 @@ import java.util.List;
 
 import javax.swing.*;
 
-import nl.lxtreme.ols.common.*;
 import nl.lxtreme.ols.tool.api.*;
 import nl.lxtreme.ols.tool.base.*;
 import nl.lxtreme.ols.tool.base.ExportUtils.CsvExporter;
@@ -394,8 +393,8 @@ public final class DMX512AnalyzerDialog extends BaseToolDialog<DMX512DataSet> im
       {
         final DMX512Data ds = decodedData.get( i );
 
-        final String startTime = Unit.Time.format( aDataSet.getTime( ds.getStartSampleIndex() ) );
-        final String endTime = Unit.Time.format( aDataSet.getTime( ds.getEndSampleIndex() ) );
+        final String startTime = formatTime( aDataSet.getTime( ds.getStartSampleIndex() ) );
+        final String endTime = formatTime( aDataSet.getTime( ds.getEndSampleIndex() ) );
 
         String eventType = ds.getEventName();
         String dataValue = Integer.toString( ds.getData() );
@@ -497,7 +496,7 @@ public final class DMX512AnalyzerDialog extends BaseToolDialog<DMX512DataSet> im
 
             tr = aParent.addChild( TR ).addAttribute( "style", "background-color: " + bgColor + ";" );
             tr.addChild( TD ).addContent( String.valueOf( i ) );
-            tr.addChild( TD ).addContent( Unit.Time.format( aDataSet.getTime( ds.getStartSampleIndex() ) ) );
+            tr.addChild( TD ).addContent( formatTime( aDataSet.getTime( ds.getStartSampleIndex() ) ) );
             if ( eventName == null )
             {
               // normal symbol...

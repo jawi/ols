@@ -18,7 +18,7 @@
  * Copyright (C) 2006-2010 Michael Poppitz, www.sump.org
  * Copyright (C) 2010-2014 J.W. Janssen, www.lxtreme.nl
  */
-package nl.lxtreme.ols.client2.views.managed.annotations;
+package nl.lxtreme.ols.client2.views.state;
 
 
 import java.awt.*;
@@ -26,13 +26,13 @@ import java.awt.*;
 import javax.swing.*;
 import javax.swing.table.*;
 
-import nl.lxtreme.ols.common.Unit.Value;
+import nl.lxtreme.ols.client2.views.*;
 
 
 /**
- * Proivdes a table cell renderer for relative time.
+ * Provides a cell renderer for data values.
  */
-class TimeCellRenderer extends DefaultTableCellRenderer
+class DataCellRenderer extends DefaultTableCellRenderer
 {
   // CONSTANTS
 
@@ -44,18 +44,15 @@ class TimeCellRenderer extends DefaultTableCellRenderer
   public Component getTableCellRendererComponent( JTable aTable, Object aValue, boolean aIsSelected, boolean aHasFocus,
       int aRow, int aColumn )
   {
-    JLabel label = ( JLabel )super.getTableCellRendererComponent( aTable, aValue, aIsSelected, //
-        aHasFocus, aRow, aColumn );
+    JLabel label = ( JLabel )super.getTableCellRendererComponent( aTable, aValue, aIsSelected, aHasFocus, aRow, aColumn );
 
-    Object value = aValue;
-    if ( value instanceof Double )
-    {
-      Value time = Value.asTime( ( Integer )value );
-      label.setText( time.toString() );
-    }
+    StateTableModel tableModel = ( StateTableModel )aTable.getModel();
+
+    Radix radix = tableModel.getRadix( aColumn );
+    int width = tableModel.getViewWidth( aColumn );
 
     label.setHorizontalAlignment( SwingConstants.RIGHT );
-
+    label.setText( radix.toString( ( Integer )aValue, width ) );
     return label;
   }
 }

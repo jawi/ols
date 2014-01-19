@@ -29,7 +29,8 @@ import nl.lxtreme.ols.client2.Client.JumpDirection;
 import nl.lxtreme.ols.client2.Client.JumpType;
 import nl.lxtreme.ols.client2.views.state.*;
 import nl.lxtreme.ols.client2.views.waveform.*;
-import nl.lxtreme.ols.common.*;
+import nl.lxtreme.ols.common.Unit.Time;
+import nl.lxtreme.ols.common.Unit.Value;
 import nl.lxtreme.ols.common.acquisition.Cursor;
 
 import org.osgi.service.event.Event;
@@ -112,24 +113,33 @@ public abstract class BaseView extends JComponent
   @Override
   public final void paint( Graphics aGraphics )
   {
-    if ( Boolean.getBoolean( "nl.lxtreme.ols.client.debug" ) )
+    setCursor( java.awt.Cursor.getPredefinedCursor( java.awt.Cursor.WAIT_CURSOR ) );
+    try
     {
-      long startTime = System.nanoTime();
-      try
+      if ( Boolean.getBoolean( "nl.lxtreme.ols.client.debug" ) )
+      {
+        long startTime = System.currentTimeMillis();
+        try
+        {
+          super.paint( aGraphics );
+        }
+        finally
+        {
+          long endTime = System.currentTimeMillis();
+
+          // @formatter:off
+          System.out.printf( "%s rendering time = %s.%n", getClass().getSimpleName(), Value.asTime( endTime - startTime, Time.MS ) );
+          // @formatter:on
+        }
+      }
+      else
       {
         super.paint( aGraphics );
       }
-      finally
-      {
-        long endTime = System.nanoTime();
-        double renderTime = ( endTime - startTime ) / 1.0e9;
-
-        System.out.printf( "%s rendering time = %s.%n", getClass().getSimpleName(), Unit.Time.format( renderTime ) );
-      }
     }
-    else
+    finally
     {
-      super.paint( aGraphics );
+      setCursor( null );
     }
   }
 
@@ -192,17 +202,6 @@ public abstract class BaseView extends JComponent
   }
 
   /**
-   * Repaints the area taken up by the given cursor on screen.
-   * 
-   * @param aCursor
-   *          the cursor to repaint, cannot be <code>null</code>.
-   */
-  protected void repaintCursor( Cursor aCursor )
-  {
-    // Nop
-  }
-
-  /**
    * Posts an asynchronous event.
    * 
    * @param aTopic
@@ -213,5 +212,16 @@ public abstract class BaseView extends JComponent
   protected final void postEvent( String aTopic, Object... aProperties )
   {
     this.controller.postEvent( aTopic, aProperties );
+  }
+
+  /**
+   * Repaints the area taken up by the given cursor on screen.
+   * 
+   * @param aCursor
+   *          the cursor to repaint, cannot be <code>null</code>.
+   */
+  protected void repaintCursor( Cursor aCursor )
+  {
+    // Nop
   }
 }

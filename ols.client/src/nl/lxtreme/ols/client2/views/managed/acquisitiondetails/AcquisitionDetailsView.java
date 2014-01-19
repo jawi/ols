@@ -21,6 +21,8 @@
 package nl.lxtreme.ols.client2.views.managed.acquisitiondetails;
 
 
+import static nl.lxtreme.ols.client2.views.ViewUtils.*;
+
 import java.awt.*;
 import java.text.*;
 

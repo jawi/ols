@@ -88,7 +88,7 @@ public abstract class BaseView extends JComponent
         long endTime = System.nanoTime();
         double renderTime = ( endTime - startTime ) / 1.0e9;
 
-        System.out.printf( "%s rendering time = %s.%n", getClass().getSimpleName(), Unit.Time.format( renderTime ) );
+//        System.out.printf( "%s rendering time = %s.%n", getClass().getSimpleName(), Unit.Time.format( renderTime ) );
       }
     }
     else

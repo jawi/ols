@@ -34,6 +34,7 @@ import java.util.concurrent.*;
 
 import javax.swing.*;
 
+import nl.lxtreme.ols.common.Unit.Value;
 import nl.lxtreme.ols.common.acquisition.*;
 import nl.lxtreme.ols.common.acquisition.Cursor.LabelStyle;
 import nl.lxtreme.ols.task.execution.*;
@@ -414,6 +415,12 @@ public abstract class BaseToolDialog<RESULT_TYPE> extends JFrame implements Tool
 
     panel.add( markerBLabel );
     panel.add( this.markerB );
+  }
+
+  protected final String formatTime( double aTime )
+  {
+    Value time = Value.asTime( aTime );
+    return time.toString();
   }
 
   /**

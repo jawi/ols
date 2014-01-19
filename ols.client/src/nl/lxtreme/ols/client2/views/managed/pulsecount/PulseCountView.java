@@ -21,6 +21,7 @@
 package nl.lxtreme.ols.client2.views.managed.pulsecount;
 
 
+import static nl.lxtreme.ols.client2.views.ViewUtils.*;
 import static nl.lxtreme.ols.util.swing.SwingComponentUtils.*;
 
 import java.awt.*;

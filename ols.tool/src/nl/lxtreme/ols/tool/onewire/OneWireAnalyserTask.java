@@ -26,7 +26,7 @@ import static nl.lxtreme.ols.tool.base.NumberUtils.*;
 
 import java.util.logging.*;
 
-import nl.lxtreme.ols.common.*;
+import nl.lxtreme.ols.common.Unit.Value;
 import nl.lxtreme.ols.common.acquisition.*;
 import nl.lxtreme.ols.tool.api.*;
 
@@ -211,8 +211,9 @@ public class OneWireAnalyserTask implements ToolTask<OneWireDataSet>
       long fallingEdge = findEdge( aData, time, endOfDecode, Edge.FALLING );
       if ( fallingEdge < 0 )
       {
-        LOG.log( Level.INFO, "Decoding ended at {0}; no falling edge found...",
-            Unit.Time.format( time / ( double )aData.getSampleRate() ) );
+        Value endTime = Value.asTime( time / ( double )aData.getSampleRate() );
+
+        LOG.log( Level.INFO, "Decoding ended at {0}; no falling edge found...", endTime );
         break;
       }
       long risingEdge = findEdge( aData, fallingEdge, endOfDecode, Edge.RISING );

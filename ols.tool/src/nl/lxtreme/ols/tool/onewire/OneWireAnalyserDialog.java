@@ -33,7 +33,6 @@ import java.util.List;
 
 import javax.swing.*;
 
-import nl.lxtreme.ols.common.*;
 import nl.lxtreme.ols.tool.api.*;
 import nl.lxtreme.ols.tool.base.*;
 import nl.lxtreme.ols.tool.base.ExportUtils.HtmlExporter;
@@ -430,7 +429,7 @@ public class OneWireAnalyserDialog extends BaseToolDialog<OneWireDataSet> implem
 
               tr = aParent.addChild( TR ).addAttribute( "style", "background-color: " + bgColor + ";" );
               tr.addChild( TD ).addContent( String.valueOf( i ) );
-              tr.addChild( TD ).addContent( Unit.Time.format( aAnalysisResult.getTime( data.getStartSampleIndex() ) ) );
+              tr.addChild( TD ).addContent( formatTime( aAnalysisResult.getTime( data.getStartSampleIndex() ) ) );
               tr.addChild( TD ).addContent( event );
               tr.addChild( TD );
               tr.addChild( TD );
@@ -442,7 +441,7 @@ public class OneWireAnalyserDialog extends BaseToolDialog<OneWireDataSet> implem
 
               tr = aParent.addChild( TR );
               tr.addChild( TD ).addContent( String.valueOf( i ) );
-              tr.addChild( TD ).addContent( Unit.Time.format( aAnalysisResult.getTime( data.getStartSampleIndex() ) ) );
+              tr.addChild( TD ).addContent( formatTime( aAnalysisResult.getTime( data.getStartSampleIndex() ) ) );
               tr.addChild( TD ).addContent( NumberUtils.integerToHexString( value, 2 ) );
               tr.addChild( TD ).addContent( NumberUtils.integerToBinString( value, 8 ) );
               tr.addChild( TD ).addContent( String.valueOf( value ) );

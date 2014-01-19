@@ -25,6 +25,8 @@ import static nl.lxtreme.ols.client2.views.UIMgr.*;
 
 import java.awt.*;
 
+import javax.swing.*;
+
 import nl.lxtreme.ols.client2.views.UIMgr.Alignment;
 import nl.lxtreme.ols.common.acquisition.*;
 
@@ -142,6 +144,7 @@ final class WaveformElement
   {
     WaveformElement result = new WaveformElement( Type.ANALOG_SCOPE );
     result.setAlignment( Alignment.valueOf( getString( SIGNALVIEW_SIGNAL_ALIGNMENT, "CENTER" ) ) );
+    result.setEnabled( UIManager.getBoolean( ANALOG_SCOPE_VISIBLE_DEFAULT ) );
     result.setHeight( getInt( ANALOG_SCOPE_HEIGHT, 50 ) );
     result.group = aGroup;
     return result;
@@ -179,6 +182,7 @@ final class WaveformElement
   {
     WaveformElement result = new WaveformElement( Type.GROUP );
     result.setAlignment( Alignment.valueOf( getString( SIGNALVIEW_SIGNAL_ALIGNMENT, "CENTER" ) ) );
+    result.setEnabled( UIManager.getBoolean( GROUP_SUMMARY_VISIBLE_DEFAULT ) );
     result.setHeight( getInt( GROUP_SUMMARY_HEIGHT, 25 ) );
     result.group = aGroup;
     return result;
@@ -307,7 +311,36 @@ final class WaveformElement
     {
       return this.channel.getMask();
     }
-    return this.group.getIndex(); // XXX
+    return this.group.getMask();
+  }
+
+  /**
+   * Returns the logical value of this waveform element based on a given sample
+   * value and the known mask.
+   * 
+   * @param aSampleValue
+   *          the sample value to return the logical value for.
+   * @return the logical value for this waveform element.
+   */
+  public int getValue( int aSampleValue )
+  {
+    if ( this.channel != null )
+    {
+      return this.channel.getValue( aSampleValue );
+    }
+    return this.group.getValue( aSampleValue );
+  }
+
+  /**
+   * @return the number of channels represented by this waveform element, >= 1.
+   */
+  public int getWidth()
+  {
+    if ( this.channel != null )
+    {
+      return 1;
+    }
+    return this.group.getChannelCount();
   }
 
   /**
@@ -399,6 +432,17 @@ final class WaveformElement
     {
       this.group.setColor( aColor );
     }
+  }
+
+  /**
+   * Sets enabled to the given value.
+   * 
+   * @param aEnabled
+   *          the enabled to set.
+   */
+  public void setEnabled( boolean aEnabled )
+  {
+    this.enabled = aEnabled;
   }
 
   /**

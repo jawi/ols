@@ -56,6 +56,7 @@ import nl.lxtreme.ols.client2.views.managed.measurement.*;
 import nl.lxtreme.ols.client2.views.managed.outline.*;
 import nl.lxtreme.ols.client2.views.managed.pulsecount.*;
 import nl.lxtreme.ols.common.*;
+import nl.lxtreme.ols.common.Unit.*;
 import nl.lxtreme.ols.common.acquisition.*;
 import nl.lxtreme.ols.common.acquisition.Cursor;
 import nl.lxtreme.ols.common.annotation.*;
@@ -722,7 +723,7 @@ public class Client extends DefaultDockableHolder implements ApplicationCallback
       if ( exception == null )
       {
         // @formatter:off
-        this.statusUpdater.add( 100, new Object[] { "Tool %s completed its task in %s.", toolName, Unit.Time.MS.format( executionTime.doubleValue(), 2 ) } );
+        this.statusUpdater.add( 100, new Object[] { "Tool %s completed its task in %s.", toolName, Value.asTime( executionTime, Time.MS ) } );
         // @formatter:on
       }
       else
@@ -761,13 +762,15 @@ public class Client extends DefaultDockableHolder implements ApplicationCallback
 
         if ( exception != null )
         {
-          this.statusUpdater.add( 0, new Object[] { "Acquisition failed for %s, possible reason: %s",
-              getSelectedDeviceName(), exception.getMessage() } );
+          // @formatter:off
+          this.statusUpdater.add( 0, new Object[] { "Acquisition failed for %s, possible reason: %s", getSelectedDeviceName(), exception.getMessage() } );
+          // @formatter:on
         }
         else
         {
-          this.statusUpdater.add( 0, new Object[] { "Acquisition ended for %s and took %s...", getSelectedDeviceName(),
-              Unit.Time.MS.format( executionTime.doubleValue(), 2 ) } );
+          // @formatter:off
+          this.statusUpdater.add( 0, new Object[] { "Acquisition ended for %s and took %s...", getSelectedDeviceName(), Value.asTime( executionTime, Time.MS ) } );
+          // @formatter:on
         }
 
         updateManagedState();

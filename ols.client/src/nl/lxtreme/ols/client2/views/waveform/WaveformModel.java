@@ -295,6 +295,14 @@ public class WaveformModel extends ViewModel
   }
 
   /**
+   * @return the radix to display the values in a group summary.
+   */
+  public Radix getGroupSummaryRadix()
+  {
+    return Radix.HEX; // XXX
+  }
+
+  /**
    * Determines the measurement information for the given mouse position.
    * 
    * @param aPoint

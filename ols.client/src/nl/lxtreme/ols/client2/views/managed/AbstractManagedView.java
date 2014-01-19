@@ -27,13 +27,12 @@ import java.util.*;
 
 import javax.swing.*;
 
-import org.osgi.framework.*;
-import org.osgi.service.event.*;
-
 import nl.lxtreme.ols.client2.views.*;
-import nl.lxtreme.ols.common.*;
 import nl.lxtreme.ols.common.acquisition.*;
 import nl.lxtreme.ols.util.swing.*;
+
+import org.osgi.framework.*;
+import org.osgi.service.event.*;
 
 import com.jidesoft.docking.*;
 
@@ -70,108 +69,6 @@ public abstract class AbstractManagedView extends JPanel implements ManagedView,
   }
 
   // METHODS
-
-  /**
-   * Returns the duty cycle as formatted String value.
-   * 
-   * @return a String representation, never <code>null</code>.
-   */
-  protected static String formatDutyCycle( final Double aDC )
-  {
-    if ( aDC != null )
-    {
-      return String.format( "%.1f %%", aDC );
-    }
-    return "-";
-  }
-
-  /**
-   * Returns the given double value as frequency string.
-   * 
-   * @return a frequency representation.
-   */
-  protected static String formatFrequency( final Double aFrequency )
-  {
-    if ( aFrequency != null )
-    {
-      return Unit.Frequency.format( aFrequency.doubleValue() );
-    }
-    return "-";
-  }
-
-  /**
-   * Returns the given double value as frequency string.
-   * 
-   * @return a frequency representation.
-   */
-  protected static String formatPeriodAsFrequency( final Double aPeriod )
-  {
-    if ( aPeriod != null )
-    {
-      return Unit.Frequency.format( 1.0 / aPeriod.doubleValue() );
-    }
-    return "-";
-  }
-
-  /**
-   * Determines what tooltip is to be displayed.
-   * 
-   * @param aPoint
-   *          a current mouse location, cannot be <code>null</code>.
-   * @return a tooltip text, never <code>null</code>.
-   */
-  protected static String formatReference( final boolean aHasTimingInformation, final double aRefTime )
-  {
-    final String toolTip;
-    if ( aHasTimingInformation )
-    {
-      toolTip = formatTimestamp( aRefTime );
-    }
-    else
-    {
-      toolTip = formatStateValue( ( int )aRefTime );
-    }
-
-    return toolTip;
-  }
-
-  /**
-   * Returns the given double value as time string.
-   * 
-   * @return a time representation.
-   */
-  protected static String formatTime( final Double aTime )
-  {
-    if ( aTime != null )
-    {
-      return Unit.Time.format( aTime.doubleValue() );
-    }
-    return "-";
-  }
-
-  /**
-   * Formats a given sample index as state value.
-   * 
-   * @param aSampleIdx
-   *          the sample index to format.
-   * @return a state value formatted string, never <code>null</code>.
-   */
-  private static String formatStateValue( final int aSampleIdx )
-  {
-    return Integer.toString( aSampleIdx );
-  }
-
-  /**
-   * Formats a given time as human readable timestamp.
-   * 
-   * @param aTime
-   *          the time to format.
-   * @return a timestamp, never <code>null</code>.
-   */
-  private static String formatTimestamp( final double aTime )
-  {
-    return Unit.Time.toUnit( aTime ).formatHumanReadable( aTime );
-  }
 
   /**
    * {@inheritDoc}

@@ -23,7 +23,7 @@ package nl.lxtreme.ols.tool.manchester;
 
 import java.util.*;
 
-import nl.lxtreme.ols.common.*;
+import nl.lxtreme.ols.common.Unit.Value;
 import nl.lxtreme.ols.common.acquisition.*;
 import nl.lxtreme.ols.common.acquisition.AcquisitionDataBuilder.IncludeAnnotations;
 import nl.lxtreme.ols.common.acquisition.AcquisitionDataBuilder.IncludeSamples;
@@ -208,8 +208,8 @@ public class ManchesterDecoderTask implements ToolTask<AcquisitionData>
 
     lastTimestamp += halfCycle;
 
-    String format = Unit.Frequency.format( inputData.getSampleRate() / ( 2.0 * halfCycle ) );
-    System.out.println( "Clock signal = " + format );
+    Value clockFreq = Value.asFrequency( inputData.getSampleRate() / ( 2.0 * halfCycle ) );
+    System.out.println( "Clock signal = " + clockFreq );
 
     AcquisitionDataBuilder builder = new AcquisitionDataBuilder();
     builder.applyTemplate( inputData, IncludeSamples.NO, IncludeAnnotations.YES );

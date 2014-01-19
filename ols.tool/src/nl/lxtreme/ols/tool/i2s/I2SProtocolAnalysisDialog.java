@@ -32,7 +32,6 @@ import java.util.List;
 
 import javax.swing.*;
 
-import nl.lxtreme.ols.common.*;
 import nl.lxtreme.ols.tool.api.*;
 import nl.lxtreme.ols.tool.base.*;
 import nl.lxtreme.ols.tool.base.ExportUtils.CsvExporter;
@@ -396,8 +395,8 @@ public final class I2SProtocolAnalysisDialog extends BaseToolDialog<I2SDataSet> 
       {
         final I2SData ds = dataSet.get( i );
 
-        final String startTime = Unit.Time.format( aAnalysisResult.getTime( ds.getStartSampleIndex() ) );
-        final String endTime = Unit.Time.format( aAnalysisResult.getTime( ds.getEndSampleIndex() ) );
+        final String startTime = formatTime( aAnalysisResult.getTime( ds.getStartSampleIndex() ) );
+        final String endTime = formatTime( aAnalysisResult.getTime( ds.getEndSampleIndex() ) );
         final String data = ds.isEvent() ? "" : Character.toString( ( char )ds.getValue() );
 
         exporter.addRow( Integer.valueOf( i ), startTime, endTime, Boolean.valueOf( ds.isEvent() ), ds.getEventName(),
@@ -476,7 +475,7 @@ public final class I2SProtocolAnalysisDialog extends BaseToolDialog<I2SDataSet> 
 
               tr = aParent.addChild( TR ).addAttribute( "style", "background-color: " + bgColor + ";" );
               tr.addChild( TD ).addContent( String.valueOf( i ) );
-              tr.addChild( TD ).addContent( Unit.Time.format( aAnalysisResult.getTime( data.getStartSampleIndex() ) ) );
+              tr.addChild( TD ).addContent( formatTime( aAnalysisResult.getTime( data.getStartSampleIndex() ) ) );
               tr.addChild( TD ).addContent( channel.name() );
               tr.addChild( TD ).addAttribute( "colspan", "2" ).addContent( event );
             }
@@ -486,7 +485,7 @@ public final class I2SProtocolAnalysisDialog extends BaseToolDialog<I2SDataSet> 
 
               tr = aParent.addChild( TR );
               tr.addChild( TD ).addContent( String.valueOf( i ) );
-              tr.addChild( TD ).addContent( Unit.Time.format( aAnalysisResult.getTime( data.getStartSampleIndex() ) ) );
+              tr.addChild( TD ).addContent( formatTime( aAnalysisResult.getTime( data.getStartSampleIndex() ) ) );
               tr.addChild( TD ).addContent( channel.name() );
               tr.addChild( TD ).addContent( Long.toHexString( value ) );
               tr.addChild( TD ).addContent( Long.toString( value ) );

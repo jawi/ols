@@ -34,6 +34,7 @@ import javax.swing.*;
 
 import nl.lxtreme.ols.client2.views.*;
 import nl.lxtreme.ols.common.*;
+import nl.lxtreme.ols.common.Unit.*;
 import nl.lxtreme.ols.common.acquisition.*;
 import nl.lxtreme.ols.common.acquisition.Cursor.LabelStyle;
 import nl.lxtreme.ols.common.acquisition.Cursor;
@@ -293,6 +294,7 @@ final class WaveformTimelineComponent extends JComponent
   // VARIABLES
 
   private final WaveformModel model;
+  private final Formatter formatter;
 
   // CONSTRUCTORS
 
@@ -302,6 +304,8 @@ final class WaveformTimelineComponent extends JComponent
   public WaveformTimelineComponent( WaveformModel aModel )
   {
     this.model = aModel;
+
+    this.formatter = new Formatter();
 
     setOpaque( true );
     // Inherit the popup menu from our parent...
@@ -474,30 +478,24 @@ final class WaveformTimelineComponent extends JComponent
    */
   private String displayTime( double aTime, double aTimeScale, int aPrecision )
   {
-    final Unit.Time timeScale = Unit.Time.toUnit( aTimeScale );
-    final Unit.Time time = Unit.Time.toUnit( aTime );
+    Unit.Time timeScale = Unit.Time.toUnit( aTimeScale );
+    Value time = Value.asTime( aTime );
 
     // determine the magnitude of difference...
-    int mag = 0;
-    Unit.Time ptr = timeScale;
-    while ( ( ptr != null ) && ( ptr != time ) )
-    {
-      ptr = ptr.predecessor();
-      mag++;
-    }
+    int mag = Math.abs( timeScale.ordinal() - time.getUnit().ordinal() );
 
     if ( mag > 1 )
     {
-      ptr = time.successor();
-      if ( ptr == null )
-      {
-        ptr = timeScale.predecessor();
-      }
       // More than a factor 1000 difference...
-      return ptr.formatHumanReadable( aTime );
+      // return BaseView.formatTime( ptr, aTime );
     }
 
-    return time.formatHumanReadable( aTime );
+    StringBuilder out = ( StringBuilder )this.formatter.out();
+    out.setLength( 0 );
+
+    time.formatTo( this.formatter, 0, -1, aPrecision );
+
+    return out.toString();
   }
 
   /**
@@ -550,12 +548,7 @@ final class WaveformTimelineComponent extends JComponent
    */
   private String getMajorTimestamp( double aTime, double aTimeScale )
   {
-    if ( this.model.hasTimingData() )
-    {
-      return displayTime( aTime, aTimeScale, 2 );
-    }
-
-    return Integer.toString( ( int )aTime );
+    return displayTime( aTime, aTimeScale, 2 );
   }
 
   /**
@@ -565,13 +558,7 @@ final class WaveformTimelineComponent extends JComponent
    */
   private String getMinorTimestamp( double aTime, double aTimeScale )
   {
-    if ( this.model.hasTimingData() )
-    {
-      final Unit.Time time = Unit.Time.toUnit( aTime );
-      return time.formatHumanReadable( aTime );
-    }
-
-    return Integer.toString( ( int )aTime );
+    return Value.asTime( aTime ).toString();
   }
 
   /**

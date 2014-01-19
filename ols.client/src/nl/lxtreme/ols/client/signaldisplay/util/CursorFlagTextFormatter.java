@@ -97,7 +97,8 @@ public final class CursorFlagTextFormatter
     final String timestampText;
     if ( this.model.hasTimingData() )
     {
-      timestampText = Unit.Time.toUnit( timestamp ).formatHumanReadable( timestamp );
+//      timestampText = Unit.Time.toUnit( timestamp ).formatHumanReadable( timestamp );
+      timestampText = ""; // XXX
     }
     else
     {

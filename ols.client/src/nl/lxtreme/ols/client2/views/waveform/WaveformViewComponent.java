@@ -54,7 +54,7 @@ final class WaveformViewComponent extends JComponent implements Scrollable
    * The number of samples that are shown in a single view upon which is decided
    * to draw the group summary and scope a bit sloppy.
    */
-  private static final int SLOPPY_DRAW_THRESHOLD = 10000;
+  private static final int SLOPPY_DRAW_THRESHOLD = 20000;
 
   // VARIABLES
 
@@ -546,9 +546,15 @@ final class WaveformViewComponent extends JComponent implements Scrollable
     aCanvas.translate( 0, aElements[0].getYposition() );
 
     final boolean enableSloppyScopePainting = !getBoolean( DISABLE_SLOPPY_SCOPE_PAINTING );
-    int lastP = 0;
 
     int elementSpacing = getInt( SIGNAL_ELEMENT_SPACING );
+
+    int sampleIncr = 1;
+    if ( enableSloppyScopePainting && ( endIdx - startIdx > SLOPPY_DRAW_THRESHOLD ) )
+    {
+      sampleIncr = ( int )Math.max( 1.0, ( 5.0 / zoomFactor ) - 1.0 );
+      System.out.printf( "Sloppy painting: sample increment = %d.%n", sampleIncr );
+    }
 
     for ( WaveformElement element : aElements )
     {
@@ -594,7 +600,7 @@ final class WaveformViewComponent extends JComponent implements Scrollable
           y[0] = ( prevSampleValue == 0 ? signalHeight : 0 );
           int p = 1;
 
-          for ( int sampleIdx = startIdx + 1; sampleIdx <= endIdx; sampleIdx++ )
+          for ( int sampleIdx = startIdx + 1; sampleIdx <= endIdx; sampleIdx += sampleIncr )
           {
             int sampleValue = ( values[sampleIdx] & mask );
             if ( prevSampleValue != sampleValue )
@@ -626,9 +632,9 @@ final class WaveformViewComponent extends JComponent implements Scrollable
           y[p] = ( values[endIdx] & mask ) == 0 ? signalHeight : 0;
           p++;
 
-          aCanvas.drawPolyline( x, y, p );
+          System.out.printf( "Points = %d.%n", p - 1 );
 
-          lastP = ( int )( ( p * 0.1 ) + ( lastP * 0.9 ) );
+          aCanvas.drawPolyline( x, y, p );
 
           aCanvas.setFont( UIMgr.getFont( SIGNALVIEW_ANNOTATION_FONT ) );
 
@@ -699,22 +705,18 @@ final class WaveformViewComponent extends JComponent implements Scrollable
         aCanvas.translate( 0, -signalOffset );
       }
 
-      int sampleIncr = 1;
-      if ( enableSloppyScopePainting && ( lastP > SLOPPY_DRAW_THRESHOLD ) )
-      {
-        sampleIncr = ( int )Math.max( 1.0, ( 1.0 / zoomFactor ) );
-      }
-
-      if ( Type.GROUP_SUMMARY.equals( type ) )
+      if ( Type.GROUP_SUMMARY.equals( type ) && element.isEnabled() )
       {
         // Tell Swing how we would like to render ourselves...
         aCanvas.setRenderingHints( createSignalRenderingHints( getBoolean( SIGNALVIEW_GROUP_SUMMARY_RENDER_AA ) ) );
 
-        int mask = element.getMask();
-
         int padding = getInt( SIGNALVIEW_GROUP_SUMMARY_PADDING );
+        Radix radix = this.model.getGroupSummaryRadix();
 
-        int prevSampleValue = values[startIdx] & mask;
+        // number of characters needed to represent the group summary value...
+        int width = ( int )Math.ceil( element.getWidth() / radix.getWidth() );
+
+        int prevSampleValue = element.getValue( values[startIdx] );
         int prevX = ( int )( zoomFactor * timestamps[startIdx] );
 
         aCanvas.setFont( UIMgr.getFont( SIGNALVIEW_GROUP_SUMMARY_TEXT_FONT ) );
@@ -722,15 +724,14 @@ final class WaveformViewComponent extends JComponent implements Scrollable
         FontMetrics fm = aCanvas.getFontMetrics();
         int textYpos = ( int )( ( element.getHeight() + fm.getLeading() + fm.getMaxAscent() ) / 2.0 ) - padding;
 
-        for ( int sampleIdx = startIdx + 1; sampleIdx < endIdx; sampleIdx += sampleIncr )
+        for ( int sampleIdx = startIdx + 1; sampleIdx <= endIdx; sampleIdx += sampleIncr )
         {
-          int sampleValue = ( values[sampleIdx] & mask );
-
+          int sampleValue = element.getValue( values[sampleIdx] );
           if ( sampleValue != prevSampleValue )
           {
             int x = ( int )( zoomFactor * timestamps[sampleIdx] );
 
-            String text = String.format( "%02X", Integer.valueOf( prevSampleValue ) );
+            String text = radix.toString( prevSampleValue, width );
 
             int textWidth = fm.stringWidth( text ) + ( 2 * padding );
             int cellWidth = x - prevX;
@@ -762,10 +763,7 @@ final class WaveformViewComponent extends JComponent implements Scrollable
 
         aCanvas.setColor( element.getColor() );
 
-        long mask = element.getMask() & 0xFFFFFFFFL;
-        final int trailingZeros = Long.numberOfTrailingZeros( mask );
-        final int onesCount = Long.SIZE - Long.numberOfLeadingZeros( mask ) - trailingZeros;
-        final long maxValue = ( ( 1L << onesCount ) - 1L ) & 0xFFFFFFFFL;
+        final int maxValue = ( int )( ( 1L << element.getWidth() ) - 1L );
         double scaleFactor = ( maxValue == 0L ) ? 1.0 : element.getHeight() / ( double )maxValue;
 
         // Make sure we always start with time 0...
@@ -778,28 +776,31 @@ final class WaveformViewComponent extends JComponent implements Scrollable
         }
         else
         {
-          for ( int sampleIdx = startIdx; ( p < POINT_COUNT ) && ( sampleIdx < endIdx ); sampleIdx += sampleIncr )
+          for ( int sampleIdx = startIdx; sampleIdx <= endIdx; sampleIdx += sampleIncr )
           {
             long timestamp = timestamps[sampleIdx];
 
-            int sampleValue = ( int )( ( values[sampleIdx] & mask ) >> trailingZeros );
-            final int i_max = Math.min( endIdx, ( sampleIdx + sampleIncr ) - 1 );
-            for ( int i = sampleIdx + 1; i < i_max; i++ )
-            {
-              sampleValue += ( ( values[i] & mask ) >> trailingZeros );
-            }
-            sampleValue = ( int )( maxValue - ( sampleValue / ( double )sampleIncr ) );
+            int sampleValue = element.getValue( values[sampleIdx] );
 
             x[p] = ( int )( zoomFactor * timestamp );
             y[p] = ( int )( scaleFactor * sampleValue );
             p++;
+
+            if ( p >= ( x.length - 2 ) )
+            {
+              aCanvas.drawPolyline( x, y, p );
+              p = 0;
+            }
           }
         }
 
         // Make sure we end at the last visible sample index...
-        x[p] = clip.x + clip.width;
-        y[p] = y[p - 1];
-        p++;
+        if ( p > 0 )
+        {
+          x[p] = clip.x + clip.width;
+          y[p] = y[p - 1];
+          p++;
+        }
 
         aCanvas.drawPolyline( x, y, p );
       }

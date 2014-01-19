@@ -16,22 +16,29 @@
  * 51 Franklin St, Fifth Floor, Boston, MA 02110, USA
  *
  * Copyright (C) 2006-2010 Michael Poppitz, www.sump.org
- * Copyright (C) 2010-2012 J.W. Janssen, www.lxtreme.nl
+ * Copyright (C) 2010-2014 J.W. Janssen, www.lxtreme.nl
  */
-package nl.lxtreme.ols.client.signaldisplay.view;
+package nl.lxtreme.ols.client2.views;
 
 
-import java.awt.*;
-
-import nl.lxtreme.ols.client.signaldisplay.model.*;
-import nl.lxtreme.ols.common.*;
+import nl.lxtreme.ols.common.Unit.*;
 
 
 /**
- * Some commonly used methods.
+ * Utility methods for use in views.
  */
-final class ViewUtils
+public final class ViewUtils
 {
+  // CONSTRUCTORS
+
+  /**
+   * Creates a new {@link ViewUtils} instance.
+   */
+  private ViewUtils()
+  {
+    // Nop
+  }
+
   // METHODS
 
   /**
@@ -57,7 +64,8 @@ final class ViewUtils
   {
     if ( aFrequency != null )
     {
-//      return Unit.Frequency.format( aFrequency.doubleValue() );
+      Value freq = Value.asFrequency( aFrequency );
+      return String.format( "%#.3s", freq );
     }
     return "-";
   }
@@ -71,7 +79,7 @@ final class ViewUtils
   {
     if ( aPeriod != null )
     {
-//      return Unit.Frequency.format( 1.0 / aPeriod.doubleValue() );
+      return formatFrequency( 1.0 / aPeriod.doubleValue() );
     }
     return "-";
   }
@@ -88,7 +96,7 @@ final class ViewUtils
     final String toolTip;
     if ( aHasTimingInformation )
     {
-      toolTip = formatTimestamp( aRefTime );
+      toolTip = formatTime( aRefTime );
     }
     else
     {
@@ -107,35 +115,9 @@ final class ViewUtils
   {
     if ( aTime != null )
     {
-//      return Unit.Time.format( aTime.doubleValue() );
+      return String.format( "%#.2s", Value.asTime( aTime ) );
     }
     return "-";
-  }
-
-  /**
-   * Determines what tooltip is to be displayed.
-   * 
-   * @param aPoint
-   *          a current mouse location, cannot be <code>null</code>.
-   * @return a tooltip text, never <code>null</code>.
-   */
-  public static String getToolTipText( final SignalDiagramModel aModel, final double aRefTime )
-  {
-    return formatReference( aModel.hasTimingData(), aRefTime );
-  }
-
-  /**
-   * Determines what tooltip is to be displayed.
-   * 
-   * @param aPoint
-   *          a current mouse location, cannot be <code>null</code>.
-   * @return a tooltip text, never <code>null</code>.
-   */
-  public static String getToolTipText( final SignalDiagramModel aModel, final Point aPoint )
-  {
-    final boolean hasTimingData = aModel.hasTimingData();
-    return formatReference( hasTimingData,
-        hasTimingData ? aModel.getTimestamp( aPoint.x ) : aModel.locationToSampleIndex( aPoint ) );
   }
 
   /**
@@ -145,22 +127,9 @@ final class ViewUtils
    *          the sample index to format.
    * @return a state value formatted string, never <code>null</code>.
    */
-  private static String formatStateValue( final int aSampleIdx )
+  private static String formatStateValue( int aSampleIdx )
   {
     return Integer.toString( aSampleIdx );
-  }
-
-  /**
-   * Formats a given time as human readable timestamp.
-   * 
-   * @param aTime
-   *          the time to format.
-   * @return a timestamp, never <code>null</code>.
-   */
-  private static String formatTimestamp( final double aTime )
-  {
-//    return Unit.Time.toUnit( aTime ).formatHumanReadable( aTime );
-    return "";
   }
 
 }

@@ -173,7 +173,7 @@ public class BackgroundTaskExecutionService implements TaskExecutionService
    */
   protected void start()
   {
-    this.executorService = Executors.newCachedThreadPool();
+    this.executorService = Executors.newFixedThreadPool( 5 );
   }
 
   /**

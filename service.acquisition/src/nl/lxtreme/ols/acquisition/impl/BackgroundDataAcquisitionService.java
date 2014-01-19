@@ -90,10 +90,17 @@ public class BackgroundDataAcquisitionService implements AcquisitionService, Eve
 
     this.acquisitionFutureTask = device.acquireData( aConfig, new AcquisitionProgressListener()
     {
+      private int oldPercentage = -1;
+
       @Override
       public void acquisitionInProgress( final int aPercentage )
       {
-        fireAcquisitionInProgressEvent( aDeviceName, aPercentage );
+        if ( this.oldPercentage != aPercentage )
+        {
+          fireAcquisitionInProgressEvent( aDeviceName, aPercentage );
+
+          this.oldPercentage = aPercentage;
+        }
       }
     } );
   }

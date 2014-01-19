@@ -500,10 +500,11 @@ public class TimeLineUI extends ComponentUI
         ptr = timeScale.predecessor();
       }
       // More than a factor 1000 difference...
-      return ptr.formatHumanReadable( aTime );
+//      return ptr.formatHumanReadable( aTime );
     }
 
-    return time.formatHumanReadable( aTime );
+//    return time.formatHumanReadable( aTime );
+    return ""; // XXX
   }
 
   /**
@@ -558,7 +559,7 @@ public class TimeLineUI extends ComponentUI
     if ( aModel.hasTimingData() )
     {
       final Unit.Time time = Unit.Time.toUnit( aTime );
-      return time.formatHumanReadable( aTime );
+//      return time.formatHumanReadable( aTime );
     }
 
     return Integer.toString( ( int )aTime );
