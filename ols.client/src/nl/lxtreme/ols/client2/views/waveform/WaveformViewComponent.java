@@ -409,20 +409,25 @@ final class WaveformViewComponent extends JComponent implements Scrollable
     aCanvas.setBackground( background );
     aCanvas.clearRect( clip.x, clip.y, clip.width, clip.height );
 
-    final int startIdx = this.model.getStartIndex( clip );
-    final long startTime = timestamps[startIdx];
-    final int endIdx = this.model.getEndIndex( clip, values.length );
-    final long endTime = timestamps[endIdx];
+    Rectangle visibleRect = getVisibleRect();
+    // Track how many samples there are on screen...
+    int firstVisibleIdx = this.model.getStartIndex( visibleRect );
+    int lastVisibleIdx = this.model.getEndIndex( visibleRect, values.length );
 
-    final double zoomFactor = this.model.getZoomFactor();
+    int startIdx = this.model.getStartIndex( clip );
+    long startTime = timestamps[startIdx];
+    int endIdx = this.model.getEndIndex( clip, values.length );
+    long endTime = timestamps[endIdx];
+
+    double zoomFactor = this.model.getZoomFactor();
 
     if ( data.hasTriggerData() )
     {
-      final long triggerOffset = data.getTriggerPosition();
+      long triggerOffset = data.getTriggerPosition();
       if ( ( timestamps[startIdx] <= triggerOffset ) && ( timestamps[endIdx] >= triggerOffset ) )
       {
         // Draw a line denoting the trigger position...
-        final int x = ( int )Math.round( triggerOffset * zoomFactor );
+        int x = ( int )Math.round( triggerOffset * zoomFactor );
 
         aCanvas.setColor( getColor( SIGNALVIEW_TRIGGER_COLOR, Color.RED ) );
         aCanvas.drawLine( x, clip.y, x, clip.y + clip.height );
@@ -432,12 +437,11 @@ final class WaveformViewComponent extends JComponent implements Scrollable
     // Start drawing at the correct position in the clipped region...
     aCanvas.translate( 0, aElements[0].getYposition() );
 
-    final boolean enableSloppyScopePainting = !getBoolean( DISABLE_SLOPPY_SCOPE_PAINTING );
-
     int elementSpacing = getInt( SIGNAL_ELEMENT_SPACING );
 
     int sampleIncr = 1;
-    if ( enableSloppyScopePainting && ( endIdx - startIdx > SLOPPY_DRAW_THRESHOLD ) )
+    boolean enableSloppyScopePainting = !getBoolean( DISABLE_SLOPPY_SCOPE_PAINTING );
+    if ( enableSloppyScopePainting && ( ( lastVisibleIdx - firstVisibleIdx ) > SLOPPY_DRAW_THRESHOLD ) )
     {
       sampleIncr = ( int )Math.max( 1.0, ( 5.0 / zoomFactor ) - 1.0 );
     }

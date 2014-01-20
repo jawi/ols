@@ -38,7 +38,6 @@ import nl.lxtreme.ols.common.Unit.Value;
 import nl.lxtreme.ols.common.acquisition.*;
 import nl.lxtreme.ols.common.acquisition.Cursor.LabelStyle;
 import nl.lxtreme.ols.common.acquisition.Cursor;
-import nl.lxtreme.ols.util.swing.*;
 
 
 /**
@@ -95,29 +94,6 @@ final class WaveformTimelineComponent extends JComponent
         result = this.boundaries.y - aLabel.boundaries.y;
       }
       return result;
-    }
-
-    public Polygon getPolygon()
-    {
-      int x = this.boundaries.x;
-      int w = this.boundaries.width;
-      int y = this.boundaries.y;
-      int h = this.boundaries.height;
-
-      Polygon flagPoly = new Polygon();
-      if ( this.mirrored )
-      {
-        flagPoly.xpoints = new int[] { x, x + w, x + w, x + ( h / 3 ), x };
-        flagPoly.ypoints = new int[] { y, y, y + h, y + h, y + ( ( 2 * h ) / 3 ) };
-        flagPoly.npoints = 5;
-      }
-      else
-      {
-        flagPoly.xpoints = new int[] { x, x + w, x + w, ( x + w ) - ( h / 3 ), x };
-        flagPoly.ypoints = new int[] { y, y, y + ( ( 2 * h ) / 3 ), y + h, y + h };
-        flagPoly.npoints = 5;
-      }
-      return flagPoly;
     }
 
     /**
@@ -280,8 +256,8 @@ final class WaveformTimelineComponent extends JComponent
       LabelPlacement.INDEX_ONLY_RIGHT, LabelPlacement.TIME_ONLY_RIGHT, LabelPlacement.LABEL_ONLY_RIGHT };
 
   private static final int PADDING_TOP = 2;
-  private static final int PADDING_LEFT = 2;
-  private static final int PADDING_RIGHT = 1;
+  private static final int PADDING_LEFT = 3;
+  private static final int PADDING_RIGHT = 2;
 
   private static final int PADDING_WIDTH = PADDING_LEFT + PADDING_RIGHT;
   private static final int PADDING_HEIGHT = 2 * PADDING_TOP;
@@ -494,7 +470,7 @@ final class WaveformTimelineComponent extends JComponent
     StringBuilder out = ( StringBuilder )this.formatter.out();
     out.setLength( 0 );
 
-    time.formatTo( this.formatter, 0, -1, aPrecision );
+    time.formatTo( this.formatter, FormattableFlags.ALTERNATE, -1, aPrecision );
 
     return out.toString();
   }
@@ -595,11 +571,10 @@ final class WaveformTimelineComponent extends JComponent
       Rectangle boundaries = new Rectangle();
 
       String flagText = cursor.getLabel( LabelStyle.LABEL_TIME );
-      int cursorXpos = this.model.timestampToCoordinate( cursor.getTimestamp() );
 
       boundaries.height = fm.getHeight() + PADDING_HEIGHT;
       boundaries.width = fm.stringWidth( flagText ) + PADDING_WIDTH;
-      boundaries.x = cursorXpos;
+      boundaries.x = this.model.timestampToCoordinate( cursor.getTimestamp() );
       boundaries.y = getHeight() - boundaries.height - 1;
 
       if ( ( boundaries.x < 0 ) || !clip.intersects( boundaries ) )
@@ -618,47 +593,30 @@ final class WaveformTimelineComponent extends JComponent
     // Phase 3: try to optimize the overlapping labels...
     placeLabels( clip, labels );
 
-    final AlphaComposite alphaComposite = AlphaComposite.SrcOver.derive( 0.7f );
-
     // Phase 4: draw the labels...
+    Composite oldComposite = aCanvas.getComposite();
+
+    aCanvas.setComposite( AlphaComposite.SrcOver.derive( 0.7f ) );
+    aCanvas.setColor( getColor( SIGNALVIEW_BACKGROUND_COLOR, Color.WHITE ) );
+
     for ( CursorLabel label : labels )
     {
       Rectangle boundaries = label.boundaries;
 
-      Color cursorColor = getCursorColor( label.cursor );
-      Color cursorTextColor = ColorUtils.getContrastColor( cursorColor );
+      aCanvas.fillRect( boundaries.x, boundaries.y, boundaries.width, boundaries.height );
+    }
 
-      Composite oldComposite = aCanvas.getComposite();
-      Stroke oldStroke = aCanvas.getStroke();
+    aCanvas.setComposite( oldComposite );
 
-      aCanvas.setComposite( alphaComposite );
+    for ( CursorLabel label : labels )
+    {
+      Rectangle boundaries = label.boundaries;
 
-      Polygon flagPoly = label.getPolygon();
+      aCanvas.setColor( getCursorColor( label.cursor ) );
+      aCanvas.drawRect( boundaries.x, boundaries.y, boundaries.width, boundaries.height );
 
-      aCanvas.setColor( cursorTextColor );
-      // It appears that the fill/draw polygon routines are using some kind of
-      // optimization that fails for large values, causing the flags to be
-      // painted in a weird way...
-      // aCanvas.drawPolygon( flagPoly );
-      aCanvas.fillRect( label.boundaries.x, label.boundaries.y, label.boundaries.width, label.boundaries.height );
-
-      aCanvas.setComposite( oldComposite );
-      aCanvas.setStroke( oldStroke );
-
-      aCanvas.setColor( cursorColor );
-      // It appears that the fill/draw polygon routines are using some kind of
-      // optimization that fails for large values, causing the flags to be
-      // painted in a weird way...
-      // aCanvas.drawPolygon( flagPoly );
-
-      aCanvas.drawLine( flagPoly.xpoints[0], flagPoly.ypoints[0], flagPoly.xpoints[1], flagPoly.ypoints[1] );
-      aCanvas.drawLine( flagPoly.xpoints[1], flagPoly.ypoints[1], flagPoly.xpoints[2], flagPoly.ypoints[2] );
-      aCanvas.drawLine( flagPoly.xpoints[2], flagPoly.ypoints[2], flagPoly.xpoints[3], flagPoly.ypoints[3] );
-      aCanvas.drawLine( flagPoly.xpoints[3], flagPoly.ypoints[3], flagPoly.xpoints[4], flagPoly.ypoints[4] );
-      aCanvas.drawLine( flagPoly.xpoints[4], flagPoly.ypoints[4], flagPoly.xpoints[0], flagPoly.ypoints[0] );
-
-      final int textXpos = boundaries.x + ( label.mirrored ? PADDING_LEFT : PADDING_RIGHT );
-      final int textYpos = boundaries.y + yOffset;
+      int textXpos = boundaries.x + ( label.mirrored ? PADDING_LEFT : PADDING_RIGHT );
+      int textYpos = boundaries.y + yOffset;
 
       aCanvas.drawString( label.text, textXpos, textYpos );
     }
