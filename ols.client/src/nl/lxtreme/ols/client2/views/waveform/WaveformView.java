@@ -419,6 +419,10 @@ public class WaveformView extends BaseView
         {
           repaintMeasurementInformation( ( MeasurementInfo )obj );
         }
+        else if ( obj instanceof WaveformView )
+        {
+          repaint();
+        }
       }
     }
   }
@@ -474,6 +478,9 @@ public class WaveformView extends BaseView
       {
         // Make sure we've got a defined zoom level...
         zoomController.restoreZoomLevel();
+        
+        // Repaint everything...
+        repaintAccumulator.add( WaveformView.this );
       }
     } );
 
@@ -897,8 +904,9 @@ public class WaveformView extends BaseView
     // view, this needs to be done *before* the view is set to its new
     // location...
     doLayout();
-//    JScrollPane scrollPane = getAncestorOfClass( JScrollPane.class, this.mainComponent );
-//    scrollPane.getViewport().doLayout();
+    // JScrollPane scrollPane = getAncestorOfClass( JScrollPane.class,
+    // this.mainComponent );
+    // scrollPane.getViewport().doLayout();
 
     this.mainComponent.setLocation( aNewLocation );
   }
