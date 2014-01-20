@@ -675,7 +675,7 @@ public final class AcquisitionDataBuilder
       }
 
       // Issue #167: make sure the absolute length is *always* present...
-      boolean addExtraSample = ( sampleCount < 2 ) || ( lastTimestamp != this.lastSeenTimestamp );
+      boolean addExtraSample = ( sampleCount < 2 ) || ( lastTimestamp != absLength );
       if ( addExtraSample )
       {
         sampleCount++;
