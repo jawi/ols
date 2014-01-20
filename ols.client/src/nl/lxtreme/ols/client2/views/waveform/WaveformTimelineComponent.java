@@ -34,7 +34,7 @@ import javax.swing.*;
 
 import nl.lxtreme.ols.client2.views.*;
 import nl.lxtreme.ols.common.*;
-import nl.lxtreme.ols.common.Unit.*;
+import nl.lxtreme.ols.common.Unit.Value;
 import nl.lxtreme.ols.common.acquisition.*;
 import nl.lxtreme.ols.common.acquisition.Cursor.LabelStyle;
 import nl.lxtreme.ols.common.acquisition.Cursor;
@@ -344,45 +344,46 @@ final class WaveformTimelineComponent extends JComponent
 
     AcquisitionData data = this.model.getData();
 
+    Rectangle clip = aGraphics.getClipBounds();
+
     Graphics2D canvas = ( Graphics2D )aGraphics.create();
 
     try
     {
-      final Rectangle clip = canvas.getClipBounds();
       // Tell Swing how we would like to render ourselves...
       canvas.setRenderingHints( createRenderingHints() );
 
       canvas.setBackground( getColor( SIGNALVIEW_BACKGROUND_COLOR, Color.WHITE ) );
       canvas.clearRect( clip.x, clip.y, clip.width, clip.height );
 
-      final Rectangle visibleRect = getVisibleRect();
+      Rectangle visibleRect = getVisibleRect();
 
-      final double zoomFactor = this.model.getZoomFactor();
-      final double triggerOffset = data.hasTriggerData() ? data.getTriggerPosition() * zoomFactor : 0;
+      double zoomFactor = this.model.getZoomFactor();
+      double triggerOffset = data.hasTriggerData() ? data.getTriggerPosition() * zoomFactor : 0;
 
       // s denotes the amount of pixels per second...
-      final double s = zoomFactor * data.getSampleRate();
+      double s = zoomFactor * data.getSampleRate();
       // p denotes the amount of time per pixel...
-      final double p = 1.0 / s;
+      double p = 1.0 / s;
       // UoT represents a logical unit-of-time...
-      final double uot = Math.pow( 10, Math.ceil( Math.log10( p ) ) );
+      double uot = pow( 10, ceil( log10( p ) ) );
       // ts denotes the number of pixels per unit-of-time...
-      final double ts = uot * s;
+      double ts = uot * s;
 
       // determine the tick increment based on the current width of the visible
       // timeline; this will make it a factor of 1, 10, 100, 1000, ...
-      final int majorTickInc = ( int )max( 1.0, pow( 10, floor( log10( visibleRect.width / 2 ) ) ) );
-      final int minorTickInc = ( majorTickInc / 2 );
-      final double minorTickTime = ( minorTickInc * uot );
-      final int tickInc = max( 1, majorTickInc / 10 );
+      int majorTickInc = ( int )max( 1.0, pow( 10, floor( log10( visibleRect.width / 2 ) ) ) );
+      int minorTickInc = ( majorTickInc / 2 );
+      double minorTickTime = ( minorTickInc * uot );
+      int tickInc = max( 1, majorTickInc / 10 );
 
       // tts denotes rounding factor to use ...
-      final double tts = majorTickInc * ts;
+      double tts = majorTickInc * ts;
       // to denotes the trigger offset...
-      final double to = triggerOffset % tts;
+      double to = triggerOffset % tts;
 
-      final int startX = clip.x;
-      final int endX = ( clip.x + clip.width );
+      int startX = clip.x;
+      int endX = ( clip.x + clip.width );
 
       // Start *before* the clip region starts; but at a multiple of our
       // rounding factor...
@@ -391,7 +392,7 @@ final class WaveformTimelineComponent extends JComponent
       int tick = 0;
       for ( ; x <= endX; tick++, x += ts )
       {
-        int xPos = ( int )round( x ) - 1;
+        int xPos = ( int )round( x );
         if ( ( xPos < startX ) || ( xPos > endX ) )
         {
           // Trivial reject: only paint visible items...

@@ -143,12 +143,12 @@ final class WaveformViewComponent extends JComponent implements Scrollable
     final int inc;
     if ( aOrientation == SwingConstants.VERTICAL )
     {
-      inc = getVerticalBlockIncrement( getSize(), aVisibleRect, aDirection );
+      inc = this.model.getVerticalBlockIncrement( getSize(), aVisibleRect, aDirection );
     }
     else
     /* if ( aOrientation == SwingConstants.HORIZONTAL ) */
     {
-      inc = getHorizontalBlockIncrement( aVisibleRect, aDirection );
+      inc = this.model.getHorizontalBlockIncrement( aVisibleRect, aDirection );
     }
 
     return inc;
@@ -277,118 +277,6 @@ final class WaveformViewComponent extends JComponent implements Scrollable
   }
 
   /**
-   * Calculates the horizontal block increment.
-   * <p>
-   * The following rules are adhered for scrolling horizontally:
-   * </p>
-   * <ol>
-   * <li>unless the first or last sample is not shown, scroll a full block;
-   * otherwise</li>
-   * <li>do not scroll.</li>
-   * </ol>
-   * 
-   * @param aVisibleRect
-   *          the visible rectangle of the component, never <code>null</code>;
-   * @param aDirection
-   *          the direction in which to scroll (&gt; 0 to scroll left, &lt; 0 to
-   *          scroll right);
-   * @return a horizontal block increment, determined according to the rules
-   *         described.
-   */
-  private int getHorizontalBlockIncrement( Rectangle aVisibleRect, int aDirection )
-  {
-    int blockIncr = 50;
-
-    int firstVisibleSample = this.model.coordinateToSampleIndex( aVisibleRect.getLocation() );
-    int lastVisibleSample = this.model.coordinateToSampleIndex( new Point( aVisibleRect.x + aVisibleRect.width, 0 ) );
-    int lastSampleIdx = this.model.getSampleCount();
-
-    int inc = 0;
-    if ( aDirection < 0 )
-    {
-      // Scroll left
-      if ( firstVisibleSample >= 0 )
-      {
-        inc = blockIncr;
-      }
-    }
-    else if ( aDirection > 0 )
-    {
-      // Scroll right
-      if ( lastVisibleSample < lastSampleIdx )
-      {
-        inc = blockIncr;
-      }
-    }
-
-    return inc;
-  }
-
-  /**
-   * Calculates the vertical block increment.
-   * <p>
-   * The following rules are adhered for scrolling vertically:
-   * </p>
-   * <ol>
-   * <li>if the first shown channel is not completely visible, it will be made
-   * fully visible; otherwise</li>
-   * <li>scroll down to show the succeeding channel fully;</li>
-   * <li>if the last channel is fully shown, and there is some room left at the
-   * bottom, show the remaining space.</li>
-   * </ol>
-   * 
-   * @param aVisibleRect
-   *          the visible rectangle of the component, never <code>null</code>;
-   * @param aDirection
-   *          the direction in which to scroll (&gt; 0 to scroll down, &lt; 0 to
-   *          scroll up).
-   * @return a vertical block increment, determined according to the rules
-   *         described.
-   */
-  private int getVerticalBlockIncrement( final Dimension aViewDimensions, final Rectangle aVisibleRect,
-      final int aDirection )
-  {
-    WaveformElement[] elements = this.model.getWaveformElements( aVisibleRect.y + 1, 1, LOOSE_MEASURER );
-    if ( elements.length == 0 )
-    {
-      return 0;
-    }
-
-    final int spacing = UIManager.getInt( SIGNAL_ELEMENT_SPACING );
-
-    int inc = 0;
-    int yPos = elements[0].getYposition();
-
-    if ( aDirection > 0 )
-    {
-      // Scroll down...
-      int height = elements[0].getHeight() + spacing;
-      inc = height - ( aVisibleRect.y - yPos );
-      if ( inc < 0 )
-      {
-        inc = -inc;
-      }
-    }
-    else if ( aDirection < 0 )
-    {
-      // Scroll up...
-      inc = ( aVisibleRect.y - yPos );
-      if ( inc <= 0 )
-      {
-        // Determine the height of the element *before* the current one, as we
-        // need to scroll up its height...
-        elements = this.model.getWaveformElements( yPos - spacing, 1, LOOSE_MEASURER );
-        if ( elements.length > 0 )
-        {
-          inc += elements[0].getHeight() + spacing;
-        }
-      }
-    }
-
-    return inc;
-  }
-
-  /**
    * Paints the cursors over the signals.
    * 
    * @param aCanvas
@@ -508,7 +396,6 @@ final class WaveformViewComponent extends JComponent implements Scrollable
 
     int[] values = data.getValues();
     long[] timestamps = data.getTimestamps();
-    long absLength = data.getAbsoluteLength();
 
     Rectangle clip = aCanvas.getClipBounds();
 
@@ -535,7 +422,7 @@ final class WaveformViewComponent extends JComponent implements Scrollable
       if ( ( timestamps[startIdx] <= triggerOffset ) && ( timestamps[endIdx] >= triggerOffset ) )
       {
         // Draw a line denoting the trigger position...
-        final int x = ( int )Math.round( triggerOffset * zoomFactor ) - 1;
+        final int x = ( int )Math.round( triggerOffset * zoomFactor );
 
         aCanvas.setColor( getColor( SIGNALVIEW_TRIGGER_COLOR, Color.RED ) );
         aCanvas.drawLine( x, clip.y, x, clip.y + clip.height );
@@ -553,7 +440,6 @@ final class WaveformViewComponent extends JComponent implements Scrollable
     if ( enableSloppyScopePainting && ( endIdx - startIdx > SLOPPY_DRAW_THRESHOLD ) )
     {
       sampleIncr = ( int )Math.max( 1.0, ( 5.0 / zoomFactor ) - 1.0 );
-      System.out.printf( "Sloppy painting: sample increment = %d.%n", sampleIncr );
     }
 
     for ( WaveformElement element : aElements )
@@ -590,19 +476,16 @@ final class WaveformViewComponent extends JComponent implements Scrollable
         else
         {
           // "Normal" data set; draw as accurate as possible...
-          final int mask = element.getMask();
-
           // Make sure we always start with time 0...
-          long prevTimestamp = timestamps[startIdx];
-          int prevSampleValue = ( values[startIdx] & mask );
+          int prevSampleValue = element.getValue( values[startIdx] );
 
-          x[0] = ( int )( zoomFactor * prevTimestamp );
+          x[0] = ( int )( zoomFactor * timestamps[startIdx] );
           y[0] = ( prevSampleValue == 0 ? signalHeight : 0 );
           int p = 1;
 
           for ( int sampleIdx = startIdx + 1; sampleIdx <= endIdx; sampleIdx += sampleIncr )
           {
-            int sampleValue = ( values[sampleIdx] & mask );
+            int sampleValue = element.getValue( values[sampleIdx] );
             if ( prevSampleValue != sampleValue )
             {
               long timestamp = timestamps[sampleIdx];
@@ -618,7 +501,6 @@ final class WaveformViewComponent extends JComponent implements Scrollable
               p++;
 
               prevSampleValue = sampleValue;
-              prevTimestamp = timestamp;
             }
 
             if ( p >= ( x.length - 2 ) )
@@ -628,11 +510,13 @@ final class WaveformViewComponent extends JComponent implements Scrollable
             }
           }
 
-          x[p] = ( int )( zoomFactor * absLength );
-          y[p] = ( values[endIdx] & mask ) == 0 ? signalHeight : 0;
-          p++;
-
-          System.out.printf( "Points = %d.%n", p - 1 );
+          // Make sure we end at the last visible sample index...
+          if ( p > 0 )
+          {
+            x[p] = clip.x + clip.width;
+            y[p] = y[p - 1];
+            p++;
+          }
 
           aCanvas.drawPolyline( x, y, p );
 
@@ -763,11 +647,15 @@ final class WaveformViewComponent extends JComponent implements Scrollable
 
         aCanvas.setColor( element.getColor() );
 
-        final int maxValue = ( int )( ( 1L << element.getWidth() ) - 1L );
-        double scaleFactor = ( maxValue == 0L ) ? 1.0 : element.getHeight() / ( double )maxValue;
+        double maxValue = ( ( 1L << element.getWidth() ) - 1L );
+        double scaleFactor = element.getHeight() / ( double )maxValue;
 
         // Make sure we always start with time 0...
-        int p = 0;
+        x[0] = ( int )( zoomFactor * timestamps[startIdx] );
+        y[0] = ( int )( scaleFactor * ( maxValue - element.getValue( values[startIdx] ) ) );
+        int p = 1;
+
+        // Make sure we always start with time 0...
         if ( startIdx == endIdx )
         {
           x[p] = clip.x;
@@ -776,14 +664,13 @@ final class WaveformViewComponent extends JComponent implements Scrollable
         }
         else
         {
-          for ( int sampleIdx = startIdx; sampleIdx <= endIdx; sampleIdx += sampleIncr )
+          for ( int sampleIdx = startIdx + 1; sampleIdx <= endIdx; sampleIdx += sampleIncr )
           {
+            int sampleValue = element.getValue( values[sampleIdx] );
             long timestamp = timestamps[sampleIdx];
 
-            int sampleValue = element.getValue( values[sampleIdx] );
-
             x[p] = ( int )( zoomFactor * timestamp );
-            y[p] = ( int )( scaleFactor * sampleValue );
+            y[p] = ( int )( scaleFactor * ( maxValue - sampleValue ) );
             p++;
 
             if ( p >= ( x.length - 2 ) )

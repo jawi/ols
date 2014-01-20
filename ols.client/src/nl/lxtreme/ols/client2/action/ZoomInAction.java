@@ -57,9 +57,12 @@ public class ZoomInAction extends AbstractManagedAction
 
     putValue( MENU_NAME, ClientConstants.DIAGRAM_MENU );
     putValue( MENU_ORDER, 0 );
-    
+
     putValue( TOOLBAR_GROUP, ClientConstants.ZOOM_GROUP );
     putValue( TOOLBAR_ORDER, 5 );
+
+    // Not enabled by default...
+    setEnabled( false );
   }
 
   // METHODS
@@ -80,7 +83,7 @@ public class ZoomInAction extends AbstractManagedAction
   @Override
   public void updateState( Client aClient )
   {
-    setEnabled( aClient.hasAcquiredData() && aClient.canZoomView() );
+    // Nop; state is handled by ZoomController...
   }
 }
 

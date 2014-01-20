@@ -54,12 +54,15 @@ public class ZoomOriginalAction extends AbstractManagedAction
     putValue( LARGE_ICON_KEY, IconFactory.createIcon( IconLocator.ICON_ZOOM_DEFAULT ) );
     putValue( ACCELERATOR_KEY, SwingComponentUtils.createMenuKeyMask( KeyEvent.VK_0 ) );
     putValue( MNEMONIC_KEY, Integer.valueOf( KeyEvent.VK_R ) );
-    
+
     putValue( MENU_NAME, ClientConstants.DIAGRAM_MENU );
     putValue( MENU_ORDER, 2 );
-    
+
     putValue( TOOLBAR_GROUP, ClientConstants.ZOOM_GROUP );
     putValue( TOOLBAR_ORDER, 7 );
+
+    // Not enabled by default...
+    setEnabled( false );
   }
 
   // METHODS
@@ -80,7 +83,7 @@ public class ZoomOriginalAction extends AbstractManagedAction
   @Override
   public void updateState( Client aClient )
   {
-    setEnabled( aClient.hasAcquiredData() && aClient.canZoomView() );
+    // Nop; state is handled by ZoomController...
   }
 }
 

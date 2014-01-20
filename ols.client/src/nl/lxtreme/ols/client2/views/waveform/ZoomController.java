@@ -77,11 +77,6 @@ final class ZoomController
 
     // CONSTRUCTORS
 
-    public ZoomStateHolder()
-    {
-      this( ZoomAction.DEFAULT, DEFAULT_ZOOM_FACTOR );
-    }
-
     public ZoomStateHolder( ZoomAction aAction, double aFactor )
     {
       this.lastAction = aAction;
@@ -127,7 +122,7 @@ final class ZoomController
   {
     this.controller = aController;
 
-    this.zoomHolderRef = new AtomicReference<ZoomStateHolder>( new ZoomStateHolder() );
+    this.zoomHolderRef = new AtomicReference<ZoomStateHolder>();
   }
 
   // METHODS
@@ -140,12 +135,11 @@ final class ZoomController
   public double getFactor()
   {
     ZoomStateHolder zh = this.zoomHolderRef.get();
-    double result = zh.factor;
-    if ( Double.isNaN( result ) )
+    if ( zh == null || Double.isNaN( zh.factor ) )
     {
-      result = DEFAULT_ZOOM_FACTOR;
+      return DEFAULT_ZOOM_FACTOR;
     }
-    return result;
+    return zh.factor;
   }
 
   /**
@@ -157,6 +151,10 @@ final class ZoomController
   public boolean isZoomAll()
   {
     ZoomStateHolder zh = this.zoomHolderRef.get();
+    if ( zh == null )
+    {
+      return false;
+    }
     ZoomAction value = zh.lastAction;
 
     return ( value == ZoomAction.ALL );
@@ -169,6 +167,10 @@ final class ZoomController
   public boolean isZoomDefault()
   {
     ZoomStateHolder zh = this.zoomHolderRef.get();
+    if ( zh == null )
+    {
+      return false;
+    }
     ZoomAction value = zh.lastAction;
 
     return ( value == ZoomAction.DEFAULT );
@@ -179,7 +181,7 @@ final class ZoomController
    */
   public void restoreZoomLevel()
   {
-    ZoomAction action = ZoomAction.DEFAULT;
+    ZoomAction action = null;
     double factor = DEFAULT_ZOOM_FACTOR;
 
     ZoomStateHolder zh = this.zoomHolderRef.get();
@@ -358,12 +360,12 @@ final class ZoomController
     }
 
     // Make sure we do not go beyond the minimum and maximum zoom levels...
-    if ( Double.compare( newFactor, minZoomLevel ) <= 0.0 )
+    if ( newFactor < minZoomLevel )
     {
       newFactor = minZoomLevel;
       newValue = ZoomAction.ALL;
     }
-    else if ( Double.compare( newFactor, maxZoomLevel ) >= 0.0 )
+    else if ( newFactor > maxZoomLevel )
     {
       newFactor = maxZoomLevel;
       newValue = ZoomAction.MAXIMUM;
@@ -383,9 +385,9 @@ final class ZoomController
   {
     // Take the location of the signal diagram component, as it is the
     // only one that is shifted in location by its (parent) scrollpane...
-    Point currentLocation = getView().getLocation();
+    Point currentLocation = getWaveformView().getLocation();
 
-    Rectangle currentVisibleRect = getView().getVisibleRect();
+    Rectangle currentVisibleRect = getWaveformView().getVisibleRect();
 
     int mx = ( aCenterPoint != null ) ? aCenterPoint.x : ( int )currentVisibleRect.getCenterX();
 
@@ -402,7 +404,7 @@ final class ZoomController
       {
         // Use the given (relative!) factor to calculate the new
         // width of the view!
-        Dimension viewSize = getView().getPreferredSize();
+        Dimension viewSize = getWaveformView().getPreferredSize();
         visibleRect.width = ( int )( viewSize.width * relFactor );
         visibleRect.height = currentVisibleRect.height;
         // Recalculate the new screen position of the visible view
@@ -416,7 +418,7 @@ final class ZoomController
       {
         // The new width of the view is always the same as the width of the view
         // size...
-        Dimension outerViewSize = getOuterViewSize( getView(), true, true );
+        Dimension outerViewSize = getOuterViewSize( getWaveformView(), true, true );
         visibleRect.width = outerViewSize.width;
         visibleRect.height = outerViewSize.height;
         // Since everything fits on screen, we can reset the view location to
@@ -474,7 +476,7 @@ final class ZoomController
     // Try to suppress the vertical scrollbar, if possible...
     if ( visibleRect.width > currentVisibleRect.width )
     {
-      JScrollPane scrollPane = getAncestorOfClass( JScrollPane.class, getView() );
+      JScrollPane scrollPane = getAncestorOfClass( JScrollPane.class, getWaveformView() );
       if ( scrollPane != null )
       {
         JScrollBar horizontalScrollBar = scrollPane.getHorizontalScrollBar();
@@ -520,7 +522,7 @@ final class ZoomController
    */
   private double getMinZoomLevel()
   {
-    final double width = getOuterViewSize( getView(), true, true ).width;
+    final double width = getOuterViewSize( getWaveformView(), true, true ).width;
     final double length = getModel().getAbsoluteLength();
     final double min = 1.0 / MAX_COMP_WIDTH;
 
@@ -539,7 +541,8 @@ final class ZoomController
   private Dimension getOuterViewSize( JComponent aComponent, boolean aIncludeVertScrollbar,
       boolean aIncludeHorzScrollbar )
   {
-    final Rectangle rect = aComponent.getVisibleRect();
+    Rectangle rect = aComponent.getVisibleRect();
+    Dimension size = rect.getSize();
 
     final JScrollPane scrollPane = getAncestorOfClass( JScrollPane.class, aComponent );
     if ( scrollPane != null )
@@ -550,25 +553,30 @@ final class ZoomController
       JScrollBar scrollBar = scrollPane.getVerticalScrollBar();
       if ( aIncludeVertScrollbar && scrollBar.isVisible() )
       {
-        rect.width += scrollBar.getWidth();
+        size.width += scrollBar.getWidth();
       }
       scrollBar = scrollPane.getHorizontalScrollBar();
       if ( aIncludeHorzScrollbar && scrollBar.isVisible() )
       {
-        rect.height += scrollBar.getHeight();
+        size.height += scrollBar.getHeight();
       }
 
       final Insets insets = scrollPane.getViewport().getInsets();
-      rect.width -= ( insets.left + insets.right );
-      rect.height -= ( insets.top + insets.bottom );
+      size.width -= ( insets.left + insets.right );
+      size.height -= ( insets.top + insets.bottom );
     }
 
-    return rect.getSize();
+    return size;
   }
 
-  private WaveformViewComponent getView()
+  private WaveformView getView()
   {
-    WaveformView view = ( WaveformView )this.controller.getView();
+    return ( WaveformView )this.controller.getView();
+  }
+
+  private WaveformViewComponent getWaveformView()
+  {
+    WaveformView view = getView();
     return view.getViewComponent();
   }
 
@@ -602,46 +610,36 @@ final class ZoomController
   /**
    * Updates the preferred width and location of the view.
    * 
-   * @param aNewVisibleRect
+   * @param aRectangle
    *          the new visible rectangle of the view component, cannot be
    *          <code>null</code>.
    */
-  private void updateViewSize( Rectangle aNewVisibleRect )
+  private void updateViewSize( Rectangle aRectangle )
   {
-    WaveformViewComponent view = getView();
-
-    JScrollPane scrollPane = getAncestorOfClass( JScrollPane.class, view );
-    if ( scrollPane != null )
-    {
-      view.setPreferredSize( aNewVisibleRect.getSize() );
-
-      // Make sure to make the viewport aware of the new dimensions of the
-      // view, this needs to be done *before* the view is set to its new
-      // location...
-      scrollPane.getViewport().doLayout();
-
-      view.setLocation( aNewVisibleRect.getLocation() );
-
-      scrollPane.revalidate();
-    }
+    WaveformView view = getView();
+    view.updatePreferredSize( aRectangle.getSize(), aRectangle.getLocation() );
   }
 
   /**
-   * Updates the state of all zoom-related actions.
+   * Updates the state of all zoom-related actions, do this here instead of in
+   * the individual zoom actions as we have all information present here, which
+   * we otherwise have to expose to the actions.
    */
   private void updateZoomActions()
   {
+    boolean zoomCapable = getView().canZoom();
+
     ActionManager actionManager = this.controller.getActionManager();
     Action zoomInAction = actionManager.getAction( ZoomInAction.ID );
-    zoomInAction.setEnabled( canZoomIn() );
+    zoomInAction.setEnabled( zoomCapable && canZoomIn() );
 
     Action zoomOutAction = actionManager.getAction( ZoomOutAction.ID );
-    zoomOutAction.setEnabled( canZoomOut() );
+    zoomOutAction.setEnabled( zoomCapable && canZoomOut() );
 
     Action zoomAllAction = actionManager.getAction( ZoomAllAction.ID );
-    zoomAllAction.setEnabled( !isZoomAll() );
+    zoomAllAction.setEnabled( zoomCapable && !isZoomAll() );
 
     Action zoomOriginalAction = actionManager.getAction( ZoomOriginalAction.ID );
-    zoomOriginalAction.setEnabled( !isZoomDefault() );
+    zoomOriginalAction.setEnabled( zoomCapable && !isZoomDefault() );
   }
 }

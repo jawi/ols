@@ -465,9 +465,19 @@ public class WaveformView extends BaseView
   @Override
   public void addNotify()
   {
-    revalidatePreferredSizes();
-
     super.addNotify();
+
+    addComponentListener( new ComponentAdapter()
+    {
+      @Override
+      public void componentResized( ComponentEvent aEvent )
+      {
+        // Make sure we've got a defined zoom level...
+        zoomController.restoreZoomLevel();
+      }
+    } );
+
+    revalidatePreferredSizes();
   }
 
   /**
@@ -595,9 +605,6 @@ public class WaveformView extends BaseView
     scrollPane.setInheritsPopupMenu( true );
 
     add( scrollPane, BorderLayout.CENTER );
-
-    // Make sure we've got a defined zoom level...
-    this.zoomController.restoreZoomLevel();
 
     registerKeyBindings();
   }
@@ -865,6 +872,38 @@ public class WaveformView extends BaseView
   }
 
   /**
+   * Updates the preferred size of this component and of its row and column
+   * headers.
+   * 
+   * @param aDimension
+   *          the new <em>main</em> dimensions;
+   * @param aNewLocation
+   *          the new location to scroll the main view to.
+   */
+  final void updatePreferredSize( Dimension aDimension, Point aNewLocation )
+  {
+    int labelWidth = this.labelComponent.getPreferredWidth();
+    int timelineHeight = getInt( TIMELINE_HEIGHT, 40 );
+
+    this.labelComponent.setPreferredSize( new Dimension( labelWidth, aDimension.height ) );
+    this.labelComponent.revalidate();
+
+    this.timelineComponent.setPreferredSize( new Dimension( aDimension.width, timelineHeight ) );
+    this.timelineComponent.revalidate();
+
+    this.mainComponent.setPreferredSize( new Dimension( aDimension.width, aDimension.height ) );
+
+    // Make sure to make the viewport aware of the new dimensions of the
+    // view, this needs to be done *before* the view is set to its new
+    // location...
+    doLayout();
+//    JScrollPane scrollPane = getAncestorOfClass( JScrollPane.class, this.mainComponent );
+//    scrollPane.getViewport().doLayout();
+
+    this.mainComponent.setLocation( aNewLocation );
+  }
+
+  /**
    * Repaints the area taken up by the given cursor on screen.
    * 
    * @param aCursor
@@ -930,19 +969,9 @@ public class WaveformView extends BaseView
   {
     WaveformModel model = ( WaveformModel )this.model;
 
-    int labelWidth = this.labelComponent.getPreferredWidth();
-    int timelineHeight = getInt( TIMELINE_HEIGHT, 40 );
-
     int mainWidth = model.calculateScreenWidth();
     int mainHeight = model.calculateScreenHeight();
 
-    this.labelComponent.setPreferredSize( new Dimension( labelWidth, mainHeight ) );
-    this.labelComponent.revalidate();
-
-    this.mainComponent.setPreferredSize( new Dimension( mainWidth, mainHeight ) );
-    this.mainComponent.revalidate();
-
-    this.timelineComponent.setPreferredSize( new Dimension( mainWidth, timelineHeight ) );
-    this.timelineComponent.revalidate();
+    updatePreferredSize( new Dimension( mainWidth, mainHeight ), getLocation() );
   }
 }

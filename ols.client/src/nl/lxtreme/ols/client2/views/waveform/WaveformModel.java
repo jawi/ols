@@ -303,6 +303,54 @@ public class WaveformModel extends ViewModel
   }
 
   /**
+   * Calculates the horizontal block increment.
+   * <p>
+   * The following rules are adhered for scrolling horizontally:
+   * </p>
+   * <ol>
+   * <li>unless the first or last sample is not shown, scroll a full block;
+   * otherwise</li>
+   * <li>do not scroll.</li>
+   * </ol>
+   * 
+   * @param aVisibleRect
+   *          the visible rectangle of the component, never <code>null</code>;
+   * @param aDirection
+   *          the direction in which to scroll (&gt; 0 to scroll left, &lt; 0 to
+   *          scroll right);
+   * @return a horizontal block increment, determined according to the rules
+   *         described.
+   */
+  public int getHorizontalBlockIncrement( Rectangle aVisibleRect, int aDirection )
+  {
+    int blockIncr = 50;
+
+    int firstVisibleSample = coordinateToSampleIndex( aVisibleRect.getLocation() );
+    int lastVisibleSample = coordinateToSampleIndex( new Point( aVisibleRect.x + aVisibleRect.width, 0 ) );
+    int lastSampleIdx = getSampleCount();
+
+    int inc = 0;
+    if ( aDirection < 0 )
+    {
+      // Scroll left
+      if ( firstVisibleSample >= 0 )
+      {
+        inc = blockIncr;
+      }
+    }
+    else if ( aDirection > 0 )
+    {
+      // Scroll right
+      if ( lastVisibleSample < lastSampleIdx )
+      {
+        inc = blockIncr;
+      }
+    }
+
+    return inc;
+  }
+
+  /**
    * Determines the measurement information for the given mouse position.
    * 
    * @param aPoint
@@ -450,6 +498,70 @@ public class WaveformModel extends ViewModel
     final Point location = aClip.getLocation();
     int index = coordinateToSampleIndex( location );
     return Math.max( index - 1, 0 );
+  }
+
+  /**
+   * Calculates the vertical block increment.
+   * <p>
+   * The following rules are adhered for scrolling vertically:
+   * </p>
+   * <ol>
+   * <li>if the first shown channel is not completely visible, it will be made
+   * fully visible; otherwise</li>
+   * <li>scroll down to show the succeeding channel fully;</li>
+   * <li>if the last channel is fully shown, and there is some room left at the
+   * bottom, show the remaining space.</li>
+   * </ol>
+   * 
+   * @param aVisibleRect
+   *          the visible rectangle of the component, never <code>null</code>;
+   * @param aDirection
+   *          the direction in which to scroll (&gt; 0 to scroll down, &lt; 0 to
+   *          scroll up).
+   * @return a vertical block increment, determined according to the rules
+   *         described.
+   */
+  public int getVerticalBlockIncrement( final Dimension aViewDimensions, final Rectangle aVisibleRect,
+      final int aDirection )
+  {
+    WaveformElement[] elements = getWaveformElements( aVisibleRect.y + 1, 1, LOOSE_MEASURER );
+    if ( elements.length == 0 )
+    {
+      return 0;
+    }
+
+    final int spacing = UIManager.getInt( SIGNAL_ELEMENT_SPACING );
+
+    int inc = 0;
+    int yPos = elements[0].getYposition();
+
+    if ( aDirection > 0 )
+    {
+      // Scroll down...
+      int height = elements[0].getHeight() + spacing;
+      inc = height - ( aVisibleRect.y - yPos );
+      if ( inc < 0 )
+      {
+        inc = -inc;
+      }
+    }
+    else if ( aDirection < 0 )
+    {
+      // Scroll up...
+      inc = ( aVisibleRect.y - yPos );
+      if ( inc <= 0 )
+      {
+        // Determine the height of the element *before* the current one, as we
+        // need to scroll up its height...
+        elements = getWaveformElements( yPos - spacing, 1, LOOSE_MEASURER );
+        if ( elements.length > 0 )
+        {
+          inc += elements[0].getHeight() + spacing;
+        }
+      }
+    }
+
+    return inc;
   }
 
   /**
