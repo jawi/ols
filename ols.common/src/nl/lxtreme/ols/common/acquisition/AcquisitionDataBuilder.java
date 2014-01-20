@@ -660,6 +660,7 @@ public final class AcquisitionDataBuilder
       Sample lastSample;
 
       int sampleCount = 1;
+      long lastTimestamp = -1L;
       int lastValue = iter.next().value & this.enabledChannelMask;
       while ( iter.hasNext() )
       {
@@ -669,11 +670,12 @@ public final class AcquisitionDataBuilder
         {
           sampleCount++;
           lastValue = value;
+          lastTimestamp = lastSample.timestamp;
         }
       }
 
       // Issue #167: make sure the absolute length is *always* present...
-      boolean addExtraSample = ( this.lastSeenTimestamp != absLength ) || ( sampleCount < 2 );
+      boolean addExtraSample = ( sampleCount < 2 ) || ( lastTimestamp != this.lastSeenTimestamp );
       if ( addExtraSample )
       {
         sampleCount++;
@@ -701,10 +703,6 @@ public final class AcquisitionDataBuilder
           timestamps[i] = lastSample.timestamp;
           lastValue = value;
           i++;
-        }
-        else if ( i > 1 )
-        {
-          timestamps[i - 1] = lastSample.timestamp;
         }
       }
 

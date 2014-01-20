@@ -138,6 +138,32 @@ public class AcquisitionDataBuilderTest
    * Tests that we can add samples starting at timestamp 0L.
    */
   @Test
+  public void testAddSamplesOk()
+  {
+    AcquisitionDataBuilder builder = new AcquisitionDataBuilder();
+    builder.setChannelCount( 4 );
+    builder.addSample( 0L, 0 );
+    builder.addSample( 1L, 1 );
+    builder.addSample( 2L, 2 );
+    builder.addSample( 3L, 4 );
+    builder.addSample( 4L, 8 );
+    builder.addSample( 5L, 0 );
+    builder.addSample( 6L, 0 );
+    builder.addSample( 7L, 0 );
+    builder.addSample( 8L, 0 );
+    builder.addSample( 9L, 0 );
+    builder.addSample( 10L, 0 );
+
+    AcquisitionData data = builder.build();
+    assertValues( data.getValues(), 0, 1, 2, 4, 8, 0, 0 );
+    assertTimestamps( data.getTimestamps(), 0L, 1L, 2L, 3L, 4L, 5L, 10L );
+//    assertEquals( 3L, data.getAbsoluteLength() );
+  }
+
+  /**
+   * Tests that we can add samples starting at timestamp 0L.
+   */
+  @Test
   public void testAddSamplesWithDuplicatesOk()
   {
     AcquisitionDataBuilder builder = new AcquisitionDataBuilder();
@@ -154,7 +180,7 @@ public class AcquisitionDataBuilderTest
 
     AcquisitionData data = builder.build();
     assertValues( data.getValues(), 1, 0, 1, 0 );
-    assertTimestamps( data.getTimestamps(), 0L, 3L, 7L, 8L );
+    assertTimestamps( data.getTimestamps(), 0L, 3L, 4L, 8L );
     assertEquals( 8L, data.getAbsoluteLength() );
   }
 
