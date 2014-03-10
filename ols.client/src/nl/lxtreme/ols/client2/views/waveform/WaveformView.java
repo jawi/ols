@@ -52,7 +52,7 @@ import org.osgi.service.event.Event;
  * Provides a waveform view of {@link AcquisitionData}, in which data is shown
  * graphically as rows.
  */
-public class WaveformView extends BaseView
+public class WaveformView extends BaseView implements ActionListener
 {
   // INNER TYPES
 
@@ -437,6 +437,10 @@ public class WaveformView extends BaseView
   static final java.awt.Cursor CURSOR_MOVE_TIMESTAMP = java.awt.Cursor
       .getPredefinedCursor( java.awt.Cursor.E_RESIZE_CURSOR );
 
+  private static final String ACTION_EDIT_SESSION_TITLE = "editSessionTitle";
+  private static final String ACTION_EDIT_CURSOR_PROPS = "editCursorProperties";
+  private static final String ACTION_EDIT_ELEMENT_PROPS = "editElementProperties";
+
   // VARIABLES
 
   private WaveformTimelineComponent timelineComponent;
@@ -467,6 +471,34 @@ public class WaveformView extends BaseView
    * {@inheritDoc}
    */
   @Override
+  public void actionPerformed( ActionEvent aEvent )
+  {
+    JComponent source = ( JComponent )aEvent.getSource();
+    Object[] context = ( Object[] )source.getClientProperty( "context" );
+
+    String cmd = aEvent.getActionCommand();
+    if ( ACTION_EDIT_SESSION_TITLE.equals( cmd ) )
+    {
+      this.controller.editSessionName();
+    }
+    else if ( ACTION_EDIT_CURSOR_PROPS.equals( cmd ) )
+    {
+      Cursor cursor = ( Cursor )context[0];
+
+      editCursorProperties( cursor );
+    }
+    else if ( ACTION_EDIT_ELEMENT_PROPS.equals( cmd ) )
+    {
+      WaveformElement element = ( WaveformElement )context[0];
+
+      editElementProperties( element );
+    }
+  }
+
+  /**
+   * {@inheritDoc}
+   */
+  @Override
   public void addNotify()
   {
     super.addNotify();
@@ -478,7 +510,7 @@ public class WaveformView extends BaseView
       {
         // Make sure we've got a defined zoom level...
         zoomController.restoreZoomLevel();
-        
+
         // Repaint everything...
         repaintAccumulator.add( WaveformView.this );
       }
@@ -756,22 +788,43 @@ public class WaveformView extends BaseView
    */
   final void populatePopup( JPopupMenu aPopup, JComponent aInvoker )
   {
-    if ( aInvoker instanceof WaveformViewComponent )
-    {
-      aPopup.add( new JMenuItem( "Edit session title..." ) );
-    }
-    else if ( aInvoker instanceof WaveformTimelineComponent )
-    {
+    WaveformModel model = ( WaveformModel )this.model;
 
-    }
-    else if ( aInvoker instanceof WaveformLabelComponent )
-    {
+    addMenuItem( aPopup, "Edit session title", ACTION_EDIT_SESSION_TITLE );
 
-    }
-    else
+    boolean separator = false;
+
+    Cursor selectedCursor = model.getSelectedCursor();
+    if ( selectedCursor != null )
     {
-      System.out.println( "Unknown invoker: " + aInvoker );
+      if ( !separator )
+      {
+        aPopup.addSeparator();
+        separator = true;
+      }
+
+      addMenuItem( aPopup, "Edit cursor properties", ACTION_EDIT_CURSOR_PROPS, selectedCursor );
     }
+
+    WaveformElement selectedElement = model.getSelectedElement();
+    if ( selectedElement != null )
+    {
+      if ( !separator )
+      {
+        aPopup.addSeparator();
+        separator = true;
+      }
+
+      addMenuItem( aPopup, "Edit element properties", ACTION_EDIT_ELEMENT_PROPS, selectedElement );
+    }
+  }
+
+  private void addMenuItem( JPopupMenu aPopup, String aLabel, String aActionCommand, Object... aContextObject )
+  {
+    JMenuItem item = aPopup.add( new JMenuItem( aLabel ) );
+    item.putClientProperty( "context", aContextObject );
+    item.setActionCommand( aActionCommand );
+    item.addActionListener( this );
   }
 
   final void repaintAnnotation( Annotation aAnnotation )
@@ -904,11 +957,11 @@ public class WaveformView extends BaseView
     // view, this needs to be done *before* the view is set to its new
     // location...
     doLayout();
-    // JScrollPane scrollPane = getAncestorOfClass( JScrollPane.class,
-    // this.mainComponent );
-    // scrollPane.getViewport().doLayout();
 
-    this.mainComponent.setLocation( aNewLocation );
+    if ( aNewLocation != null )
+    {
+      this.mainComponent.setLocation( aNewLocation );
+    }
   }
 
   /**
@@ -980,6 +1033,6 @@ public class WaveformView extends BaseView
     int mainWidth = model.calculateScreenWidth();
     int mainHeight = model.calculateScreenHeight();
 
-    updatePreferredSize( new Dimension( mainWidth, mainHeight ), getLocation() );
+    updatePreferredSize( new Dimension( mainWidth, mainHeight ), null );
   }
 }

@@ -30,7 +30,7 @@ import nl.lxtreme.ols.client2.platform.*;
 /**
  * OSX implementation for {@link ApplicationCallback}.
  */
-public final class OSXApplicationCallback implements ApplicationCallback
+public final class OSXApplicationCallback
 {
   // INNER TYPES
 
@@ -236,10 +236,6 @@ public final class OSXApplicationCallback implements ApplicationCallback
     }
   }
 
-  // VARIABLES
-
-  private volatile ApplicationCallback service;
-
   // METHODS
 
   /**
@@ -283,60 +279,5 @@ public final class OSXApplicationCallback implements ApplicationCallback
     {
       Logger.getAnonymousLogger().log( Level.FINE, "Install application callback failed!", exception );
     }
-  }
-
-  /**
-   * {@inheritDoc}
-   */
-  @Override
-  public boolean handleAbout()
-  {
-    if ( this.service != null )
-    {
-      return this.service.handleAbout();
-    }
-    return false;
-  }
-
-  /**
-   * {@inheritDoc}
-   */
-  @Override
-  public boolean handlePreferences()
-  {
-    if ( this.service != null )
-    {
-      return this.service.handlePreferences();
-    }
-    return false;
-  }
-
-  /**
-   * {@inheritDoc}
-   */
-  @Override
-  public boolean handleQuit()
-  {
-    if ( this.service != null )
-    {
-      this.service.handleQuit();
-    }
-    // We should always return OSX as to indicate that we're handling the Quit
-    // operation ourselves. Otherwise, OSX will simply shutdown our JVM for
-    // us...
-    return false;
-  }
-
-  /**
-   * {@inheritDoc}
-   */
-  @Override
-  public boolean hasPreferences()
-  {
-    if ( this.service != null )
-    {
-      return this.service.hasPreferences();
-    }
-    return false;
   }
 }

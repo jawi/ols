@@ -270,6 +270,66 @@ public class EditWaveformPropertiesDialog extends JDialog implements StatusAware
     this.signalAlignmentEditor.setSelectedItem( this.defaultAlignment );
   }
 
+  protected boolean validateSettings()
+  {
+    String text = this.labelEditor.getText();
+    if ( isNullOrEmpty( text ) )
+    {
+      return false;
+    }
+
+    text = this.heightEditor.getText();
+    if ( isNullOrEmpty( text ) )
+    {
+      return false;
+    }
+
+    int height;
+    try
+    {
+      height = Integer.valueOf( text );
+    }
+    catch ( NumberFormatException exception1 )
+    {
+      return false;
+    }
+
+    if ( height < 1 )
+    {
+      return false;
+    }
+
+    int signalHeight = -1;
+    if ( this.signalHeightEditor.isVisible() )
+    {
+      text = this.signalHeightEditor.getText();
+      if ( isNullOrEmpty( text ) )
+      {
+        return false;
+      }
+      try
+      {
+        signalHeight = Integer.valueOf( text );
+      }
+      catch ( NumberFormatException exception )
+      {
+        return false;
+      }
+
+      if ( signalHeight < 1 )
+      {
+        return false;
+      }
+    }
+
+    return signalHeight < height;
+  }
+
+  private static boolean isNullOrEmpty( String text )
+  {
+    return text == null || "".equals( text.trim() );
+  }
+
   /**
    * Initializes this dialog.
    */
@@ -282,34 +342,30 @@ public class EditWaveformPropertiesDialog extends JDialog implements StatusAware
     final JButton okButton = StandardActionFactory.createOkButton();
     JButton cancelButton = StandardActionFactory.createCancelButton();
 
-    JLabel labelEditorLabel = SwingComponentUtils.createRightAlignedLabel( "Label" );
-    this.labelEditor = new JTextField( aElement.getLabel(), 10 );
-    this.labelEditor.getDocument().addDocumentListener( new DocumentListener()
+    final DocumentListener inputValidator = new DocumentListener()
     {
       @Override
-      public void changedUpdate( final DocumentEvent aEvent )
+      public void insertUpdate( DocumentEvent aEvent )
       {
-        updateOkButton( aEvent );
+        okButton.setEnabled( validateSettings() );
       }
 
       @Override
-      public void insertUpdate( final DocumentEvent aEvent )
+      public void removeUpdate( DocumentEvent aEvent )
       {
-        updateOkButton( aEvent );
+        okButton.setEnabled( validateSettings() );
       }
 
       @Override
-      public void removeUpdate( final DocumentEvent aEvent )
+      public void changedUpdate( DocumentEvent aEvent )
       {
-        updateOkButton( aEvent );
+        okButton.setEnabled( validateSettings() );
       }
+    };
 
-      private void updateOkButton( final DocumentEvent aEvent )
-      {
-        String text = EditWaveformPropertiesDialog.this.labelEditor.getText();
-        okButton.setEnabled( ( text != null ) && !"".equals( text.trim() ) );
-      }
-    } );
+    JLabel labelEditorLabel = SwingComponentUtils.createRightAlignedLabel( "Label" );
+    this.labelEditor = new JTextField( aElement.getLabel(), 10 );
+    this.labelEditor.getDocument().addDocumentListener( inputValidator );
 
     JLabel colorEditorLabel = SwingComponentUtils.createRightAlignedLabel( "Color" );
     this.colorEditor = new JColorEditor( aElement.getColor() );
@@ -318,11 +374,13 @@ public class EditWaveformPropertiesDialog extends JDialog implements StatusAware
     this.heightEditor = new JTextField( "" + aElement.getHeight(), 10 );
     this.heightEditor.setInputVerifier( JComponentInputVerifier.create( Integer.class,
         "Invalid height! Must be a postive whole number." ) );
+    this.heightEditor.getDocument().addDocumentListener( inputValidator );
 
     JLabel signalHeightEditorLabel = SwingComponentUtils.createRightAlignedLabel( "Signal height" );
     this.signalHeightEditor = new JTextField( "" + this.defaultSignalHeight, 10 );
     this.signalHeightEditor.setInputVerifier( JComponentInputVerifier.create( Integer.class,
         "Invalid height! Must be a postive whole number." ) );
+    this.signalHeightEditor.getDocument().addDocumentListener( inputValidator );
 
     JLabel signalAlignmentEditorLabel = SwingComponentUtils.createRightAlignedLabel( "Signal alignment" );
     this.signalAlignmentEditor = new JComboBox( Alignment.values() );
@@ -359,6 +417,12 @@ public class EditWaveformPropertiesDialog extends JDialog implements StatusAware
 
       editorPane.add( signalAlignmentEditorLabel );
       editorPane.add( this.signalAlignmentEditor );
+    }
+    else
+    {
+      // Flag them invisible for validation routine...
+      this.signalHeightEditor.setVisible( false );
+      this.signalAlignmentEditor.setVisible( false );
     }
 
     editorPane.add( new JLabel( "" ) );

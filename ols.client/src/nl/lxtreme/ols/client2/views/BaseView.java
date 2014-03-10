@@ -21,6 +21,8 @@
 package nl.lxtreme.ols.client2.views;
 
 
+import static nl.lxtreme.ols.util.swing.SwingComponentUtils.*;
+
 import java.awt.*;
 
 import javax.swing.*;
@@ -199,6 +201,25 @@ public abstract class BaseView extends JComponent
   public void zoomOut()
   {
     // Nop
+  }
+
+  /**
+   * Edits the name of the session this view belongs to.
+   * 
+   * @return the new session title, can be <code>null</code> in case the user
+   *         dismissed the dialog.
+   */
+  final String showSessionNameDialog()
+  {
+    Window parent = getCurrentWindow();
+
+    EditSessionTitleDialog dialog = new EditSessionTitleDialog( parent, this.model );
+    dialog.setLocationRelativeTo( parent );
+    if ( dialog.showDialog() )
+    {
+      return dialog.getLabel();
+    }
+    return null;
   }
 
   /**

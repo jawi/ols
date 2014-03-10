@@ -34,6 +34,7 @@ import nl.lxtreme.ols.client2.views.state.*;
 import nl.lxtreme.ols.client2.views.waveform.*;
 import nl.lxtreme.ols.common.acquisition.*;
 import nl.lxtreme.ols.common.session.*;
+import nl.lxtreme.ols.util.swing.*;
 
 import org.apache.felix.dm.*;
 import org.osgi.service.event.*;
@@ -192,6 +193,28 @@ public class ViewController
     }
     this.model.setSelectedCursor( aCursor );
     this.view.repaintCursor( aCursor );
+  }
+
+  /**
+   * Shows an editor to edit the session name, and updates the model and view
+   * accordingly.
+   */
+  public void editSessionName()
+  {
+    String newName = this.view.showSessionNameDialog();
+    if ( newName != null )
+    {
+      JTabbedPane tabbedPane = SwingComponentUtils.getAncestorOfClass( JTabbedPane.class, this.view );
+      if ( tabbedPane != null )
+      {
+        int idx = tabbedPane.getSelectedIndex();
+        if ( idx >= 0 && idx < tabbedPane.getTabCount() )
+        {
+          tabbedPane.setTitleAt( idx, newName );
+        }
+      }
+      this.model.setSessionName( newName );
+    }
   }
 
   /**

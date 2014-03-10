@@ -803,7 +803,10 @@ public class Client extends DefaultDockableHolder implements ApplicationCallback
   public boolean handleQuit()
   {
     exit();
-    return true;
+    // We should always return OSX as to indicate that we're handling the Quit
+    // operation ourselves. Otherwise, OSX will simply shutdown our JVM for
+    // us...
+    return false;
   }
 
   /**
@@ -1475,6 +1478,22 @@ public class Client extends DefaultDockableHolder implements ApplicationCallback
     } );
 
     this.viewsPane = new JTabbedPane();
+    this.viewsPane.addMouseListener( new MouseAdapter()
+    {
+      public void mouseClicked( MouseEvent aEvent )
+      {
+        JTabbedPane pane = ( JTabbedPane )aEvent.getComponent();
+        int idx = pane.getSelectedIndex();
+        if ( idx >= 0 && idx < pane.getTabCount() )
+        {
+          Rectangle rect = pane.getUI().getTabBounds( pane, idx );
+          if ( rect != null && rect.contains( aEvent.getPoint() ) && aEvent.getClickCount() == 2 )
+          {
+            getCurrentViewController().editSessionName();
+          }
+        }
+      }
+    } );
     this.viewsPane.addChangeListener( new ChangeListener()
     {
       @Override
