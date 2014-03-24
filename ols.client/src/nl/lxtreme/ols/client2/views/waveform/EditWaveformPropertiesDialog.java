@@ -29,7 +29,6 @@ import javax.swing.event.*;
 
 import nl.lxtreme.ols.client2.views.*;
 import nl.lxtreme.ols.client2.views.UIMgr.Alignment;
-import nl.lxtreme.ols.client2.views.waveform.WaveformElement.Type;
 import nl.lxtreme.ols.util.swing.*;
 import nl.lxtreme.ols.util.swing.StandardActionFactory.DialogStatus;
 import nl.lxtreme.ols.util.swing.StandardActionFactory.StatusAwareCloseableDialog;
@@ -410,7 +409,9 @@ public class EditWaveformPropertiesDialog extends JDialog implements StatusAware
     editorPane.add( heightEditorLabel );
     editorPane.add( this.heightEditor );
 
-    if ( Type.CHANNEL.equals( aElement.getType() ) )
+    // There seems to be a compiler bug in the Oracle that causes a build failure. 
+    // This does not appear with OpenJDK or ECJ. Thanks to TudorP for reporting this.
+    if ( WaveformElement.Type.CHANNEL.equals( aElement.getType() ) )
     {
       editorPane.add( signalHeightEditorLabel );
       editorPane.add( this.signalHeightEditor );
