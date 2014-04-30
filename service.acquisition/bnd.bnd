@@ -1,8 +1,9 @@
--buildpath: osgi.core;version=4.2.0,\
-	osgi.cmpn;version=4.2.0.200908310645,\
+-buildpath: ${^-buildpath}, \
+	${osgi_core},\
+	${osgi_cmpn},\
+	${felix_dm},\
+	${felix_eventadmin},\
 	ols.common;version=latest,\
 	ols.device.api;version=latest,\
-	service.taskexecution.api;version=latest,\
-	org.apache.felix.dependencymanager;version=3.1.0,\
-	org.apache.felix.eventadmin;version=1.3
+	service.taskexecution.api;version=latest
 -sub: *.bnd

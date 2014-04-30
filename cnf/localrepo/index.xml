@@ -1,5 +1,5 @@
 <?xml version='1.0' encoding='utf-8'?>
-<repository increment='1380728202239' name='Local' xmlns='http://www.osgi.org/xmlns/repository/v1.0.0'>
+<repository increment='1398849001639' name='Local' xmlns='http://www.osgi.org/xmlns/repository/v1.0.0'>
   <resource>
     <capability namespace='osgi.identity'>
       <attribute name='osgi.identity' value='org.apache.felix.eventadmin'/>
@@ -198,6 +198,98 @@
     </capability>
     <requirement namespace='osgi.wiring.package'>
       <directive name='filter' value='(osgi.wiring.package=javax.swing)'/>
+    </requirement>
+  </resource>
+  <resource>
+    <capability namespace='osgi.identity'>
+      <attribute name='osgi.identity' value='purejavacomm'/>
+      <attribute name='type' value='osgi.bundle'/>
+      <attribute name='version' type='Version' value='0.0.21'/>
+    </capability>
+    <capability namespace='osgi.content'>
+      <attribute name='osgi.content' value='cbf34b6990f5af1694e188475ebff643473787ec8002b8dc7266fee194f5a9fd'/>
+      <attribute name='url' value='purejavacomm/purejavacomm-0.0.21.jar'/>
+      <attribute name='size' type='Long' value='1113761'/>
+      <attribute name='mime' value='application/vnd.osgi.bundle'/>
+    </capability>
+    <capability namespace='osgi.wiring.bundle'>
+      <attribute name='osgi.wiring.bundle' value='purejavacomm'/>
+      <attribute name='bundle-version' type='Version' value='0.0.21'/>
+    </capability>
+    <capability namespace='osgi.wiring.host'>
+      <attribute name='osgi.wiring.host' value='purejavacomm'/>
+      <attribute name='bundle-version' type='Version' value='0.0.21'/>
+    </capability>
+    <capability namespace='osgi.wiring.package'>
+      <attribute name='osgi.wiring.package' value='com.sun.jna'/>
+      <attribute name='version' type='Version' value='4.0.0'/>
+      <attribute name='bundle-symbolic-name' value='purejavacomm'/>
+      <attribute name='bundle-version' type='Version' value='0.0.21'/>
+    </capability>
+    <capability namespace='osgi.wiring.package'>
+      <attribute name='osgi.wiring.package' value='com.sun.jna.ptr'/>
+      <attribute name='version' type='Version' value='4.0.0'/>
+      <attribute name='bundle-symbolic-name' value='purejavacomm'/>
+      <attribute name='bundle-version' type='Version' value='0.0.21'/>
+      <directive name='uses' value='com.sun.jna'/>
+    </capability>
+    <capability namespace='osgi.wiring.package'>
+      <attribute name='osgi.wiring.package' value='com.sun.jna.win32'/>
+      <attribute name='version' type='Version' value='4.0.0'/>
+      <attribute name='bundle-symbolic-name' value='purejavacomm'/>
+      <attribute name='bundle-version' type='Version' value='0.0.21'/>
+      <directive name='uses' value='com.sun.jna'/>
+    </capability>
+    <capability namespace='osgi.wiring.package'>
+      <attribute name='osgi.wiring.package' value='jtermios'/>
+      <attribute name='version' type='Version' value='0.0.21'/>
+      <attribute name='bundle-symbolic-name' value='purejavacomm'/>
+      <attribute name='bundle-version' type='Version' value='0.0.21'/>
+      <directive name='uses' value='com.sun.jna'/>
+    </capability>
+    <capability namespace='osgi.wiring.package'>
+      <attribute name='osgi.wiring.package' value='jtermios.freebsd'/>
+      <attribute name='version' type='Version' value='0.0.21'/>
+      <attribute name='bundle-symbolic-name' value='purejavacomm'/>
+      <attribute name='bundle-version' type='Version' value='0.0.21'/>
+      <directive name='uses' value='com.sun.jna,jtermios'/>
+    </capability>
+    <capability namespace='osgi.wiring.package'>
+      <attribute name='osgi.wiring.package' value='jtermios.linux'/>
+      <attribute name='version' type='Version' value='0.0.21'/>
+      <attribute name='bundle-symbolic-name' value='purejavacomm'/>
+      <attribute name='bundle-version' type='Version' value='0.0.21'/>
+      <directive name='uses' value='com.sun.jna,jtermios'/>
+    </capability>
+    <capability namespace='osgi.wiring.package'>
+      <attribute name='osgi.wiring.package' value='jtermios.macosx'/>
+      <attribute name='version' type='Version' value='0.0.21'/>
+      <attribute name='bundle-symbolic-name' value='purejavacomm'/>
+      <attribute name='bundle-version' type='Version' value='0.0.21'/>
+      <directive name='uses' value='com.sun.jna,jtermios'/>
+    </capability>
+    <capability namespace='osgi.wiring.package'>
+      <attribute name='osgi.wiring.package' value='jtermios.solaris'/>
+      <attribute name='version' type='Version' value='0.0.21'/>
+      <attribute name='bundle-symbolic-name' value='purejavacomm'/>
+      <attribute name='bundle-version' type='Version' value='0.0.21'/>
+      <directive name='uses' value='com.sun.jna,jtermios'/>
+    </capability>
+    <capability namespace='osgi.wiring.package'>
+      <attribute name='osgi.wiring.package' value='jtermios.windows'/>
+      <attribute name='version' type='Version' value='0.0.21'/>
+      <attribute name='bundle-symbolic-name' value='purejavacomm'/>
+      <attribute name='bundle-version' type='Version' value='0.0.21'/>
+      <directive name='uses' value='com.sun.jna,com.sun.jna.ptr,com.sun.jna.win32,jtermios'/>
+    </capability>
+    <capability namespace='osgi.wiring.package'>
+      <attribute name='osgi.wiring.package' value='purejavacomm'/>
+      <attribute name='version' type='Version' value='0.0.21'/>
+      <attribute name='bundle-symbolic-name' value='purejavacomm'/>
+      <attribute name='bundle-version' type='Version' value='0.0.21'/>
+    </capability>
+    <requirement namespace='osgi.ee'>
+      <directive name='filter' value='(&amp;(osgi.ee=JavaSE)(version=1.6))'/>
     </requirement>
   </resource>
   <resource>

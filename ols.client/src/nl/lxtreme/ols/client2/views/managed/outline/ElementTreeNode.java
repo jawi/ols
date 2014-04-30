@@ -29,6 +29,12 @@ import nl.lxtreme.ols.common.acquisition.*;
  */
 class ElementTreeNode extends DefaultMutableTreeNode
 {
+  // INNER TYPES
+  
+  static interface TreeNodeListener {
+    
+  }
+  
   // CONSTANTS
 
   private static final long serialVersionUID = 1L;
@@ -111,7 +117,7 @@ class ElementTreeNode extends DefaultMutableTreeNode
 
       if ( channel.getGroup() != group || channel.getIndex() != aChildIndex )
       {
-//        System.out.println( "TODO" ); XXX
+        group.move( channel, aChildIndex );
       }
     }
   }

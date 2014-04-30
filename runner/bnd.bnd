@@ -2,7 +2,7 @@
 X-Felix-Version: 4.2.1
 X-AppName: ${ols.shortName}
 -buildpath: org.apache.felix.framework;version=${X-Felix-Version},\
-	osgi.cmpn;version=4.2.0
+	${osgi_cmpn}
 Private-Package: \
 	nl.lxtreme.ols.runner
 Include-Resource: \

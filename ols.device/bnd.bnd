@@ -1,11 +1,10 @@
 -sub: *.bnd
--buildpath: \
-	osgi.core;version=4.2.0,\
-	osgi.cmpn;version=4.2.0,\
-	org.apache.felix.dependencymanager;version=3.1.0,\
+-buildpath: ${^-buildpath}, \
+	${osgi_core},\
+	${osgi_cmpn},\
+	${felix_dm},\
 	ols.common;version=latest,\
 	service.io;version=latest,\
 	service.taskexecution.api;version=latest,\
-	purejavacomm,\
-	lib.swing;version=latest,\
-	junit.osgi;version=4.11.0
+	purejavacomm;version=latest,\
+	lib.swing;version=latest

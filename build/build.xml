@@ -1,10 +1,10 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<project name="project" default="build" basedir=".">
+<project name="project" basedir=".">
 	<import file="../cnf/build.xml" />
 	<!-- defines the main version -->
 	<property file="ols.version" />
 
-	<target name="init" depends="template.init">
+	<target name="init">
 		<property name="release.base" value="generated/release" />
 		<property name="release.dir" value="${release.base}/plugins" />
 		<property name="release.version" value="${ols.version}" />
@@ -23,7 +23,7 @@
 		</condition>
 	</target>
 
-	<target name="clean" depends="template.clean">
+	<target name="clean">
 		<delete dir="${osx.releasedir}" followsymlinks="false" includeemptydirs="true" removeNotFollowedSymlinks="true" />
 		<delete dir="${osx.releasedir-tmp}" followsymlinks="false" includeemptydirs="true" removeNotFollowedSymlinks="true" />
 	</target>

@@ -86,9 +86,8 @@ public class ChannelOutlineView extends AbstractManagedView
     this.tree.setRootVisible( false );
     this.tree.setShowsRootHandles( true );
     this.tree.setEditable( true );
-    // Enable DnD support: TODO temporarily disabled as we do not yet support
-    // moving channels within channel groups...
-    this.tree.setDragEnabled( false );
+    // Enable DnD support...
+    this.tree.setDragEnabled( true );
     this.tree.setDropMode( DropMode.INSERT );
     this.tree.setTransferHandler( new JLxTreeTransferHandler() );
 

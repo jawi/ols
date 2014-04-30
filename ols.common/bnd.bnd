@@ -1,5 +1,4 @@
--buildpath: junit.osgi;version=4.11.0,\
-	org.mockito.mockito-all;version=1.9
+-buildpath: ${^-buildpath}
 Export-Package: nl.lxtreme.ols.common,\
 	nl.lxtreme.ols.common.acquisition,\
 	nl.lxtreme.ols.common.annotation,\

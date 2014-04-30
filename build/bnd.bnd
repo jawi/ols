@@ -1,7 +1,6 @@
 -nosrc=true
 -nobundles=true
 -dependson: \
-	purejavacomm,\
 	lib.swing,\
 	service.acquisition,\
 	service.io,\

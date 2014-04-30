@@ -1,13 +1,11 @@
 -sub: *.bnd
--buildpath: \
-	osgi.core;version=4.2.0,\
-	osgi.cmpn;version=4.2.0,\
-	org.mockito.mockito-all;version=1.9.0,\
-	junit.osgi;version=4.11.0,\
-	org.apache.felix.dependencymanager;version=3.1.0,\
+-buildpath: ${^-buildpath}, \
+	${osgi_core},\
+	${osgi_cmpn},\
+	${felix_dm},\
 	ols.common;version=latest,\
 	ols.device.api;version=latest,\
 	service.taskexecution.api;version=latest,\
-	purejavacomm,\
+	purejavacomm;version=latest,\
 	lib.swing;version=latest,\
-	jvt220-1.1.1.jar;version=file
+	jvt220;version=latest

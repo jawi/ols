@@ -2,5 +2,6 @@ Export-Package: nl.lxtreme.ols.util.swing,\
 	nl.lxtreme.ols.util.swing.component,\
 	nl.lxtreme.ols.util.swing.component.icon,\
 	nl.lxtreme.ols.util.swing.validation
--buildpath: osgi.core;version=4.2.0,\
-	osgi.cmpn;version=4.2.0
+-buildpath: \
+	${osgi_core},\
+	${osgi_cmpn}

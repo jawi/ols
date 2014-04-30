@@ -1,7 +1,6 @@
--buildpath: osgi.core;version=4.2.0,\
-	osgi.cmpn;version=4.2.0.200908310645,\
-	junit.osgi;version=4.11.0,\
-	org.mockito.mockito-all;version=1.9.0,\
-	org.apache.felix.dependencymanager;version=3.1.0,\
-	org.apache.felix.eventadmin;version=1.3
+-buildpath: ${^-buildpath}, \
+	${osgi_core},\
+	${osgi_cmpn},\
+	${felix_dm},\
+	${felix_eventadmin}
 -sub: *.bnd

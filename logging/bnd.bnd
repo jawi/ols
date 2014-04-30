@@ -1,6 +1,7 @@
--buildpath: org.apache.felix.dependencymanager;version=3.1.0,\
-	osgi.core;version=4.2.0,\
-	osgi.cmpn;version=4.2.0
+-buildpath: \
+	${osgi_core},\
+	${osgi_cmpn},\
+	${felix_dm}
 Private-Package: nl.lxtreme.ols.logging
 Bundle-Activator: nl.lxtreme.ols.logging.Activator
 Bundle-Name: Provides a logger redirector.

@@ -90,6 +90,18 @@ public interface ChannelGroup extends Comparable<ChannelGroup>
   int getValue( int aSampleValue );
 
   /**
+   * Moves a given channel to this channel group at the given index. If the
+   * given channel already belongs to this channel group, it will be moved to
+   * the given index.
+   * 
+   * @param aChannel
+   *          the channel to move;
+   * @param aIndex
+   *          the new index of this channel, &gt;= 0.
+   */
+  void move( Channel aChannel, int aIndex );
+
+  /**
    * Sets the color for this channel group.
    * 
    * @param aColor

@@ -1,3 +1,13 @@
+-runfw: org.apache.felix.framework;version='[4.2,5.0)'
+-runee: JavaSE-1.6
+-resolve.effective: active
+-runsystemcapabilities: ${native_capability}
+-runproperties: \
+	org.apache.felix.log.storeDebug=true,\
+    org.apache.felix.log.maxSize=-1,\
+    org.osgi.framework.bootdelegation="com.yourkit.*,com.sun.*,sun.*,apple.*,com.apple.*"
+-runvm: \
+	-Xdock:name=LogicSniffer -Xmx2048m -Dnl.lxtreme.ols.client.debug=true -Dnl.lxtreme.ols.filterJdkUiLog=true 
 -runrequires: \
 	osgi.identity;filter:='(&(osgi.identity=com.jidesoft.docking)(version>=3.5.8))',\
 	osgi.identity;filter:='(osgi.identity=org.apache.felix.dependencymanager)',\
@@ -41,8 +51,6 @@
 	osgi.identity;filter:='(osgi.identity=ols.export.csv)',\
 	osgi.identity;filter:='(osgi.identity=ols.export.image)',\
 	osgi.identity;filter:='(osgi.identity=ols.export.vcd)'
--runfw: org.apache.felix.framework;version='[4.2,5.0)'
--runee: JavaSE-1.6
 -runbundles: \
 	com.jidesoft.docking;version='[3.5.8,3.5.9)',\
 	jvt220;version='[1.1.1,1.1.2)',\
@@ -90,9 +98,3 @@
 	service.io;version=latest,\
 	service.taskexecution.api;version=latest,\
 	service.taskexecution.impl;version=latest
--runproperties: \
-	org.apache.felix.log.storeDebug=true,\
-    org.apache.felix.log.maxSize=-1,\
-    org.osgi.framework.bootdelegation="com.yourkit.*,com.sun.*,sun.*,apple.*,com.apple.*"
--runvm: \
-	-Xdock:name=LogicSniffer -Xmx2048m -Dnl.lxtreme.ols.client.debug=true -Dnl.lxtreme.ols.filterJdkUiLog=true 

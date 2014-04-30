@@ -62,7 +62,10 @@ public class ChannelGroupBuilder
 
     public void addChannel( Channel aChannel )
     {
-      this.channels.add( aChannel );
+      synchronized ( this.channels )
+      {
+        this.channels.add( aChannel );
+      }
     }
 
     /**
@@ -114,7 +117,10 @@ public class ChannelGroupBuilder
     @Override
     public int getChannelCount()
     {
-      return this.channels.size();
+      synchronized ( this.channels )
+      {
+        return this.channels.size();
+      }
     }
 
     /**
@@ -123,7 +129,10 @@ public class ChannelGroupBuilder
     @Override
     public Channel[] getChannels()
     {
-      return this.channels.toArray( new Channel[this.channels.size()] );
+      synchronized ( this.channels )
+      {
+        return this.channels.toArray( new Channel[this.channels.size()] );
+      }
     }
 
     /**
@@ -207,6 +216,31 @@ public class ChannelGroupBuilder
      * {@inheritDoc}
      */
     @Override
+    public void move( Channel aChannel, int aNewIndex )
+    {
+      ChannelGroupImpl oldGroup = ( ChannelGroupImpl )aChannel.getGroup();
+      if ( oldGroup != this )
+      {
+        oldGroup.remove( aChannel );
+      }
+
+      synchronized ( this.channels )
+      {
+        if ( aNewIndex >= this.channels.size() )
+        {
+          this.channels.add( aChannel );
+        }
+        else
+        {
+          this.channels.add( Math.max( 0, aNewIndex ), aChannel );
+        }
+      }
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
     public void setColor( Color aColor )
     {
       this.color = aColor;
@@ -230,7 +264,7 @@ public class ChannelGroupBuilder
      *          the channel to remove from this group, cannot be
      *          <code>null</code>.
      */
-    void remove( ChannelImpl aChannel )
+    void remove( Channel aChannel )
     {
       this.channels.remove( aChannel );
     }
