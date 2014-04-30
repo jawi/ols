@@ -1,6 +1,5 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <project name="project" basedir=".">
-	<import file="../cnf/build.xml" />
 	<!-- defines the main version -->
 	<property file="ols.version" />
 
@@ -13,7 +12,7 @@
 		<!-- be sure to have a proper version defined at all times! -->
 		<fail message="No release version is defined! Cannot continue..." unless="release.version" />
 
-		<taskdef name="createDist" classname="aQute.bnd.ant.RunconfigToDistributionTask" classpath="../cnf/plugins/biz.aQute.bnd/biz.aQute.bnd-2.2.0.jar" />
+		<taskdef name="createDist" classname="aQute.bnd.ant.RunconfigToDistributionTask" classpath="../cnf/gradle/dependencies/biz.aQute.bnd.jar" />
 		<taskdef name="jarBundler" classname="net.sourceforge.jarbundler.JarBundler" classpath="../cnf/buildrepo/net.sourceforge.jarbundler/jarbundler-2.1.0.jar" />
 
 		<condition property="isMac">
