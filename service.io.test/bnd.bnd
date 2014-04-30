@@ -1,5 +1,12 @@
 Test-Cases: ${classes;CONCRETE;EXTENDS;junit.framework.TestCase}
--runbundles: org.mockito.mockito-all
+-runbundles: \
+	${junit},\
+	${osgi_cmpn},\
+	${felix_dm},\
+	${felix_metatype},\
+	${felix_configadmin},\
+	service.io;version=latest,\
+	purejavacomm;version=latest
 Private-Package: nl.lxtreme.ols.io.serial.test
 -runee: JavaSE-1.6
 -runvm: -ea

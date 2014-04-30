@@ -38,11 +38,15 @@ public class CommConnectionFactoryTest extends TestCase
 {
   // METHODS
 
+  public void testStub()
+  {
+    // Nop
+  }
+
   /**
    * Tests that creating a serial connection works on Linux/Unix platforms.
    */
-  public void ignoreTestCreateExistingConnectionLinux() throws IOException,
-      InvalidSyntaxException
+  public void ignoreTestCreateExistingConnectionLinux() throws IOException, InvalidSyntaxException
   {
     if ( !HostUtils.isUnix() )
     {
@@ -56,24 +60,21 @@ public class CommConnectionFactoryTest extends TestCase
   /**
    * Tests that creating a serial connection works on Mac OS platforms.
    */
-  public void ignoreTestCreateExistingConnectionMacOS() throws IOException,
-      InvalidSyntaxException
+  public void ignoreTestCreateExistingConnectionMacOS() throws IOException, InvalidSyntaxException
   {
     if ( !HostUtils.isMacOS() )
     {
       return;
     }
 
-    final Connection connection = getConnectionFactory().createConnection( "comm:/dev/tty.usbmodemfd131", 0,
-        false );
+    final Connection connection = getConnectionFactory().createConnection( "comm:/dev/tty.usbmodemfd131", 0, false );
     assertNotNull( "Failed to obtain a valid connection!", connection );
   }
 
   /**
    * Tests that creating a serial connection works on Solaris platforms.
    */
-  public void ignoreTestCreateExistingConnectionSolaris() throws IOException,
-      InvalidSyntaxException
+  public void ignoreTestCreateExistingConnectionSolaris() throws IOException, InvalidSyntaxException
   {
     if ( !HostUtils.isSolaris() )
     {
@@ -87,8 +88,7 @@ public class CommConnectionFactoryTest extends TestCase
   /**
    * Tests that creating a serial connection works on Windows platforms.
    */
-  public void ignoreTestCreateExistingConnectionWin32() throws IOException,
-      InvalidSyntaxException
+  public void ignoreTestCreateExistingConnectionWin32() throws IOException, InvalidSyntaxException
   {
     if ( !HostUtils.isWindows() )
     {
