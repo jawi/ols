@@ -3,39 +3,20 @@ import org.apache.tools.ant.filters.ReplaceTokens
 
 assert(project != rootProject)
 
-loadProperties "ols.version"
-    
-def loadProperties(String sourceFileName) {
-    def config = new Properties()
-    def propFile = new File(sourceFileName)
-    if (propFile.canRead()) {
-        config.load(new FileInputStream(propFile))
-        for (Map.Entry property in config) {
-            ext[property.key] = property.value;
-        }
-    }
-}
-
-def createDir(String name) {
-  	def dir = file(name)
-    if ((!dir.exists() && !dir.mkdirs()) || !dir.isDirectory()) {
-      throw new GradleException("Could not create directory $dir")
-    }
-    dir
-}
-
-// Preparation
-def releaseBase = createDir('generated/release')
-def releaseBin = createDir("$releaseBase/bin")
-def releasePlugins = createDir("$releaseBase/plugins")
+loadProperties "build/ols.version"
 
 task packageRelease {
   description   "Assembles release artifacts."
   group         "Release"
 
-  doLast {
-  	ant.taskdef(name: 'createDist', classname: 'aQute.bnd.ant.RunconfigToDistributionTask', classpath: "../cnf/gradle/dependencies/biz.aQute.bnd.jar")
+  // Preparation
+  def releaseBase = createDir('generated/release')
+  def releaseBin = createDir("$releaseBase/bin")
+  def releasePlugins = createDir("$releaseBase/plugins")
+
+  ant.taskdef(name: 'createDist', classname: 'aQute.bnd.ant.RunconfigToDistributionTask', classpath: "../cnf/gradle/dependencies/biz.aQute.bnd.jar")
   	
+  doLast {
   	delete "$releasePlugins"
 
     ant.createDist(rootDir: '..', allowSnapshots: 'true', bndFile: 'local.bndrun', outputdir: "$releasePlugins")
@@ -65,41 +46,81 @@ task packageRelease {
 }
 
 task createZipball(type: Zip) {
+  description   "Creates a release ZIP archive."
+  group         "Release"
+
+  doLast {
 	destinationDir = file('generated')
 	archiveName = "ols-${ols_version}-full.zip"
 	from "$releaseBase"
+  }
 }
 
 task createTarball(type: Tar) {
+  description   "Creates a release TGZ archive."
+  group         "Release"
+
+  doLast {
 	destinationDir = file('generated')
 	archiveName = "ols-${ols_version}-full.tar.gz"
 	compression = "gzip"
 	from "$releaseBase"
+  }
 }
 
 task createDiskImage {
-	onlyIf {
-		/* only run this task on OSX/Darwin */
-		Os.isFamily(Os.FAMILY_MAC)
-	}
-	doLast {
-	  	ant.taskdef(name: 'jarBundler', classname: 'net.sourceforge.jarbundler.JarBundler', classpath: "../cnf/buildrepo/net.sourceforge.jarbundler/jarbundler-2.3.0.jar")
-	  	
-		def osxBase = createDir('generated/osx')
-		def bgDir = createDir("$osxBase/.background")
+  description   "Creates a release DMG archive (OSX only)."
+  group         "Release"
+
+  ant.taskdef(name: 'jarBundler', classname: 'net.sourceforge.jarbundler.JarBundler', classpath: "../cnf/buildrepo/net.sourceforge.jarbundler/jarbundler-2.3.0.jar")
+
+  def osxBase = createDir('generated/osx')
+  def bgDir = createDir("$osxBase/.background")
 		
-		copy {
-			from('resources')
-			into "$bgDir"
-			include 'background.png'
-		}
-		
-		ant.jarBundler(dir: "$osxBase", bundleid: 'nl.lxtreme.ols', name: "$ols_shortName", shortname: "$ols_shortName", mainclass: 'nl.lxtreme.ols.runner.Runner', version: "$ols_version", build: '1', jvmversion: '1.6+', workingdirectory: '$APP_PACKAGE/Contents/Resources/Java', vmoptions: '-Xmx1024m', icon: 'resources/LogicSniffer.icns', arguments: '-logToFile') {
-			/* put all bin/*.jar files on the class path */
-			jarfileset(dir: "$releaseBase", includes: "bin/*.jar", excludes: "bin/jgoodies*.jar") 
-			javafileset(dir: "$releaseBase", includes: "plugins/*.*", excludes: "plugins/*gogo*.jar") 
-		}
+  onlyIf {
+	/* only run this task on OSX/Darwin */
+	Os.isFamily(Os.FAMILY_MAC)
+  }
+  doLast {
+	copy {
+		from('resources')
+		into "$bgDir"
+		include 'background.png'
 	}
+		
+	ant.jarBundler(dir: "$osxBase", bundleid: 'nl.lxtreme.ols', name: "$ols_shortName", shortname: "$ols_shortName", mainclass: 'nl.lxtreme.ols.runner.Runner', version: "$ols_version", build: '1', jvmversion: '1.6+', workingdirectory: '$APP_PACKAGE/Contents/Resources/Java', vmoptions: '-Xmx1024m', icon: 'resources/LogicSniffer.icns', arguments: '-logToFile') {
+		/* put all bin/*.jar files on the class path */
+		jarfileset(dir: "$releaseBase", includes: "bin/*.jar", excludes: "bin/jgoodies*.jar") 
+		javafileset(dir: "$releaseBase", includes: "plugins/*.*", excludes: "plugins/*gogo*.jar") 
+	}
+		
+	invoke('./app-bundle-osx.sh')
+  }
+}
+
+def loadProperties(String sourceFileName) {
+    def config = new Properties()
+    def propFile = new File(sourceFileName)
+    if (propFile.canRead()) {
+        config.load(new FileInputStream(propFile))
+        for (Map.Entry property in config) {
+            ext[property.key] = property.value;
+        }
+    }
+}
+
+def createDir(String name) {
+  	def dir = file(name)
+    if ((!dir.exists() && !dir.mkdirs()) || !dir.isDirectory()) {
+      throw new GradleException("Could not create directory $dir")
+    }
+    dir
+}
+
+def invoke(String target) {
+    exec {
+        executable target
+    }
 }
 
 createZipball.mustRunAfter packageRelease
