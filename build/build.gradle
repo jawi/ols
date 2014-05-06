@@ -5,12 +5,13 @@ assert(project != rootProject)
 
 loadProperties "build/ols.version"
 
+// Preparation
+def releaseBase = createDir('generated/release')
+  
 task packageRelease {
   description   "Assembles release artifacts."
   group         "Release"
 
-  // Preparation
-  def releaseBase = createDir('generated/release')
   def releaseBin = createDir("$releaseBase/bin")
   def releasePlugins = createDir("$releaseBase/plugins")
 
