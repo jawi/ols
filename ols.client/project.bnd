@@ -7,4 +7,4 @@ Bundle-License: GPLv2;link=http://www.gnu.org/licenses/gpl-2.0.html
 Bundle-Activator: nl.lxtreme.ols.client.project.impl.Activator
 Private-Package: nl.lxtreme.ols.client.project.impl
 Export-Package: nl.lxtreme.ols.client.project
-X-ClientVersion = ${ols.version}
+X-ClientVersion = ${ols_version}

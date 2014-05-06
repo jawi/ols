@@ -13,7 +13,7 @@
 		<fail message="No release version is defined! Cannot continue..." unless="release.version" />
 
 		<taskdef name="createDist" classname="aQute.bnd.ant.RunconfigToDistributionTask" classpath="../cnf/gradle/dependencies/biz.aQute.bnd.jar" />
-		<taskdef name="jarBundler" classname="net.sourceforge.jarbundler.JarBundler" classpath="../cnf/buildrepo/net.sourceforge.jarbundler/jarbundler-2.1.0.jar" />
+		<taskdef name="jarBundler" classname="net.sourceforge.jarbundler.JarBundler" classpath="../cnf/buildrepo/net.sourceforge.jarbundler/jarbundler-2.3.0.jar" />
 
 		<condition property="isMac">
 			<and>

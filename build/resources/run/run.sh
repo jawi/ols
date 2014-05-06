@@ -12,7 +12,7 @@ platformOpts=
 java -Xdock:name="test" -version 1>/dev/null 2>&1
 if [ "$?" -eq "0" ]; then
 	# running on OSX
-	platformOpts="-Xdock:name=@ols.shortName@ -Dcom.apple.mrj.application.apple.menu.about.name=@ols.shortName@"
+	platformOpts="-Xdock:name=@ols_shortName@ -Dcom.apple.mrj.application.apple.menu.about.name=@ols_shortName@"
 else
 	# running on other platforms
 	platformOpts="-DPlastic.defaultTheme=SkyBluer -Dswing.defaultlaf=com.jgoodies.looks.plastic.Plastic3DLookAndFeel"

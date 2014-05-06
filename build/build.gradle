@@ -1,0 +1,112 @@
+import org.apache.tools.ant.taskdefs.condition.Os
+import org.apache.tools.ant.filters.ReplaceTokens
+
+assert(project != rootProject)
+
+loadProperties "ols.version"
+    
+def loadProperties(String sourceFileName) {
+    def config = new Properties()
+    def propFile = new File(sourceFileName)
+    if (propFile.canRead()) {
+        config.load(new FileInputStream(propFile))
+        for (Map.Entry property in config) {
+            ext[property.key] = property.value;
+        }
+    }
+}
+
+def createDir(String name) {
+  	def dir = file(name)
+    if ((!dir.exists() && !dir.mkdirs()) || !dir.isDirectory()) {
+      throw new GradleException("Could not create directory $dir")
+    }
+    dir
+}
+
+// Preparation
+def releaseBase = createDir('generated/release')
+def releaseBin = createDir("$releaseBase/bin")
+def releasePlugins = createDir("$releaseBase/plugins")
+
+task packageRelease {
+  description   "Assembles release artifacts."
+  group         "Release"
+
+  doLast {
+  	ant.taskdef(name: 'createDist', classname: 'aQute.bnd.ant.RunconfigToDistributionTask', classpath: "../cnf/gradle/dependencies/biz.aQute.bnd.jar")
+  	
+  	delete "$releasePlugins"
+
+    ant.createDist(rootDir: '..', allowSnapshots: 'true', bndFile: 'local.bndrun', outputdir: "$releasePlugins")
+
+    /* The actual runner + fw */
+    copy {
+    	into "$releaseBin"
+    	include '*.jar'
+    	from '../runner/generated'
+    	from 'resources/lib'
+    }
+    
+    /* the run scripts */
+    copy {
+    	into "$releaseBase"
+		filter(ReplaceTokens, tokens: ['ols_shortName': ols_shortName, 'ols_version': ols_version])
+    	from('resources/run') {
+    		include '*.sh'
+    		fileMode 0755
+    	}
+    	from('resources/run') {
+			exclude '*.sh'
+    		fileMode 0644
+    	}
+    }
+  }
+}
+
+task createZipball(type: Zip) {
+	destinationDir = file('generated')
+	archiveName = "ols-${ols_version}-full.zip"
+	from "$releaseBase"
+}
+
+task createTarball(type: Tar) {
+	destinationDir = file('generated')
+	archiveName = "ols-${ols_version}-full.tar.gz"
+	compression = "gzip"
+	from "$releaseBase"
+}
+
+task createDiskImage {
+	onlyIf {
+		/* only run this task on OSX/Darwin */
+		Os.isFamily(Os.FAMILY_MAC)
+	}
+	doLast {
+	  	ant.taskdef(name: 'jarBundler', classname: 'net.sourceforge.jarbundler.JarBundler', classpath: "../cnf/buildrepo/net.sourceforge.jarbundler/jarbundler-2.3.0.jar")
+	  	
+		def osxBase = createDir('generated/osx')
+		def bgDir = createDir("$osxBase/.background")
+		
+		copy {
+			from('resources')
+			into "$bgDir"
+			include 'background.png'
+		}
+		
+		ant.jarBundler(dir: "$osxBase", bundleid: 'nl.lxtreme.ols', name: "$ols_shortName", shortname: "$ols_shortName", mainclass: 'nl.lxtreme.ols.runner.Runner', version: "$ols_version", build: '1', jvmversion: '1.6+', workingdirectory: '$APP_PACKAGE/Contents/Resources/Java', vmoptions: '-Xmx1024m', icon: 'resources/LogicSniffer.icns', arguments: '-logToFile') {
+			/* put all bin/*.jar files on the class path */
+			jarfileset(dir: "$releaseBase", includes: "bin/*.jar", excludes: "bin/jgoodies*.jar") 
+			javafileset(dir: "$releaseBase", includes: "plugins/*.*", excludes: "plugins/*gogo*.jar") 
+		}
+	}
+}
+
+createZipball.mustRunAfter packageRelease
+createTarball.mustRunAfter packageRelease
+createDiskImage.mustRunAfter packageRelease
+
+assemble.dependsOn packageRelease
+assemble.dependsOn createZipball
+assemble.dependsOn createTarball
+assemble.dependsOn createDiskImage

@@ -23,5 +23,5 @@ Private-Package: \
 	nl.lxtreme.ols.client2.session,\
 	nl.lxtreme.ols.client2.usersettings,\
 	nl.lxtreme.ols.client2.views.*
-X-ClientVersion = ${ols.version}
-X-ClientIncidentAddress = info+v${ols.version}@lxtreme.nl
+X-ClientVersion = ${ols_version}
+X-ClientIncidentAddress = info+v${ols_version}@lxtreme.nl
