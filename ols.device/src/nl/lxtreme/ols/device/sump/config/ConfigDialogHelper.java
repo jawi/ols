@@ -18,7 +18,7 @@
  * 
  * Copyright (C) 2010-2011 J.W. Janssen, www.lxtreme.nl
  */
-package nl.lxtreme.ols.device.sump;
+package nl.lxtreme.ols.device.sump.config;
 
 
 import java.util.*;
@@ -32,9 +32,9 @@ import nl.lxtreme.ols.device.sump.profile.DeviceProfile.TriggerType;
 
 
 /**
- * @author jawi
+ * Helper methods for use in the configuration dialog.
  */
-public class ConfigDialogHelper
+class ConfigDialogHelper
 {
   // CONSTANTS
 

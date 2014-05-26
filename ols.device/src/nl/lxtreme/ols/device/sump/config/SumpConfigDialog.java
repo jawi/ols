@@ -22,8 +22,8 @@ package nl.lxtreme.ols.device.sump.config;
 
 
 import static nl.lxtreme.ols.common.OlsConstants.*;
-import static nl.lxtreme.ols.device.sump.ConfigDialogHelper.*;
 import static nl.lxtreme.ols.device.sump.SumpConstants.*;
+import static nl.lxtreme.ols.device.sump.config.ConfigDialogHelper.*;
 import static nl.lxtreme.ols.util.swing.SwingComponentUtils.*;
 
 import java.awt.*;

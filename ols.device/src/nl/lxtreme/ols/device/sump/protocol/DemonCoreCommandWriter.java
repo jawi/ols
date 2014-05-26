@@ -23,7 +23,6 @@ package nl.lxtreme.ols.device.sump.protocol;
 
 import java.io.*;
 
-import nl.lxtreme.ols.device.sump.*;
 import nl.lxtreme.ols.device.sump.config.*;
 
 

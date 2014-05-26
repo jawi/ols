@@ -93,6 +93,44 @@ public class SumpDevice implements Device
   }
 
   /**
+   * @param uri
+   * @return
+   * @throws IOException
+   */
+  public StreamConnection createStreamConnection( final String uri ) throws IOException
+  {
+    return ( StreamConnection )this.connectorService.open( uri, ConnectorService.READ_WRITE, true /* timeouts */);
+  }
+
+  /**
+   * @param aMetadata
+   * @return
+   * @throws InvalidSyntaxException
+   */
+  public DeviceProfile findDeviceProfile( DeviceMetadata aMetadata ) throws InvalidSyntaxException
+  {
+    return getDeviceProfileManager().findProfile( aMetadata );
+  }
+
+  /**
+   * Returns the default device profile.
+   * 
+   * @return a default profile, never <code>null</code>.
+   */
+  public DeviceProfile getDefaultProfile()
+  {
+    return getDeviceProfileManager().getDefaultProfile();
+  }
+
+  /**
+   * @return
+   */
+  public List<DeviceProfile> getDeviceProfiles()
+  {
+    return getDeviceProfileManager().getProfiles();
+  }
+
+  /**
    * @see nl.lxtreme.ols.api.devices.Device#getName()
    */
   public String getName()
@@ -127,54 +165,6 @@ public class SumpDevice implements Device
     }
 
     return this.config.asMap();
-  }
-
-  /**
-   * @param uri
-   * @return
-   * @throws IOException
-   */
-  final StreamConnection createStreamConnection( final String uri ) throws IOException
-  {
-    return ( StreamConnection )this.connectorService.open( uri, ConnectorService.READ_WRITE, true /* timeouts */);
-  }
-
-  /**
-   * Returns the default device profile.
-   * 
-   * @return a default profile, never <code>null</code>.
-   */
-  final DeviceProfile getDefaultProfile()
-  {
-    return getDeviceProfileManager().getDefaultProfile();
-  }
-
-  /**
-   * @param aMetadata
-   * @return
-   * @throws InvalidSyntaxException
-   */
-  final DeviceProfile findDeviceProfile( DeviceMetadata aMetadata ) throws InvalidSyntaxException
-  {
-    return getDeviceProfileManager().findProfile( aMetadata );
-  }
-
-  /**
-   * @return
-   */
-  final List<DeviceProfile> getDeviceProfiles()
-  {
-    return getDeviceProfileManager().getProfiles();
-  }
-
-  /**
-   * Returns the current device profile manager.
-   * 
-   * @return a device profile manager, never <code>null</code>.
-   */
-  private DeviceProfileManager getDeviceProfileManager()
-  {
-    return ( DeviceProfileManager )this.deviceProfileManagerServiceFactory;
   }
 
   /**
@@ -218,6 +208,16 @@ public class SumpDevice implements Device
   {
     SwingComponentUtils.dispose( this.configDialog );
     this.configDialog = null;
+  }
+
+  /**
+   * Returns the current device profile manager.
+   * 
+   * @return a device profile manager, never <code>null</code>.
+   */
+  private DeviceProfileManager getDeviceProfileManager()
+  {
+    return ( DeviceProfileManager )this.deviceProfileManagerServiceFactory;
   }
 
   /**

@@ -18,7 +18,7 @@
  * Copyright (C) 2006-2010 Michael Poppitz, www.sump.org
  * Copyright (C) 2010 J.W. Janssen, www.lxtreme.nl
  */
-package nl.lxtreme.ols.device.sump;
+package nl.lxtreme.ols.device.sump.config;
 
 
 import java.io.*;
@@ -27,6 +27,7 @@ import java.util.logging.*;
 
 import javax.microedition.io.*;
 
+import nl.lxtreme.ols.device.sump.*;
 import nl.lxtreme.ols.device.sump.protocol.*;
 
 

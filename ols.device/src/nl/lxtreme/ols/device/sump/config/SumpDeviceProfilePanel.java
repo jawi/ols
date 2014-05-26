@@ -18,7 +18,7 @@
  * Copyright (C) 2006-2010 Michael Poppitz, www.sump.org
  * Copyright (C) 2010 J.W. Janssen, www.lxtreme.nl
  */
-package nl.lxtreme.ols.device.sump;
+package nl.lxtreme.ols.device.sump.config;
 
 
 import java.awt.*;
@@ -32,6 +32,7 @@ import javax.swing.plaf.basic.*;
 
 import org.osgi.framework.*;
 
+import nl.lxtreme.ols.device.sump.*;
 import nl.lxtreme.ols.device.sump.profile.*;
 import nl.lxtreme.ols.util.swing.*;
 import nl.lxtreme.ols.util.swing.Configurable;
