@@ -32,6 +32,7 @@ import javax.microedition.io.*;
 
 import nl.lxtreme.ols.common.acquisition.*;
 import nl.lxtreme.ols.device.api.*;
+import nl.lxtreme.ols.device.sump.config.*;
 import nl.lxtreme.ols.device.sump.profile.*;
 import nl.lxtreme.ols.task.execution.*;
 import nl.lxtreme.ols.util.swing.*;
@@ -87,7 +88,7 @@ public class SumpDevice implements Device
       // throw new IllegalArgumentException( "Invalid device configuration!" );
     }
 
-    return this.taskExecutionService.execute( new LogicSnifferAcquisitionTask( this.config, getStreamConnection(),
+    return this.taskExecutionService.execute( new SumpAcquisitionTask( this.config, getStreamConnection(),
         aProgressListener ), Collections.singletonMap( "type", "acquisition" ) );
   }
 
@@ -120,14 +121,12 @@ public class SumpDevice implements Device
 
     this.configDialog = new SumpConfigDialog( currentWindow, this );
 
-    Map<String, ? extends Serializable> result = this.config;
-
     if ( this.configDialog.showDialog() )
     {
-      result = this.config = this.configDialog.getConfiguration();
+      this.config = this.configDialog.getConfiguration();
     }
 
-    return result;
+    return this.config.asMap();
   }
 
   /**

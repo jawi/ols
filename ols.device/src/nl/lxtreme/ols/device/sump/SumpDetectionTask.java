@@ -34,11 +34,11 @@ import nl.lxtreme.ols.device.sump.protocol.*;
  * Provides a task for detecting the current type of the attached logic sniffer
  * device.
  */
-public class LogicSnifferDetectionTask implements SumpProtocolConstants
+public class SumpDetectionTask implements SumpProtocolConstants
 {
   // CONSTANTS
 
-  private static final Logger LOG = Logger.getLogger( LogicSnifferDetectionTask.class.getName() );
+  private static final Logger LOG = Logger.getLogger( SumpDetectionTask.class.getName() );
 
   // METHODS
 

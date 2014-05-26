@@ -57,35 +57,7 @@ public interface SumpConstants
 
   int MIN_CHANNEL_GROUPS = 1;
   int MAX_CHANNEL_GROUPS_DDR = 2;
-
-  /** demultiplex */
-  int FLAG_DEMUX = 0x00000001;
-  /** noise filter */
-  int FLAG_FILTER = 0x00000002;
-  /** channel group 1 enabled? */
-  int FLAG_GROUP1_DISABLED = 0x00000004;
-  /** channel group 2 enabled? */
-  int FLAG_GROUP2_DISABLED = 0x00000008;
-  /** channel group 3 enabled? */
-  int FLAG_GROUP3_DISABLED = 0x00000010;
-  /** channel group 4 enabled? */
-  int FLAG_GROUP4_DISABLED = 0x00000020;
-  /** external trigger? */
-  int FLAG_EXTERNAL = 0x00000040;
-  /** inverted */
-  int FLAG_INVERTED = 0x00000080;
-  /** run length encoding */
-  int FLAG_RLE = 0x00000100;
-  int FLAG_RLE_MODE_0 = 0x00000000;
-  int FLAG_RLE_MODE_1 = 0x00004000;
-  int FLAG_RLE_MODE_2 = 0x00008000;
-  int FLAG_RLE_MODE_3 = 0x0000C000;
-  /** Number Scheme */
-  int FLAG_NUMBER_SCHEME = 0x00000200;
-  /** Testing mode (external, bits 16:32) */
-  int FLAG_EXTERNAL_TEST_MODE = 0x00000400;
-  /** Testing mode (internal) */
-  int FLAG_INTERNAL_TEST_MODE = 0x00000800;
+  int MAX_SIMPLE_TRIGGER_STAGES = 4;
 
   // Configuration keys
   String KEY_CHANNEL_COUNT = "sump.channelCount";
@@ -103,8 +75,6 @@ public interface SumpConstants
   String KEY_TRIGGER_STAGES = "sump.triggerStages";
   /** "complex" or "hp165xx" */
   String KEY_TRIGGER_TYPE = "sump.triggerType";
-  String KEY_TRIGGER_CONFIG = "sump.triggerConfig";
-  String KEY_TRIGGER_MASK = "sump.triggerMask";
-  String KEY_TRIGGER_VALUE = "sump.triggerValue";
+  String KEY_TRIGGER_DEFS = "sump.triggerDefs";
 
 }

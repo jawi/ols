@@ -21,45 +21,51 @@
 package nl.lxtreme.ols.device.sump;
 
 
-import java.io.*;
+import static nl.lxtreme.ols.device.sump.profile.Constants.*;
+
+import java.util.*;
+
+import nl.lxtreme.ols.device.sump.profile.*;
 
 
 /**
  * 
  */
-class TestUtils
+public class TestUtils
 {
   // METHODS
 
-  public static void closeSilently( Closeable aCloseable )
+  public static DeviceProfile createDeviceProfile( final String aType, final String aMetadataKeys,
+      final boolean aLastSampleFirst )
   {
-    try
-    {
-      if ( aCloseable != null )
-      {
-        aCloseable.close();
-      }
-    }
-    catch ( IOException exception )
-    {
-      // Ignored...
-    }
-  }
+    Map<String, String> properties = new HashMap<String, String>();
+    properties.put( DEVICE_CAPTURECLOCK, "INTERNAL" );
+    properties.put( DEVICE_CAPTURESIZE_BOUND, "false" );
+    properties.put( DEVICE_CAPTURESIZES, "4096,2048,1024,512,256,128,64,32,16" );
+    properties.put( DEVICE_CHANNEL_COUNT, "32" );
+    properties.put( DEVICE_CHANNEL_GROUPS, "4" );
+    properties.put( DEVICE_CHANNEL_NUMBERING_SCHEMES, "DEFAULT" );
+    properties.put( DEVICE_CLOCKSPEED, "100000000" );
+    properties.put( DEVICE_DIVIDER_CLOCKSPEED, "100000000" );
+    properties.put( DEVICE_DESCRIPTION, aType.concat( " Device Profile" ) );
+    properties.put( DEVICE_FEATURE_NOISEFILTER, "true" );
+    properties.put( DEVICE_FEATURE_RLE, "true" );
+    properties.put( DEVICE_FEATURE_TEST_MODE, "true" );
+    properties.put( DEVICE_FEATURE_TRIGGERS, "true" );
+    properties.put( DEVICE_FEATURE_COMBINED_READDELAY_COUNT, "true" );
+    properties.put( DEVICE_INTERFACE, "SERIAL" );
+    properties.put( DEVICE_METADATA_KEYS, aMetadataKeys );
+    properties.put( DEVICE_OPEN_PORT_DELAY, "0" );
+    properties.put( DEVICE_OPEN_PORT_DTR, "false" );
+    properties.put( DEVICE_RECEIVE_TIMEOUT, "12" );
+    properties.put( DEVICE_LAST_SAMPLE_FIRST, Boolean.toString( aLastSampleFirst ) );
+    properties.put( DEVICE_SAMPLERATES, "1000000" );
+    properties.put( DEVICE_SUPPORTS_DDR, "true" );
+    properties.put( DEVICE_TRIGGER_HP165XX, "false" );
+    properties.put( DEVICE_TRIGGER_COMPLEX, "true" );
+    properties.put( DEVICE_TRIGGER_STAGES, "4" );
+    properties.put( DEVICE_TYPE, aType );
 
-  public static int packBytes( final int aValue )
-  {
-    int mask = 0xFF000000;
-    int result = 0;
-    for ( int i = 0, j = 3; i < 4; i++, j-- )
-    {
-      int tmp = ( aValue & mask ) >> ( j * 8 );
-      if ( tmp != 0 )
-      {
-        result <<= 8;
-        result |= tmp;
-      }
-      mask >>>= 8;
-    }
-    return result;
+    return new DeviceProfile( properties );
   }
 }

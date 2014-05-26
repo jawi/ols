@@ -18,7 +18,7 @@
  * 
  * Copyright (C) 2010-2011 - J.W. Janssen, http://www.lxtreme.nl
  */
-package nl.lxtreme.ols.device.sump;
+package nl.lxtreme.ols.device.sump.config;
 
 
 import static nl.lxtreme.ols.device.sump.SumpConstants.*;
@@ -27,26 +27,19 @@ import java.io.*;
 import java.util.*;
 
 import nl.lxtreme.ols.common.*;
+import nl.lxtreme.ols.device.sump.*;
 
 
 /**
  * Provides the configuration options for the LogicSniffer device.
  */
-public final class SumpConfig extends HashMap<String, Serializable>
+public final class SumpConfig
 {
-  // CONSTANTS
+  // VARIABLES
 
-  private static final long serialVersionUID = 1L;
+  private final Map<String, Serializable> config;
 
   // CONSTRUCTORS
-
-  /**
-   * Creates a new {@link SumpConfig} instance with all default settings.
-   */
-  public SumpConfig()
-  {
-    super();
-  }
 
   /**
    * Creates a new {@link SumpConfig} instance with a given map with settings.
@@ -56,17 +49,28 @@ public final class SumpConfig extends HashMap<String, Serializable>
    */
   public SumpConfig( Map<String, ? extends Serializable> aConfig )
   {
-    super( aConfig );
+    this.config = new HashMap<String, Serializable>( aConfig );
   }
 
   // METHODS
+
+  /**
+   * Returns this configuration as {@link Map}.
+   * 
+   * @return the configuration settings, as unmodifiable {@link Map}, never
+   *         <code>null</code>.
+   */
+  public Map<String, Serializable> asMap()
+  {
+    return Collections.unmodifiableMap( this.config );
+  }
 
   /**
    * @return the total number of channels, &gt;= 0 && &lt;= 32.
    */
   public int getChannelCount()
   {
-    return ( Integer )get( KEY_CHANNEL_COUNT );
+    return ( Integer )this.config.get( KEY_CHANNEL_COUNT );
   }
 
   /**
@@ -76,8 +80,8 @@ public final class SumpConfig extends HashMap<String, Serializable>
   public int getCombinedReadDelayCount()
   {
     // Get the "raw" values...
-    int readCount = ( Integer )get( KEY_READ_COUNT );
-    int delayCount = ( Integer )get( KEY_DELAY_COUNT );
+    int readCount = ( Integer )this.config.get( KEY_READ_COUNT );
+    int delayCount = ( Integer )this.config.get( KEY_DELAY_COUNT );
 
     int maxSize = 0x3fffc;
     if ( isDoubleDataRateEnabled() )
@@ -97,7 +101,7 @@ public final class SumpConfig extends HashMap<String, Serializable>
    */
   public String getConnectionURI()
   {
-    return ( String )get( KEY_CONNECTION_URI );
+    return ( String )this.config.get( KEY_CONNECTION_URI );
   }
 
   /**
@@ -105,7 +109,7 @@ public final class SumpConfig extends HashMap<String, Serializable>
    */
   public int getDelayCount()
   {
-    int delayCount = ( Integer )get( KEY_DELAY_COUNT );
+    int delayCount = ( Integer )this.config.get( KEY_DELAY_COUNT );
     if ( isDoubleDataRateEnabled() )
     {
       return ( ( delayCount - 8 ) & 0x7fffff8 ) >> 3;
@@ -119,7 +123,7 @@ public final class SumpConfig extends HashMap<String, Serializable>
    */
   public int getDivider()
   {
-    return ( Integer )get( KEY_DIVIDER );
+    return ( Integer )this.config.get( KEY_DIVIDER );
   }
 
   /**
@@ -136,7 +140,7 @@ public final class SumpConfig extends HashMap<String, Serializable>
    */
   public int getEnabledChannelMask()
   {
-    return ( Integer )get( KEY_ENABLED_CHANNELS );
+    return ( Integer )this.config.get( KEY_ENABLED_CHANNELS );
   }
 
   /**
@@ -161,7 +165,7 @@ public final class SumpConfig extends HashMap<String, Serializable>
    */
   public int getFlags()
   {
-    return ( Integer )get( KEY_FLAGS );
+    return ( Integer )this.config.get( KEY_FLAGS );
   }
 
   /**
@@ -170,7 +174,7 @@ public final class SumpConfig extends HashMap<String, Serializable>
    */
   public int getGroupCount()
   {
-    return ( Integer )get( KEY_GROUP_COUNT );
+    return ( Integer )this.config.get( KEY_GROUP_COUNT );
   }
 
   /**
@@ -178,7 +182,7 @@ public final class SumpConfig extends HashMap<String, Serializable>
    */
   public int getReadCount()
   {
-    int readCount = ( Integer )get( KEY_READ_COUNT );
+    int readCount = ( Integer )this.config.get( KEY_READ_COUNT );
     if ( isDoubleDataRateEnabled() )
     {
       return ( readCount >> 3 ) - 1;
@@ -194,7 +198,7 @@ public final class SumpConfig extends HashMap<String, Serializable>
    */
   public int getSampleCount()
   {
-    int samples = ( Integer )get( KEY_READ_COUNT );
+    int samples = ( Integer )this.config.get( KEY_READ_COUNT );
     if ( isDoubleDataRateEnabled() )
     {
       // When the multiplexer is turned on, the upper two channel blocks are
@@ -213,7 +217,7 @@ public final class SumpConfig extends HashMap<String, Serializable>
    */
   public int getSampleRate()
   {
-    return ( Integer )get( KEY_SAMPLE_RATE );
+    return ( Integer )this.config.get( KEY_SAMPLE_RATE );
   }
 
   /**
@@ -221,21 +225,9 @@ public final class SumpConfig extends HashMap<String, Serializable>
    *          the stage index, &gt;= 0 && &lt;= 3.
    * @return the trigger configuration, as integer value.
    */
-  public int getTriggerConfig( int aStage )
+  public SumpBasicTrigger getTriggerDefinition( int aStage )
   {
-    int[] configs = ( int[] )get( KEY_TRIGGER_CONFIG );
-    return configs[aStage];
-  }
-
-  /**
-   * @param aStage
-   *          the stage index, &gt;= 0 && &lt;= 3.
-   * @return the trigger mask, as integer value.
-   */
-  public int getTriggerMask( int aStage )
-  {
-    int[] masks = ( int[] )get( KEY_TRIGGER_MASK );
-    return masks[aStage];
+    return ( ( SumpBasicTrigger[] )this.config.get( KEY_TRIGGER_DEFS ) )[aStage];
   }
 
   /**
@@ -251,9 +243,9 @@ public final class SumpConfig extends HashMap<String, Serializable>
     }
 
     // Get the "raw" values...
-    int readCount = ( Integer )get( KEY_READ_COUNT );
-    int delayCount = ( Integer )get( KEY_DELAY_COUNT );
-    int divider = ( Integer )get( KEY_DIVIDER );
+    int readCount = ( Integer )this.config.get( KEY_READ_COUNT );
+    int delayCount = ( Integer )this.config.get( KEY_DELAY_COUNT );
+    int divider = ( Integer )this.config.get( KEY_DIVIDER );
     boolean ddr = isDoubleDataRateEnabled();
 
     // pure magic taken from the original LA sources...
@@ -266,18 +258,7 @@ public final class SumpConfig extends HashMap<String, Serializable>
    */
   public int getTriggerStageCount()
   {
-    return ( Integer )get( KEY_TRIGGER_STAGES );
-  }
-
-  /**
-   * @param aStage
-   *          the stage index, &gt;= 0 && &lt;= 3.
-   * @return the trigger value, as integer value.
-   */
-  public int getTriggerValue( int aStage )
-  {
-    int[] values = ( int[] )get( KEY_TRIGGER_VALUE );
-    return values[aStage];
+    return ( Integer )this.config.get( KEY_TRIGGER_STAGES );
   }
 
   /**
@@ -287,6 +268,17 @@ public final class SumpConfig extends HashMap<String, Serializable>
   public boolean isDoubleDataRateEnabled()
   {
     return ( getFlags() & 0x01 ) != 0;
+  }
+
+  /**
+   * @return <code>true</code> if a flush of the input stream upon closing of
+   *         the device is needed, <code>false</code> otherwise.
+   */
+  public boolean isFlushOnCloseNeeded()
+  {
+    // On the Pipistrello, this can take a *long* time, which is not aiding the
+    // user experience...
+    return getSampleCount() < 256 * 1024;
   }
 
   /**
@@ -315,7 +307,7 @@ public final class SumpConfig extends HashMap<String, Serializable>
    */
   public boolean isLastSampleSentFirst()
   {
-    return ( Boolean )get( KEY_LAST_SAMPLE_SENT_FIRST );
+    return ( Boolean )this.config.get( KEY_LAST_SAMPLE_SENT_FIRST );
   }
 
   /**
@@ -325,7 +317,7 @@ public final class SumpConfig extends HashMap<String, Serializable>
    */
   public boolean isReadDelayCountValueCombined()
   {
-    return ( Boolean )get( KEY_READ_DELAY_COUNT_COMBINED );
+    return ( Boolean )this.config.get( KEY_READ_DELAY_COUNT_COMBINED );
   }
 
   /**
@@ -343,18 +335,7 @@ public final class SumpConfig extends HashMap<String, Serializable>
    */
   public boolean isTriggerEnabled()
   {
-    return ( Boolean )get( KEY_TRIGGER_ENABLED );
-  }
-
-  /**
-   * @return <code>true</code> if a flush of the input stream upon closing of
-   *         the device is needed, <code>false</code> otherwise.
-   */
-  public boolean isFlushOnCloseNeeded()
-  {
-    // On the Pipistrello, this can take a *long* time, which is not aiding the
-    // user experience...
-    return getSampleCount() < 256 * 1024;
+    return ( Boolean )this.config.get( KEY_TRIGGER_ENABLED );
   }
 
   /**
@@ -417,37 +398,32 @@ public final class SumpConfig extends HashMap<String, Serializable>
     {
       return false;
     }
-    if ( !isNumber( KEY_TRIGGER_CONFIG, Integer.MIN_VALUE, Integer.MAX_VALUE ) )
+    if ( Boolean.TRUE.equals( this.config.get( KEY_TRIGGER_ENABLED ) ) )
     {
-      return false;
-    }
-    if ( !isNumber( KEY_TRIGGER_MASK, Integer.MIN_VALUE, Integer.MAX_VALUE ) )
-    {
-      return false;
-    }
-    if ( !isNumber( KEY_TRIGGER_VALUE, Integer.MIN_VALUE, Integer.MAX_VALUE ) )
-    {
-      return false;
+      if ( this.config.get( KEY_TRIGGER_DEFS ) == null )
+      {
+        return false;
+      }
     }
 
     return true;
   }
 
-  private boolean isNonEmptyString( String aKey )
-  {
-    Object value = get( aKey );
-    return value != null && ( value instanceof String ) && !"".equals( ( ( String )value ).trim() );
-  }
-
   private boolean isBoolean( String aKey )
   {
-    Object value = get( aKey );
+    Object value = this.config.get( aKey );
     return value != null && ( value instanceof Boolean );
+  }
+
+  private boolean isNonEmptyString( String aKey )
+  {
+    Object value = this.config.get( aKey );
+    return value != null && ( value instanceof String ) && !"".equals( ( ( String )value ).trim() );
   }
 
   private boolean isNumber( String aKey, int aMin, int aMax )
   {
-    Object value = get( aKey );
+    Object value = this.config.get( aKey );
     if ( value == null || !( value instanceof Number ) )
     {
       return false;

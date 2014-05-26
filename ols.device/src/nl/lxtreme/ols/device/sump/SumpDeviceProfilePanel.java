@@ -40,7 +40,7 @@ import nl.lxtreme.ols.util.swing.Configurable;
 /**
  * 
  */
-public abstract class LogicSnifferDeviceProfilePanel implements Configurable
+public abstract class SumpDeviceProfilePanel implements Configurable
 {
   // INNER TYPES
 
@@ -199,13 +199,13 @@ public abstract class LogicSnifferDeviceProfilePanel implements Configurable
 
   // VARIABLES
 
-  JButton showMetadataButton;
+  private JButton showMetadataButton;
   private JComboBox deviceTypeSelect;
   private JEditorPane deviceTypeDetails;
 
   // CONSTANTS
 
-  private static final Logger LOG = Logger.getLogger( LogicSnifferDeviceProfilePanel.class.getName() );
+  private static final Logger LOG = Logger.getLogger( SumpDeviceProfilePanel.class.getName() );
 
   private static final String DETAILS_TMPL = "<html><style>body { font-family: sans-serif; font-size: 8px; margin-left: 8px; } th { text-align: right; }</style><body><table>"
       + "<tr><th>%s</th><td>%s</td></tr>" //
@@ -226,7 +226,7 @@ public abstract class LogicSnifferDeviceProfilePanel implements Configurable
   /**
    * Creates a new LogicSnifferDeviceProfilePanel instance.
    */
-  public LogicSnifferDeviceProfilePanel( final SumpDevice aDevice )
+  public SumpDeviceProfilePanel( final SumpDevice aDevice )
   {
     super();
 
@@ -246,7 +246,7 @@ public abstract class LogicSnifferDeviceProfilePanel implements Configurable
     aContainer.add( this.deviceTypeSelect );
 
     aContainer.add( new JLabel( "" ) );
-    aContainer.add( this.showMetadataButton );
+    aContainer.add( this.getShowMetadataButton() );
 
     aContainer.add( new JLabel( "" ) );
     aContainer.add( this.deviceTypeDetails );
@@ -290,7 +290,7 @@ public abstract class LogicSnifferDeviceProfilePanel implements Configurable
   {
     SwingComponentUtils.getCurrentWindow().setCursor( Cursor.getPredefinedCursor( Cursor.WAIT_CURSOR ) );
 
-    LogicSnifferDetectionTask detectTask = new LogicSnifferDetectionTask();
+    SumpDetectionTask detectTask = new SumpDetectionTask();
 
     try
     {
@@ -434,7 +434,7 @@ public abstract class LogicSnifferDeviceProfilePanel implements Configurable
    */
   private void initPanel()
   {
-    this.showMetadataButton = new JButton( new ShowDeviceMetadataAction() );
+    this.setShowMetadataButton( new JButton( new ShowDeviceMetadataAction() ) );
 
     this.deviceTypeDetails = new JEditorPane( "text/html", getEmtpyMetadataDetails() );
     this.deviceTypeDetails.setEditable( false );
@@ -463,5 +463,23 @@ public abstract class LogicSnifferDeviceProfilePanel implements Configurable
       // By default, select the "OLS" device, if available...
       this.deviceTypeSelect.setSelectedItem( defaultProfile );
     }
+  }
+
+  /**
+   * Returns the current value of showMetadataButton.
+   * @return the showMetadataButton
+   */
+  public JButton getShowMetadataButton()
+  {
+    return showMetadataButton;
+  }
+
+  /**
+   * Sets showMetadataButton to the given value.
+   * @param aShowMetadataButton the showMetadataButton to set.
+   */
+  public void setShowMetadataButton( JButton aShowMetadataButton )
+  {
+    this.showMetadataButton = aShowMetadataButton;
   }
 }

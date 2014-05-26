@@ -18,7 +18,7 @@
  * 
  * Copyright (C) 2010-2011 - J.W. Janssen, http://www.lxtreme.nl
  */
-package nl.lxtreme.ols.device.sump;
+package nl.lxtreme.ols.device.sump.config;
 
 
 import static nl.lxtreme.ols.common.OlsConstants.*;
@@ -36,6 +36,7 @@ import javax.swing.event.*;
 import javax.swing.plaf.basic.*;
 
 import nl.lxtreme.ols.common.Unit.Value;
+import nl.lxtreme.ols.device.sump.*;
 import nl.lxtreme.ols.device.sump.profile.*;
 import nl.lxtreme.ols.device.sump.profile.DeviceProfile.CaptureClockSource;
 import nl.lxtreme.ols.device.sump.profile.DeviceProfile.DeviceInterface;
@@ -242,11 +243,14 @@ public final class SumpConfigDialog extends JDialog implements Configurable, Clo
   private static final String[] BAUDRATES = { "921600bps", "460800bps", "230400bps", "115200bps", "57600bps",
       "38400bps", "19200bps", "14400bps", "9600bps", "4800bps" };
 
+  private static final String TRIGGER_PARALLEL = "Parallel";
+  private static final String TRIGGER_SERIAL = "Serial";
+
   // VARIABLES
 
   private final SumpDevice logicSnifferDevice;
 
-  private LogicSnifferDeviceProfilePanel deviceProfilePanel;
+  private SumpDeviceProfilePanel deviceProfilePanel;
 
   private JComboBox connTypeSelect;
   private JTextField remAddress;
@@ -371,11 +375,35 @@ public final class SumpConfigDialog extends JDialog implements Configurable, Clo
   }
 
   /**
+   * Determines which RLE-mode to use. There are up to four different RLE-modes
+   * present in 'dogsbody' Verilog firmware.
+   * <p>
+   * The RLE-Encoding modes are:
+   * </p>
+   * <ol start="0">
+   * <li>Issue {values} & {RLE-count} as pairs. Count inclusive of value
+   * (<strike>backwards compatible</strike>);</li>
+   * <li>Issue {values} & {RLE-count} as pairs. Count is <em>exclusive</em> of
+   * value. Compatible with all clients;</li>
+   * <li>Periodic. {values} reissued approximately every 256 {RLE-count} fields;
+   * </li>
+   * <li>Unlimited. {values} can be followed by unlimited numbers of
+   * {RLE-counts}.</li>
+   * </ol>
+   * 
+   * @return a RLE-mode, defaults to 1.
+   */
+  static final int determineRleMode()
+  {
+    return Integer.getInteger( "nl.lxtreme.ols.rle.mode", 1 ).intValue();
+  }
+
+  /**
    * @return a {@link SumpConfig} instance, never <code>null</code>.
    */
   public SumpConfig getConfiguration()
   {
-    SumpConfigBuilder builder = new SumpConfigBuilder( this.deviceProfile );
+    SumpConfigBuilder builder = new SumpConfigBuilder();
 
     // how should we connect to our device?
     builder.setConnectionURI( getConnectionURI() );
@@ -384,30 +412,24 @@ public final class SumpConfigDialog extends JDialog implements Configurable, Clo
     builder.setClockSource( ( CaptureClockSource )this.sourceSelect.getSelectedItem() );
 
     // set enabled channel groups
-    int enabledChannels = 0;
-    for ( int i = 0; i < this.channelGroup.length; i++ )
-    {
-      if ( this.channelGroup[i].isSelected() )
-      {
-        enabledChannels |= 0xff << ( 8 * i );
-      }
-    }
-    builder.setEnabledChannels( enabledChannels );
+    builder.setEnableGroup1( this.channelGroup[0].isEnabled() && this.channelGroup[0].isSelected() );
+    builder.setEnableGroup2( this.channelGroup[1].isEnabled() && this.channelGroup[1].isSelected() );
+    builder.setEnableGroup3( this.channelGroup[2].isEnabled() && this.channelGroup[2].isSelected() );
+    builder.setEnableGroup4( this.channelGroup[3].isEnabled() && this.channelGroup[3].isSelected() );
 
     // set sample rate; use a default to ensure the internal state remains
     // correct...
-    builder.setSampleRate( getSelectedSampleRate() );
+    int sampleRate = getSelectedSampleRate();
+    builder.setSampleRate( sampleRate );
+    builder.setDoubleDataRateMode( this.deviceProfile.isDoubleDataRateSupported()
+        && sampleRate > this.deviceProfile.getDividerClockspeed() );
 
     // set sample count
     builder.setSampleCount( getSelectedSampleCount() );
 
-    // set before / after ratio
-    double r = 1.0 - ( this.ratioSlider.getValue() / ( double )this.ratioSlider.getMaximum() );
-    builder.setRatio( r );
-
     // set filter
     builder.setFilterEnabled( this.filterEnable.isEnabled() && this.filterEnable.isSelected() );
-    builder.setRleEnabled( this.rleEnable.isEnabled() && this.rleEnable.isSelected() );
+    builder.setRleEnabled( this.rleEnable.isEnabled() && this.rleEnable.isSelected(), determineRleMode() );
 
     // set number scheme
     NumberingScheme scheme = ( NumberingScheme )this.numberSchemeSelect.getSelectedItem();
@@ -418,67 +440,38 @@ public final class SumpConfigDialog extends JDialog implements Configurable, Clo
 
     // set trigger
     final boolean triggerEnabled = this.triggerEnable.isEnabled() && this.triggerEnable.isSelected();
-    builder.setTriggerEnabled( triggerEnabled );
-
     if ( triggerEnabled )
     {
-      final boolean complex = TriggerType.COMPLEX.equals( this.triggerTypeSelect.getSelectedItem() );
-      for ( int stage = 0; stage < MAX_COMPLEX_TRIGGER_STAGES; stage++ )
+      // set before / after ratio
+      double r = 1.0 - ( this.ratioSlider.getValue() / ( double )this.ratioSlider.getMaximum() );
+      builder.setRatio( r );
+
+      boolean complex = TriggerType.COMPLEX.equals( this.triggerTypeSelect.getSelectedItem() );
+      int triggerStages = this.deviceProfile.getTriggerStages();
+
+      for ( int stage = 0; stage < triggerStages; stage++ )
       {
-        int m = 0;
-        int v = 0;
-        for ( int i = 0; i < MAX_CHANNELS; i++ )
+        boolean startCapture = this.triggerStart[stage].isSelected();
+        if ( !complex )
         {
-          if ( this.triggerMask[stage][i].isSelected() )
-          {
-            m |= 1 << i;
-          }
-          if ( this.triggerValue[stage][i].isSelected() )
-          {
-            v |= 1 << i;
-          }
+          // Simple trigger, only start capture on first stage...
+          startCapture = ( stage == 0 );
         }
-        final int level = this.triggerLevel[stage].getSelectedIndex();
-        final int delay = smartParseInt( this.triggerDelay[stage].getText(), 0 );
 
-        final boolean parallelTriggerStage = this.triggerMode[stage].getSelectedIndex() == 0;
-        final int channel = this.triggerChannel[stage].getSelectedIndex();
-        final boolean startCapture = this.triggerStart[stage].isSelected();
-
-        if ( complex )
-        {
-          if ( parallelTriggerStage )
-          {
-            builder.setParallelTrigger( stage, m, v, level, delay, startCapture );
-          }
-          else
-          {
-            builder.setSerialTrigger( stage, channel, m, v, level, delay, startCapture );
-          }
-        }
-        else
-        {
-          if ( stage == 0 )
-          {
-            if ( parallelTriggerStage )
-            {
-              builder.setParallelTrigger( stage, m, v, 0, delay, true );
-            }
-            else
-            {
-              builder.setSerialTrigger( stage, channel, m, v, 0, delay, true );
-            }
-          }
-          else
-          {
-            // make sure stages > 0 will not interfere
-            builder.setParallelTrigger( stage, 0, 0, 3, 0, false );
-          }
-        }
+        builder.add( //
+            builder.createSumpTrigger() //
+                .setStage( stage ) //
+                .setMask( getBitMask( this.triggerMask[stage] ) ) //
+                .setValue( getBitMask( this.triggerValue[stage] ) ) //
+                .setLevel( this.triggerLevel[stage].getSelectedIndex() ) //
+                .setDelay( smartParseInt( this.triggerDelay[stage].getText(), 0 ) ) //
+                .setSerialMode( TRIGGER_SERIAL.equals( this.triggerMode[stage].getSelectedItem() ) ) //
+                .setSerialChannel( this.triggerChannel[stage].getSelectedIndex() ) //
+                .setStartCapture( startCapture ) );
       }
     }
 
-    return builder.build();
+    return builder.build( this.deviceProfile );
   }
 
   /**
@@ -805,7 +798,7 @@ public final class SumpConfigDialog extends JDialog implements Configurable, Clo
     }
 
     this.captureButton.setEnabled( mandatoryFieldsFilled );
-    this.deviceProfilePanel.showMetadataButton.setEnabled( mandatoryFieldsFilled );
+    this.deviceProfilePanel.getShowMetadataButton().setEnabled( mandatoryFieldsFilled );
   }
 
   /**
@@ -933,7 +926,7 @@ public final class SumpConfigDialog extends JDialog implements Configurable, Clo
 
     SpringLayoutUtils.addSeparator( connectionPane, "" );
 
-    this.deviceProfilePanel = new LogicSnifferDeviceProfilePanel( this.logicSnifferDevice )
+    this.deviceProfilePanel = new SumpDeviceProfilePanel( this.logicSnifferDevice )
     {
       @Override
       protected String getConnectionURI()
@@ -1321,7 +1314,7 @@ public final class SumpConfigDialog extends JDialog implements Configurable, Clo
       stagePane.add( createRightAlignedLabel( "Arm" ), createConstraints( 0, 0, 1, 1, 1.0, 1.0 ) );
       stagePane.add( this.triggerLevel[i], createConstraints( 1, 0, 1, 1, 0.5, 1.0 ) );
 
-      final String[] modes = { "Parallel", "Serial" };
+      final String[] modes = { TRIGGER_PARALLEL, TRIGGER_SERIAL };
       this.triggerMode[i] = new JComboBox( modes );
       this.triggerMode[i].setSelectedIndex( 0 );
 
@@ -1497,7 +1490,9 @@ public final class SumpConfigDialog extends JDialog implements Configurable, Clo
 
     for ( int stage = 0; stage < MAX_COMPLEX_TRIGGER_STAGES; stage++ )
     {
-      final boolean stageEnabled = aEnable && ( stage < aAvailableTriggerStages );
+      boolean stageEnabled = aEnable && ( stage < aAvailableTriggerStages );
+      boolean serialTrigger = aEnable && TRIGGER_SERIAL.equals( this.triggerMode[stage].getSelectedItem() );
+
       for ( int i = 0; i < MAX_CHANNELS; i++ )
       {
         final boolean enabled = stageEnabled && ( i < channelCount );
@@ -1510,17 +1505,13 @@ public final class SumpConfigDialog extends JDialog implements Configurable, Clo
       this.triggerLevel[stage].setEnabled( stageEnabled && complex );
       this.triggerDelay[stage].setEnabled( stageEnabled );
       this.triggerMode[stage].setEnabled( stageEnabled );
-      if ( aEnable && ( this.triggerMode[stage].getSelectedIndex() == 1 ) )
-      {
-        this.triggerChannel[stage].setEnabled( true );
-      }
-      else
-      {
-        this.triggerChannel[stage].setEnabled( false );
-      }
+      this.triggerChannel[stage].setEnabled( serialTrigger );
       this.triggerStart[stage].setEnabled( stageEnabled && complex );
+      if ( !complex )
+      {
+        this.triggerStart[stage].setSelected( stage == 0 );
+      }
 
-      // @@@
       this.triggerHexMask[stage].setEnabled( stageEnabled );
       this.triggerHexValue[stage].setEnabled( stageEnabled );
       this.applyHexMaskButton[stage].setEnabled( stageEnabled );

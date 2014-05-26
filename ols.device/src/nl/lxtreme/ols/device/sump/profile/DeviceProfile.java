@@ -42,6 +42,16 @@ public final class DeviceProfile implements Cloneable, Comparable<DeviceProfile>
   public static enum CaptureClockSource
   {
     INTERNAL, EXTERNAL_FALLING, EXTERNAL_RISING;
+
+    public boolean isExternal()
+    {
+      return this != INTERNAL;
+    }
+
+    public boolean isInverted()
+    {
+      return this == EXTERNAL_FALLING;
+    }
   }
 
   /**

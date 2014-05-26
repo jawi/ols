@@ -25,6 +25,7 @@ import java.io.*;
 import java.util.logging.*;
 
 import nl.lxtreme.ols.device.sump.*;
+import nl.lxtreme.ols.device.sump.config.*;
 
 
 /**
@@ -239,7 +240,9 @@ public class SumpCommandWriter implements SumpProtocolConstants, Closeable
       shift += 8;
     }
 
-    LOG.log( Level.INFO, "Sending long command: 0x{0} with data 0x{1} 0x{2} 0x{3} 0x{4}",
+    LOG.log(
+        Level.INFO,
+        "Sending long command: 0x{0} with data 0x{1} 0x{2} 0x{3} 0x{4}",
         new Object[] { Integer.toHexString( raw[0] & 0xFF ), String.format( "%02x", raw[1] ),
             String.format( "%02x", raw[2] ), String.format( "%02x", raw[3] ), String.format( "%02x", raw[4] ) } );
 
@@ -259,17 +262,21 @@ public class SumpCommandWriter implements SumpProtocolConstants, Closeable
     {
       for ( int i = 0; i < this.config.getTriggerStageCount(); i++ )
       {
+        SumpBasicTrigger triggerDef = this.config.getTriggerDefinition( i );
+
         final int indexMask = 4 * i;
-        sendCommand( SETTRIGMASK | indexMask, this.config.getTriggerMask( i ) );
-        sendCommand( SETTRIGVAL | indexMask, this.config.getTriggerValue( i ) );
-        sendCommand( SETTRIGCFG | indexMask, this.config.getTriggerConfig( i ) );
+        sendCommand( SETTRIGMASK | indexMask, triggerDef.getMask() );
+        sendCommand( SETTRIGVAL | indexMask, triggerDef.getValue() );
+        sendCommand( SETTRIGCFG | indexMask, triggerDef.getConfig() );
       }
     }
     else
     {
-      sendCommand( SETTRIGMASK, 0 );
-      sendCommand( SETTRIGVAL, 0 );
-      sendCommand( SETTRIGCFG, SumpConfigBuilder.TRIGGER_CAPTURE );
+      SumpBasicTrigger triggerDef = new SumpBasicTrigger();
+
+      sendCommand( SETTRIGMASK, triggerDef.getMask() );
+      sendCommand( SETTRIGVAL, triggerDef.getValue() );
+      sendCommand( SETTRIGCFG, triggerDef.getConfig() );
     }
   }
 }

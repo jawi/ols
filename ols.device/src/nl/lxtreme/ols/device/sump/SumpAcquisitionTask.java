@@ -27,6 +27,7 @@ import java.util.logging.*;
 import javax.microedition.io.*;
 
 import nl.lxtreme.ols.common.acquisition.*;
+import nl.lxtreme.ols.device.sump.config.*;
 import nl.lxtreme.ols.device.sump.protocol.*;
 import nl.lxtreme.ols.task.execution.*;
 
@@ -35,11 +36,11 @@ import nl.lxtreme.ols.task.execution.*;
  * Provides an acquisition task that uses the SUMP protocol for talking with a
  * LogicSniffer device on a serial/USB port.
  */
-public class LogicSnifferAcquisitionTask implements SumpProtocolConstants, Task<AcquisitionData>
+public class SumpAcquisitionTask implements SumpProtocolConstants, Task<AcquisitionData>
 {
   // CONSTANTS
 
-  private static final Logger LOG = Logger.getLogger( LogicSnifferAcquisitionTask.class.getName() );
+  private static final Logger LOG = Logger.getLogger( SumpAcquisitionTask.class.getName() );
 
   // VARIABLES
 
@@ -55,7 +56,7 @@ public class LogicSnifferAcquisitionTask implements SumpProtocolConstants, Task<
   /**
    * Creates a new LogicSnifferDevice instance.
    */
-  public LogicSnifferAcquisitionTask( SumpConfig aConfig, StreamConnection aConnection,
+  public SumpAcquisitionTask( SumpConfig aConfig, StreamConnection aConnection,
       AcquisitionProgressListener aProgressListener )
   {
     this.config = aConfig;
