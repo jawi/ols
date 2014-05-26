@@ -450,6 +450,7 @@ public final class AcquisitionDataBuilder
   private int sampleRate;
   private long triggerPosition;
   private boolean cursorsVisible;
+  private boolean reverseSampleOrder;
 
   // CONSTRUCTORS
 
@@ -469,6 +470,7 @@ public final class AcquisitionDataBuilder
     this.sampleRate = NOT_AVAILABLE; // state values
     this.channelCount = 0;
     this.cursorsVisible = true; // by default
+    this.reverseSampleOrder = false; // by default
   }
 
   // METHODS
@@ -721,6 +723,22 @@ public final class AcquisitionDataBuilder
       absLength = 0L;
     }
 
+    // If samples were added in the "reverse" order, we can now easily swap
+    // them...
+    if ( this.reverseSampleOrder )
+    {
+      for ( int left = 0, right = values.length - 1; left <= right; left++, right-- )
+      {
+        int val = values[left];
+        values[left] = values[right];
+        values[right] = val;
+
+        long tstamp = timestamps[left];
+        timestamps[left] = absLength - timestamps[right];
+        timestamps[right] = absLength - tstamp;
+      }
+    }
+
     CursorImpl[] _cursors = new CursorImpl[OlsConstants.MAX_CURSORS];
     for ( CursorImpl cursor : this.cursors )
     {
@@ -883,6 +901,21 @@ public final class AcquisitionDataBuilder
       throw new IllegalArgumentException( "Mask cannot be zero!" );
     }
     this.enabledChannelMask = aMask;
+    return this;
+  }
+
+  /**
+   * Sets whether or not the order of samples are reversed.
+   * 
+   * @param aReverseSampleOrder
+   *          <code>true</code> if the added samples should be "reversed" during
+   *          building, <code>false</code> to keep the samples in the order they
+   *          were added.
+   * @return this builder.
+   */
+  public AcquisitionDataBuilder setReverseSampleOrder( boolean aReverseSampleOrder )
+  {
+    this.reverseSampleOrder = aReverseSampleOrder;
     return this;
   }
 

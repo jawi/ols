@@ -179,6 +179,33 @@ public class AcquisitionDataBuilderTest
   }
 
   /**
+   * Tests that the signal transitions are correctly determined.
+   */
+  @Test
+  public void testAddSamplesWithReverseOrderOk()
+  {
+    AcquisitionDataBuilder builder = new AcquisitionDataBuilder();
+    builder.setChannelCount( 4 );
+    builder.setReverseSampleOrder( true );
+    builder.addSample( 0L, 0 );
+    builder.addSample( 1L, 1 );
+    builder.addSample( 2L, 2 );
+    builder.addSample( 3L, 4 );
+    builder.addSample( 4L, 8 );
+    builder.addSample( 5L, 0 );
+    builder.addSample( 6L, 0 );
+    builder.addSample( 7L, 0 );
+    builder.addSample( 8L, 0 );
+    builder.addSample( 9L, 0 );
+    builder.addSample( 10L, 0 );
+
+    AcquisitionData data = builder.build();
+    assertValues( data.getValues(), 0, 0, 8, 4, 2, 1, 0 );
+    assertTimestamps( data.getTimestamps(), 0L, 5L, 6L, 7L, 8L, 9L, 10L );
+    assertEquals( 10L, data.getAbsoluteLength() );
+  }
+
+  /**
    * Tests that we can add samples starting at timestamp 1L.
    */
   @Test
