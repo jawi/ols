@@ -52,19 +52,6 @@ public class SumpConfigBuilderTest
   }
 
   /**
-   * Test method for {@link SumpConfig#getChannelCount()}.
-   */
-  @Test
-  public void testGetChannelCount()
-  {
-    this.builder.setDoubleDataRateMode( false );
-    assertEquals( 32, buildConfig().getChannelCount() );
-
-    this.builder.setDoubleDataRateMode( true );
-    assertEquals( 16, buildConfig().getChannelCount() );
-  }
-
-  /**
    * Test method for {@link SumpConfig#getDivider()}.
    */
   @Test

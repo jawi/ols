@@ -125,7 +125,40 @@ public class SumpAcquisitionTask implements SumpProtocolConstants, Task<Acquisit
   {
     LOG.info( "Configuring device ..." );
 
-    this.outputStream.writeDeviceConfiguration();
+    this.outputStream.writeCmdDivider( this.config.getDivider() );
+    this.outputStream.writeCmdSetFlags( this.config.getFlags() );
+    if ( this.config.isReadDelayCountValueCombined() )
+    {
+      this.outputStream.writeCmdSetSize( this.config.getCombinedReadDelayCount() );
+    }
+    else
+    {
+      this.outputStream.writeCmdSetReadCount( this.config.getReadCount() );
+      this.outputStream.writeCmdSetDelayCount( this.config.getDelayCount() );
+    }
+
+    LOG.info( "Configuring triggers ..." );
+
+    if ( this.config.isBasicTriggerEnabled() )
+    {
+      SumpBasicTrigger[] triggerDefs = this.config.getBasicTriggerDefinitions();
+      for ( int i = 0; i < triggerDefs.length; i++ )
+      {
+        this.outputStream.writeBasicTrigger( i, triggerDefs[i] );
+      }
+    }
+    else if ( this.config.isAdvancedTriggerEnabled() )
+    {
+      SumpAdvancedTrigger[] triggerDefs = this.config.getAdvancedTriggerDefinitions();
+      for ( int i = 0; i < triggerDefs.length; i++ )
+      {
+        this.outputStream.writeAdvancedTrigger( i, triggerDefs[i] );
+      }
+    }
+    else
+    {
+      this.outputStream.writeBasicTrigger( 0, new SumpBasicTrigger() );
+    }
 
     LOG.info( "Arming device and starting capture ..." );
 
@@ -259,7 +292,7 @@ public class SumpAcquisitionTask implements SumpProtocolConstants, Task<Acquisit
         throw new IOException( "Failed to open a valid connection!" );
       }
 
-      this.outputStream = new SumpCommandWriter( this.config, conn.openDataOutputStream() );
+      this.outputStream = new SumpCommandWriter( conn.openDataOutputStream() );
       this.inputStream = new SumpResultReader( conn.openDataInputStream() );
 
       // We don't expect any data, so flush all data pending in the given
@@ -366,31 +399,31 @@ public class SumpAcquisitionTask implements SumpProtocolConstants, Task<Acquisit
     final int length = this.config.getEnabledGroupCount() * this.config.getSampleCount();
     final byte[] rawData = new byte[length];
 
-    boolean cancelled = false;
-
     int offset = 0;
     int zerosRead = 0;
     int count = length;
 
     try
     {
-      while ( ( offset >= 0 ) && ( offset < length ) )
+      while ( !Thread.currentThread().isInterrupted() && ( offset >= 0 ) && ( offset < length ) )
       {
         int read = this.inputStream.readRawData( rawData, offset, count );
 
         if ( Thread.interrupted() )
         {
           // We've been interrupted, check what we need to do...
-          if ( this.config.isRleEnabled() && !cancelled )
+          if ( this.config.isAdvancedTriggerEnabled() || this.config.isRleEnabled() )
           {
+            LOG.log( Level.INFO, "Interrupted. Sending 'finish now' command..." );
+
             this.outputStream.writeCmdFinishNow();
           }
           else
           {
-            // Already cancelled or not using RLE, break out the loop...
-            break;
+            LOG.log( Level.INFO, "Interrupted. Stop reading of sample data..." );
+            // Re-interrupt ourselves as this flag is cleared...
+            Thread.currentThread().interrupt();
           }
-          cancelled = true;
         }
 
         if ( read < 0 )
@@ -399,7 +432,10 @@ public class SumpAcquisitionTask implements SumpProtocolConstants, Task<Acquisit
         }
         else if ( read == 0 )
         {
-          LOG.log( Level.INFO, "Read zero bytes?! Stats = [{0}/{1}/{2}].", new Object[] { offset, count, zerosRead } );
+          if ( !Thread.currentThread().isInterrupted() )
+          {
+            LOG.log( Level.INFO, "Read zero bytes?! Stats = [{0}/{1}/{2}].", new Object[] { offset, count, zerosRead } );
+          }
 
           if ( ++zerosRead == 10000 )
           {
@@ -419,6 +455,7 @@ public class SumpAcquisitionTask implements SumpProtocolConstants, Task<Acquisit
     catch ( InterruptedIOException exception )
     {
       // We're stopping already...
+      LOG.log( Level.WARNING, "Reading of samples interrupted!", exception );
     }
     finally
     {

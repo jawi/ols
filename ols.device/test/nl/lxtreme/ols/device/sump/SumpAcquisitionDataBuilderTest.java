@@ -362,7 +362,6 @@ public class SumpAcquisitionDataBuilderTest
 
     Map<String, Serializable> config = new HashMap<String, Serializable>();
     config.put( KEY_SAMPLE_RATE, 1 ); // Hz
-    config.put( KEY_TRIGGER_ENABLED, Boolean.FALSE );
     config.put( KEY_LAST_SAMPLE_SENT_FIRST, Boolean.FALSE );
     config.put( KEY_ENABLED_CHANNELS, enabledGroupMask );
     config.put( KEY_GROUP_COUNT, groupCount );

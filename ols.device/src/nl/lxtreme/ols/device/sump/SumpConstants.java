@@ -58,9 +58,11 @@ public interface SumpConstants
   int MIN_CHANNEL_GROUPS = 1;
   int MAX_CHANNEL_GROUPS_DDR = 2;
   int MAX_SIMPLE_TRIGGER_STAGES = 4;
+  
+  String TRIGGER_TYPE_BASIC = "basic";
+  String TRIGGER_TYPE_ADVANCED = "advanced";
 
   // Configuration keys
-  String KEY_CHANNEL_COUNT = "sump.channelCount";
   String KEY_CONNECTION_URI = "sump.connectionURI";
   String KEY_DIVIDER = "sump.divider";
   String KEY_ENABLED_CHANNELS = "sump.enabledChannels";
@@ -71,10 +73,6 @@ public interface SumpConstants
   String KEY_SAMPLE_RATE = "sump.sampleRate";
   String KEY_LAST_SAMPLE_SENT_FIRST = "sump.lastSampleSentFirst";
   String KEY_READ_DELAY_COUNT_COMBINED = "sump.readDelayCountCombined";
-  String KEY_TRIGGER_ENABLED = "sump.triggerEnabled";
-  String KEY_TRIGGER_STAGES = "sump.triggerStages";
-  /** "complex" or "hp165xx" */
-  String KEY_TRIGGER_TYPE = "sump.triggerType";
   String KEY_TRIGGER_DEFS = "sump.triggerDefs";
 
 }

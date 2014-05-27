@@ -25,7 +25,6 @@ import java.io.*;
 import java.util.logging.*;
 
 import nl.lxtreme.ols.device.sump.*;
-import nl.lxtreme.ols.device.sump.config.*;
 
 
 /**
@@ -85,7 +84,6 @@ public class SumpCommandWriter implements SumpProtocolConstants, Closeable
 
   // VARIABLES
 
-  protected final SumpConfig config;
   private final DataOutputStream outputStream;
 
   // CONSTRUCTORS
@@ -98,9 +96,8 @@ public class SumpCommandWriter implements SumpProtocolConstants, Closeable
    * @param aOutputStream
    *          the {@link DataOutputStream} to wrap, cannot be <code>null</code>.
    */
-  public SumpCommandWriter( final SumpConfig aConfiguration, final DataOutputStream aOutputStream )
+  public SumpCommandWriter( final DataOutputStream aOutputStream )
   {
-    this.config = aConfiguration;
     this.outputStream = aOutputStream;
   }
 
@@ -115,18 +112,31 @@ public class SumpCommandWriter implements SumpProtocolConstants, Closeable
     this.outputStream.close();
   }
 
+  public void writeAdvancedTrigger( int aStage, SumpAdvancedTrigger aTriggerDef ) throws IOException
+  {
+    // TODO Auto-generated method stub
+  }
+
+  public void writeBasicTrigger( int aStage, SumpBasicTrigger aTriggerDef ) throws IOException
+  {
+    final int indexMask = 4 * aStage;
+    sendCommand( SETTRIGMASK | indexMask, aTriggerDef.getMask() );
+    sendCommand( SETTRIGVAL | indexMask, aTriggerDef.getValue() );
+    sendCommand( SETTRIGCFG | indexMask, aTriggerDef.getConfig() );
+  }
+
+  public void writeCmdDivider( int aDivider ) throws IOException
+  {
+    sendCommand( SETDIVIDER, aDivider );
+  }
+
   /**
    * @param aConfiguration
    * @throws IOException
    */
   public void writeCmdFinishNow() throws IOException
   {
-    final boolean isRleEnabled = this.config.isRleEnabled();
-    if ( isRleEnabled )
-    {
-      LOG.info( "Prematurely finishing RLE-enabled capture ..." );
-      sendCommand( CMD_RLE_FINISH_NOW );
-    }
+    sendCommand( CMD_RLE_FINISH_NOW );
   }
 
   /**
@@ -167,35 +177,24 @@ public class SumpCommandWriter implements SumpProtocolConstants, Closeable
     sendCommand( CMD_RUN );
   }
 
-  /**
-   * @param aConfiguration
-   * @throws IOException
-   */
-  public void writeDeviceConfiguration() throws IOException
+  public void writeCmdSetDelayCount( int aDelayCount ) throws IOException
   {
-    // set the sampling frequency...
-    sendCommand( SETDIVIDER, this.config.getDivider() );
+    sendCommand( DELAY_COUNT, aDelayCount );
+  }
 
-    configureTriggers();
+  public void writeCmdSetFlags( int aFlags ) throws IOException
+  {
+    sendCommand( SETFLAGS, aFlags );
+  }
 
-    final int delayCount = this.config.getDelayCount();
-    final int readCount = this.config.getReadCount();
+  public void writeCmdSetReadCount( int aReadCount ) throws IOException
+  {
+    sendCommand( READ_COUNT, aReadCount );
+  }
 
-    if ( this.config.isReadDelayCountValueCombined() )
-    {
-      // set the capture size...
-      sendCommand( SETSIZE, this.config.getCombinedReadDelayCount() );
-    }
-    else
-    {
-      sendCommand( READ_COUNT, readCount );
-      sendCommand( DELAY_COUNT, delayCount );
-    }
-
-    int flags = this.config.getFlags();
-
-    // finally set the device flags...
-    sendCommand( SETFLAGS, flags );
+  public void writeCmdSetSize( int aSize ) throws IOException
+  {
+    sendCommand( SETSIZE, aSize );
   }
 
   /**
@@ -248,35 +247,5 @@ public class SumpCommandWriter implements SumpProtocolConstants, Closeable
 
     this.outputStream.write( raw );
     this.outputStream.flush();
-  }
-
-  /**
-   * Sends the trigger mask, value and configuration to the OLS device.
-   * 
-   * @throws IOException
-   *           in case of I/O problems.
-   */
-  private void configureTriggers() throws IOException
-  {
-    if ( this.config.isTriggerEnabled() )
-    {
-      for ( int i = 0; i < this.config.getTriggerStageCount(); i++ )
-      {
-        SumpBasicTrigger triggerDef = this.config.getTriggerDefinition( i );
-
-        final int indexMask = 4 * i;
-        sendCommand( SETTRIGMASK | indexMask, triggerDef.getMask() );
-        sendCommand( SETTRIGVAL | indexMask, triggerDef.getValue() );
-        sendCommand( SETTRIGCFG | indexMask, triggerDef.getConfig() );
-      }
-    }
-    else
-    {
-      SumpBasicTrigger triggerDef = new SumpBasicTrigger();
-
-      sendCommand( SETTRIGMASK, triggerDef.getMask() );
-      sendCommand( SETTRIGVAL, triggerDef.getValue() );
-      sendCommand( SETTRIGCFG, triggerDef.getConfig() );
-    }
   }
 }

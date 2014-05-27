@@ -21,6 +21,7 @@
 package nl.lxtreme.ols.device.sump.config;
 
 
+import static nl.lxtreme.ols.device.sump.SumpFlagBits.*;
 import static nl.lxtreme.ols.device.sump.SumpConstants.*;
 
 import java.io.*;
@@ -66,11 +67,19 @@ public final class SumpConfig
   }
 
   /**
-   * @return the total number of channels, &gt;= 0 && &lt;= 32.
+   * @return the advanced trigger definitions, as array.
    */
-  public int getChannelCount()
+  public SumpAdvancedTrigger[] getAdvancedTriggerDefinitions()
   {
-    return ( Integer )this.config.get( KEY_CHANNEL_COUNT );
+    return ( SumpAdvancedTrigger[] )this.config.get( KEY_TRIGGER_DEFS );
+  }
+
+  /**
+   * @return the basic trigger definitions, as array.
+   */
+  public SumpBasicTrigger[] getBasicTriggerDefinitions()
+  {
+    return ( SumpBasicTrigger[] )this.config.get( KEY_TRIGGER_DEFS );
   }
 
   /**
@@ -221,22 +230,12 @@ public final class SumpConfig
   }
 
   /**
-   * @param aStage
-   *          the stage index, &gt;= 0 && &lt;= 3.
-   * @return the trigger configuration, as integer value.
-   */
-  public SumpBasicTrigger getTriggerDefinition( int aStage )
-  {
-    return ( ( SumpBasicTrigger[] )this.config.get( KEY_TRIGGER_DEFS ) )[aStage];
-  }
-
-  /**
    * @return the trigger position, if triggers are enabled, or
    *         {@link OlsConstants#NOT_AVAILABLE} if triggers are disabled.
    */
   public int getTriggerPosition()
   {
-    if ( !isTriggerEnabled() )
+    if ( this.config.get( KEY_TRIGGER_DEFS ) == null )
     {
       // Not available...
       return OlsConstants.NOT_AVAILABLE;
@@ -253,12 +252,21 @@ public final class SumpConfig
   }
 
   /**
-   * @return the maximum number of trigger stages supported by the SUMP device,
-   *         &gt; 0.
+   * @return <code>true</code> if advanced triggers are to be used,
+   *         <code>false</code> otherwise.
    */
-  public int getTriggerStageCount()
+  public boolean isAdvancedTriggerEnabled()
   {
-    return ( Integer )this.config.get( KEY_TRIGGER_STAGES );
+    return ( this.config.get( KEY_TRIGGER_DEFS ) instanceof SumpAdvancedTrigger[] );
+  }
+
+  /**
+   * @return <code>true</code> if basic triggers are to be used,
+   *         <code>false</code> otherwise.
+   */
+  public boolean isBasicTriggerEnabled()
+  {
+    return ( this.config.get( KEY_TRIGGER_DEFS ) instanceof SumpBasicTrigger[] );
   }
 
   /**
@@ -267,7 +275,7 @@ public final class SumpConfig
    */
   public boolean isDoubleDataRateEnabled()
   {
-    return ( getFlags() & 0x01 ) != 0;
+    return DEMUX_MODE.isSet( getFlags() );
   }
 
   /**
@@ -326,16 +334,7 @@ public final class SumpConfig
    */
   public boolean isRleEnabled()
   {
-    return ( getFlags() & 0x100 ) != 0;
-  }
-
-  /**
-   * @return <code>true</code> if the trigger is to be enabled,
-   *         <code>false</code> otherwise.
-   */
-  public boolean isTriggerEnabled()
-  {
-    return ( Boolean )this.config.get( KEY_TRIGGER_ENABLED );
+    return ENABLE_RLE_MODE.isSet( getFlags() );
   }
 
   /**
@@ -357,20 +356,12 @@ public final class SumpConfig
     {
       return false;
     }
-    if ( !isBoolean( KEY_TRIGGER_ENABLED ) )
-    {
-      return false;
-    }
 
     if ( !isNumber( KEY_GROUP_COUNT, 1, OlsConstants.MAX_BLOCKS ) )
     {
       return false;
     }
-    if ( !isNumber( KEY_CHANNEL_COUNT, 1, OlsConstants.MAX_CHANNELS ) )
-    {
-      return false;
-    }
-    if ( !isNumber( KEY_ENABLED_CHANNELS, 1, OlsConstants.MAX_CHANNELS ) )
+    if ( !isNumber( KEY_ENABLED_CHANNELS, Integer.MIN_VALUE, Integer.MAX_VALUE ) )
     {
       return false;
     }
@@ -393,17 +384,6 @@ public final class SumpConfig
     if ( !isNumber( KEY_FLAGS, Integer.MIN_VALUE, Integer.MAX_VALUE ) )
     {
       return false;
-    }
-    if ( !isNumber( KEY_TRIGGER_STAGES, 0, 4 ) )
-    {
-      return false;
-    }
-    if ( Boolean.TRUE.equals( this.config.get( KEY_TRIGGER_ENABLED ) ) )
-    {
-      if ( this.config.get( KEY_TRIGGER_DEFS ) == null )
-      {
-        return false;
-      }
     }
 
     return true;

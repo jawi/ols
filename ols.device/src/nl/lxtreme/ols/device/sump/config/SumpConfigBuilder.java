@@ -82,6 +82,7 @@ public final class SumpConfigBuilder
       channelCount = Math.min( 16, channelCount );
     }
 
+    // TODO support advanced triggers...
     SumpBasicTrigger[] triggerDefs = new SumpBasicTrigger[this.triggers.size()];
     boolean triggerEnabled = triggerDefs.length > 0;
 
@@ -115,7 +116,6 @@ public final class SumpConfigBuilder
     Map<String, Serializable> config = new HashMap<String, Serializable>();
     config.put( KEY_CONNECTION_URI, this.connectionURI );
     config.put( KEY_GROUP_COUNT, aProfile.getChannelGroupCount() );
-    config.put( KEY_CHANNEL_COUNT, channelCount );
     config.put( KEY_ENABLED_CHANNELS, this.enabledChannels );
     config.put( KEY_SAMPLE_RATE, this.sampleRate );
     config.put( KEY_LAST_SAMPLE_SENT_FIRST, aProfile.isLastSampleSentFirst() );
@@ -124,8 +124,6 @@ public final class SumpConfigBuilder
     config.put( KEY_READ_COUNT, readCount );
     config.put( KEY_DELAY_COUNT, delayCount );
     config.put( KEY_FLAGS, this.flags );
-    config.put( KEY_TRIGGER_ENABLED, triggerEnabled );
-    config.put( KEY_TRIGGER_STAGES, aProfile.getTriggerStages() );
     config.put( KEY_TRIGGER_DEFS, triggerDefs );
     return new SumpConfig( config );
   }
@@ -284,7 +282,7 @@ public final class SumpConfigBuilder
    */
   public SumpConfigBuilder setRleEnabled( boolean aEnable, int aMode )
   {
-    apply( RLE_COMPRESSION_MODE, aEnable );
+    apply( ENABLE_RLE_MODE, aEnable );
     switch ( aMode )
     {
       case 1:

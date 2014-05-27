@@ -23,8 +23,6 @@ package nl.lxtreme.ols.device.sump.protocol;
 
 import java.io.*;
 
-import nl.lxtreme.ols.device.sump.config.*;
-
 
 /**
  * Provides an extension to the {@link SumpCommandWriter} that allows the
@@ -252,9 +250,9 @@ public class DemonCoreCommandWriter extends SumpCommandWriter
    * @param aOutputStream
    *          the {@link DataOutputStream} to use.
    */
-  public DemonCoreCommandWriter( final SumpConfig aConfiguration, final DataOutputStream aOutputStream )
+  public DemonCoreCommandWriter( final DataOutputStream aOutputStream )
   {
-    super( aConfiguration, aOutputStream );
+    super( aOutputStream );
   }
 
   // METHODS
