@@ -1,0 +1,3 @@
+[submodule "lib.tdl"]
+	path = lib.tdl
+	url = git@github.com:jawi/libtdl.git

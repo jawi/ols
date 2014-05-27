@@ -164,7 +164,7 @@ public class SumpDevice implements Device
       this.config = this.configDialog.getConfiguration();
     }
 
-    return this.config.asMap();
+    return this.config != null ? this.config.asMap() : null;
   }
 
   /**

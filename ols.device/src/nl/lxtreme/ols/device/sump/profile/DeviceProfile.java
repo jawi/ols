@@ -463,6 +463,18 @@ public final class DeviceProfile implements Cloneable, Comparable<DeviceProfile>
   }
 
   /**
+   * Returns whether or not the device supports advanced/HP165xx-style triggers.
+   * 
+   * @return <code>true</code> if advanced (HP165xx-style) triggers are
+   *         supported by the device, <code>false</code> otherwise.
+   */
+  public boolean isAdvancedTriggerSupported()
+  {
+    final String value = this.properties.get( DEVICE_TRIGGER_HP165XX );
+    return Boolean.parseBoolean( value );
+  }
+
+  /**
    * Returns whether or not the capture size is bound to the number of channels.
    * 
    * @return <code>true</code> if the capture size is bound to the number of
@@ -475,10 +487,11 @@ public final class DeviceProfile implements Cloneable, Comparable<DeviceProfile>
   }
 
   /**
-   * Returns whether or not the device supports "complex" triggers.
+   * Returns whether or not the device supports "complex" SUMP-style triggers.
    * 
    * @return <code>true</code> if complex triggers are supported by the device,
-   *         <code>false</code> otherwise.
+   *         <code>false</code> if only a single-stage, SUMP-style, trigger is
+   *         supported.
    */
   public boolean isComplexTriggersSupported()
   {

@@ -812,7 +812,8 @@ public final class SumpConfigDialog extends JDialog implements Configurable, Clo
     final JTabbedPane tabs = new JTabbedPane( SwingConstants.TOP, JTabbedPane.SCROLL_TAB_LAYOUT );
     tabs.addTab( "Connection", createConnectionSettingsPane() );
     tabs.addTab( "Acquisition", createAcquisitionSettingsPane() );
-    tabs.addTab( "Triggers", createTriggerPane() );
+    tabs.addTab( "Basic triggers", createBasicTriggerPane() );
+    tabs.addTab( "Advanced triggers", createAdvancedTriggerPane() );
 
     this.captureButton.addActionListener( new ActionListener()
     {
@@ -1007,9 +1008,17 @@ public final class SumpConfigDialog extends JDialog implements Configurable, Clo
   }
 
   /**
-   * @return
+   * @return a panel to configure "advanced" (HP165xx-style) triggers.
    */
-  private JPanel createTriggerPane()
+  private JPanel createAdvancedTriggerPane()
+  {
+    return new JPanel();
+  }
+
+  /**
+   * @return a panel to configure "basic" (SUMP-style) triggers.
+   */
+  private JPanel createBasicTriggerPane()
   {
     final JPanel generalPane = new JPanel( new SpringLayout() );
     generalPane.add( createRightAlignedLabel( "Trigger" ) );
