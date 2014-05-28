@@ -3,6 +3,8 @@
 	${osgi_core},\
 	${osgi_cmpn},\
 	${felix_dm},\
+	lib.tdl.core;version=latest,\
+	lib.tdl.editor;version=latest,\
 	ols.common;version=latest,\
 	service.io;version=latest,\
 	service.taskexecution.api;version=latest,\

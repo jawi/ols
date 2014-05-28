@@ -35,6 +35,7 @@ import javax.swing.*;
 import javax.swing.event.*;
 import javax.swing.plaf.basic.*;
 
+import nl.lxtreme.libtdl.swing.*;
 import nl.lxtreme.ols.common.Unit.Value;
 import nl.lxtreme.ols.device.sump.*;
 import nl.lxtreme.ols.device.sump.profile.*;
@@ -1010,9 +1011,41 @@ public final class SumpConfigDialog extends JDialog implements Configurable, Clo
   /**
    * @return a panel to configure "advanced" (HP165xx-style) triggers.
    */
-  private JPanel createAdvancedTriggerPane()
+  private JComponent createAdvancedTriggerPane()
   {
-    return new JPanel();
+    JEditorPane editor = new JEditorPane();
+    editor.setEditorKit( new TdlSyntaxKit() );
+
+    // @formatter:off
+    String text =
+        "timer1 := 20ns\n" + 
+        "a := mask = 0b11, value = 0x12\n" + 
+        "\n" + 
+        "stage 1: \n" + 
+        "\tcapture a\n" + 
+        "\twhen a start capture\n" + 
+        "\telse on any goto 2\n" + 
+        "\n" + 
+        "c := 10000 ^ 01000\n" + 
+        "edge1 := falling = 0x1\n" + 
+        "\n" + 
+        "// this is comment\n" + 
+        "stage 2:\n" + 
+        "  capture termD\n" + 
+        "  when edge1 start timer1\n" + 
+        "  else on any goto 1\n";
+    // @formatter:on
+
+    editor.setText( text );
+
+    TdlProblemView problemView = new TdlProblemView( editor );
+
+    JSplitPane splitPane = new JSplitPane( JSplitPane.VERTICAL_SPLIT );
+    splitPane.setTopComponent( new JScrollPane( editor ) );
+    splitPane.setBottomComponent( new JScrollPane( problemView ) );
+    splitPane.setDividerLocation( 300 );
+
+    return splitPane;
   }
 
   /**
