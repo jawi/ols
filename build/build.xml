@@ -6,7 +6,7 @@
 	<target name="init">
 		<property name="release.base" value="generated/release" />
 		<property name="release.dir" value="${release.base}/plugins" />
-		<property name="release.version" value="${ols.version}" />
+		<property name="release.version" value="${ols_version}" />
 		<property name="osx.releasedir" value="generated/osx" />
 
 		<!-- be sure to have a proper version defined at all times! -->
@@ -77,7 +77,7 @@
 
 		<property name="osx.releasedir-src" value="generated/release" />
 
-		<jarBundler dir="${osx.releasedir}" bundleid="nl.lxtreme.ols" name="${ols.shortName}" shortname="${ols.shortName}" mainclass="nl.lxtreme.ols.runner.Runner" version="${release.version}" build="1" jvmversion="1.6+" workingdirectory="$APP_PACKAGE/Contents/Resources/Java" vmoptions="-Xmx1024m" icon="resources/LogicSniffer.icns">
+		<jarBundler dir="${osx.releasedir}" bundleid="nl.lxtreme.ols" name="${ols_shortName}" shortname="${ols_shortName}" mainclass="nl.lxtreme.ols.runner.Runner" version="${release.version}" build="1" jvmversion="1.6+" workingdirectory="$APP_PACKAGE/Contents/Resources/Java" vmoptions="-Xmx1024m" icon="resources/LogicSniffer.icns">
 			<!-- put all bin/*.jar files on the class path -->
 			<jarfileset dir="${osx.releasedir-src}">
 				<include name="bin/*.jar" />
@@ -105,15 +105,15 @@
 			<arg value="-ov" />
 			<arg value="-scrub" />
 			<arg value="-volname" />
-			<arg value="${ols.shortName}" />
+			<arg value="${ols_shortName}" />
 			<arg value="-srcfolder" />
 			<arg value="${osx.releasedir}" />
 			<arg value="generated/ols-tmp.dmg" />
 		</exec>
 		<exec executable="/bin/bash">
-			<arg value="resources/app-bundle-osx.sh" />
+			<arg value="app-bundle-osx.sh" />
 			<arg value="generated/ols-tmp.dmg" />
-			<arg value="${ols.shortName}" />
+			<arg value="${ols_shortName}" />
 		</exec>
 		<exec executable="hdiutil">
 			<arg value="convert" />

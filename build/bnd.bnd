@@ -1,6 +1,7 @@
 -nosrc=true
 -nobundles=true
 -dependson: \
+	lib.tdl,\
 	lib.swing,\
 	logging,\
 	service.acquisition,\

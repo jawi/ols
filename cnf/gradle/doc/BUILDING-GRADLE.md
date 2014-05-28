@@ -78,10 +78,10 @@ searching up in the directory tree.
 The build will include all projects in the build that are:
 
 * **bnd** projects: Directories directly below the root project with
-                    a ```bnd.bnd``` file.
+  a ```bnd.bnd``` file.
 
 * **Gradle** projects: Directories directly below the root project with
-                       a ```build.gradle``` file.
+  a ```build.gradle``` file.
 
 ## <a name="GradleWorkspace"/>Gradle Workspace
 
@@ -216,7 +216,7 @@ It contains:
       This directory contains documentation pertaining to the build. The
       document you're now reading is located in this directory.
 
-      <a name="svg"/>
+      <a name="svg"></a>
       Also found in this directory is a diagram ([template.svg](template.svg))
       that provides an overview of the build setup, much like the Gradle User
       Guide shows for the Java Plugin.
@@ -748,4 +748,3 @@ ext.bnd_testSrcDir    = "src/main/test"
 ext.bnd_testSrcBinDir = "target/test-classes"
 ext.bnd_targetDir     = "target"
 ```
-
