@@ -30,7 +30,7 @@ import nl.lxtreme.ols.common.Unit.Value;
 
 
 /**
- * Proivdes a table cell renderer for relative time.
+ * Provides a table cell renderer for relative time.
  */
 class TimeCellRenderer extends DefaultTableCellRenderer
 {
@@ -51,7 +51,7 @@ class TimeCellRenderer extends DefaultTableCellRenderer
     if ( value instanceof Double )
     {
       Value time = Value.asTime( ( Integer )value );
-      label.setText( time.toString() );
+      label.setText( String.format( "%#.2s", time ) );
     }
 
     label.setHorizontalAlignment( SwingConstants.RIGHT );

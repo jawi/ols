@@ -279,8 +279,7 @@ public class CursorBuilder
         }
         _ts = _ts / aData.getSampleRate();
 
-        Value ts = Value.asTime( _ts );
-        timestampText = ts.toString();
+        timestampText = String.format( "%#.1s", Value.asTime( _ts ) );
       }
       else
       {

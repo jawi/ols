@@ -26,6 +26,7 @@ import static org.mockito.Mockito.*;
 
 import java.awt.*;
 
+import nl.lxtreme.ols.common.Unit.*;
 import nl.lxtreme.ols.common.acquisition.Cursor.LabelStyle;
 import nl.lxtreme.ols.common.acquisition.CursorBuilder.CursorImpl;
 
@@ -69,10 +70,10 @@ public class CursorTest
 
     assertEquals( "1", cursor.getLabel( LabelStyle.INDEX_ONLY, data ) );
     assertEquals( "label", cursor.getLabel( LabelStyle.LABEL_ONLY, data ) );
-    assertEquals( "1.0 s", cursor.getLabel( LabelStyle.TIME_ONLY, data ) );
+    assertEquals( "1.0" + Value.getSeparator() + "s", cursor.getLabel( LabelStyle.TIME_ONLY, data ) );
 
     assertEquals( "1: label", cursor.getLabel( LabelStyle.INDEX_LABEL, data ) );
-    assertEquals( "label: 1.0 s", cursor.getLabel( LabelStyle.LABEL_TIME, data ) );
+    assertEquals( "label: 1.0" + Value.getSeparator() + "s", cursor.getLabel( LabelStyle.LABEL_TIME, data ) );
   }
 
   private CursorImpl createCursor( int aIndex, long aTimestamp, String aLabel, Color aColor )

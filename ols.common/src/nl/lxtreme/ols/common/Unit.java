@@ -642,10 +642,6 @@ public interface Unit
       }
       else
       {
-        if ( ( aFlags & ALTERNATE ) != 0 )
-        {
-          sb.append( '#' );
-        }
         if ( ( aFlags & LEFT_JUSTIFY ) != 0 )
         {
           sb.append( '-' );

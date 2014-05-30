@@ -114,6 +114,7 @@ public class TimeUnitTest
     assertEquals( "1.230 s", String.format( "%.3s", new Value( 1.23, S ) ) );
     assertEquals( " 1.23 s", String.format( "%5.2s", new Value( 1.23, S ) ) );
     assertEquals( "1.23  s", String.format( "%-5.2s", new Value( 1.23, S ) ) );
+    assertEquals( "1 s", String.format( "%.0s", new Value( 1.23, S ) ) );
   }
 
   /**

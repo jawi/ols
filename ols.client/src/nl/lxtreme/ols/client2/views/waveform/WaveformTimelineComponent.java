@@ -535,7 +535,7 @@ final class WaveformTimelineComponent extends JComponent
    */
   private String getMinorTimestamp( double aTime, double aTimeScale )
   {
-    return Value.asTime( aTime ).toString();
+    return String.format( "%#.0s", Value.asTime( aTime ) );
   }
 
   /**

@@ -420,7 +420,7 @@ public abstract class BaseToolDialog<RESULT_TYPE> extends JFrame implements Tool
   protected final String formatTime( double aTime )
   {
     Value time = Value.asTime( aTime );
-    return time.toString();
+    return String.format( "%#.2s", time );
   }
 
   /**

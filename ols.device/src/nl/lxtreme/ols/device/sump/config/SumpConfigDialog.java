@@ -74,8 +74,8 @@ public final class SumpConfigDialog extends JDialog implements Configurable, Clo
         Value capSize = Value.asSizeSI( ( Integer )value );
         Value capTime = Value.asTime( capSize.getValue() / ( double )getSelectedSampleRate() );
 
-        value = String.format( "<html>%#s&nbsp;&nbsp;<span style='color:gray;font-size:0.85em;'>(%#s)</span></html>",
-            capSize, capTime );
+        value = String.format( "<html>%#1.1s&nbsp;&nbsp;"
+            + "<span style='color:gray;font-size:0.85em;'>(%#3.2s)</span></html>", capSize, capTime );
       }
       return super.getListCellRendererComponent( aList, value, aIndex, aIsSelected, aCellHasFocus );
     }
