@@ -65,6 +65,8 @@ public class AnnotationsView extends AbstractManagedView
   private JButton exportButton;
   private JLxTable table;
 
+  private volatile ViewController viewController;
+
   // CONSTRUCTORS
 
   /**
@@ -156,7 +158,10 @@ public class AnnotationsView extends AbstractManagedView
 
   final void jumpToAnnotation( long aTimestamp )
   {
-    // TODO
+    if ( this.viewController != null )
+    {
+      this.viewController.scrollToTimestamp( aTimestamp );
+    }
   }
 
   /**
@@ -250,6 +255,7 @@ public class AnnotationsView extends AbstractManagedView
     aFrame.setDockedHeight( 200 );
 
     JToolBar toolBar = new JToolBar();
+    toolBar.setFloatable( false );
     toolBar.add( this.exportButton );
 
     aFrame.setTitleBarComponent( toolBar );
@@ -264,6 +270,9 @@ public class AnnotationsView extends AbstractManagedView
   @Override
   protected void doUpdateState( ViewController aController, AcquisitionData aData )
   {
+    // Keep for later use (see #jumpToAnnotation)...
+    this.viewController = aController;
+
     if ( aController != null )
     {
       // Update the structure with the current session data...

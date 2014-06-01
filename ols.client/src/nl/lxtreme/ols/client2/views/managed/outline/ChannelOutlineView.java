@@ -80,7 +80,7 @@ public class ChannelOutlineView extends AbstractManagedView
   {
     setOpaque( false );
     setLayout( new BorderLayout() );
-    setName( "Channel outline" );
+    setName( "Outline" );
 
     this.tree = new JTree();
     this.tree.setRootVisible( false );

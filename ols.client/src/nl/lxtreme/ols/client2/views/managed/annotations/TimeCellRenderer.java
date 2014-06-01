@@ -48,9 +48,9 @@ class TimeCellRenderer extends DefaultTableCellRenderer
         aHasFocus, aRow, aColumn );
 
     Object value = aValue;
-    if ( value instanceof Double )
+    if ( value instanceof Number )
     {
-      Value time = Value.asTime( ( Integer )value );
+      Value time = Value.asTime( ( Number )value );
       label.setText( String.format( "%#.2s", time ) );
     }
 
