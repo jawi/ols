@@ -48,6 +48,5 @@ be installed from the Eclipse Marketplace.
 Drop me a line if you want to contribute code to the OLS repository, if needed,
 I can give you write-access to the GitHub or apply your patch.
 
--- J.W. Janssen, <j dot w dot janssen at lxtreme.nl>
+  [J.W. Janssen](j dot w dot janssen at lxtreme.nl)
 
-[1] Bndtools, <http://bndtools.org/>
