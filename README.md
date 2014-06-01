@@ -17,7 +17,7 @@ and
 In case you're interested in cloning this repository and compile it yourself,
 you should do the following:
 
-  $ git clone http://github.com/jawi/ols.git
+    $ git clone http://github.com/jawi/ols.git
 
 For compiling the sources, you need to have at least a valid JDK (1.6+), Apache
 Ant (1.8+) and optionally, a recent Gradle installed (1.12+).
@@ -25,11 +25,11 @@ Ant (1.8+) and optionally, a recent Gradle installed (1.12+).
 On Unix-flavored machines, you can kick off a build from the project's root
 directory by calling the included Gradle wrapper.
 
-  $ ./gradlew build
+    $ ./gradlew build
 
 On Windows, you can do something similar:
 
-  C:\Source\ols> gradlew.bat build
+    C:\Source\ols> gradlew.bat build
 
 Once the build is finished, you can create archives of the build artifacts by:
 
