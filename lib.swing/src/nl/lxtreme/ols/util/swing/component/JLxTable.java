@@ -438,7 +438,8 @@ public class JLxTable extends JTable
   private void setColumnWidths( int... aWidths )
   {
     TableColumnModel columnModel = getColumnModel();
-    for ( int i = 0; i < aWidths.length; i++ )
+    int len = Math.min( columnModel.getColumnCount(), aWidths.length );
+    for ( int i = 0; i < len; i++ )
     {
       columnModel.getColumn( i ).setWidth( aWidths[i] );
     }
