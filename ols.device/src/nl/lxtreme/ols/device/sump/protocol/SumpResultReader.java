@@ -164,7 +164,7 @@ public class SumpResultReader implements Closeable, SumpProtocolConstants
   }
 
   /**
-   * Reads raw data from the contained input stream.
+   * Reads raw data from the contained input stream, non blocking
    * 
    * @return the integer sample value containing up to four read bytes, not
    *         aligned.
@@ -173,7 +173,14 @@ public class SumpResultReader implements Closeable, SumpProtocolConstants
    */
   public int readRawData( byte[] aBuffer, int aOffset, int aCount ) throws IOException
   {
-    return this.inputStream.read( aBuffer, aOffset, aCount );
+    int availableCount = this.inputStream.available();
+    if(availableCount<=0) {
+      return availableCount;
+    }
+    if(availableCount>aCount) {
+      availableCount = aCount;
+    }
+    return this.inputStream.read( aBuffer, aOffset, availableCount);
   }
 
   /**
