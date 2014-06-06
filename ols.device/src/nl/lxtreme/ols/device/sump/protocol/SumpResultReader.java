@@ -174,13 +174,15 @@ public class SumpResultReader implements Closeable, SumpProtocolConstants
   public int readRawData( byte[] aBuffer, int aOffset, int aCount ) throws IOException
   {
     int availableCount = this.inputStream.available();
-    if(availableCount<=0) {
+    if ( availableCount <= 0 )
+    {
       return availableCount;
     }
-    if(availableCount>aCount) {
+    if ( availableCount > aCount )
+    {
       availableCount = aCount;
     }
-    return this.inputStream.read( aBuffer, aOffset, availableCount);
+    return this.inputStream.read( aBuffer, aOffset, availableCount );
   }
 
   /**
