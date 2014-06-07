@@ -39,6 +39,7 @@
 	osgi.identity;filter:='(osgi.identity=ols.tool.api)',\
 	osgi.identity;filter:='(osgi.identity=ols.tool.1wire)',\
 	osgi.identity;filter:='(osgi.identity=ols.tool.asm45)',\
+	osgi.identity;filter:='(osgi.identity=ols.tool.can)',\
 	osgi.identity;filter:='(osgi.identity=ols.tool.dmx512)',\
 	osgi.identity;filter:='(osgi.identity=ols.tool.i2c)',\
 	osgi.identity;filter:='(osgi.identity=ols.tool.i2s)',\
@@ -76,6 +77,7 @@
 	ols.tool.1wire;version=latest,\
 	ols.tool.api;version=latest,\
 	ols.tool.asm45;version=latest,\
+	ols.tool.can;version=latest,\
 	ols.tool.dmx512;version=latest,\
 	ols.tool.i2c;version=latest,\
 	ols.tool.i2s;version=latest,\
