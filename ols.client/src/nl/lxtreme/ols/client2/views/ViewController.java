@@ -96,6 +96,28 @@ public class ViewController
   }
 
   /**
+   * Shows an editor to edit the session name, and updates the model and view
+   * accordingly.
+   */
+  public void editSessionName()
+  {
+    String newName = this.view.showSessionNameDialog();
+    if ( newName != null )
+    {
+      JTabbedPane tabbedPane = SwingComponentUtils.getAncestorOfClass( JTabbedPane.class, this.view );
+      if ( tabbedPane != null )
+      {
+        int idx = tabbedPane.getSelectedIndex();
+        if ( idx >= 0 && idx < tabbedPane.getTabCount() )
+        {
+          tabbedPane.setTitleAt( idx, newName );
+        }
+      }
+      this.model.setSessionName( newName );
+    }
+  }
+
+  /**
    * Returns the current value of actionManager.
    * 
    * @return the actionManager
@@ -134,6 +156,24 @@ public class ViewController
     {
       // Annotation added or removed...
       this.view.handleEvent( aTopic, aEvent );
+    }
+  }
+
+  /**
+   * Moves a given channel to a given group and index.
+   * 
+   * @param aChannel
+   *          the channel to move;
+   * @param aGroup
+   *          the (new) group to move the channel to;
+   * @param aChildIndex
+   *          the (new) index of the channel in the given group.
+   */
+  public void moveElement( Channel aChannel, ChannelGroup aGroup, int aChildIndex )
+  {
+    if ( aChannel.getGroup() != aGroup || aChannel.getIndex() != aChildIndex )
+    {
+      this.model.moveElement( aChannel, aGroup, aChildIndex );
     }
   }
 
@@ -193,28 +233,6 @@ public class ViewController
     }
     this.model.setSelectedCursor( aCursor );
     this.view.repaintCursor( aCursor );
-  }
-
-  /**
-   * Shows an editor to edit the session name, and updates the model and view
-   * accordingly.
-   */
-  public void editSessionName()
-  {
-    String newName = this.view.showSessionNameDialog();
-    if ( newName != null )
-    {
-      JTabbedPane tabbedPane = SwingComponentUtils.getAncestorOfClass( JTabbedPane.class, this.view );
-      if ( tabbedPane != null )
-      {
-        int idx = tabbedPane.getSelectedIndex();
-        if ( idx >= 0 && idx < tabbedPane.getTabCount() )
-        {
-          tabbedPane.setTitleAt( idx, newName );
-        }
-      }
-      this.model.setSessionName( newName );
-    }
   }
 
   /**

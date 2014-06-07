@@ -184,6 +184,21 @@ public class ViewModel
   }
 
   /**
+   * Moves a given channel to a given group and index.
+   * 
+   * @param aChannel
+   *          the channel to move;
+   * @param aGroup
+   *          the (new) group to move the channel to;
+   * @param aChildIndex
+   *          the (new) index of the channel in the given group.
+   */
+  public void moveElement( Channel aChannel, ChannelGroup aGroup, int aChildIndex )
+  {
+    aGroup.move( aChannel, aChildIndex );
+  }
+
+  /**
    * Sets whether or not the measurement mode is frozen.
    * 
    * @param aFrozen

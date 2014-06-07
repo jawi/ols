@@ -20,9 +20,12 @@
  */
 package nl.lxtreme.ols.client2.views.managed.outline;
 
+
 import javax.swing.tree.*;
 
+import nl.lxtreme.ols.client2.views.*;
 import nl.lxtreme.ols.common.acquisition.*;
+
 
 /**
  * Custom tree node for representing our signal elements.
@@ -30,25 +33,32 @@ import nl.lxtreme.ols.common.acquisition.*;
 class ElementTreeNode extends DefaultMutableTreeNode
 {
   // INNER TYPES
-  
-  static interface TreeNodeListener {
-    
+
+  static interface TreeNodeListener
+  {
+
   }
-  
+
   // CONSTANTS
 
   private static final long serialVersionUID = 1L;
 
   private static final String ROOT_ID = new String( "<root>" );
 
+  // VARIABLES
+
+  private ViewController controller;
+
   // CONSTRUCTORS
 
   /**
    * Creates a new {@link ElementTreeNode} instance, used as <b>root</b>-node.
    */
-  public ElementTreeNode()
+  public ElementTreeNode( final ViewController aController )
   {
     super( ROOT_ID );
+
+    this.controller = aController;
   }
 
   /**
@@ -61,8 +71,7 @@ class ElementTreeNode extends DefaultMutableTreeNode
   }
 
   /**
-   * Creates a new {@link ElementTreeNode} instance, used as
-   * <b>group</b>-node.
+   * Creates a new {@link ElementTreeNode} instance, used as <b>group</b>-node.
    */
   public ElementTreeNode( final ChannelGroup aGroup )
   {
@@ -82,8 +91,7 @@ class ElementTreeNode extends DefaultMutableTreeNode
   // METHODS
 
   /**
-   * @return the text of this tree node's user object, can be
-   *         <code>null</code>.
+   * @return the text of this tree node's user object, can be <code>null</code>.
    */
   public String getText()
   {
@@ -112,19 +120,13 @@ class ElementTreeNode extends DefaultMutableTreeNode
     if ( ( this.userObject instanceof ChannelGroup ) && ( newChildUserObject instanceof Channel ) )
     {
       // Move the actual element as well...
-      ChannelGroup group = ( ChannelGroup )this.userObject;
-      Channel channel = ( Channel )newChildUserObject;
-
-      if ( channel.getGroup() != group || channel.getIndex() != aChildIndex )
-      {
-        group.move( channel, aChildIndex );
-      }
+      getViewController().moveElement( ( Channel )newChildUserObject, ( ChannelGroup )this.userObject, aChildIndex );
     }
   }
 
   /**
-   * @return <code>true</code> if this tree node is visible,
-   *         <code>false</code> if not.
+   * @return <code>true</code> if this tree node is visible, <code>false</code>
+   *         if not.
    */
   public boolean isVisible()
   {
@@ -212,5 +214,14 @@ class ElementTreeNode extends DefaultMutableTreeNode
   public String toString()
   {
     return String.format( "ElementTreeNode(%s)@%s", getUserObject(), Integer.toHexString( hashCode() ) );
+  }
+
+  private ViewController getViewController()
+  {
+    if ( isRoot() )
+    {
+      return this.controller;
+    }
+    return ( ( ElementTreeNode )getRoot() ).getViewController();
   }
 }
