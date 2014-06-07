@@ -1,4 +1,4 @@
 [submodule "lib.tdl"]
 	path = lib.tdl
-    url = https://github.com/jawi/ols.git
+    url = https://github.com/jawi/libtdl.git
 #url = git@github.com:jawi/libtdl.git
