@@ -668,6 +668,16 @@ public class WaveformModel extends ViewModel
   }
 
   /**
+   * {@inheritDoc}
+   */
+  @Override
+  public void moveElement( Channel aChannel, ChannelGroup aGroup, int aChildIndex )
+  {
+    // TODO move WaveformElements as well...
+    super.moveElement( aChannel, aGroup, aChildIndex );
+  }
+
+  /**
    * Sets the selected element to the one given.
    * 
    * @param aElement

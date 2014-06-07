@@ -69,7 +69,7 @@ public class ChannelOutlineView extends AbstractManagedView
   {
     add( new JScrollPane( this.tree ), BorderLayout.CENTER );
 
-    updateView();
+    updateView( null );
   }
 
   /**
@@ -110,20 +110,20 @@ public class ChannelOutlineView extends AbstractManagedView
   {
     if ( aData != null )
     {
-      updateView( aData.getChannelGroups() );
+      updateView( aController, aData.getChannelGroups() );
     }
     else
     {
-      updateView();
+      updateView( aController );
     }
   }
 
   /**
    * @return a tree structure based on the initial element model.
    */
-  private DefaultMutableTreeNode createTree( ChannelGroup[] aChannelGroups )
+  private DefaultMutableTreeNode createTree( ViewController aController, ChannelGroup[] aChannelGroups )
   {
-    ElementTreeNode rootNode = new ElementTreeNode();
+    ElementTreeNode rootNode = new ElementTreeNode( aController );
 
     for ( ChannelGroup group : aChannelGroups )
     {
@@ -139,9 +139,9 @@ public class ChannelOutlineView extends AbstractManagedView
     return rootNode;
   }
 
-  private void updateView( ChannelGroup... aChannelGroups )
+  private void updateView( ViewController aController, ChannelGroup... aChannelGroups )
   {
-    this.tree.setModel( new DefaultTreeModel( createTree( aChannelGroups ) ) );
+    this.tree.setModel( new DefaultTreeModel( createTree( aController, aChannelGroups ) ) );
     // Initially expand all rows...
     for ( int i = 0; i < this.tree.getRowCount(); i++ )
     {
