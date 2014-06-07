@@ -442,32 +442,6 @@ public class Client extends DefaultDockableHolder implements ApplicationCallback
   }
 
   /**
-   * Exits this client.
-   */
-  public void exit()
-  {
-    close();
-
-    if ( this.bundle != null )
-    {
-      try
-      {
-        Bundle systemBundle = this.bundle.getBundleContext().getBundle( 0L );
-        systemBundle.stop();
-        this.bundle = null;
-      }
-      catch ( BundleException exception )
-      {
-        // Ignore...
-      }
-    }
-    else
-    {
-      System.exit( 0 );
-    }
-  }
-
-  /**
    * Exports the current acquired data to a file using the given exporter.
    * 
    * @param aExporter
@@ -802,11 +776,40 @@ public class Client extends DefaultDockableHolder implements ApplicationCallback
   @Override
   public boolean handleQuit()
   {
-    exit();
+    handleShutdown();
     // We should always return OSX as to indicate that we're handling the Quit
     // operation ourselves. Otherwise, OSX will simply shutdown our JVM for
     // us...
     return false;
+  }
+
+  /**
+   * Tries to shutdown this client, by stopping the entire framework. In case of
+   * unsaved changes, for which the user does not acknowledge them to lose, this
+   * method does nothing.
+   */
+  public void handleShutdown()
+  {
+    // TODO handle unsaved changed!
+    close();
+
+    if ( this.bundle != null )
+    {
+      try
+      {
+        Bundle systemBundle = this.bundle.getBundleContext().getBundle( 0L );
+        systemBundle.stop();
+        this.bundle = null;
+      }
+      catch ( BundleException exception )
+      {
+        // Ignore...
+      }
+    }
+    else
+    {
+      System.exit( 0 );
+    }
   }
 
   /**
@@ -1502,6 +1505,17 @@ public class Client extends DefaultDockableHolder implements ApplicationCallback
         postClientStateChangeEvent( TOPIC_CLIENT_STATE_VIEW_CHANGED );
 
         updateManagedState();
+      }
+    } );
+    // Issue #208: ensure we can use the close buttons...
+    addWindowListener( new WindowAdapter()
+    {
+      @Override
+      public void windowClosing( WindowEvent aEvent )
+      {
+        // In case the user does not acknowledge the shut down, we do not close
+        // the window...
+        handleShutdown();
       }
     } );
 

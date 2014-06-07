@@ -71,7 +71,7 @@ public class ExitAction extends AbstractManagedAction
   {
     Client client = getClient( aEvent );
 
-    client.exit();
+    client.handleShutdown();
   }
 }
 
