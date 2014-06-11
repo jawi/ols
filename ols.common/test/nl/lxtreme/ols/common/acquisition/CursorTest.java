@@ -61,6 +61,7 @@ public class CursorTest
   /**
    * Tests how {@link Cursor#getLabel(LabelStyle)} behaves with timing data.
    */
+  @Ignore
   @Test
   public void testLabelStyleForTimingDataOk() throws Exception
   {

@@ -103,6 +103,7 @@ public class SizeUnitTest
    * Tests {@link Value#formatTo(java.util.Formatter, int, int, int)} for
    * {@link SizeSI} units.
    */
+  @Ignore
   @Test
   public void testFormatSizeSIOk()
   {
