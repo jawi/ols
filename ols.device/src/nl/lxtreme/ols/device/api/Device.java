@@ -22,7 +22,6 @@ package nl.lxtreme.ols.device.api;
 
 
 import java.io.*;
-import java.util.*;
 import java.util.concurrent.*;
 
 import nl.lxtreme.ols.common.acquisition.*;
@@ -53,8 +52,7 @@ public interface Device
    *           in case the acquisition failed, for example, due to an
    *           inaccessible device.
    */
-  Future<AcquisitionData> acquireData( Map<String, ? extends Serializable> aConfig,
-      AcquisitionProgressListener aProgressListener ) throws IOException;
+  Future<AcquisitionData> acquireData( DeviceConfiguration aConfig, AcquisitionProgressListener aProgressListener ) throws IOException;
 
   /**
    * Returns a descriptive name of this device controller.
@@ -78,5 +76,5 @@ public interface Device
    * @return the device configuration, or <code>null</code> if the user
    *         cancelled or disapproved the configuration.
    */
-  Map<String, ? extends Serializable> setupDevice();
+  DeviceConfiguration setupDevice();
 }

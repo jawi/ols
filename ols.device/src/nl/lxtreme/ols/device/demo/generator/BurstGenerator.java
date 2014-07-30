@@ -18,27 +18,19 @@
  * 
  * Copyright (C) 2010-2011 - J.W. Janssen, http://www.lxtreme.nl
  */
-package nl.lxtreme.ols.device.demo;
+package nl.lxtreme.ols.device.demo.generator;
 
 
 import nl.lxtreme.ols.common.acquisition.*;
+import nl.lxtreme.ols.device.demo.*;
 
 
 /**
  * Provides a data generator that outputs state-data, with a clock on the last
  * channel.
  */
-final class BurstGenerator implements IDataGenerator
+public class BurstGenerator implements DataGenerator
 {
-  // CONSTRUCTORS
-
-  /**
-   * Creates a new {@link BurstGenerator} instance.
-   */
-  public BurstGenerator()
-  {
-  }
-
   // METHODS
 
   /**

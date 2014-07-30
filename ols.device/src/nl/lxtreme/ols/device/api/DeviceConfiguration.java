@@ -18,13 +18,32 @@
  * Copyright (C) 2006-2010 Michael Poppitz, www.sump.org
  * Copyright (C) 2010-2014 J.W. Janssen, www.lxtreme.nl
  */
-package nl.lxtreme.ols.device.sump;
+package nl.lxtreme.ols.device.api;
+
+
+import java.util.*;
 
 
 /**
- * Represents an "advanced" (or HP165xx-style) trigger.
+ * Represents the configuration of a {@link Device}.
+ * <p>
+ * Implementations of this interface are considered to represent a read-only
+ * view of the configuration parameters used by a {@link Device} to acquire its
+ * data.<br>
+ * The data returned by implementations should be complete and syntactically
+ * correct, meaning that a {@link Device} should be able to use them as-is
+ * without having to parse or validate it prior to its use.
+ * </p>
  */
-public class SumpAdvancedTrigger implements SumpTrigger
+public interface DeviceConfiguration
 {
-  // TODO
+  // METHODS
+
+  /**
+   * Converts this configuration to a map representation of key-value pairs.
+   * 
+   * @return this configuration as serialized map.
+   */
+  Map<String, String> asMap();
+
 }

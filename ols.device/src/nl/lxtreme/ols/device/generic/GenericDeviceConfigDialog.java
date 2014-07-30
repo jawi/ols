@@ -21,13 +21,10 @@
 package nl.lxtreme.ols.device.generic;
 
 
-import static nl.lxtreme.ols.device.generic.GenericConstants.*;
 import static nl.lxtreme.ols.util.swing.SwingComponentUtils.*;
 
 import java.awt.*;
 import java.awt.event.*;
-import java.io.*;
-import java.util.*;
 
 import javax.swing.*;
 
@@ -46,6 +43,8 @@ public class GenericDeviceConfigDialog extends JDialog implements Configurable, 
   private static final long serialVersionUID = 1L;
 
   // VARIABLES
+
+  final GenericConfigBuilder configBuilder;
 
   private JTextField devicePath;
   private JTextField sampleRate;
@@ -67,6 +66,8 @@ public class GenericDeviceConfigDialog extends JDialog implements Configurable, 
   {
     super( aParent, "Generic capture settings", ModalityType.DOCUMENT_MODAL );
 
+    this.configBuilder = new GenericConfigBuilder();
+
     initDialog();
   }
 
@@ -85,15 +86,9 @@ public class GenericDeviceConfigDialog extends JDialog implements Configurable, 
   /**
    * @return the device configuration, as configured in this dialog.
    */
-  public Map<String, ? extends Serializable> getConfig()
+  public GenericConfig getConfig()
   {
-    Map<String, Serializable> result = new HashMap<String, Serializable>();
-    result.put( KEY_DEVICE_PATH, this.devicePath.getText() );
-    result.put( KEY_CHANNEL_COUNT, safeParseInt( this.channelCount.getText(), 8 ) );
-    result.put( KEY_SAMPLE_COUNT, safeParseInt( this.sampleDepth.getText(), 1024 ) );
-    result.put( KEY_SAMPLE_RATE, safeParseInt( this.sampleRate.getText(), 1000000 ) );
-    result.put( KEY_SAMPLE_WIDTH, safeParseInt( this.sampleWidth.getText(), 1 ) );
-    return result;
+    return this.configBuilder.build();
   }
 
   /**
@@ -145,22 +140,67 @@ public class GenericDeviceConfigDialog extends JDialog implements Configurable, 
   private JComponent createContents()
   {
     this.channelCount = new JTextField( 10 );
-    this.channelCount.setText( "1" );
+    this.channelCount.setText( "" + this.configBuilder.getChannelCount() );
     this.channelCount.setInputVerifier( JComponentInputVerifier.create( Integer.TYPE, "Invalid channel count!" ) );
+    this.channelCount.addActionListener( new ActionListener()
+    {
+      @Override
+      public void actionPerformed( ActionEvent aEvent )
+      {
+        JTextField source = ( JTextField )aEvent.getSource();
+        configBuilder.setChannelCount( source.getText() );
+      }
+    } );
 
     this.devicePath = new JTextField( 10 );
+    this.devicePath.addActionListener( new ActionListener()
+    {
+      @Override
+      public void actionPerformed( ActionEvent aEvent )
+      {
+        JTextField source = ( JTextField )aEvent.getSource();
+        configBuilder.setDevicePath( source.getText() );
+      }
+    } );
 
     this.sampleDepth = new JTextField( 10 );
-    this.sampleDepth.setText( "256" );
+    this.sampleDepth.setText( "" + this.configBuilder.getSampleCount() );
     this.sampleDepth.setInputVerifier( JComponentInputVerifier.create( Integer.TYPE, "Invalid sample depth!" ) );
+    this.sampleDepth.addActionListener( new ActionListener()
+    {
+      @Override
+      public void actionPerformed( ActionEvent aEvent )
+      {
+        JTextField source = ( JTextField )aEvent.getSource();
+        configBuilder.setSampleCount( source.getText() );
+      }
+    } );
 
     this.sampleRate = new JTextField( 10 );
-    this.sampleRate.setText( "1000000" );
+    this.sampleRate.setText( "" + this.configBuilder.getSampleRate() );
     this.sampleRate.setInputVerifier( JComponentInputVerifier.create( Integer.TYPE, "Invalid sample rate!" ) );
+    this.sampleRate.addActionListener( new ActionListener()
+    {
+      @Override
+      public void actionPerformed( ActionEvent aEvent )
+      {
+        JTextField source = ( JTextField )aEvent.getSource();
+        configBuilder.setSampleRate( source.getText() );
+      }
+    } );
 
     this.sampleWidth = new JTextField( 10 );
-    this.sampleWidth.setText( "1" );
+    this.sampleWidth.setText( "" + this.configBuilder.getSampleWidth() );
     this.sampleWidth.setInputVerifier( JComponentInputVerifier.create( Integer.TYPE, "Invalid sample width!" ) );
+    this.sampleWidth.addActionListener( new ActionListener()
+    {
+      @Override
+      public void actionPerformed( ActionEvent aEvent )
+      {
+        JTextField source = ( JTextField )aEvent.getSource();
+        configBuilder.setSampleWidth( source.getText() );
+      }
+    } );
 
     final JPanel result = new JPanel( new SpringLayout() );
 
@@ -209,17 +249,5 @@ public class GenericDeviceConfigDialog extends JDialog implements Configurable, 
     final JComponent buttonPane = SwingComponentUtils.createButtonPane( okButton, closeButton );
 
     SwingComponentUtils.setupWindowContentPane( this, contents, buttonPane, okButton );
-  }
-
-  private int safeParseInt( String aText, int aDefault )
-  {
-    try
-    {
-      return Integer.parseInt( aText );
-    }
-    catch ( NumberFormatException exception )
-    {
-      return aDefault;
-    }
   }
 }

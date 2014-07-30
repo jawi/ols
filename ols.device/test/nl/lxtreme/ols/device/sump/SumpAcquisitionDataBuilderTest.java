@@ -26,7 +26,6 @@ import static org.junit.Assert.*;
 import static org.mockito.Matchers.*;
 import static org.mockito.Mockito.*;
 
-import java.io.*;
 import java.util.*;
 
 import nl.lxtreme.ols.common.acquisition.*;
@@ -360,11 +359,14 @@ public class SumpAcquisitionDataBuilderTest
   {
     int groupCount = 4;
 
-    Map<String, Serializable> config = new HashMap<String, Serializable>();
-    config.put( KEY_SAMPLE_RATE, 1 ); // Hz
-    config.put( KEY_LAST_SAMPLE_SENT_FIRST, Boolean.FALSE );
-    config.put( KEY_ENABLED_CHANNELS, enabledGroupMask );
-    config.put( KEY_GROUP_COUNT, groupCount );
+    Map<String, String> config = new HashMap<String, String>();
+    config.put( KEY_SAMPLE_RATE, "1" ); // Hz
+    config.put( KEY_READ_COUNT, "0" ); // don't care
+    config.put( KEY_DELAY_COUNT, "0" ); // don't care
+    config.put( KEY_DIVIDER, "0" ); // don't care
+    config.put( KEY_LAST_SAMPLE_SENT_FIRST, "false" );
+    config.put( KEY_ENABLED_CHANNELS, Integer.toString( enabledGroupMask ) );
+    config.put( KEY_GROUP_COUNT, Integer.toString( groupCount ) );
 
     int flags = 0;
     for ( int i = 0; i < groupCount; i++ )
@@ -378,7 +380,7 @@ public class SumpAcquisitionDataBuilderTest
     }
     flags = mode | ( ( ~flags & 0xF ) << 2 );
 
-    config.put( KEY_FLAGS, flags );
+    config.put( KEY_FLAGS, Integer.toString( flags ) );
     return new SumpConfig( config );
   }
 }

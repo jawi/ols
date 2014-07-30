@@ -22,9 +22,9 @@ package nl.lxtreme.ols.device.sump;
 
 
 /**
- * Represents an "advanced" (or HP165xx-style) trigger.
+ * Represents a trigger definition.
  */
-public class SumpAdvancedTrigger implements SumpTrigger
+public interface SumpTrigger
 {
-  // TODO
+
 }

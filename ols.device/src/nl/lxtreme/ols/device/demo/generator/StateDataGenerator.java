@@ -18,29 +18,21 @@
  * 
  * Copyright (C) 2010-2011 - J.W. Janssen, http://www.lxtreme.nl
  */
-package nl.lxtreme.ols.device.demo;
+package nl.lxtreme.ols.device.demo.generator;
 
 
 import java.util.*;
 
 import nl.lxtreme.ols.common.*;
 import nl.lxtreme.ols.common.acquisition.*;
+import nl.lxtreme.ols.device.demo.*;
 
 
 /**
  * Provides a data generator that outputs state-data.
  */
-final class StateDataGenerator implements IDataGenerator
+public class StateDataGenerator implements DataGenerator
 {
-  // CONSTRUCTORS
-
-  /**
-   * Creates a new {@link StateDataGenerator} instance.
-   */
-  public StateDataGenerator()
-  {
-  }
-
   // METHODS
 
   /**

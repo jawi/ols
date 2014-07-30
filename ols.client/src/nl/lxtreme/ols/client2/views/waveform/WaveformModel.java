@@ -32,6 +32,7 @@ import java.util.concurrent.*;
 import java.util.concurrent.atomic.*;
 
 import javax.swing.*;
+import javax.swing.tree.*;
 
 import nl.lxtreme.ols.client2.Client.JumpDirection;
 import nl.lxtreme.ols.client2.Client.JumpType;
@@ -281,6 +282,42 @@ public class WaveformModel extends ViewModel
   public long getAbsoluteLength()
   {
     return getData().getAbsoluteLength();
+  }
+
+  /**
+   * {@inheritDoc}
+   */
+  @Override
+  public MutableTreeNode getChannelOutline()
+  {
+    ChannelOutlineTreeNode rootNode = new ChannelOutlineTreeNode( this );
+    ChannelOutlineTreeNode ptr = rootNode;
+
+    for ( WaveformElement element : this.elements )
+    {
+      Type type = element.getType();
+      switch ( type )
+      {
+        case CHANNEL:
+          ptr.add( new ChannelOutlineTreeNode( element.getChannel() ) );
+          break;
+
+        case GROUP:
+          ptr = new ChannelOutlineTreeNode( element.getGroup() );
+          rootNode.add( ptr );
+          break;
+
+        case ANALOG_SCOPE:
+        case GROUP_SUMMARY:
+          ptr.add( new ChannelOutlineTreeNode( element.getLabel() ) );
+          break;
+
+        default:
+          throw new RuntimeException( "Unhandled element type: " + type );
+      }
+    }
+
+    return rootNode;
   }
 
   /**
@@ -673,8 +710,29 @@ public class WaveformModel extends ViewModel
   @Override
   public void moveElement( Channel aChannel, ChannelGroup aGroup, int aChildIndex )
   {
-    // TODO move WaveformElements as well...
     super.moveElement( aChannel, aGroup, aChildIndex );
+
+    // TODO move WaveformElements as well...
+    WaveformElement movedElement = null;
+    int offset = 0;
+    for ( WaveformElement element : this.elements )
+    {
+      if ( Type.CHANNEL == element.getType() && element.getChannel() == aChannel )
+      {
+        movedElement = element;
+        break;
+      }
+      else
+      {
+        offset++;
+      }
+    }
+
+    if ( movedElement != null )
+    {
+      this.elements.remove( movedElement );
+      this.elements.add( aChildIndex, movedElement );
+    }
   }
 
   /**

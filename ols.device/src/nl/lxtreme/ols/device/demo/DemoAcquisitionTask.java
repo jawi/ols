@@ -35,7 +35,7 @@ public class DemoAcquisitionTask implements Task<AcquisitionData>
 
   private final int channelCount;
   private final int sampleCount;
-  private final IDataGenerator generator;
+  private final DataGenerator generator;
   private final AcquisitionProgressListener progressListener;
 
   // CONSTRUCTORS
@@ -48,7 +48,7 @@ public class DemoAcquisitionTask implements Task<AcquisitionData>
    * @param aGenerator
    * @param aProgressListener
    */
-  public DemoAcquisitionTask( int aChannelCount, int aSampleCount, IDataGenerator aGenerator,
+  public DemoAcquisitionTask( int aChannelCount, int aSampleCount, DataGenerator aGenerator,
       AcquisitionProgressListener aProgressListener )
   {
     this.channelCount = aChannelCount;

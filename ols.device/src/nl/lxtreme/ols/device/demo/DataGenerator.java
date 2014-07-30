@@ -27,7 +27,7 @@ import nl.lxtreme.ols.common.acquisition.*;
 /**
  * Provides a common interface for all custom data generators.
  */
-public interface IDataGenerator
+public interface DataGenerator
 {
   // CONSTANTS
   

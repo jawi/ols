@@ -18,27 +18,19 @@
  * 
  * Copyright (C) 2010-2011 - J.W. Janssen, http://www.lxtreme.nl
  */
-package nl.lxtreme.ols.device.demo;
+package nl.lxtreme.ols.device.demo.generator;
 
 
 import nl.lxtreme.ols.common.acquisition.*;
+import nl.lxtreme.ols.device.demo.*;
 
 
 /**
  * Provides a data generator that outputs state-data, with a clock on the last
  * channel.
  */
-final class UnityGenerator implements IDataGenerator
+public class ClockedCounterGenerator implements DataGenerator
 {
-  // CONSTRUCTORS
-
-  /**
-   * Creates a new {@link UnityGenerator} instance.
-   */
-  public UnityGenerator()
-  {
-  }
-
   // METHODS
 
   /**
@@ -47,7 +39,7 @@ final class UnityGenerator implements IDataGenerator
   @Override
   public String getName()
   {
-    return "Unity";
+    return "Clocked counter data";
   }
 
   /**
@@ -57,47 +49,43 @@ final class UnityGenerator implements IDataGenerator
   public void generate( int aChannelCount, int aSampleCount, AcquisitionDataBuilder aBuilder,
       AcquisitionProgressListener aProgressListener )
   {
-    int sampleCount = aChannelCount * aChannelCount;
+    int channelCount = Math.max( 4, aChannelCount );
 
-    aBuilder.setChannelCount( aChannelCount );
-    aBuilder.setSampleRate( 1 );
-    aBuilder.setTriggerPosition( 10 );
+    int counterSize = channelCount - 1;
+    int counterMax = ( 1 << counterSize ) - 1;
+    int clockMask = ( 1 << counterSize );
+
+    aBuilder.setChannelCount( channelCount );
+    aBuilder.setSampleRate( SR_10MHZ );
+    aBuilder.setTriggerPosition( 0 );
 
     // Make a single group with all channels...
-    ChannelGroupBuilder group = aBuilder.createChannelGroup().setIndex( 0 ).setName( "Unity" );
+    ChannelGroupBuilder group = aBuilder.createChannelGroup().setIndex( 0 ).setName( "Demo counter" );
     for ( int i = 0; i < aChannelCount; i++ )
     {
       group.addChannel( i );
     }
     aBuilder.add( group );
 
-    int value = 0;
-    long ts = 0;
-
-    for ( int i = 0; !Thread.currentThread().isInterrupted() && i < sampleCount; i++, ts += 10 )
+    int value = 0, counter = 0, dir = -1;
+    for ( int i = 0; !Thread.currentThread().isInterrupted() && i < aSampleCount; i++ )
     {
-      aBuilder.addSample( ts, value );
+      if ( ( value & clockMask ) == 0 )
+      {
+        value = clockMask | counter;
 
-      if ( i == 0 )
-      {
-        value = 1;
-      }
-      else if ( i < aChannelCount )
-      {
-        value <<= 1;
-      }
-      else if ( i == ( sampleCount - ( 2 * aChannelCount ) ) )
-      {
-        value = ( 1 << aChannelCount );
-      }
-      else if ( ( sampleCount - aChannelCount - i ) < aChannelCount )
-      {
-        value >>>= 1;
+        if ( counter == 0 || counter == counterMax )
+        {
+          dir = ( dir > 0 ) ? -1 : +1;
+        }
+        counter += dir;
       }
       else
       {
-        value = 0;
+        value = counter;
       }
+
+      aBuilder.addSample( i, value );
 
       aProgressListener.acquisitionInProgress( i * 100 / aSampleCount );
     }

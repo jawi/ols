@@ -253,6 +253,18 @@ final class WaveformElement
   }
 
   /**
+   * @return the channel group, never <code>null</code>.
+   */
+  public ChannelGroup getGroup()
+  {
+    if ( this.channel != null )
+    {
+      return this.channel.getGroup();
+    }
+    return this.group;
+  }
+
+  /**
    * @return a channel group index, >= 0.
    */
   public int getGroupIndex()

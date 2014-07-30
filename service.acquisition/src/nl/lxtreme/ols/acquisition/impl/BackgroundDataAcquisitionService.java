@@ -45,7 +45,7 @@ public class BackgroundDataAcquisitionService implements AcquisitionService, Eve
   // VARIABLES
 
   private final ConcurrentMap<String, Device> devices;
-  private final Map<String, Map<String, ? extends Serializable>> deviceConfigs;
+  private final Map<String, DeviceConfiguration> deviceConfigs;
 
   private volatile Future<?> acquisitionFutureTask;
   private volatile EventAdmin eventAdmin;
@@ -58,7 +58,7 @@ public class BackgroundDataAcquisitionService implements AcquisitionService, Eve
    */
   public BackgroundDataAcquisitionService()
   {
-    this.deviceConfigs = new HashMap<String, Map<String, ? extends Serializable>>();
+    this.deviceConfigs = new HashMap<String, DeviceConfiguration>();
     this.devices = new ConcurrentHashMap<String, Device>();
   }
 
@@ -68,7 +68,7 @@ public class BackgroundDataAcquisitionService implements AcquisitionService, Eve
    * {@inheritDoc}
    */
   @Override
-  public void acquireData( Map<String, ? extends Serializable> aConfig, final String aDeviceName ) throws IOException
+  public void acquireData( DeviceConfiguration aConfig, final String aDeviceName ) throws IOException
   {
     if ( aConfig == null )
     {
@@ -116,7 +116,7 @@ public class BackgroundDataAcquisitionService implements AcquisitionService, Eve
       throw new IllegalArgumentException( "Invalid device name!" );
     }
 
-    Map<String, ? extends Serializable> config = this.deviceConfigs.get( aDeviceName );
+    DeviceConfiguration config = this.deviceConfigs.get( aDeviceName );
     if ( config == null )
     {
       throw new IllegalStateException( "No configuration present for " + aDeviceName );
@@ -157,7 +157,7 @@ public class BackgroundDataAcquisitionService implements AcquisitionService, Eve
    * {@inheritDoc}
    */
   @Override
-  public Map<String, ? extends Serializable> configureDevice( java.awt.Window aParent, String aDeviceName )
+  public DeviceConfiguration configureDevice( java.awt.Window aParent, String aDeviceName )
   {
     Device device = this.devices.get( aDeviceName );
     if ( device == null )

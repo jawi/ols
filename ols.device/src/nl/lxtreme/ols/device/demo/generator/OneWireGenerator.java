@@ -18,12 +18,13 @@
  * 
  * Copyright (C) 2010-2011 - J.W. Janssen, http://www.lxtreme.nl
  */
-package nl.lxtreme.ols.device.demo;
+package nl.lxtreme.ols.device.demo.generator;
 
 
 import java.util.*;
 
 import nl.lxtreme.ols.common.acquisition.*;
+import nl.lxtreme.ols.device.demo.*;
 
 
 /**
@@ -33,7 +34,7 @@ import nl.lxtreme.ols.common.acquisition.*;
  * "1-Wire Communication Through Software" of Maxim (May 30, 2002).
  * </p>
  */
-final class OneWireGenerator implements IDataGenerator
+public class OneWireGenerator implements DataGenerator
 {
   // CONSTANTS
 

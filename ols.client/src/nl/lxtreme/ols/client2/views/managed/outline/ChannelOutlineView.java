@@ -24,6 +24,7 @@ package nl.lxtreme.ols.client2.views.managed.outline;
 import java.awt.*;
 
 import javax.swing.*;
+import javax.swing.event.*;
 import javax.swing.tree.*;
 
 import nl.lxtreme.ols.client2.views.*;
@@ -86,8 +87,7 @@ public class ChannelOutlineView extends AbstractManagedView
     this.tree.setRootVisible( false );
     this.tree.setShowsRootHandles( true );
     this.tree.setEditable( true );
-    // Enable DnD support...
-    this.tree.setDragEnabled( true );
+    this.tree.setDragEnabled( false );
     this.tree.setDropMode( DropMode.INSERT );
     this.tree.setTransferHandler( new JLxTreeTransferHandler() );
 
@@ -108,46 +108,85 @@ public class ChannelOutlineView extends AbstractManagedView
   @Override
   protected void doUpdateState( ViewController aController, AcquisitionData aData )
   {
-    if ( aData != null )
-    {
-      updateView( aController, aData.getChannelGroups() );
-    }
-    else
-    {
-      updateView( aController );
-    }
+    updateView( aController );
   }
 
   /**
    * @return a tree structure based on the initial element model.
    */
-  private DefaultMutableTreeNode createTree( ViewController aController, ChannelGroup[] aChannelGroups )
+  private DefaultTreeModel createTreeModel( ViewController aController )
   {
-    ElementTreeNode rootNode = new ElementTreeNode( aController );
-
-    for ( ChannelGroup group : aChannelGroups )
+    if ( aController != null )
     {
-      ElementTreeNode groupNode = new ElementTreeNode( group );
-      rootNode.add( groupNode );
-
-      for ( Channel channel : group.getChannels() )
-      {
-        groupNode.add( new ElementTreeNode( channel ) );
-      }
+      ViewModel model = aController.getModel();
+      return new DefaultTreeModel( model.getChannelOutline() );
     }
 
-    return rootNode;
+    return new DefaultTreeModel( new DefaultMutableTreeNode() );
   }
 
-  private void updateView( ViewController aController, ChannelGroup... aChannelGroups )
+  private boolean isReorderingAllowed( ViewController aController )
   {
-    this.tree.setModel( new DefaultTreeModel( createTree( aController, aChannelGroups ) ) );
+    // Reordering elements only makes sense when viewing waveforms (in contrast
+    // to state data)...
+    return ( aController != null ) && aController.getModel().hasTimingData();
+  }
+
+  private void updateView( final ViewController aController )
+  {
+    DefaultTreeModel treeModel = createTreeModel( aController );
+    treeModel.addTreeModelListener( new TreeModelListener()
+    {
+      @Override
+      public void treeStructureChanged( TreeModelEvent aEvent )
+      {
+        // TODO Auto-generated method stub
+      }
+
+      @Override
+      public void treeNodesRemoved( TreeModelEvent aEvent )
+      {
+        // TODO Auto-generated method stub
+      }
+
+      @Override
+      public void treeNodesInserted( TreeModelEvent aEvent )
+      {
+        Object[] children = aEvent.getChildren();
+        for ( int i = 0; i < children.length; i++ )
+        {
+          ChannelOutlineTreeNode child = ( ChannelOutlineTreeNode )children[i];
+          // Retrieve the (new!) parent of the child...
+          ChannelOutlineTreeNode parent = ( ChannelOutlineTreeNode )child.getParent();
+
+          Object childUserObject = child.getUserObject();
+          Object parentUserObject = parent.getUserObject();
+
+          if ( parentUserObject instanceof ChannelGroup && childUserObject instanceof Channel )
+          {
+            getViewModel().moveElement( ( Channel )childUserObject, ( ChannelGroup )parentUserObject, parent.getIndex( child ) );
+          }
+        }
+      }
+
+      @Override
+      public void treeNodesChanged( TreeModelEvent aEvent )
+      {
+        // TODO Auto-generated method stub
+      }
+      
+      private ViewModel getViewModel() {
+        return aController.getModel();
+      }
+    } );
+
+    this.tree.setModel( treeModel );
+    this.tree.setDragEnabled( isReorderingAllowed( aController ) );
     // Initially expand all rows...
     for ( int i = 0; i < this.tree.getRowCount(); i++ )
     {
       this.tree.expandRow( i );
     }
-
     this.tree.repaint();
   }
 }

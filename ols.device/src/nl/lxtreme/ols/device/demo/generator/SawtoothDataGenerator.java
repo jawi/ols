@@ -15,30 +15,21 @@
  * with this program; if not, write to the Free Software Foundation, Inc.,
  * 51 Franklin St, Fifth Floor, Boston, MA 02110, USA
  *
- * 
- * Copyright (C) 2010-2011 - J.W. Janssen, http://www.lxtreme.nl
+ * Copyright (C) 2006-2010 Michael Poppitz, www.sump.org
+ * Copyright (C) 2010-2013 J.W. Janssen, www.lxtreme.nl
  */
-package nl.lxtreme.ols.device.demo;
+package nl.lxtreme.ols.device.demo.generator;
 
 
 import nl.lxtreme.ols.common.acquisition.*;
+import nl.lxtreme.ols.device.demo.*;
 
 
 /**
- * Provides a data generator that outputs state-data, with a clock on the last
- * channel.
+ * Provides a sawtooth-generator.
  */
-final class ClockedCounterGenerator implements IDataGenerator
+public class SawtoothDataGenerator implements DataGenerator
 {
-  // CONSTRUCTORS
-
-  /**
-   * Creates a new {@link ClockedCounterGenerator} instance.
-   */
-  public ClockedCounterGenerator()
-  {
-  }
-
   // METHODS
 
   /**
@@ -47,7 +38,7 @@ final class ClockedCounterGenerator implements IDataGenerator
   @Override
   public String getName()
   {
-    return "Clocked counter data";
+    return "Sawtooth";
   }
 
   /**
@@ -57,47 +48,26 @@ final class ClockedCounterGenerator implements IDataGenerator
   public void generate( int aChannelCount, int aSampleCount, AcquisitionDataBuilder aBuilder,
       AcquisitionProgressListener aProgressListener )
   {
-    int channelCount = Math.max( 4, aChannelCount );
+    int maxValue = ( int )( ( 1L << aChannelCount ) - 1L );
 
-    int counterSize = channelCount - 1;
-    int counterMax = ( 1 << counterSize ) - 1;
-    int clockMask = ( 1 << counterSize );
-
-    aBuilder.setChannelCount( channelCount );
+    aBuilder.setChannelCount( aChannelCount );
     aBuilder.setSampleRate( SR_10MHZ );
-    aBuilder.setTriggerPosition( 0 );
+    aBuilder.setTriggerPosition( ( int )( aSampleCount * 0.25 ) );
 
     // Make a single group with all channels...
-    ChannelGroupBuilder group = aBuilder.createChannelGroup().setIndex( 0 ).setName( "Demo counter" );
-    for ( int i = 0; i < aChannelCount; i++ )
+    ChannelGroupBuilder group = aBuilder.createChannelGroup().setIndex( 0 ).setName( "Sawtooth" );
+    for ( int i = 0; !Thread.currentThread().isInterrupted() && i < aChannelCount; i++ )
     {
       group.addChannel( i );
     }
     aBuilder.add( group );
 
-    int value = 0, counter = 0, dir = -1;
-    for ( int i = 0; !Thread.currentThread().isInterrupted() && i < aSampleCount; i++ )
+    for ( int i = 0; i < aSampleCount; i++ )
     {
-      if ( ( value & clockMask ) == 0 )
-      {
-        value = clockMask | counter;
-
-        if ( counter == 0 || counter == counterMax )
-        {
-          dir = ( dir > 0 ) ? -1 : +1;
-        }
-        counter += dir;
-      }
-      else
-      {
-        value = counter;
-      }
-
-      aBuilder.addSample( i, value );
+      final int v = maxValue - ( i % maxValue );
+      aBuilder.addSample( i, v );
 
       aProgressListener.acquisitionInProgress( i * 100 / aSampleCount );
     }
   }
 }
-
-/* EOF */

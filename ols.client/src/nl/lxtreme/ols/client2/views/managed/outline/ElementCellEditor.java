@@ -26,6 +26,8 @@ import java.awt.*;
 import javax.swing.*;
 import javax.swing.tree.*;
 
+import nl.lxtreme.ols.common.acquisition.*;
+
 
 /**
  * Provides a decorated tree cell editor to handle our custom signal elements.
@@ -51,8 +53,23 @@ class ElementCellEditor extends DefaultTreeCellEditor
   public Component getTreeCellEditorComponent( JTree aTree, Object aValue, boolean aIsSelected, boolean aExpanded,
       boolean aLeaf, int aRow )
   {
-    ElementTreeNode treeNode = ( ElementTreeNode )aValue;
+    Object value = aValue;
+    if ( value instanceof DefaultMutableTreeNode )
+    {
+      value = ( ( DefaultMutableTreeNode )value ).getUserObject();
+    }
 
-    return super.getTreeCellEditorComponent( aTree, treeNode.getText(), aIsSelected, aExpanded, aLeaf, aRow );
+    if ( value instanceof ChannelGroup )
+    {
+      ChannelGroup elementGroup = ( ChannelGroup )value;
+      value = elementGroup.getName();
+    }
+    else if ( value instanceof Channel )
+    {
+      Channel signalElement = ( Channel )value;
+      value = signalElement.getLabel();
+    }
+
+    return super.getTreeCellEditorComponent( aTree, value, aIsSelected, aExpanded, aLeaf, aRow );
   }
 }

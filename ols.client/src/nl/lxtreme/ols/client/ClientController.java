@@ -457,7 +457,7 @@ public final class ClientController implements ActionProvider
 
     try
     {
-      Map<String, ? extends Serializable> config = device.setupDevice();
+      DeviceConfiguration config = device.setupDevice();
       if ( config != null )
       {
         setStatusOnEDT( "Capture from {0} started at {1,date,medium} {1,time,medium} ...", device.getName(), new Date() );

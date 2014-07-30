@@ -22,12 +22,9 @@ package nl.lxtreme.ols.device.demo;
 
 
 import static nl.lxtreme.ols.device.demo.DemoDevice.*;
-import static nl.lxtreme.ols.device.demo.DemoConstants.*;
 
 import java.awt.*;
 import java.awt.event.*;
-import java.io.*;
-import java.util.*;
 
 import javax.swing.*;
 
@@ -51,10 +48,9 @@ public class DemoDeviceDialog extends JDialog implements Configurable, Closeable
 
   // VARIABLES
 
+  final DemoConfigBuilder configBuilder;
+
   private boolean setupConfirmed;
-  private String dataFunction;
-  private int channels;
-  private int dataLength;
 
   private JComboBox dataFunctionCombo;
   private JComboBox channelsCombo;
@@ -70,6 +66,7 @@ public class DemoDeviceDialog extends JDialog implements Configurable, Closeable
     super( aParent, "Test capture settings", ModalityType.DOCUMENT_MODAL );
 
     this.setupConfirmed = false;
+    this.configBuilder = new DemoConfigBuilder();
 
     initDialog();
   }
@@ -89,13 +86,9 @@ public class DemoDeviceDialog extends JDialog implements Configurable, Closeable
   /**
    * @return the device configuration, as configured in this dialog.
    */
-  public Map<String, ? extends Serializable> getConfig()
+  public DemoConfig getConfig()
   {
-    Map<String, Serializable> result = new HashMap<String, Serializable>();
-    result.put( KEY_CHANNEL_COUNT, this.channels );
-    result.put( KEY_SAMPLE_COUNT, this.dataLength );
-    result.put( KEY_GENERATOR_NAME, this.dataFunction );
-    return result;
+    return configBuilder.build();
   }
 
   /**
@@ -141,12 +134,6 @@ public class DemoDeviceDialog extends JDialog implements Configurable, Closeable
   final void confirmAndCloseDialog()
   {
     this.setupConfirmed = true;
-
-    // Make the selected information available for the outside...
-    this.channels = ( Integer )this.channelsCombo.getSelectedItem();
-    this.dataFunction = ( String )this.dataFunctionCombo.getSelectedItem();
-    this.dataLength = ( Integer )this.dataLengthCombo.getSelectedItem();
-
     close();
   }
 
@@ -158,8 +145,37 @@ public class DemoDeviceDialog extends JDialog implements Configurable, Closeable
     Object[] generatorNames = GENERATORS.keySet().toArray();
 
     this.dataFunctionCombo = new JComboBox( generatorNames );
+    this.dataFunctionCombo.addActionListener( new ActionListener()
+    {
+      @Override
+      public void actionPerformed( ActionEvent aEvent )
+      {
+        JComboBox source = ( JComboBox )aEvent.getSource();
+        configBuilder.setDataGenerator( GENERATORS.get( source.getSelectedItem() ) );
+      }
+    } );
+
     this.channelsCombo = new JComboBox( CHANNELS );
+    this.channelsCombo.addActionListener( new ActionListener()
+    {
+      @Override
+      public void actionPerformed( ActionEvent aEvent )
+      {
+        JComboBox source = ( JComboBox )aEvent.getSource();
+        configBuilder.setChannelCount( ( Integer )source.getSelectedItem() );
+      }
+    } );
+
     this.dataLengthCombo = new JComboBox( DATA_LENGTH );
+    this.dataLengthCombo.addActionListener( new ActionListener()
+    {
+      @Override
+      public void actionPerformed( ActionEvent aEvent )
+      {
+        JComboBox source = ( JComboBox )aEvent.getSource();
+        configBuilder.setDataLength( ( Integer )source.getSelectedItem() );
+      }
+    } );
 
     final Insets labelInsets = new Insets( 4, 4, 4, 2 );
     final Insets compInsets = new Insets( 4, 2, 4, 4 );

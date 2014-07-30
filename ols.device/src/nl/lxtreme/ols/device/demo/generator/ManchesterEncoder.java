@@ -18,18 +18,19 @@
  * Copyright (C) 2006-2010 Michael Poppitz, www.sump.org
  * Copyright (C) 2010-2012 J.W. Janssen, www.lxtreme.nl
  */
-package nl.lxtreme.ols.device.demo;
+package nl.lxtreme.ols.device.demo.generator;
 
 
 import java.util.*;
 
 import nl.lxtreme.ols.common.acquisition.*;
+import nl.lxtreme.ols.device.demo.*;
 
 
 /**
  * Represents a Manchester line-encoder.
  */
-final class ManchesterEncoder implements IDataGenerator
+public class ManchesterEncoder implements DataGenerator
 {
   // CONSTANTS
 

@@ -160,24 +160,6 @@ public class ViewController
   }
 
   /**
-   * Moves a given channel to a given group and index.
-   * 
-   * @param aChannel
-   *          the channel to move;
-   * @param aGroup
-   *          the (new) group to move the channel to;
-   * @param aChildIndex
-   *          the (new) index of the channel in the given group.
-   */
-  public void moveElement( Channel aChannel, ChannelGroup aGroup, int aChildIndex )
-  {
-    if ( aChannel.getGroup() != aGroup || aChannel.getIndex() != aChildIndex )
-    {
-      this.model.moveElement( aChannel, aGroup, aChildIndex );
-    }
-  }
-
-  /**
    * Posts an asynchronous event.
    * 
    * @param aTopic

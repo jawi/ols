@@ -18,18 +18,19 @@
  * 
  * Copyright (C) 2010-2011 - J.W. Janssen, http://www.lxtreme.nl
  */
-package nl.lxtreme.ols.device.demo;
+package nl.lxtreme.ols.device.demo.generator;
 
 
 import java.util.*;
 
 import nl.lxtreme.ols.common.acquisition.*;
+import nl.lxtreme.ols.device.demo.*;
 
 
 /**
  * Provides a data generator that outputs I2C-data.
  */
-final class I2CGenerator implements IDataGenerator
+public class I2CGenerator implements DataGenerator
 {
   // CONSTANTS
 

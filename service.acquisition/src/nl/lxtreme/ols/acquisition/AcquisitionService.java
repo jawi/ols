@@ -22,7 +22,6 @@ package nl.lxtreme.ols.acquisition;
 
 
 import java.io.*;
-import java.util.*;
 
 import nl.lxtreme.ols.device.api.*;
 
@@ -58,7 +57,7 @@ public interface AcquisitionService
    *           in case the given configuration or device was <code>null</code>
    *           or did not resolve to an exisiting device.
    */
-  void acquireData( Map<String, ? extends Serializable> aConfig, String aDeviceName ) throws IOException;
+  void acquireData( DeviceConfiguration aConfig, String aDeviceName ) throws IOException;
 
   /**
    * Acquires data from the given device using the last known configuration.
@@ -106,7 +105,7 @@ public interface AcquisitionService
    *           in case the given configuration or device was <code>null</code>
    *           or did not resolve to an exisiting device.
    */
-  Map<String, ? extends Serializable> configureDevice( java.awt.Window aParent, String aDeviceName );
+  DeviceConfiguration configureDevice( java.awt.Window aParent, String aDeviceName );
 
   /**
    * Returns the state of the device with a given name,

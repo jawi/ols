@@ -21,20 +21,17 @@
 package nl.lxtreme.ols.device.demo;
 
 
-import static nl.lxtreme.ols.device.demo.DemoConstants.*;
-
 import java.awt.*;
-import java.io.*;
 import java.util.*;
 import java.util.concurrent.*;
 
-import org.apache.felix.dm.Component;
-
-import nl.lxtreme.ols.common.*;
 import nl.lxtreme.ols.common.acquisition.*;
 import nl.lxtreme.ols.device.api.*;
+import nl.lxtreme.ols.device.demo.generator.*;
 import nl.lxtreme.ols.task.execution.*;
 import nl.lxtreme.ols.util.swing.*;
+
+import org.apache.felix.dm.Component;
 
 
 /**
@@ -44,7 +41,7 @@ public class DemoDevice implements Device
 {
   // CONSTANTS
 
-  static final Map<String, IDataGenerator> GENERATORS = new LinkedHashMap<String, IDataGenerator>();
+  static final Map<String, DataGenerator> GENERATORS = new LinkedHashMap<String, DataGenerator>();
 
   static
   {
@@ -57,7 +54,7 @@ public class DemoDevice implements Device
     {
       try
       {
-        IDataGenerator inst = ( IDataGenerator )generator.newInstance();
+        DataGenerator inst = ( DataGenerator )generator.newInstance();
         GENERATORS.put( inst.getName(), inst );
       }
       catch ( Exception exception )
@@ -69,34 +66,41 @@ public class DemoDevice implements Device
 
   // VARIABLES
 
-  private Map<String, ? extends Serializable> lastConfig = null;
+  private DemoConfig lastConfig = null;
   private DemoDeviceDialog configDialog = null;
 
   private volatile TaskExecutionService taskExecutionService;
 
   // METHODS
 
+  static DataGenerator getGeneratorByName( String aName )
+  {
+    if ( aName == null )
+    {
+      throw new IllegalArgumentException( "Name cannot be null!" );
+    }
+    DataGenerator result = GENERATORS.get( aName );
+    if ( result == null )
+    {
+      throw new IllegalArgumentException( "No such generator: " + aName );
+    }
+    return result;
+  }
+
   /**
    * {@inheritDoc}
    */
   @Override
-  public Future<AcquisitionData> acquireData( Map<String, ? extends Serializable> aConfig,
-      AcquisitionProgressListener aProgressListener )
+  public Future<AcquisitionData> acquireData( DeviceConfiguration aConfig, AcquisitionProgressListener aProgressListener )
   {
-    if ( ( aConfig == null ) || !isValid( aConfig ) )
+    if ( aConfig == null || !( aConfig instanceof DemoConfig ) )
     {
       throw new IllegalArgumentException( "Invalid device configuration!" );
     }
 
-    int channelCount = ( ( Number )aConfig.get( KEY_CHANNEL_COUNT ) ).intValue();
-    int sampleCount = ( ( Number )aConfig.get( KEY_SAMPLE_COUNT ) ).intValue();
-    String generatorName = ( String )aConfig.get( KEY_GENERATOR_NAME );
-
-    IDataGenerator generator = GENERATORS.get( generatorName );
-    if ( generator == null )
-    {
-      throw new IllegalArgumentException( "Invalid device configuration!" );
-    }
+    int channelCount = ( ( DemoConfig )aConfig ).getChannelCount();
+    int sampleCount = ( ( DemoConfig )aConfig ).getSampleCount();
+    DataGenerator generator = ( ( DemoConfig )aConfig ).getGenerator();
 
     return this.taskExecutionService.execute( new DemoAcquisitionTask( channelCount, sampleCount, generator,
         aProgressListener ), Collections.singletonMap( "type", "acquisition" ) );
@@ -124,7 +128,7 @@ public class DemoDevice implements Device
    * {@inheritDoc}
    */
   @Override
-  public Map<String, ? extends Serializable> setupDevice()
+  public DeviceConfiguration setupDevice()
   {
     final Window currentWindow = SwingComponentUtils.getCurrentWindow();
 
@@ -132,13 +136,11 @@ public class DemoDevice implements Device
 
     this.configDialog = new DemoDeviceDialog( currentWindow );
 
-    Map<String, ? extends Serializable> config = this.lastConfig;
-
+    DemoConfig config = this.lastConfig;
     if ( this.configDialog.showDialog() )
     {
       config = this.lastConfig = this.configDialog.getConfig();
     }
-
     return config;
   }
 
@@ -158,47 +160,6 @@ public class DemoDevice implements Device
   {
     SwingComponentUtils.dispose( this.configDialog );
     this.configDialog = null;
-  }
-
-  /**
-   * Validates the given device configuration.
-   * 
-   * @param aConfig
-   *          the configuration to validate, cannot be <code>null</code>.
-   * @return <code>true</code> if the given configuration was valid,
-   *         <code>false</code> otherwise.
-   */
-  private boolean isValid( Map<String, ? extends Serializable> aConfig )
-  {
-    Object value = aConfig.get( KEY_CHANNEL_COUNT );
-    if ( value == null || !( value instanceof Number ) )
-    {
-      return false;
-    }
-    int num = ( ( Number )value ).intValue();
-    if ( num < 1 || num > OlsConstants.MAX_CHANNELS )
-    {
-      return false;
-    }
-
-    value = aConfig.get( KEY_SAMPLE_COUNT );
-    if ( value == null || !( value instanceof Number ) )
-    {
-      return false;
-    }
-    num = ( ( Number )value ).intValue();
-    if ( num < 1 )
-    {
-      return false;
-    }
-
-    value = aConfig.get( KEY_GENERATOR_NAME );
-    if ( value == null || !GENERATORS.containsKey( value ) )
-    {
-      return false;
-    }
-
-    return true;
   }
 }
 

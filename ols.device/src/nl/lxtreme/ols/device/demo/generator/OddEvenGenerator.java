@@ -18,16 +18,17 @@
  * Copyright (C) 2006-2010 Michael Poppitz, www.sump.org
  * Copyright (C) 2010-2013 J.W. Janssen, www.lxtreme.nl
  */
-package nl.lxtreme.ols.device.demo;
+package nl.lxtreme.ols.device.demo.generator;
 
 
 import nl.lxtreme.ols.common.acquisition.*;
+import nl.lxtreme.ols.device.demo.*;
 
 
 /**
  * Provides a odd-even-generator.
  */
-final class OddEvenGenerator implements IDataGenerator
+public class OddEvenGenerator implements DataGenerator
 {
   // METHODS
 

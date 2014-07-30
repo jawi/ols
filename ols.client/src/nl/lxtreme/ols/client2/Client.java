@@ -61,6 +61,7 @@ import nl.lxtreme.ols.common.acquisition.*;
 import nl.lxtreme.ols.common.acquisition.Cursor;
 import nl.lxtreme.ols.common.annotation.*;
 import nl.lxtreme.ols.common.session.*;
+import nl.lxtreme.ols.device.api.*;
 import nl.lxtreme.ols.export.api.*;
 import nl.lxtreme.ols.tool.api.*;
 import nl.lxtreme.ols.util.swing.*;
@@ -241,7 +242,7 @@ public class Client extends DefaultDockableHolder implements ApplicationCallback
 
     try
     {
-      Map<String, ? extends Serializable> config = this.acquisitionService.configureDevice( aParent, deviceName );
+      DeviceConfiguration config = this.acquisitionService.configureDevice( aParent, deviceName );
       if ( config != null )
       {
         this.acquisitionService.acquireData( config, deviceName );

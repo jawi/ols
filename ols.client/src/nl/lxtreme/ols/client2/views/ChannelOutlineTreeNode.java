@@ -18,27 +18,19 @@
  * Copyright (C) 2006-2010 Michael Poppitz, www.sump.org
  * Copyright (C) 2010-2014 J.W. Janssen, www.lxtreme.nl
  */
-package nl.lxtreme.ols.client2.views.managed.outline;
+package nl.lxtreme.ols.client2.views;
 
 
 import javax.swing.tree.*;
 
-import nl.lxtreme.ols.client2.views.*;
 import nl.lxtreme.ols.common.acquisition.*;
 
 
 /**
  * Custom tree node for representing our signal elements.
  */
-class ElementTreeNode extends DefaultMutableTreeNode
+public class ChannelOutlineTreeNode extends DefaultMutableTreeNode
 {
-  // INNER TYPES
-
-  static interface TreeNodeListener
-  {
-
-  }
-
   // CONSTANTS
 
   private static final long serialVersionUID = 1L;
@@ -47,81 +39,55 @@ class ElementTreeNode extends DefaultMutableTreeNode
 
   // VARIABLES
 
-  private ViewController controller;
+  private ViewModel model;
 
   // CONSTRUCTORS
 
   /**
-   * Creates a new {@link ElementTreeNode} instance, used as <b>root</b>-node.
+   * Creates a new {@link ChannelOutlineTreeNode} instance, used as <b>leaf</b>-node.
    */
-  public ElementTreeNode( final ViewController aController )
-  {
-    super( ROOT_ID );
-
-    this.controller = aController;
-  }
-
-  /**
-   * Creates a new {@link ElementTreeNode} instance, used as <b>leaf</b>-node.
-   */
-  public ElementTreeNode( final Channel aElement )
+  public ChannelOutlineTreeNode( final Channel aElement )
   {
     super( aElement );
     setAllowsChildren( false );
   }
 
   /**
-   * Creates a new {@link ElementTreeNode} instance, used as <b>group</b>-node.
+   * Creates a new {@link ChannelOutlineTreeNode} instance, used as <b>group</b>-node.
    */
-  public ElementTreeNode( final ChannelGroup aGroup )
+  public ChannelOutlineTreeNode( final ChannelGroup aGroup )
   {
     super( aGroup );
     setAllowsChildren( true );
   }
 
   /**
-   * Creates a new {@link ElementTreeNode} instance as copy of the given node.
+   * Creates a new {@link ChannelOutlineTreeNode} instance, used as <b>root</b>-node.
    */
-  public ElementTreeNode( final ElementTreeNode aNode )
+  public ChannelOutlineTreeNode( final String aData )
   {
-    super( aNode.getUserObject() );
-    setAllowsChildren( aNode.allowsChildren );
+    super( aData );
+  }
+
+  /**
+   * Creates a new {@link ChannelOutlineTreeNode} instance, used as <b>root</b>-node.
+   */
+  public ChannelOutlineTreeNode( final ViewModel aModel )
+  {
+    super( ROOT_ID );
+
+    this.model = aModel;
   }
 
   // METHODS
 
-  /**
-   * @return the text of this tree node's user object, can be <code>null</code>.
-   */
-  public String getText()
+  public ViewModel getViewModel()
   {
-    String result = "";
-    if ( this.userObject instanceof ChannelGroup )
+    if ( isRoot() )
     {
-      result = ( ( ChannelGroup )this.userObject ).getName();
+      return this.model;
     }
-    else if ( this.userObject instanceof Channel )
-    {
-      result = ( ( Channel )this.userObject ).getLabel();
-    }
-    return result;
-  }
-
-  /**
-   * {@inheritDoc}
-   */
-  @Override
-  public void insert( final MutableTreeNode aNewChild, final int aChildIndex )
-  {
-    super.insert( aNewChild, aChildIndex );
-
-    Object newChildUserObject = ( ( ElementTreeNode )aNewChild ).getUserObject();
-
-    if ( ( this.userObject instanceof ChannelGroup ) && ( newChildUserObject instanceof Channel ) )
-    {
-      // Move the actual element as well...
-      getViewController().moveElement( ( Channel )newChildUserObject, ( ChannelGroup )this.userObject, aChildIndex );
-    }
+    return ( ( ChannelOutlineTreeNode )getRoot() ).getViewModel();
   }
 
   /**
@@ -214,14 +180,5 @@ class ElementTreeNode extends DefaultMutableTreeNode
   public String toString()
   {
     return String.format( "ElementTreeNode(%s)@%s", getUserObject(), Integer.toHexString( hashCode() ) );
-  }
-
-  private ViewController getViewController()
-  {
-    if ( isRoot() )
-    {
-      return this.controller;
-    }
-    return ( ( ElementTreeNode )getRoot() ).getViewController();
   }
 }

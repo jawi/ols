@@ -23,7 +23,9 @@ package nl.lxtreme.ols.client2.views;
 
 import java.util.concurrent.atomic.*;
 
-import nl.lxtreme.ols.client2.views.MeasurementInfoBuilder.*;
+import javax.swing.tree.*;
+
+import nl.lxtreme.ols.client2.views.MeasurementInfoBuilder.MeasurementInfo;
 import nl.lxtreme.ols.common.acquisition.*;
 import nl.lxtreme.ols.common.annotation.*;
 import nl.lxtreme.ols.common.session.*;
@@ -73,6 +75,30 @@ public class ViewModel
   public final AnnotationData getAnnotations()
   {
     return this.session.getAnnotationData();
+  }
+
+  /**
+   * @return a {@link TreeNode} representing the channel outline for this model,
+   *         never <code>null</code>.
+   */
+  public MutableTreeNode getChannelOutline()
+  {
+    AcquisitionData data = getData();
+
+    ChannelOutlineTreeNode rootNode = new ChannelOutlineTreeNode( this );
+
+    for ( ChannelGroup group : data.getChannelGroups() )
+    {
+      ChannelOutlineTreeNode groupNode = new ChannelOutlineTreeNode( group );
+      rootNode.add( groupNode );
+
+      for ( Channel channel : group.getChannels() )
+      {
+        groupNode.add( new ChannelOutlineTreeNode( channel ) );
+      }
+    }
+
+    return rootNode;
   }
 
   /**
@@ -195,7 +221,10 @@ public class ViewModel
    */
   public void moveElement( Channel aChannel, ChannelGroup aGroup, int aChildIndex )
   {
-    aGroup.move( aChannel, aChildIndex );
+    if ( aChannel.getGroup() != aGroup || aChannel.getIndex() != aChildIndex )
+    {
+      aGroup.move( aChannel, aChildIndex );
+    }
   }
 
   /**

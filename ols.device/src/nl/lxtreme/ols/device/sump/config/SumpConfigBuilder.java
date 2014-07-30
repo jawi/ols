@@ -24,7 +24,6 @@ package nl.lxtreme.ols.device.sump.config;
 import static nl.lxtreme.ols.device.sump.SumpConstants.*;
 import static nl.lxtreme.ols.device.sump.SumpFlagBits.*;
 
-import java.io.*;
 import java.util.*;
 
 import nl.lxtreme.ols.device.sump.*;
@@ -113,19 +112,10 @@ public final class SumpConfigBuilder
       apply( NOISE_FILTER, false );
     }
 
-    Map<String, Serializable> config = new HashMap<String, Serializable>();
-    config.put( KEY_CONNECTION_URI, this.connectionURI );
-    config.put( KEY_GROUP_COUNT, aProfile.getChannelGroupCount() );
-    config.put( KEY_ENABLED_CHANNELS, this.enabledChannels );
-    config.put( KEY_SAMPLE_RATE, this.sampleRate );
-    config.put( KEY_LAST_SAMPLE_SENT_FIRST, aProfile.isLastSampleSentFirst() );
-    config.put( KEY_READ_DELAY_COUNT_COMBINED, aProfile.isReadDelayCountCombined() );
-    config.put( KEY_DIVIDER, ( int )Math.max( 0.0, ( ( clock / this.sampleRate ) - 1.0 ) ) );
-    config.put( KEY_READ_COUNT, readCount );
-    config.put( KEY_DELAY_COUNT, delayCount );
-    config.put( KEY_FLAGS, this.flags );
-    config.put( KEY_TRIGGER_DEFS, triggerDefs );
-    return new SumpConfig( config );
+    int divider = ( int )Math.max( 0.0, ( ( clock / this.sampleRate ) - 1.0 ) );
+
+    return new SumpConfig( this.connectionURI, aProfile, this.enabledChannels, this.sampleRate, readCount, delayCount,
+        divider, this.flags, triggerDefs );
   }
 
   public SumpBasicTriggerBuilder createSumpTrigger()

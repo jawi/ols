@@ -73,20 +73,15 @@ public class SumpDevice implements Device
    * {@inheritDoc}
    */
   @Override
-  public Future<AcquisitionData> acquireData( Map<String, ? extends Serializable> aConfig,
-      AcquisitionProgressListener aProgressListener ) throws IOException
+  public Future<AcquisitionData> acquireData( DeviceConfiguration aConfig, AcquisitionProgressListener aProgressListener )
+      throws IOException
   {
-    if ( aConfig == null )
+    if ( aConfig == null || !( aConfig instanceof SumpConfig ) )
     {
       throw new IllegalArgumentException( "Invalid device configuration!" );
     }
 
-    this.config = new SumpConfig( aConfig );
-    if ( !this.config.isValid() )
-    {
-      // TODO
-      // throw new IllegalArgumentException( "Invalid device configuration!" );
-    }
+    this.config = ( SumpConfig )aConfig;
 
     return this.taskExecutionService.execute( new SumpAcquisitionTask( this.config, getStreamConnection(),
         aProgressListener ), Collections.singletonMap( "type", "acquisition" ) );
@@ -151,7 +146,7 @@ public class SumpDevice implements Device
    * {@inheritDoc}
    */
   @Override
-  public Map<String, ? extends Serializable> setupDevice()
+  public DeviceConfiguration setupDevice()
   {
     final Window currentWindow = SwingComponentUtils.getCurrentWindow();
 
@@ -164,7 +159,7 @@ public class SumpDevice implements Device
       this.config = this.configDialog.getConfiguration();
     }
 
-    return this.config != null ? this.config.asMap() : null;
+    return null; // XXX this.config != null ? this.config.asMap() : null;
   }
 
   /**

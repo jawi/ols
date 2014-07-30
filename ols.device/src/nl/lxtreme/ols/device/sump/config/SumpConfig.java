@@ -21,36 +21,79 @@
 package nl.lxtreme.ols.device.sump.config;
 
 
-import static nl.lxtreme.ols.device.sump.SumpFlagBits.*;
 import static nl.lxtreme.ols.device.sump.SumpConstants.*;
+import static nl.lxtreme.ols.device.sump.SumpFlagBits.*;
 
-import java.io.*;
 import java.util.*;
 
 import nl.lxtreme.ols.common.*;
+import nl.lxtreme.ols.device.api.*;
 import nl.lxtreme.ols.device.sump.*;
+import nl.lxtreme.ols.device.sump.profile.*;
 
 
 /**
  * Provides the configuration options for the LogicSniffer device.
  */
-public final class SumpConfig
+public final class SumpConfig implements DeviceConfiguration
 {
   // VARIABLES
 
-  private final Map<String, Serializable> config;
+  private final String connectionURI;
+  private final int groupCount;
+  private final int enabledChannelMask;
+  private final int sampleRate;
+  private final boolean lastSampleSentFirst;
+  private final boolean combinedReadDelayCount;
+  private final int readCount;
+  private final int delayCount;
+  private final int divider;
+  private final int flags;
+  private final SumpTrigger[] triggers;
 
   // CONSTRUCTORS
 
   /**
-   * Creates a new {@link SumpConfig} instance with a given map with settings.
-   * 
-   * @param aConfig
-   *          the configuration settings, cannot be <code>null</code>.
+   * Creates a new {@link SumpConfig} instance from a serialized map.
    */
-  public SumpConfig( Map<String, ? extends Serializable> aConfig )
+  public SumpConfig( Map<String, String> aConfig )
   {
-    this.config = new HashMap<String, Serializable>( aConfig );
+    if ( aConfig == null )
+    {
+      throw new IllegalArgumentException( "Configuration cannot be null!" );
+    }
+
+    this.connectionURI = aConfig.get( KEY_CONNECTION_URI );
+    this.groupCount = Integer.parseInt( aConfig.get( KEY_GROUP_COUNT ) );
+    this.enabledChannelMask = Integer.parseInt( aConfig.get( KEY_ENABLED_CHANNELS ) );
+    this.sampleRate = Integer.parseInt( aConfig.get( KEY_SAMPLE_RATE ) );
+    this.lastSampleSentFirst = Boolean.parseBoolean( aConfig.get( KEY_LAST_SAMPLE_SENT_FIRST ) );
+    this.combinedReadDelayCount = Boolean.parseBoolean( aConfig.get( KEY_READ_DELAY_COUNT_COMBINED ) );
+    this.readCount = Integer.parseInt( aConfig.get( KEY_READ_COUNT ) );
+    this.delayCount = Integer.parseInt( aConfig.get( KEY_DELAY_COUNT ) );
+    this.divider = Integer.parseInt( aConfig.get( KEY_DIVIDER ) );
+    this.flags = Integer.parseInt( aConfig.get( KEY_FLAGS ) );
+    this.triggers = null; // TODO
+
+  }
+
+  /**
+   * Creates a new {@link SumpConfig} instance.
+   */
+  SumpConfig( String aConnectionURI, DeviceProfile aProfile, int aEnabledChannelMask, int aSampleRate, int aReadCount,
+      int aDelayCount, int aDivider, int aFlags, SumpTrigger[] aTriggers )
+  {
+    this.connectionURI = aConnectionURI;
+    this.groupCount = aProfile.getChannelGroupCount();
+    this.enabledChannelMask = aEnabledChannelMask;
+    this.sampleRate = aSampleRate;
+    this.lastSampleSentFirst = aProfile.isLastSampleSentFirst();
+    this.combinedReadDelayCount = aProfile.isReadDelayCountCombined();
+    this.readCount = aReadCount;
+    this.delayCount = aDelayCount;
+    this.divider = aDivider;
+    this.flags = aFlags;
+    this.triggers = aTriggers;
   }
 
   // METHODS
@@ -61,9 +104,21 @@ public final class SumpConfig
    * @return the configuration settings, as unmodifiable {@link Map}, never
    *         <code>null</code>.
    */
-  public Map<String, Serializable> asMap()
+  public Map<String, String> asMap()
   {
-    return Collections.unmodifiableMap( this.config );
+    Map<String, String> result = new HashMap<String, String>();
+    result.put( KEY_TRIGGER_DEFS, "" ); // TODO
+    result.put( KEY_READ_DELAY_COUNT_COMBINED, Boolean.toString( combinedReadDelayCount ) );
+    result.put( KEY_CONNECTION_URI, this.connectionURI );
+    result.put( KEY_DELAY_COUNT, Integer.toString( this.delayCount ) );
+    result.put( KEY_DIVIDER, Integer.toString( this.divider ) );
+    result.put( KEY_ENABLED_CHANNELS, Integer.toString( this.enabledChannelMask ) );
+    result.put( KEY_FLAGS, Integer.toString( this.flags ) );
+    result.put( KEY_GROUP_COUNT, Integer.toString( this.groupCount ) );
+    result.put( KEY_LAST_SAMPLE_SENT_FIRST, Boolean.toString( this.lastSampleSentFirst ) );
+    result.put( KEY_READ_COUNT, Integer.toString( this.readCount ) );
+    result.put( KEY_SAMPLE_RATE, Integer.toString( this.sampleRate ) );
+    return result;
   }
 
   /**
@@ -71,7 +126,7 @@ public final class SumpConfig
    */
   public SumpAdvancedTrigger[] getAdvancedTriggerDefinitions()
   {
-    return ( SumpAdvancedTrigger[] )this.config.get( KEY_TRIGGER_DEFS );
+    return ( SumpAdvancedTrigger[] )this.triggers;
   }
 
   /**
@@ -79,7 +134,7 @@ public final class SumpConfig
    */
   public SumpBasicTrigger[] getBasicTriggerDefinitions()
   {
-    return ( SumpBasicTrigger[] )this.config.get( KEY_TRIGGER_DEFS );
+    return ( SumpBasicTrigger[] )this.triggers;
   }
 
   /**
@@ -88,10 +143,6 @@ public final class SumpConfig
    */
   public int getCombinedReadDelayCount()
   {
-    // Get the "raw" values...
-    int readCount = ( Integer )this.config.get( KEY_READ_COUNT );
-    int delayCount = ( Integer )this.config.get( KEY_DELAY_COUNT );
-
     int maxSize = 0x3fffc;
     if ( isDoubleDataRateEnabled() )
     {
@@ -110,7 +161,7 @@ public final class SumpConfig
    */
   public String getConnectionURI()
   {
-    return ( String )this.config.get( KEY_CONNECTION_URI );
+    return this.connectionURI;
   }
 
   /**
@@ -118,7 +169,7 @@ public final class SumpConfig
    */
   public int getDelayCount()
   {
-    int delayCount = ( Integer )this.config.get( KEY_DELAY_COUNT );
+    int delayCount = this.delayCount;
     if ( isDoubleDataRateEnabled() )
     {
       return ( ( delayCount - 8 ) & 0x7fffff8 ) >> 3;
@@ -132,7 +183,7 @@ public final class SumpConfig
    */
   public int getDivider()
   {
-    return ( Integer )this.config.get( KEY_DIVIDER );
+    return this.divider;
   }
 
   /**
@@ -149,7 +200,7 @@ public final class SumpConfig
    */
   public int getEnabledChannelMask()
   {
-    return ( Integer )this.config.get( KEY_ENABLED_CHANNELS );
+    return this.enabledChannelMask;
   }
 
   /**
@@ -174,7 +225,7 @@ public final class SumpConfig
    */
   public int getFlags()
   {
-    return ( Integer )this.config.get( KEY_FLAGS );
+    return this.flags;
   }
 
   /**
@@ -183,7 +234,7 @@ public final class SumpConfig
    */
   public int getGroupCount()
   {
-    return ( Integer )this.config.get( KEY_GROUP_COUNT );
+    return this.groupCount;
   }
 
   /**
@@ -191,7 +242,7 @@ public final class SumpConfig
    */
   public int getReadCount()
   {
-    int readCount = ( Integer )this.config.get( KEY_READ_COUNT );
+    int readCount = this.readCount;
     if ( isDoubleDataRateEnabled() )
     {
       return ( readCount >> 3 ) - 1;
@@ -207,7 +258,7 @@ public final class SumpConfig
    */
   public int getSampleCount()
   {
-    int samples = ( Integer )this.config.get( KEY_READ_COUNT );
+    int samples = this.readCount;
     if ( isDoubleDataRateEnabled() )
     {
       // When the multiplexer is turned on, the upper two channel blocks are
@@ -226,7 +277,7 @@ public final class SumpConfig
    */
   public int getSampleRate()
   {
-    return ( Integer )this.config.get( KEY_SAMPLE_RATE );
+    return this.sampleRate;
   }
 
   /**
@@ -235,16 +286,13 @@ public final class SumpConfig
    */
   public int getTriggerPosition()
   {
-    if ( this.config.get( KEY_TRIGGER_DEFS ) == null )
+    if ( this.triggers == null || this.triggers.length < 1 )
     {
       // Not available...
       return OlsConstants.NOT_AVAILABLE;
     }
 
     // Get the "raw" values...
-    int readCount = ( Integer )this.config.get( KEY_READ_COUNT );
-    int delayCount = ( Integer )this.config.get( KEY_DELAY_COUNT );
-    int divider = ( Integer )this.config.get( KEY_DIVIDER );
     boolean ddr = isDoubleDataRateEnabled();
 
     // pure magic taken from the original LA sources...
@@ -257,7 +305,7 @@ public final class SumpConfig
    */
   public boolean isAdvancedTriggerEnabled()
   {
-    return ( this.config.get( KEY_TRIGGER_DEFS ) instanceof SumpAdvancedTrigger[] );
+    return ( this.triggers instanceof SumpAdvancedTrigger[] );
   }
 
   /**
@@ -266,7 +314,7 @@ public final class SumpConfig
    */
   public boolean isBasicTriggerEnabled()
   {
-    return ( this.config.get( KEY_TRIGGER_DEFS ) instanceof SumpBasicTrigger[] );
+    return ( this.triggers instanceof SumpBasicTrigger[] );
   }
 
   /**
@@ -315,7 +363,7 @@ public final class SumpConfig
    */
   public boolean isLastSampleSentFirst()
   {
-    return ( Boolean )this.config.get( KEY_LAST_SAMPLE_SENT_FIRST );
+    return this.lastSampleSentFirst;
   }
 
   /**
@@ -325,7 +373,7 @@ public final class SumpConfig
    */
   public boolean isReadDelayCountValueCombined()
   {
-    return ( Boolean )this.config.get( KEY_READ_DELAY_COUNT_COMBINED );
+    return this.combinedReadDelayCount;
   }
 
   /**
@@ -335,81 +383,5 @@ public final class SumpConfig
   public boolean isRleEnabled()
   {
     return ENABLE_RLE_MODE.isSet( getFlags() );
-  }
-
-  /**
-   * @return <code>true</code> if this configuration is valid,
-   *         <code>false</code> otherwise.
-   */
-  public boolean isValid()
-  {
-    if ( !isNonEmptyString( KEY_CONNECTION_URI ) )
-    {
-      return false;
-    }
-
-    if ( !isBoolean( KEY_LAST_SAMPLE_SENT_FIRST ) )
-    {
-      return false;
-    }
-    if ( !isBoolean( KEY_READ_DELAY_COUNT_COMBINED ) )
-    {
-      return false;
-    }
-
-    if ( !isNumber( KEY_GROUP_COUNT, 1, OlsConstants.MAX_BLOCKS ) )
-    {
-      return false;
-    }
-    if ( !isNumber( KEY_ENABLED_CHANNELS, Integer.MIN_VALUE, Integer.MAX_VALUE ) )
-    {
-      return false;
-    }
-    if ( !isNumber( KEY_SAMPLE_RATE, 1, Integer.MAX_VALUE ) )
-    {
-      return false;
-    }
-    if ( !isNumber( KEY_DIVIDER, 0, Integer.MAX_VALUE ) )
-    {
-      return false;
-    }
-    if ( !isNumber( KEY_READ_COUNT, 0, Integer.MAX_VALUE ) )
-    {
-      return false;
-    }
-    if ( !isNumber( KEY_DELAY_COUNT, 0, Integer.MAX_VALUE ) )
-    {
-      return false;
-    }
-    if ( !isNumber( KEY_FLAGS, Integer.MIN_VALUE, Integer.MAX_VALUE ) )
-    {
-      return false;
-    }
-
-    return true;
-  }
-
-  private boolean isBoolean( String aKey )
-  {
-    Object value = this.config.get( aKey );
-    return value != null && ( value instanceof Boolean );
-  }
-
-  private boolean isNonEmptyString( String aKey )
-  {
-    Object value = this.config.get( aKey );
-    return value != null && ( value instanceof String ) && !"".equals( ( ( String )value ).trim() );
-  }
-
-  private boolean isNumber( String aKey, int aMin, int aMax )
-  {
-    Object value = this.config.get( aKey );
-    if ( value == null || !( value instanceof Number ) )
-    {
-      return false;
-    }
-
-    int intValue = ( ( Number )value ).intValue();
-    return ( intValue >= aMin ) && ( intValue <= aMax );
   }
 }

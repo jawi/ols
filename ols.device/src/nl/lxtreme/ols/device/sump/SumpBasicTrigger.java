@@ -24,7 +24,7 @@ package nl.lxtreme.ols.device.sump;
 /**
  * Represents a "basic" trigger, as used in the original SUMP protocol.
  */
-public class SumpBasicTrigger
+public class SumpBasicTrigger implements SumpTrigger
 {
   // CONSTANTS
 
