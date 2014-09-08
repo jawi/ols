@@ -22,6 +22,7 @@ package nl.lxtreme.ols.tool.base;
 
 
 import java.awt.*;
+import java.awt.Dialog.ModalExclusionType;
 import java.util.concurrent.*;
 
 import javax.swing.*;
@@ -40,7 +41,7 @@ import org.osgi.framework.*;
 /**
  * Provides a base tool dialog.
  */
-public abstract class BaseToolDialog<RESULT_TYPE> extends JDialog implements ToolDialog, TaskStatusListener,
+public abstract class BaseToolDialog<RESULT_TYPE> extends JFrame implements ToolDialog, TaskStatusListener,
     Configurable, Closeable
 {
   // CONSTANTS
@@ -76,38 +77,23 @@ public abstract class BaseToolDialog<RESULT_TYPE> extends JDialog implements Too
    *          the owning window of this dialog;
    * @param aTitle
    *          the title of this dialog;
-   * @param aModalityType
-   *          the modality type;
    * @param aContext
    *          the tool context to use in this dialog.
    */
-  protected BaseToolDialog( final Window aOwner, final ModalityType aModalityType, final ToolContext aContext,
+  protected BaseToolDialog( final Window aOwner, final ToolContext aContext,
       final BundleContext aBundleContext, final Tool<RESULT_TYPE> aTool )
   {
-    super( aOwner, aTool.getName(), aModalityType );
+    super( aTool.getName() );
+    
     this.context = aContext;
     this.bundleContext = aBundleContext;
     this.tool = aTool;
+    
+    setModalExclusionType( ModalExclusionType.NO_EXCLUDE );
 
     this.taskExecutionService = new TaskExecutionServiceTracker( aBundleContext );
     this.annotationListener = new AnnotationListenerServiceTracker( aBundleContext );
     this.toolProgressListener = new ToolProgressListenerServiceTracker( aBundleContext );
-  }
-
-  /**
-   * Creates a new {@link BaseToolDialog} instance that is document modal.
-   * 
-   * @param aOwner
-   *          the owning window of this dialog;
-   * @param aTitle
-   *          the title of this dialog;
-   * @param aContext
-   *          the tool context to use in this dialog.
-   */
-  protected BaseToolDialog( final Window aOwner, final ToolContext aContext, final BundleContext aBundleContext,
-      final Tool<RESULT_TYPE> aTool )
-  {
-    this( aOwner, Dialog.ModalityType.MODELESS, aContext, aBundleContext, aTool );
   }
 
   // METHODS

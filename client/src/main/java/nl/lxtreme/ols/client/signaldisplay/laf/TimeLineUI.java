@@ -311,6 +311,23 @@ public class TimeLineUI extends ComponentUI
     return hints;
   }
 
+  @Override
+  public Dimension getPreferredSize( JComponent aComponent )
+  {
+    TimeLineView view = ( TimeLineView )aComponent;
+    TimeLineViewModel model = view.getModel();
+
+    int height = 0;
+    int width = 0;
+    if ( model.hasData() )
+    {
+      height = model.getPreferredHeight();
+      width = model.getPreferredWidth();
+    }
+
+    return new Dimension( width, height );
+  }
+
   /**
    * {@inheritDoc}
    */
@@ -325,7 +342,7 @@ public class TimeLineUI extends ComponentUI
       return;
     }
 
-    final int baseTickYpos = model.getTimeLineHeight() - VERTICAL_PADDING;
+    final int baseTickYpos = model.getPreferredHeight() - VERTICAL_PADDING;
     final int tickYpos = baseTickYpos - model.getTickHeight();
     final int majorTickYpos = baseTickYpos - model.getMajorTickHeight();
     final int minorTickYpos = baseTickYpos - model.getMinorTickHeight();
@@ -464,12 +481,12 @@ public class TimeLineUI extends ComponentUI
    */
   private String displayTime( final double aTime, final double aTimeScale, final int aPrecision )
   {
-    final UnitOfTime timeScale = UnitOfTime.toUnit( aTimeScale );
-    final UnitOfTime time = UnitOfTime.toUnit( aTime );
+    final Unit.Time timeScale = Unit.Time.toUnit( aTimeScale );
+    final Unit.Time time = Unit.Time.toUnit( aTime );
 
     // determine the magnitude of difference...
     int mag = 0;
-    UnitOfTime ptr = timeScale;
+    Unit.Time ptr = timeScale;
     while ( ( ptr != null ) && ( ptr != time ) )
     {
       ptr = ptr.predecessor();
@@ -541,7 +558,7 @@ public class TimeLineUI extends ComponentUI
   {
     if ( aModel.hasTimingData() )
     {
-      final UnitOfTime time = UnitOfTime.toUnit( aTime );
+      final Unit.Time time = Unit.Time.toUnit( aTime );
       return time.formatHumanReadable( aTime );
     }
 
@@ -614,13 +631,26 @@ public class TimeLineUI extends ComponentUI
       Polygon flagPoly = label.getPolygon();
 
       aCanvas.setColor( cursorTextColor );
-      aCanvas.fillPolygon( flagPoly );
+      // It appears that the fill/draw polygon routines are using some kind of
+      // optimization that fails for large values, causing the flags to be
+      // painted in a weird way...
+      // aCanvas.drawPolygon( flagPoly );
+      aCanvas.fillRect( label.boundaries.x, label.boundaries.y, label.boundaries.width, label.boundaries.height );
 
       aCanvas.setComposite( oldComposite );
       aCanvas.setStroke( oldStroke );
 
       aCanvas.setColor( cursorColor );
-      aCanvas.drawPolygon( flagPoly );
+      // It appears that the fill/draw polygon routines are using some kind of
+      // optimization that fails for large values, causing the flags to be
+      // painted in a weird way...
+      // aCanvas.drawPolygon( flagPoly );
+
+      aCanvas.drawLine( flagPoly.xpoints[0], flagPoly.ypoints[0], flagPoly.xpoints[1], flagPoly.ypoints[1] );
+      aCanvas.drawLine( flagPoly.xpoints[1], flagPoly.ypoints[1], flagPoly.xpoints[2], flagPoly.ypoints[2] );
+      aCanvas.drawLine( flagPoly.xpoints[2], flagPoly.ypoints[2], flagPoly.xpoints[3], flagPoly.ypoints[3] );
+      aCanvas.drawLine( flagPoly.xpoints[3], flagPoly.ypoints[3], flagPoly.xpoints[4], flagPoly.ypoints[4] );
+      aCanvas.drawLine( flagPoly.xpoints[4], flagPoly.ypoints[4], flagPoly.xpoints[0], flagPoly.ypoints[0] );
 
       final int textXpos = boundaries.x + ( label.mirrored ? PADDING_LEFT : PADDING_RIGHT );
       final int textYpos = boundaries.y + yOffset;

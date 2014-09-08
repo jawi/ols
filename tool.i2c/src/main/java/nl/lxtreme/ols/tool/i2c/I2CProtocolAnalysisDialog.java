@@ -529,7 +529,7 @@ public final class I2CProtocolAnalysisDialog extends BaseToolDialog<I2CDataSet> 
 
     final JComponent buttonPane = SwingComponentUtils.createButtonPane( runAnalysisButton, exportButton, closeButton );
 
-    SwingComponentUtils.setupDialogContentPane( this, contentPane, buttonPane, runAnalysisButton );
+    SwingComponentUtils.setupWindowContentPane( this, contentPane, buttonPane, runAnalysisButton );
 
     pack();
   }
@@ -553,8 +553,8 @@ public final class I2CProtocolAnalysisDialog extends BaseToolDialog<I2CDataSet> 
       {
         final I2CData ds = dataSet.get( i );
 
-        final String startTime = UnitOfTime.format( aAnalysisResult.getTime( ds.getStartSampleIndex() ) );
-        final String endTime = UnitOfTime.format( aAnalysisResult.getTime( ds.getEndSampleIndex() ) );
+        final String startTime = Unit.Time.format( aAnalysisResult.getTime( ds.getStartSampleIndex() ) );
+        final String endTime = Unit.Time.format( aAnalysisResult.getTime( ds.getEndSampleIndex() ) );
         final String data = ds.isEvent() ? "" : Character.toString( ( char )ds.getValue() );
 
         exporter.addRow( Integer.valueOf( i ), startTime, endTime, Boolean.valueOf( ds.isEvent() ), ds.getEventName(),
@@ -665,7 +665,7 @@ public final class I2CProtocolAnalysisDialog extends BaseToolDialog<I2CDataSet> 
 
               tr = aParent.addChild( TR ).addAttribute( "style", "background-color: " + bgColor + ";" );
               tr.addChild( TD ).addContent( String.valueOf( i ) );
-              tr.addChild( TD ).addContent( UnitOfTime.format( aAnalysisResult.getTime( data.getStartSampleIndex() ) ) );
+              tr.addChild( TD ).addContent( Unit.Time.format( aAnalysisResult.getTime( data.getStartSampleIndex() ) ) );
               tr.addChild( TD ).addContent( event );
               tr.addChild( TD );
               tr.addChild( TD );
@@ -677,7 +677,7 @@ public final class I2CProtocolAnalysisDialog extends BaseToolDialog<I2CDataSet> 
 
               tr = aParent.addChild( TR );
               tr.addChild( TD ).addContent( String.valueOf( i ) );
-              tr.addChild( TD ).addContent( UnitOfTime.format( aAnalysisResult.getTime( data.getStartSampleIndex() ) ) );
+              tr.addChild( TD ).addContent( Unit.Time.format( aAnalysisResult.getTime( data.getStartSampleIndex() ) ) );
               tr.addChild( TD ).addContent( "0x" + StringUtils.integerToHexString( value, 2 ) );
               tr.addChild( TD ).addContent( "0b" + StringUtils.integerToBinString( value, 8 ) );
               tr.addChild( TD ).addContent( String.valueOf( value ) );

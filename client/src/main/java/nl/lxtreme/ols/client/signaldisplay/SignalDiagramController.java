@@ -27,9 +27,11 @@ import java.beans.*;
 
 import javax.swing.*;
 
+import nl.lxtreme.ols.api.acquisition.AcquisitionResult;
 import nl.lxtreme.ols.api.data.*;
 import nl.lxtreme.ols.api.data.Cursor;
 import nl.lxtreme.ols.api.data.project.*;
+import nl.lxtreme.ols.client.Activator;
 import nl.lxtreme.ols.client.action.*;
 import nl.lxtreme.ols.client.actionmanager.*;
 import nl.lxtreme.ols.client.signaldisplay.ZoomController.ZoomEvent;
@@ -184,8 +186,12 @@ public final class SignalDiagramController implements ZoomListener, PropertyChan
    */
   public SignalElementType getSignalHoverType( final Point aPoint )
   {
-    final SignalElement element = getSignalDiagramModel().findSignalElement( aPoint );
-    return ( element != null ) ? element.getType() : null;
+    final IUIElement element = getSignalDiagramModel().findUIElement( aPoint );
+    if ( element instanceof SignalElement )
+    {
+      return ( ( SignalElement )element ).getType();
+    }
+    return null;
   }
 
   /**
@@ -261,7 +267,25 @@ public final class SignalDiagramController implements ZoomListener, PropertyChan
   }
 
   /**
-   * {@inheritDoc}
+   * Called when the zoom-level is changed, or restored.
+   * <p>
+   * In case the dead-center zooming does not work, make sure that:
+   * </p>
+   * <ul>
+   * <li>the view of the viewport is updated <b>directly</b> with respect to its
+   * dimensions and location;
+   * <li>the viewport is revalidated <b>before</b> the new location is set;
+   * <li>the zoom controller calculates the correct width and height of the view
+   * using the <b>new</b> zoom factor;
+   * <li>the center point is in the correct coordinate space;
+   * <li>only the width of the component is updated;
+   * <li>the zoom level is <em>restored</em> after changing the window
+   * dimensions;
+   * <li>the timeline and channel labels follow the width/height of the signal
+   * view.
+   * </ul>
+   * 
+   * @see http://stackoverflow.com/questions/115103
    */
   @Override
   public void notifyZoomChange( final ZoomEvent aEvent )
@@ -273,29 +297,51 @@ public final class SignalDiagramController implements ZoomListener, PropertyChan
       @Override
       public void run()
       {
+        final ZoomController zoomCtrl = aEvent.getZoomController();
+
         // Update the zoom action's state...
         Action zoomInAction = getActionManager().getAction( ZoomInAction.ID );
-        zoomInAction.setEnabled( dataAvailable && aEvent.canZoomIn() );
+        zoomInAction.setEnabled( dataAvailable && zoomCtrl.canZoomIn() );
 
         Action zoomOutAction = getActionManager().getAction( ZoomOutAction.ID );
-        zoomOutAction.setEnabled( dataAvailable && aEvent.canZoomOut() );
+        zoomOutAction.setEnabled( dataAvailable && zoomCtrl.canZoomOut() );
 
         Action zoomAllAction = getActionManager().getAction( ZoomAllAction.ID );
-        zoomAllAction.setEnabled( dataAvailable && !aEvent.isZoomAll() );
+        zoomAllAction.setEnabled( dataAvailable && !zoomCtrl.isZoomAll() );
 
         Action zoomOriginalAction = getActionManager().getAction( ZoomOriginalAction.ID );
-        zoomOriginalAction.setEnabled( dataAvailable && !aEvent.isZoomOriginal() );
+        zoomOriginalAction.setEnabled( dataAvailable && !zoomCtrl.isZoomDefault() );
 
-        // Update the main component's state...
-        final SignalDiagramComponent diagram = getSignalDiagram();
+        // Idea based on <http://stackoverflow.com/questions/115103>
+        JScrollPane scrollPane = SwingComponentUtils.getAncestorOfClass( JScrollPane.class, getSignalDiagram() );
+        if ( scrollPane == null )
+        {
+          // Nothing to do...
+          return;
+        }
 
-        // Recalculate all dimensions...
-        diagram.calculateDimensions();
-        // Notify that everything needs to be revalidated as well...
-        diagram.revalidateAll();
-        // Issue #100: in case the factor is changed, we need to repaint all
-        // components...
-        diagram.repaintAll();
+        JViewport viewport = scrollPane.getViewport();
+        JViewport timelineViewport = scrollPane.getColumnHeader();
+        Component view = viewport.getView();
+
+        if ( Activator.isDebugMode() )
+        {
+          System.out.printf( "Handling %s.%n", aEvent );
+        }
+
+        view.setPreferredSize( aEvent.getDimension() );
+
+        // Make sure to make the viewport aware of the new dimensions of the
+        // view, this needs to be done *before* the view is set to its new
+        // location...
+        viewport.doLayout();
+
+        view.setLocation( aEvent.getLocation() );
+
+        // Layout the timeline as well, as it needs probably be repainted as
+        // well, since the view itself is changed...
+        timelineViewport.doLayout();
+        timelineViewport.repaint();
       }
     } );
   }
@@ -323,15 +369,13 @@ public final class SignalDiagramController implements ZoomListener, PropertyChan
   }
 
   /**
-   * Recalculates the dimensions of the various components and repaints the
-   * entire component.
+   * Revalidates the various components and repaints the entire component.
    * <p>
    * SLOW METHOD: USE WITH CARE!
    * </p>
    */
-  public void recalculateDimensions()
+  public void revalidateAll()
   {
-    this.signalDiagram.calculateDimensions();
     this.signalDiagram.revalidateAll();
     this.signalDiagram.repaintAll();
   }
@@ -442,7 +486,24 @@ public final class SignalDiagramController implements ZoomListener, PropertyChan
   {
     getSignalDiagramModel().setDataModel( aDataSet );
 
-    recalculateDimensions();
+    // will update the view and show the signals...
+    revalidateAll();
+
+    // optionally center the view on the trigger moment...
+    boolean autoCenterOnTrigger = UIManager.getBoolean( UIManagerKeys.AUTO_CENTER_TO_TRIGGER_AFTER_CAPTURE );
+    final AcquisitionResult capturedData = aDataSet.getCapturedData();
+
+    // Issue #181
+    if ( autoCenterOnTrigger && ( capturedData != null ) && capturedData.hasTriggerData() )
+    {
+      SwingComponentUtils.invokeOnEDT( new Runnable()
+      {
+        public void run()
+        {
+          scrollToTimestamp( capturedData.getTriggerPosition() );
+        }
+      } );
+    }
   }
 
   /**
@@ -451,7 +512,13 @@ public final class SignalDiagramController implements ZoomListener, PropertyChan
   public void setDefaultSettings()
   {
     // Set the correct defaults...
-    setSnapModeEnabled( UIManager.getBoolean( UIManagerKeys.SNAP_CURSORS_DEFAULT ) );
+    final boolean snapCursorsDefault = UIManager.getBoolean( UIManagerKeys.SNAP_CURSORS_DEFAULT );
+    final boolean snapCursorsValue = getSignalDiagramModel().isSnapCursorMode();
+
+    if ( snapCursorsValue ^ snapCursorsDefault )
+    {
+      setSnapModeEnabled( snapCursorsDefault );
+    }
   }
 
   /**
@@ -473,39 +540,52 @@ public final class SignalDiagramController implements ZoomListener, PropertyChan
   {
     SignalDiagramModel model = getSignalDiagramModel();
 
-    final SignalElement signalElement = model.findSignalElement( aPosition );
+    final IUIElement element = model.findUIElement( aPosition );
+    if ( !( element instanceof SignalElement ) )
+    {
+      return;
+    }
 
+    SignalElement signalElement = ( SignalElement )element;
     int oldIndex = model.getSelectedChannelIndex();
     int newIndex = -1;
 
-    if ( ( signalElement != null ) && signalElement.isDigitalSignal() )
+    if ( signalElement.isDigitalSignal() )
     {
       // Update the selected channel index...
       newIndex = signalElement.getChannel().getIndex();
     }
-
     if ( oldIndex != newIndex )
     {
       model.setSelectedChannelIndex( newIndex );
+    }
 
-      ChannelLabelsView channelLabelsView = getChannelLabelsView();
-      if ( channelLabelsView != null )
+    ChannelLabelsView channelLabelsView = getChannelLabelsView();
+    if ( channelLabelsView != null )
+    {
+      Rectangle rect;
+      int width = channelLabelsView.getWidth();
+
+      // Repaint the affected areas
+      if ( signalElement != null )
       {
-        int width = channelLabelsView.getWidth();
+        rect = new Rectangle( 0, signalElement.getYposition(), width, signalElement.getHeight() );
+        channelLabelsView.repaint( rect );
 
-        // Repaint the affected areas
-        if ( signalElement != null )
-        {
-          Rectangle rect1 = new Rectangle( 0, signalElement.getYposition(), width, signalElement.getHeight() );
-          channelLabelsView.repaint( rect1 );
-        }
+        ElementGroup signalGroup = signalElement.getGroup();
+        rect = new Rectangle( 0, signalGroup.getYposition(), width, signalGroup.getHeight() );
+        channelLabelsView.repaint( rect );
+      }
 
-        SignalElement currentElement = model.getSignalElementManager().getChannelByIndex( oldIndex );
-        if ( currentElement != null )
-        {
-          Rectangle rect2 = new Rectangle( 0, currentElement.getYposition(), width, currentElement.getHeight() );
-          channelLabelsView.repaint( rect2 );
-        }
+      SignalElement currentElement = model.getSignalElementManager().getDigitalSignalByChannelIndex( oldIndex );
+      if ( currentElement != null )
+      {
+        rect = new Rectangle( 0, currentElement.getYposition(), width, currentElement.getHeight() );
+        channelLabelsView.repaint( rect );
+
+        ElementGroup currentGroup = currentElement.getGroup();
+        rect = new Rectangle( 0, currentGroup.getYposition(), width, currentGroup.getHeight() );
+        channelLabelsView.repaint( rect );
       }
     }
   }

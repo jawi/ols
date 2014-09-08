@@ -216,7 +216,8 @@ public class CsvExporterTest
       value++;
     }
 
-    CapturedData capData = new CapturedData( values, timestamps, aTriggerPos, aSampleRate, aChannelCount, mask, value );
+    CapturedData capData = new CapturedData( values, timestamps, aTriggerPos, aSampleRate, aChannelCount, mask,
+        value - 1 );
 
     StubDataSet dataSet = new StubDataSet();
     dataSet.setCapturedData( capData );

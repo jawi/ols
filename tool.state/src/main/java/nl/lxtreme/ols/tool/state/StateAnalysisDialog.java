@@ -261,7 +261,7 @@ public final class StateAnalysisDialog extends BaseToolDialog<AcquisitionResult>
 
     final JComponent buttons = SwingComponentUtils.createButtonPane( runAnalysisButton, closeButton );
 
-    SwingComponentUtils.setupDialogContentPane( this, pane, buttons, runAnalysisButton );
+    SwingComponentUtils.setupWindowContentPane( this, pane, buttons, runAnalysisButton );
   }
 }
 

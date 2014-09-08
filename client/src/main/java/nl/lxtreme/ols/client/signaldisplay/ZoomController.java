@@ -21,12 +21,22 @@
 package nl.lxtreme.ols.client.signaldisplay;
 
 
-import java.awt.*;
-import java.util.*;
+import static nl.lxtreme.ols.util.swing.SwingComponentUtils.getAncestorOfClass;
 
-import javax.swing.event.*;
+import java.awt.Dimension;
+import java.awt.Insets;
+import java.awt.Point;
+import java.awt.Rectangle;
+import java.awt.event.MouseWheelEvent;
+import java.util.EventListener;
+import java.util.concurrent.atomic.AtomicReference;
 
-import nl.lxtreme.ols.client.signaldisplay.model.*;
+import javax.swing.JComponent;
+import javax.swing.JScrollBar;
+import javax.swing.JScrollPane;
+import javax.swing.event.EventListenerList;
+
+import nl.lxtreme.ols.client.signaldisplay.model.SignalDiagramModel;
 
 
 /**
@@ -37,143 +47,93 @@ public final class ZoomController
   // INNER TYPES
 
   /**
-   * Denotes a zoom-event.
+   * Denotes the value with which zooming in/out should happen.
    */
-  public static final class ZoomEvent
+  public static enum ZoomAction
+  {
+    // CONSTANTS
+
+    /**
+     * Keeps zoom-level as-is, useful for redrawing the views after changing
+     * their dimensions.
+     */
+    RESTORE,
+    /** Zooms in with a constant factor. */
+    IN,
+    /** Zooms out with a constant factor. */
+    OUT,
+    /** Zooms to a default level. */
+    DEFAULT,
+    /** Zooms to a least possible zoom level, showing everything in one view. */
+    ALL,
+    /** Zooms to a maximum possible zoom level, showing the most detailed view. */
+    MAXIMUM;
+  }
+
+  /**
+   * Denotes a zooming event.
+   */
+  public final class ZoomEvent
   {
     // VARIABLES
 
-    private final double minZoomLevel;
-    private final double defaultZoomLevel;
-    private final double maxZoomLevel;
-    private final double newFactor;
-    private final double oldFactor;
-    private final Point hotSpot;
+    private final double factor;
+    private final ZoomAction action;
+    private final Rectangle visibleRect;
 
     // CONSTRUCTORS
 
     /**
      * Creates a new {@link ZoomEvent} instance.
-     * 
-     * @param aFactor
-     * @param aMinZoomLevel
-     * @param aMaxZoomLevel
      */
-    public ZoomEvent( final double aNewFactor, final double aOldFactor, final double aMinZoomLevel,
-        final double aDefaultLevel, final double aMaxZoomLevel, final Point aHotSpot )
+    public ZoomEvent( final ZoomAction aAction, final double aFactor, final Rectangle aVisibleRect )
     {
-      this.newFactor = aNewFactor;
-      this.oldFactor = aOldFactor;
-      this.minZoomLevel = aMinZoomLevel;
-      this.defaultZoomLevel = aDefaultLevel;
-      this.maxZoomLevel = aMaxZoomLevel;
-      this.hotSpot = aHotSpot == null ? null : new Point( aHotSpot );
+      this.action = aAction;
+      this.factor = aFactor;
+      this.visibleRect = aVisibleRect;
     }
 
     // METHODS
 
     /**
-     * Returns whether or not we can zoom in further.
-     * 
-     * @return <code>true</code> if we can zoom in, <code>false</code> if the
-     *         maximum zoom level has been reached.
+     * @return the proposed view dimensions, never <code>null</code>.
      */
-    public boolean canZoomIn()
+    public Dimension getDimension()
     {
-      final double maxZoomLevel = getMaxZoomLevel();
-      return getFactor() < maxZoomLevel;
+      return this.visibleRect.getSize();
     }
 
     /**
-     * Returns whether or not we can zoom out further.
+     * Returns the <em>relative</em> zoom factor.
      * 
-     * @return <code>true</code> if we can zoom out, <code>false</code> if the
-     *         maximum zoom level has been reached.
-     */
-    public boolean canZoomOut()
-    {
-      final double minZoomLevel = getMinZoomLevel();
-      return getFactor() > minZoomLevel;
-    }
-
-    /**
-     * Returns the current value of factor.
-     * 
-     * @return the factor
+     * @return the zoom factor, >= 0.0.
      */
     public double getFactor()
     {
-      return this.newFactor;
+      return this.factor;
     }
 
     /**
-     * Returns the "hot spot" of this zoom event, e.g., where center location of
-     * the zoom in/out action.
-     * 
-     * @return the "hot spot" on screen, can be <code>null</code>.
+     * @return the proposed view location, can be <code>null</code>.
      */
-    public Point getHotSpot()
+    public Point getLocation()
     {
-      return this.hotSpot;
+      return this.visibleRect.getLocation();
     }
 
     /**
-     * Returns the current value of maxZoomLevel.
-     * 
-     * @return the maxZoomLevel
+     * @return the current zoom controller, never <code>null</code>.
      */
-    public double getMaxZoomLevel()
+    public ZoomController getZoomController()
     {
-      return this.maxZoomLevel;
+      return ZoomController.this;
     }
 
-    /**
-     * Returns the current value of minZoomLevel.
-     * 
-     * @return the minZoomLevel
-     */
-    public double getMinZoomLevel()
+    @Override
+    public String toString()
     {
-      return this.minZoomLevel;
-    }
-
-    /**
-     * Returns the current value of oldFactor.
-     * 
-     * @return the oldFactor
-     */
-    public double getOldFactor()
-    {
-      return this.oldFactor;
-    }
-
-    /**
-     * Returns whether or not we're zooming to fit all.
-     * 
-     * @return <code>true</code> if zoom-all is enabled, <code>false</code>
-     *         otherwise.
-     */
-    public boolean isZoomAll()
-    {
-      return Math.abs( this.newFactor - this.minZoomLevel ) < 1.0E-6;
-    }
-
-    /**
-     * @return <code>true</code> if the default zoom level is selected,
-     *         <code>false</code> otherwise.
-     */
-    public boolean isZoomMaximum()
-    {
-      return Math.abs( this.newFactor - this.maxZoomLevel ) < 1.0E-6;
-    }
-
-    /**
-     * @return <code>true</code> if the default zoom level is selected,
-     *         <code>false</code> otherwise.
-     */
-    public boolean isZoomOriginal()
-    {
-      return Math.abs( this.newFactor - this.defaultZoomLevel ) < 1.0E-6;
+      return String.format( "ZoomEvent: (Action = %s, ZF = %f, Rect = %s)", this.action, Double.valueOf( getFactor() ),
+          this.visibleRect );
     }
   }
 
@@ -195,25 +155,43 @@ public final class ZoomController
   }
 
   /**
-   * Denotes the value with which zooming in/out should happen.
+   * Small container for keeping the zoom state.
    */
-  public static enum ZoomValue
+  private static class ZoomStateHolder
   {
-    // CONSTANTS
+    // VARIABLES
 
-    /** Zooms in with a constant factor. */
-    IN,
-    /** Zooms out with a constant factor. */
-    OUT,
-    /** Zooms to a default level. */
-    DEFAULT,
-    /** Zooms to a least possible zoom level, showing everything in one view. */
-    ALL,
-    /** Zooms to a maximum possible zoom level, showing the most detailed view. */
-    MAXIMUM;
+    final double factor;
+    final ZoomAction lastAction;
+
+    // CONSTRUCTORS
+
+    public ZoomStateHolder()
+    {
+      this( ZoomAction.DEFAULT, DEFAULT_ZOOM_FACTOR );
+    }
+
+    public ZoomStateHolder( ZoomAction aAction, double aFactor )
+    {
+      this.lastAction = aAction;
+      this.factor = aFactor;
+    }
   }
 
   // CONSTANTS
+
+  /**
+   * This is what the width of the view component can be at maximum. Swing is
+   * entirely based 32-bit signed values, meaning that the theoretical width
+   * could be {@link Integer#MAX_VALUE}. However, due the use signed integers,
+   * most calculations done with a component of with {@link Integer#MAX_VALUE}
+   * will cause an "overflow" and make the values wrap around to negative
+   * values. This is especially done when determining whether or not values are
+   * in the clipping region of the component. To overcome this, we zero out the
+   * lowest 16-bits in order to have enough head-room for integer calculations
+   * without "overflowing".
+   */
+  static final int MAX_COMP_WIDTH = 0x7fff0000;
 
   /** The default/original zoom factor. */
   private static final double DEFAULT_ZOOM_FACTOR = 1.0;
@@ -225,10 +203,7 @@ public final class ZoomController
   private final SignalDiagramController controller;
   private final EventListenerList eventListeners;
 
-  private final Object LOCK = new Object();
-
-  private volatile ZoomValue value = ZoomValue.DEFAULT;
-  private volatile double factor = DEFAULT_ZOOM_FACTOR;
+  private final AtomicReference<ZoomStateHolder> zoomHolderRef;
 
   // CONSTRUCTORS
 
@@ -242,6 +217,8 @@ public final class ZoomController
   {
     this.controller = aController;
     this.eventListeners = new EventListenerList();
+
+    this.zoomHolderRef = new AtomicReference<ZoomStateHolder>( new ZoomStateHolder() );
   }
 
   // METHODS
@@ -258,16 +235,43 @@ public final class ZoomController
   }
 
   /**
+   * Returns whether or not we can zoom in further.
+   * 
+   * @return <code>true</code> if we can zoom in, <code>false</code> if the
+   *         maximum zoom level has been reached.
+   */
+  public boolean canZoomIn()
+  {
+    final double maxZoomLevel = getMaxZoomLevel();
+    final double zoomFactor = getFactor();
+    return zoomFactor < maxZoomLevel;
+  }
+
+  /**
+   * Returns whether or not we can zoom out further.
+   * 
+   * @return <code>true</code> if we can zoom out, <code>false</code> if the
+   *         maximum zoom level has been reached.
+   */
+  public boolean canZoomOut()
+  {
+    final double minZoomLevel = getMinZoomLevel();
+    final double zoomFactor = getFactor();
+    return zoomFactor > minZoomLevel;
+  }
+
+  /**
    * Returns the current value of factor.
    * 
    * @return the factor
    */
   public double getFactor()
   {
-    final double result;
-    synchronized ( this.LOCK )
+    ZoomStateHolder zh = this.zoomHolderRef.get();
+    double result = zh.factor;
+    if ( Double.isNaN( result ) )
     {
-      result = Double.isNaN( this.factor ) ? DEFAULT_ZOOM_FACTOR : this.factor;
+      result = DEFAULT_ZOOM_FACTOR;
     }
     return result;
   }
@@ -280,10 +284,10 @@ public final class ZoomController
    */
   public boolean isZoomAll()
   {
-    synchronized ( this.LOCK )
-    {
-      return ( this.value == ZoomValue.ALL );
-    }
+    ZoomStateHolder zh = this.zoomHolderRef.get();
+    ZoomAction value = zh.lastAction;
+
+    return ( value == ZoomAction.ALL );
   }
 
   /**
@@ -292,10 +296,10 @@ public final class ZoomController
    */
   public boolean isZoomDefault()
   {
-    synchronized ( this.LOCK )
-    {
-      return ( this.value == ZoomValue.DEFAULT );
-    }
+    ZoomStateHolder zh = this.zoomHolderRef.get();
+    ZoomAction value = zh.lastAction;
+
+    return ( value == ZoomAction.DEFAULT );
   }
 
   /**
@@ -314,15 +318,45 @@ public final class ZoomController
    */
   public void restoreZoomLevel()
   {
-    ZoomValue _value;
-    double _factor;
-    synchronized ( this.LOCK )
+    ZoomAction action = ZoomAction.DEFAULT;
+    double factor = DEFAULT_ZOOM_FACTOR;
+
+    ZoomStateHolder zh = this.zoomHolderRef.get();
+    if ( zh != null )
     {
-      _value = this.value;
-      _factor = this.factor;
+      action = zh.lastAction;
+      factor = zh.factor;
+    }
+    if ( action == null || ZoomAction.IN == action || ZoomAction.OUT == action )
+    {
+      action = ZoomAction.RESTORE;
     }
 
-    zoom( _value, _factor, null );
+    performZoomAction( action, factor, null );
+  }
+
+  /**
+   * Zooms in or out with a constant factor, according to the given mouse wheel
+   * event.
+   * 
+   * @param aRotation
+   *          the mouse wheel rotation, either positive or negative;
+   * @param aPoint
+   *          the location of the mouse pointer, can be <code>null</code>.
+   * @see MouseWheelEvent#getWheelRotation()
+   */
+  public void zoom( int aRotation, Point aPoint )
+  {
+    if ( aRotation > 0 )
+    {
+      double ratio = 1.0 / ( aRotation * DEFAULT_ZOOM_RATIO );
+      performZoomAction( ZoomAction.OUT, ratio, aPoint );
+    }
+    else if ( aRotation < 0 )
+    {
+      double ratio = ( -aRotation * DEFAULT_ZOOM_RATIO );
+      performZoomAction( ZoomAction.IN, ratio, aPoint );
+    }
   }
 
   /**
@@ -330,7 +364,7 @@ public final class ZoomController
    */
   public void zoomAll()
   {
-    zoom( ZoomValue.ALL, getMinZoomLevel(), null );
+    performZoomAction( ZoomAction.ALL, 0.0 /* not used */, null );
   }
 
   /**
@@ -338,18 +372,15 @@ public final class ZoomController
    */
   public void zoomDefault()
   {
-    zoom( ZoomValue.DEFAULT, getDefaultZoomLevel(), null );
+    performZoomAction( ZoomAction.DEFAULT, 0.0 /* not used */, null );
   }
 
   /**
-   * Zooms in with a constant factor.
-   * 
-   * @param aCenterPoint
-   *          the center point for the zoom action, may be <code>null</code>.
+   * Zooms in with a constant factor around the current view-center.
    */
-  public void zoomIn( final Point aCenterPoint )
+  public void zoomIn()
   {
-    zoom( ZoomValue.IN, DEFAULT_ZOOM_RATIO, aCenterPoint );
+    performZoomAction( ZoomAction.IN, DEFAULT_ZOOM_RATIO, null );
   }
 
   /**
@@ -357,18 +388,15 @@ public final class ZoomController
    */
   public void zoomMaximum()
   {
-    zoom( ZoomValue.ALL, getMaxZoomLevel(), null );
+    performZoomAction( ZoomAction.MAXIMUM, 0.0 /* not used */, null );
   }
 
   /**
-   * Zooms out with a constant factor.
-   * 
-   * @param aCenterPoint
-   *          the center point for the zoom action, may be <code>null</code>.
+   * Zooms out with a constant factor around the current view-center.
    */
-  public void zoomOut( final Point aCenterPoint )
+  public void zoomOut()
   {
-    zoom( ZoomValue.OUT, 1.0 / DEFAULT_ZOOM_RATIO, aCenterPoint );
+    performZoomAction( ZoomAction.OUT, 1.0 / DEFAULT_ZOOM_RATIO, null );
   }
 
   /**
@@ -384,36 +412,202 @@ public final class ZoomController
 
     // Zoom region...
 
-    final SignalDiagramModel model = this.controller.getSignalDiagramModel();
-    final Rectangle viewSize = getSignalDiagram().getVisibleViewSize();
+    return true;
+  }
 
-    final int width = Math.abs( aPoint2.x - aPoint1.x );
-    final Long triggerPos = model.getTriggerPosition();
+  /**
+   * Determines the new zoom state for the given action and factor.
+   * 
+   * @param aAction
+   *          the zoom action to perform, cannot be <code>null</code>;
+   * @param aFactor
+   *          the relative zoom factor to apply.
+   * @return the new zoom state, never <code>null</code>.
+   */
+  private ZoomStateHolder calculateNewZoomState( ZoomAction aAction, double aFactor )
+  {
+    final double oldFactor = getFactor();
 
-    ZoomEvent event;
-    long ts;
-    synchronized ( this.LOCK )
+    final double minZoomLevel = getMinZoomLevel();
+    final double maxZoomLevel = getMaxZoomLevel();
+    final double defaultZoomLevel = Math.max( minZoomLevel, DEFAULT_ZOOM_FACTOR );
+
+    double newFactor;
+    ZoomAction newValue = aAction;
+
+    // Determine what to do...
+    switch ( aAction )
     {
-      double oldFactor = getFactor();
+      case IN:
+      case OUT:
+        // The given factor is relative...
+        newFactor = aFactor * oldFactor;
+        break;
 
-      int midX = ( int )( aPoint1.x + ( width / 2.0 ) );
+      case ALL:
+        newFactor = minZoomLevel;
+        break;
 
-      ts = ( long )Math.ceil( midX / oldFactor );
-      if ( triggerPos != null )
-      {
-        ts -= triggerPos.longValue();
-      }
+      case MAXIMUM:
+        newFactor = maxZoomLevel;
+        break;
 
-      Point hs = new Point( ( int )( ts * oldFactor ), 0 );
+      case DEFAULT:
+        newFactor = defaultZoomLevel;
+        break;
 
-      double newFactor = ( viewSize.width / ( double )width );
-
-      event = createZoomEvent( oldFactor, newFactor, hs );
+      case RESTORE:
+      default:
+        newFactor = oldFactor;
+        break;
     }
 
-    fireZoomEvent( event );
+    // Make sure the default zoom-level is selected when we're close enough to
+    // its value...
+    if ( Math.abs( newFactor - defaultZoomLevel ) < 1.0e-6 )
+    {
+      newFactor = defaultZoomLevel;
+      newValue = ZoomAction.DEFAULT;
+    }
 
-    return true;
+    // Make sure we do not go beyond the minimum and maximum zoom levels...
+    if ( Double.compare( newFactor, minZoomLevel ) <= 0.0 )
+    {
+      newFactor = minZoomLevel;
+      newValue = ZoomAction.ALL;
+    }
+    else if ( Double.compare( newFactor, maxZoomLevel ) >= 0.0 )
+    {
+      newFactor = maxZoomLevel;
+      newValue = ZoomAction.MAXIMUM;
+    }
+
+    return new ZoomStateHolder( newValue, newFactor );
+  }
+
+  /**
+   * Calculates the visible rectangle of the view component given a zoom-action,
+   * a relative zoom-factor, a center position and the new zoom state.
+   * 
+   * @return a rectangle denoting the visible view of the component, never
+   *         <code>null</code>.
+   */
+  private Rectangle calculateVisibleViewRect( final ZoomStateHolder aZoomState, final Point aCenterPoint )
+  {
+    SignalDiagramComponent signalDiagram = getSignalDiagram();
+    SignalDiagramModel model = getModel();
+
+    // Take the location of the signal diagram component, as it is the
+    // only one that is shifted in location by its (parent) scrollpane...
+    Point currentLocation = signalDiagram.getLocation();
+
+    Rectangle currentVisibleRect = signalDiagram.getVisibleRect();
+
+    int mx = ( aCenterPoint != null ) ? aCenterPoint.x : ( int )currentVisibleRect.getCenterX();
+
+    Rectangle visibleRect = new Rectangle();
+
+    // Calculate the relative factor we're using...
+    double relFactor = aZoomState.factor / getFactor();
+
+    // Calculate the new dimensions and the new location of the view...
+    switch ( aZoomState.lastAction )
+    {
+      case IN:
+      case OUT:
+      {
+        // Use the given (relative!) factor to calculate the new
+        // width of the view!
+        Dimension viewSize = signalDiagram.getPreferredSize();
+        visibleRect.width = ( int )( viewSize.width * relFactor );
+        visibleRect.height = currentVisibleRect.height;
+        // Recalculate the new screen position of the visible view
+        // rectangle; the X-coordinate shifts relative to the zoom
+        // factor, while the Y-coordinate remains as-is...
+        visibleRect.x = ( int )Math.round( currentLocation.x - ( mx * relFactor ) + mx );
+        visibleRect.y = currentLocation.y;
+        break;
+      }
+      case ALL:
+      {
+        // The new width of the view is always the same as the width of the view
+        // size...
+        Dimension outerViewSize = getOuterViewSize( signalDiagram, true, true );
+        visibleRect.width = outerViewSize.width;
+        visibleRect.height = outerViewSize.height;
+        // Since everything fits on screen, we can reset the view location to
+        // its initial X-coordinate...
+        visibleRect.x = 0;
+        visibleRect.y = currentLocation.y;
+        break;
+      }
+      case MAXIMUM:
+      case DEFAULT:
+      {
+        // Recalculate the new width based on the max./default zoom level...
+        visibleRect.width = ( int )( model.getAbsoluteLength() * aZoomState.factor );
+        visibleRect.height = currentVisibleRect.height;
+        // Recalculate the new screen position of the visible view
+        // rectangle; the X-coordinate shifts relative to the zoom
+        // factor, while the Y-coordinate remains as-is...
+        visibleRect.x = ( int )Math.round( currentLocation.x - ( mx * relFactor ) + mx );
+        visibleRect.y = currentLocation.y;
+        break;
+      }
+      case RESTORE:
+      default:
+      {
+        // Recalculate the new width based on the old zoom level...
+        visibleRect.width = ( int )( model.getAbsoluteLength() * aZoomState.factor );
+        visibleRect.height = currentVisibleRect.height;
+        // Keep the location as-is...
+        visibleRect.x = currentLocation.x;
+        visibleRect.y = currentLocation.y;
+        break;
+      }
+    }
+
+    // Ensure the visible location stays in the calculated minimum and
+    // maximum...
+    int maxX = ( visibleRect.width - currentVisibleRect.width );
+    if ( Math.abs( visibleRect.x ) > maxX )
+    {
+      visibleRect.x = -maxX;
+    }
+    // View locations appear to be always negative with respect to the (0,
+    // 0)-coordinate...
+    if ( visibleRect.x > 0 )
+    {
+      visibleRect.x = -visibleRect.x;
+    }
+
+    // Ensure the minimum height of the view is adhered...
+    int minimumHeight = model.getMinimumHeight();
+    if ( visibleRect.height < minimumHeight )
+    {
+      visibleRect.height = minimumHeight;
+    }
+    // Try to suppress the vertical scrollbar, if possible...
+    if ( visibleRect.width > currentVisibleRect.width )
+    {
+      JScrollPane scrollPane = getAncestorOfClass( JScrollPane.class, signalDiagram );
+      if ( scrollPane != null )
+      {
+        JScrollBar horizontalScrollBar = scrollPane.getHorizontalScrollBar();
+        int sbHeight = horizontalScrollBar.getHeight();
+        // When the width of the view is wider than we can currently view, the
+        // horizontal scrollbar is not yet visible, and we have enough room
+        // vertically, subtract the scrollbar height in order to suppress the
+        // vertical scrollbar...
+        if ( !horizontalScrollBar.isVisible() && ( visibleRect.height > ( minimumHeight + sbHeight ) )
+            && ( visibleRect.height == currentVisibleRect.height ) )
+        {
+          visibleRect.height -= sbHeight;
+        }
+      }
+    }
+
+    return visibleRect;
   }
 
   /**
@@ -421,9 +615,9 @@ public final class ZoomController
    * 
    * @return a new {@link ZoomEvent} instance, never <code>null</code>.
    */
-  private ZoomEvent createZoomEvent( final double aOldFactor, final double aNewFactor, final Point aHotSpot )
+  private ZoomEvent createZoomEvent( ZoomAction aAction, final double aFactor, final Rectangle aVisibleRect )
   {
-    return new ZoomEvent( aNewFactor, aOldFactor, getMinZoomLevel(), getDefaultZoomLevel(), getMaxZoomLevel(), aHotSpot );
+    return new ZoomEvent( aAction, aFactor, aVisibleRect );
   }
 
   /**
@@ -442,19 +636,6 @@ public final class ZoomController
   }
 
   /**
-   * @return the default zoom level.
-   */
-  private double getDefaultZoomLevel()
-  {
-    double minLevel = getMinZoomLevel();
-    if ( minLevel > DEFAULT_ZOOM_FACTOR )
-    {
-      return minLevel;
-    }
-    return DEFAULT_ZOOM_FACTOR;
-  }
-
-  /**
    * Determines the maximum zoom level that we can handle without causing
    * display problems.
    * <p>
@@ -463,6 +644,7 @@ public final class ZoomController
    * </p>
    * 
    * @return a maximum zoom level.
+   * @see #MAX_COMP_WIDTH
    */
   private double getMaxZoomLevel()
   {
@@ -473,7 +655,8 @@ public final class ZoomController
     }
 
     final double length = model.getAbsoluteLength();
-    return Math.floor( Integer.MAX_VALUE / length );
+
+    return MAX_COMP_WIDTH / length;
   }
 
   /**
@@ -484,16 +667,18 @@ public final class ZoomController
    */
   private double getMinZoomLevel()
   {
-    final SignalDiagramModel model = getModel();
+    final SignalDiagramComponent signalDiagram = getSignalDiagram();
+    final SignalDiagramModel model = signalDiagram.getModel();
     if ( !model.hasData() )
     {
       return DEFAULT_ZOOM_FACTOR;
     }
 
-    final double width = getVisibleViewSize().getWidth();
+    final double width = getOuterViewSize( signalDiagram, true, true ).width;
     final double length = model.getAbsoluteLength();
+    final double min = 1.0 / MAX_COMP_WIDTH;
 
-    return width / length;
+    return Math.max( min, width / length );
   }
 
   /**
@@ -513,115 +698,59 @@ public final class ZoomController
   }
 
   /**
-   * @return the view size of the current view, never <code>null</code>.
+   * Performs the zoom action as given using the given relative factor and
+   * center point.
+   * 
+   * @param aAction
+   * @param aFactor
+   * @param aCenterPoint
    */
-  private Rectangle getVisibleViewSize()
+  private void performZoomAction( final ZoomAction aAction, final double aFactor, final Point aCenterPoint )
   {
-    return getSignalDiagram().getVisibleViewSize();
+    ZoomStateHolder newState = calculateNewZoomState( aAction, aFactor );
+    Rectangle visibleRect = calculateVisibleViewRect( newState, aCenterPoint );
+
+    ZoomStateHolder oldState;
+    do
+    {
+      oldState = this.zoomHolderRef.get();
+    }
+    while ( !this.zoomHolderRef.compareAndSet( oldState, newState ) );
+
+    fireZoomEvent( createZoomEvent( aAction, aFactor, visibleRect ) );
   }
 
   /**
-   * Zooms in with a factor 2.
+   * @return the view size of the given component, including any width/height of
+   *         visible scrollbars.
    */
-  private void zoom( final ZoomValue aZoomValue, final double aFactor, final Point aHotSpot )
+  private Dimension getOuterViewSize( JComponent aComponent, boolean aIncludeVertScrollbar,
+      boolean aIncludeHorzScrollbar )
   {
-    double oldFactor = getFactor();
-    double newFactor = aFactor; // assume the factor is absolute...
-    ZoomValue newValue = aZoomValue;
+    final Rectangle rect = aComponent.getVisibleRect();
 
-    // Ensure the zoom level is always bounded to the current view and the
-    // number of samples...
-    final Rectangle visibleViewSize = getVisibleViewSize();
-    final SignalDiagramModel model = getModel();
-
-    double currentViewWidth = visibleViewSize.getWidth();
-    double absLength = model.getAbsoluteLength();
-
-    // Make sure less samples do not cause empty bars on the screen...
-    double oldViewWidth = Math.round( absLength * oldFactor );
-
-    if ( ( aZoomValue == ZoomValue.IN ) || ( aZoomValue == ZoomValue.OUT ) )
+    final JScrollPane scrollPane = getAncestorOfClass( JScrollPane.class, aComponent );
+    if ( scrollPane != null )
     {
-      // The given factor is relative...
-      newFactor = aFactor * oldFactor;
-      newValue = null;
-    }
-    else if ( aZoomValue == ZoomValue.ALL )
-    {
-      newFactor = currentViewWidth / absLength;
-    }
-
-    if ( oldViewWidth < currentViewWidth )
-    {
-      newFactor = currentViewWidth / absLength;
-    }
-
-    double defaultZoomLevel = getDefaultZoomLevel();
-    double minZoomLevel = getMinZoomLevel();
-    double maxZoomLevel = getMaxZoomLevel();
-
-    if ( Math.abs( newFactor - defaultZoomLevel ) < 1.0e-6 )
-    {
-      newFactor = defaultZoomLevel;
-      newValue = ZoomValue.DEFAULT;
-    }
-
-    if ( Double.compare( newFactor, minZoomLevel ) <= 0.0 )
-    {
-      newFactor = minZoomLevel;
-      newValue = ZoomValue.ALL;
-    }
-    else if ( Double.compare( newFactor, maxZoomLevel ) >= 0.0 )
-    {
-      newFactor = maxZoomLevel;
-      newValue = ZoomValue.MAXIMUM;
-    }
-
-    if ( ( aZoomValue == ZoomValue.IN ) || ( aZoomValue == ZoomValue.OUT ) )
-    {
-      // Idea based on <http://stackoverflow.com/questions/115103>
-      SignalDiagramComponent signalDiagram = getSignalDiagram();
-
-      // Take the visibleRect of the signal diagram, as it tells us where we're
-      // located in the scrollpane; this information we need to allow
-      // dead-center zooming...
-      double mx = signalDiagram.getVisibleRect().getCenterX();
-      double my = 0;
-
-      if ( aHotSpot != null )
+      // Take care of the fact that scrollbars *can* be visible, which is not
+      // what we want here. We want to have the outside boundaries, including
+      // the scrollbars...
+      JScrollBar scrollBar = scrollPane.getVerticalScrollBar();
+      if ( aIncludeVertScrollbar && scrollBar.isVisible() )
       {
-        mx = aHotSpot.x;
+        rect.width += scrollBar.getWidth();
+      }
+      scrollBar = scrollPane.getHorizontalScrollBar();
+      if ( aIncludeHorzScrollbar && scrollBar.isVisible() )
+      {
+        rect.height += scrollBar.getHeight();
       }
 
-      // Calculate the timestamp from the center position of the visible view
-      // rectangle; after which we lookup the exact timestamp that is at that
-      // position. If found, we'll use that timestamp to recalculate the new
-      // center position in the new zoom factor...
-      final long timestamp = ( long )( mx / oldFactor );
-      final int tsIdx = model.getTimestampIndex( timestamp );
-
-      mx = Math.floor( model.getTimestamps()[tsIdx] * oldFactor );
-
-      // Take the location of the signal diagram component, as it is the only
-      // one that is shifted in location by its (parent) scrollpane...
-      final Point location = signalDiagram.getLocation();
-
-      // Recalculate the new screen position of the visible view rectangle...
-      int newX = ( int )( location.getX() - ( ( mx * aFactor ) - mx ) );
-      int newY = ( int )( location.getY() - ( ( my * aFactor ) - my ) );
-
-      signalDiagram.setLocation( newX, newY );
+      final Insets insets = scrollPane.getViewport().getInsets();
+      rect.width -= ( insets.left + insets.right );
+      rect.height -= ( insets.top + insets.bottom );
     }
 
-    final ZoomEvent event;
-    synchronized ( this.LOCK )
-    {
-      this.factor = newFactor;
-      this.value = newValue;
-
-      event = new ZoomEvent( newFactor, oldFactor, minZoomLevel, defaultZoomLevel, maxZoomLevel, aHotSpot );
-    }
-
-    fireZoomEvent( event );
+    return rect.getSize();
   }
 }

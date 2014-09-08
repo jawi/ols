@@ -328,9 +328,7 @@ public class SumpCommandWriter implements SumpProtocolConstants, Closeable
   {
     if ( LOG.isLoggable( Level.ALL ) || LOG.isLoggable( Level.FINE ) )
     {
-      final byte opcode = ( byte )( aOpcode & 0xFF );
-      LOG.log( Level.FINE, "Sending short command: {0} ({1})",
-          new Object[] { Integer.toHexString( opcode ), Integer.toBinaryString( opcode ) } );
+      LOG.log( Level.FINE, String.format( "Sending short command: 0x%02x", Integer.valueOf( aOpcode & 0xFF ) ) );
     }
 
     this.outputStream.writeByte( aOpcode );
@@ -349,14 +347,6 @@ public class SumpCommandWriter implements SumpProtocolConstants, Closeable
    */
   protected final void sendCommand( final int aOpcode, final int aData ) throws IOException
   {
-    if ( LOG.isLoggable( Level.ALL ) || LOG.isLoggable( Level.FINE ) )
-    {
-      final byte opcode = ( byte )( aOpcode & 0xFF );
-      LOG.log( Level.FINE, "Sending long command: {0} ({1}) with data {2} ({3})",
-          new Object[] { Integer.toHexString( opcode ), Integer.toBinaryString( opcode ), //
-              Integer.toHexString( aData ), Integer.toBinaryString( aData ) } );
-    }
-
     final byte[] raw = new byte[5];
     int mask = 0xff;
     int shift = 0;
@@ -367,6 +357,12 @@ public class SumpCommandWriter implements SumpProtocolConstants, Closeable
       raw[i] = ( byte )( ( aData & mask ) >> shift );
       mask = mask << 8;
       shift += 8;
+    }
+
+    if ( LOG.isLoggable( Level.ALL ) || LOG.isLoggable( Level.FINE ) )
+    {
+      LOG.log( Level.FINE, String.format( "Sending long command: 0x%02x with data 0x%08x", //
+          Integer.valueOf( aOpcode & 0xFF ), Integer.valueOf( aData ) ) );
     }
 
     this.outputStream.write( raw );

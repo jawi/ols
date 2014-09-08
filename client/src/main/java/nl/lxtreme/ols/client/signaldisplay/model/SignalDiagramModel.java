@@ -307,16 +307,16 @@ public class SignalDiagramModel
   }
 
   /**
-   * Finds a signal element based on a given screen coordinate.
+   * Finds a UI-element based on a given screen coordinate.
    * 
    * @param aPoint
    *          the coordinate to find the channel for, cannot be
    *          <code>null</code>.
    * @return the channel if found, or <code>null</code> if no channel was found.
    */
-  public SignalElement findSignalElement( final Point aPoint )
+  public IUIElement findUIElement( final Point aPoint )
   {
-    final SignalElement[] elements = getSignalElementManager().getSignalElements( aPoint.y, 1,
+    final IUIElement[] elements = getSignalElementManager().getUIElements( aPoint.y, 1,
         SignalElementMeasurer.LOOSE_MEASURER );
     if ( elements.length == 0 )
     {
@@ -352,31 +352,6 @@ public class SignalDiagramModel
 
     final AcquisitionResult capturedData = getCapturedData();
     return capturedData.getAbsoluteLength();
-  }
-
-  /**
-   * Returns the absolute height of the screen.
-   * 
-   * @return a screen height, in pixels, >= 0 && < {@value Integer#MAX_VALUE}.
-   */
-  public int getAbsoluteScreenHeight()
-  {
-    return getSignalElementManager().calculateScreenHeight();
-  }
-
-  /**
-   * Returns the absolute width of the screen.
-   * 
-   * @return a screen width, in pixels, >= 0 && < {@value Integer#MAX_VALUE}.
-   */
-  public int getAbsoluteScreenWidth()
-  {
-    final double result = Math.floor( getAbsoluteLength() * getZoomFactor() );
-    if ( result > Integer.MAX_VALUE )
-    {
-      return Integer.MAX_VALUE;
-    }
-    return ( int )result;
   }
 
   /**
@@ -434,19 +409,19 @@ public class SignalDiagramModel
    */
   public Double getDisplayedTimeInterval()
   {
-    final Rectangle visibleRect = this.controller.getSignalDiagram().getVisibleViewSize();
-    if ( ( visibleRect == null ) || !hasData() )
+    final int width = this.controller.getSignalDiagram().getVisibleRect().width;
+    if ( !hasData() )
     {
       return null;
     }
     double result;
     if ( hasTimingData() )
     {
-      result = visibleRect.width / ( getZoomFactor() * getSampleRate() );
+      result = width / ( getZoomFactor() * getSampleRate() );
     }
     else
     {
-      result = visibleRect.width / getZoomFactor();
+      result = width / getZoomFactor();
     }
     return Double.valueOf( result );
   }
@@ -497,6 +472,14 @@ public class SignalDiagramModel
     }
 
     return inc;
+  }
+
+  /**
+   * @return the minimum height of the signal diagram, in pixels, > 0.
+   */
+  public int getMinimumHeight()
+  {
+    return getSignalElementManager().calculateScreenHeight();
   }
 
   /**
@@ -557,14 +540,14 @@ public class SignalDiagramModel
    */
   public final MeasurementInfo getSignalHover( final Point aPoint )
   {
-    final SignalElement signalElement = findSignalElement( aPoint );
-    if ( ( signalElement == null ) || !signalElement.isDigitalSignal() )
+    final IUIElement element = findUIElement( aPoint );
+    if ( !( element instanceof SignalElement ) || !( ( SignalElement )element ).isDigitalSignal() )
     {
       // Trivial reject: no digital signal, or not above any channel...
       return null;
     }
 
-    return getSignalHover( aPoint, signalElement );
+    return getSignalHover( aPoint, ( SignalElement )element );
   }
 
   /**
@@ -867,7 +850,7 @@ public class SignalDiagramModel
     final SignalElementMeasurer measurer = SignalElementMeasurer.LOOSE_MEASURER;
     final SignalElementManager elemMgr = getSignalElementManager();
 
-    SignalElement[] signalElements = elemMgr.getSignalElements( aVisibleRect.y + 1, 1, measurer );
+    IUIElement[] signalElements = elemMgr.getUIElements( aVisibleRect.y + 1, 1, measurer );
     if ( signalElements.length == 0 )
     {
       return 0;
@@ -896,7 +879,7 @@ public class SignalDiagramModel
       {
         // Determine the height of the element *before* the current one, as we
         // need to scroll up its height...
-        signalElements = elemMgr.getSignalElements( yPos - spacing, 1, measurer );
+        signalElements = elemMgr.getUIElements( yPos - spacing, 1, measurer );
         if ( signalElements.length > 0 )
         {
           inc += signalElements[0].getHeight() + spacing;

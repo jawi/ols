@@ -62,7 +62,7 @@ public final class LogicSnifferConfigDialog extends JDialog implements Configura
   /**
    * Renders a binary size.
    */
-  static final class BinarySizeComboBoxRenderer extends BasicComboBoxRenderer
+  final class BinarySizeComboBoxRenderer extends BasicComboBoxRenderer
   {
     private static final long serialVersionUID = 1L;
 
@@ -73,7 +73,21 @@ public final class LogicSnifferConfigDialog extends JDialog implements Configura
       Object value = aValue;
       if ( value instanceof Integer )
       {
-        value = SizeUnit.format( ( ( Integer )aValue ).doubleValue() );
+        double size = ( ( Integer )value ).doubleValue();
+
+        int enabledGroups = getEnabledChannelGroups();
+        if ( enabledGroups > 0 )
+        {
+          int sampleRate = getSelectedSampleRate();
+          double time = ( enabledGroups != 0 ) ? size / ( sampleRate * enabledGroups ) : 0.0;
+
+          value = String.format( "<html>%s&nbsp;&nbsp;<span style='color:gray;font-size:0.85em;'>(%s)</span></html>",
+              Unit.SizeSI.format( size ), Unit.Time.format( time ) );
+        }
+        else
+        {
+          value = String.format( "%s", Unit.SizeSI.format( size ) );
+        }
       }
       return super.getListCellRendererComponent( aList, value, aIndex, aIsSelected, aCellHasFocus );
     }
@@ -93,7 +107,7 @@ public final class LogicSnifferConfigDialog extends JDialog implements Configura
       Object value = aValue;
       if ( value instanceof Integer )
       {
-        value = FrequencyUnit.format( ( ( Integer )value ).doubleValue() );
+        value = Unit.Frequency.format( ( ( Integer )value ).doubleValue() );
       }
       return super.getListCellRendererComponent( aList, value, aIndex, aIsSelected, aCellHasFocus );
     }
@@ -841,7 +855,7 @@ public final class LogicSnifferConfigDialog extends JDialog implements Configura
 
     final JComponent buttonPane = SwingComponentUtils.createButtonPane( this.captureButton, cancel );
 
-    SwingComponentUtils.setupDialogContentPane( this, tabs, buttonPane, this.captureButton );
+    SwingComponentUtils.setupWindowContentPane( this, tabs, buttonPane, this.captureButton );
 
     pack();
 
@@ -1187,10 +1201,10 @@ public final class LogicSnifferConfigDialog extends JDialog implements Configura
     this.connTypeSelect.setSelectedItem( DeviceInterface.SERIAL );
     this.connTypeSelect.addActionListener( fieldUpdater );
 
-    this.remAddress = new JTextField("localhost");
+    this.remAddress = new JTextField( "localhost" );
     this.remAddress.addActionListener( fieldUpdater );
 
-    this.remPort = new JTextField("5678");
+    this.remPort = new JTextField( "5678" );
     this.remPort.addActionListener( fieldUpdater );
 
     this.portSelect = new JLazyComboBox( new JLazyComboBox.ItemProvider()

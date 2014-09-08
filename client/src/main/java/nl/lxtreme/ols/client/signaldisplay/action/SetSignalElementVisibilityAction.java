@@ -55,11 +55,6 @@ public class SetSignalElementVisibilityAction extends AbstractAction
    */
   public SetSignalElementVisibilityAction( final SignalDiagramController aController, final SignalElement aSignalElement )
   {
-    if ( aSignalElement.isSignalGroup() )
-    {
-      throw new IllegalArgumentException();
-    }
-
     this.signalElement = aSignalElement;
     this.controller = aController;
 
@@ -97,10 +92,6 @@ public class SetSignalElementVisibilityAction extends AbstractAction
     {
       suffix = "group summary";
     }
-    else if ( aType == SignalElementType.SIGNAL_GROUP )
-    {
-      suffix = "signal group";
-    }
     else
     {
       throw new InternalError( "Unknown signal element?!" );
@@ -126,7 +117,7 @@ public class SetSignalElementVisibilityAction extends AbstractAction
     {
       // Group summary and analog scope are really hidden, so we need to repaint
       // the entire frame...
-      this.controller.recalculateDimensions();
+      this.controller.revalidateAll();
     }
   }
 

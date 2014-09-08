@@ -14,7 +14,7 @@ you should do the following:
   $ git clone http://github.com/jawi/ols.git
 
 For compiling the sources, you need to have at least a valid JDK (1.6+) and
-Maven2 installed. For developing, I can recommend Eclipse as development
+Maven3 installed. For developing, I can recommend Eclipse as development
 environment.
 
   $ cd ols/
@@ -30,19 +30,19 @@ or even Emacs. Keep in mind that IDE-specific stuff is not committed to the
 repository as this would clutter it unnecessarily.
 
 Keep in mind that if you're going to use an IDE like Eclipse or Netbeans (or
-whatever IDE you're preferring) that it should provide support for Maven2,
+whatever IDE you're preferring) that it should provide support for Maven3,
 otherwise it most probably won't compile out of the box. In addition, you
 probably want support for Git in your IDE as well. To create the needed project
 files for, for example, Eclipse, you can use the following Maven command:
 
   $ mvn eclipse:eclipse
 
-For other IDEs there are similar commands. See the Maven2 site for more details
+For other IDEs there are similar commands. See the Maven3 site for more details
 on this.
 
 Some notes for Eclipe: after importing the projects into your workspace, you
 might need to enable Maven support by hand. Simply select all projects, right
-click on them and choose "Enable Dependency Management" from the Maven2 menu
+click on them and choose "Enable Dependency Management" from the Maven menu
 should be sufficient. For running the OLS client in Eclipse, you can make use
 of the launch configurations found in the eclipse/ subdirectory of the OLS
 repository. Also the code formatting rules and cleanup rules can be found

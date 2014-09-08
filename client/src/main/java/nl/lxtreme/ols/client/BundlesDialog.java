@@ -453,6 +453,6 @@ public class BundlesDialog extends JDialog implements Closeable
 
     final JComponent buttonPane = SwingComponentUtils.createButtonPane( cancel );
 
-    SwingComponentUtils.setupDialogContentPane( this, editorsPane, buttonPane, cancel );
+    SwingComponentUtils.setupWindowContentPane( this, editorsPane, buttonPane, cancel );
   }
 }

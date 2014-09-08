@@ -343,7 +343,7 @@ public class LineDecoderToolDialog extends BaseToolDialog<AcquisitionResult>
 
     final JComponent buttonPane = SwingComponentUtils.createButtonPane( runAnalysisButton, closeButton );
 
-    SwingComponentUtils.setupDialogContentPane( this, contentPane, buttonPane, runAnalysisButton );
+    SwingComponentUtils.setupWindowContentPane( this, contentPane, buttonPane, runAnalysisButton );
 
     pack();
   }

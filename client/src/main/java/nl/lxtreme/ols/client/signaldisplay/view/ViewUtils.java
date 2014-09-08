@@ -57,7 +57,7 @@ final class ViewUtils
   {
     if ( aFrequency != null )
     {
-      return FrequencyUnit.format( aFrequency.doubleValue() );
+      return Unit.Frequency.format( aFrequency.doubleValue() );
     }
     return "-";
   }
@@ -71,7 +71,7 @@ final class ViewUtils
   {
     if ( aPeriod != null )
     {
-      return FrequencyUnit.format( 1.0 / aPeriod.doubleValue() );
+      return Unit.Frequency.format( 1.0 / aPeriod.doubleValue() );
     }
     return "-";
   }
@@ -107,7 +107,7 @@ final class ViewUtils
   {
     if ( aTime != null )
     {
-      return UnitOfTime.format( aTime.doubleValue() );
+      return Unit.Time.format( aTime.doubleValue() );
     }
     return "-";
   }
@@ -159,7 +159,7 @@ final class ViewUtils
    */
   private static String formatTimestamp( final double aTime )
   {
-    return UnitOfTime.toUnit( aTime ).formatHumanReadable( aTime );
+    return Unit.Time.toUnit( aTime ).formatHumanReadable( aTime );
   }
 
 }

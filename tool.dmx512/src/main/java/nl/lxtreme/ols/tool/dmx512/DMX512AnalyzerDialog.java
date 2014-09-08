@@ -382,7 +382,7 @@ public final class DMX512AnalyzerDialog extends BaseToolDialog<DMX512DataSet> im
 
     final JComponent buttons = SwingComponentUtils.createButtonPane( runAnalysisButton, exportButton, closeButton );
 
-    SwingComponentUtils.setupDialogContentPane( this, contentPane, buttons, runAnalysisButton );
+    SwingComponentUtils.setupWindowContentPane( this, contentPane, buttons, runAnalysisButton );
   }
 
   /**
@@ -405,8 +405,8 @@ public final class DMX512AnalyzerDialog extends BaseToolDialog<DMX512DataSet> im
       {
         final DMX512Data ds = decodedData.get( i );
 
-        final String startTime = UnitOfTime.format( aDataSet.getTime( ds.getStartSampleIndex() ) );
-        final String endTime = UnitOfTime.format( aDataSet.getTime( ds.getEndSampleIndex() ) );
+        final String startTime = Unit.Time.format( aDataSet.getTime( ds.getStartSampleIndex() ) );
+        final String endTime = Unit.Time.format( aDataSet.getTime( ds.getEndSampleIndex() ) );
 
         String eventType = ds.getEventName();
         String dataValue = Integer.toString( ds.getData() );
@@ -516,7 +516,7 @@ public final class DMX512AnalyzerDialog extends BaseToolDialog<DMX512DataSet> im
 
             tr = aParent.addChild( TR ).addAttribute( "style", "background-color: " + bgColor + ";" );
             tr.addChild( TD ).addContent( String.valueOf( i ) );
-            tr.addChild( TD ).addContent( UnitOfTime.format( aDataSet.getTime( ds.getStartSampleIndex() ) ) );
+            tr.addChild( TD ).addContent( Unit.Time.format( aDataSet.getTime( ds.getStartSampleIndex() ) ) );
             if ( eventName == null )
             {
               // normal symbol...

@@ -34,6 +34,9 @@ import nl.lxtreme.ols.test.data.*;
 import nl.lxtreme.ols.tool.uart.AsyncSerialDataDecoder.Parity;
 import nl.lxtreme.ols.tool.uart.AsyncSerialDataDecoder.SerialDecoderCallback;
 import nl.lxtreme.ols.tool.uart.AsyncSerialDataDecoder.StopBits;
+import nl.lxtreme.ols.tool.uart.AsyncSerialDataDecoder.BitOrder;
+import nl.lxtreme.ols.tool.uart.AsyncSerialDataDecoder.BitEncoding;
+import nl.lxtreme.ols.tool.uart.AsyncSerialDataDecoder.BitLevel;
 import nl.lxtreme.ols.tool.uart.impl.*;
 
 import org.junit.*;
@@ -80,14 +83,14 @@ public class ISO7816DataTest
     final Iterator<UARTData> dataIter = aDataSet.getData().iterator();
 
     int symbolIdx = 0, errors = 0;
-    while ( dataIter.hasNext() && ( symbolIdx < aExpectedData.length ) )
+    while ( dataIter.hasNext() )
     {
       final UARTData data = dataIter.next();
       if ( data.isEvent() )
       {
         errors++;
       }
-      else
+      else if ( symbolIdx < aExpectedData.length )
       {
         assertEquals( "Data value at index " + symbolIdx + " not equal, ", aExpectedData[symbolIdx], data.getData() );
         symbolIdx++;
@@ -109,10 +112,10 @@ public class ISO7816DataTest
     UARTDataSet result = analyseDataFile( "sy-card-atr-rxd-channel1-baud9600-parity-odd.ols", 9600, Parity.EVEN,
         1 /* RxD */, true /* inverse convention */);
 
-    assertEquals( 21, result.getDecodedSymbols() );
-    assertEquals( 0, result.getDetectedErrors() );
+    assertEquals( 22, result.getDecodedSymbols() );
+    assertEquals( 2, result.getDetectedErrors() );
     assertDataEvents( result, new int[] { 0x3f, 0xfd, 0x11, 0x25, 0x02, 0x50, 0x00, 0x03, 0x33, 0xb0, 0x15, 0x69, 0xff,
-        0x4a, 0x50, 0xf0, 0x80, 0x03, 0x4b, 0x4c, 0x03 } );
+        0x4a, 0x50, 0xf0, 0x80, 0x03, 0x4b, 0x4c, 0x03, 0xff } );
   }
 
   /**
@@ -126,10 +129,10 @@ public class ISO7816DataTest
     UARTDataSet result = analyseDataFile( "openpgp-card-atr-rxd-channel1-baud9600-parity-even.ols", 9600, Parity.EVEN,
         1 /* RxD */, false /* inverse convention */);
 
-    assertEquals( 20, result.getDecodedSymbols() );
-    assertEquals( 0, result.getDetectedErrors() );
+    assertEquals( 21, result.getDecodedSymbols() );
+    assertEquals( 1, result.getDetectedErrors() );
     assertDataEvents( result, new int[] { 0x3b, 0xfa, 0x13, 0x00, 0xff, 0x81, 0x31, 0x80, 0x45, 0x00, 0x31, 0xc1, 0x73,
-        0xc0, 0x01, 0x00, 0x00, 0x90, 0x00, 0xb1 } );
+        0xc0, 0x01, 0x00, 0x00, 0x90, 0x00, 0xb1, 0x00 } );
   }
 
   /**
@@ -159,8 +162,17 @@ public class ISO7816DataTest
     worker.setBaudRate( aBaudRate );
     worker.setRxdIndex( aRxDChannel );
     worker.setTxdIndex( -1 );
-    worker.setInversed( aInverseConvention );
-    worker.setInverted( aInverseConvention );
+    if ( aInverseConvention )
+    {
+      worker.setBitOrder( BitOrder.MSB_FIRST );
+      worker.setBitEncoding ( BitEncoding.HIGH_IS_SPACE );
+    }
+    else
+    {
+      worker.setBitOrder( BitOrder.LSB_FIRST );
+      worker.setBitEncoding( BitEncoding.HIGH_IS_MARK );
+    }
+    worker.setIdleLevel( BitLevel.HIGH );
 
     UARTDataSet result = worker.call();
     assertNotNull( result );

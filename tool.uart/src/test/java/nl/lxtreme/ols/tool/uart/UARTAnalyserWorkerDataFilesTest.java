@@ -33,6 +33,9 @@ import nl.lxtreme.ols.test.*;
 import nl.lxtreme.ols.test.data.*;
 import nl.lxtreme.ols.tool.uart.AsyncSerialDataDecoder.Parity;
 import nl.lxtreme.ols.tool.uart.AsyncSerialDataDecoder.StopBits;
+import nl.lxtreme.ols.tool.uart.AsyncSerialDataDecoder.BitOrder;
+import nl.lxtreme.ols.tool.uart.AsyncSerialDataDecoder.BitEncoding;
+import nl.lxtreme.ols.tool.uart.AsyncSerialDataDecoder.BitLevel;
 import nl.lxtreme.ols.tool.uart.impl.*;
 
 import org.junit.*;
@@ -87,11 +90,11 @@ public class UARTAnalyserWorkerDataFilesTest
   {
     return Arrays.asList( new Object[][] { //
         // { filename, error count, symbol count, baudrate, (rxd, txd) }
-            { "uart_8bit_1.ols", 0, 33, -1, 38400, Parity.NONE, new int[] { 0, -1 } }, //
-            { "uart_8bit_2.ols", 0, 6, -1, 9600, Parity.NONE, new int[] { 2, -1 } }, //
-            { "uart_8bit_3.ols", 50, 418, -1, 9600, Parity.NONE, new int[] { 1, 0 } }, //
-            { "uart_8bit_4_38400bps.ols", 0, 22, -1, 38400, Parity.NONE, new int[] { 0, -1 } }, //
-            { "uart_8bit_5_115200bps.ols", 0, 306, 115200, 115200, Parity.NONE, new int[] { 0, -1 } }, //
+            { "uart_8bit_1.ols", 0, 33, -1, 38400, Parity.NONE, new int[] { 0, -1 } }, // 0
+            { "uart_8bit_2.ols", 0, 6, -1, 9600, Parity.NONE, new int[] { 2, -1 } }, // 1
+            { "uart_8bit_3.ols", 48, 419, -1, 9600, Parity.NONE, new int[] { 1, 0 } }, // 2
+            { "uart_8bit_4_38400bps.ols", 0, 22, -1, 38400, Parity.NONE, new int[] { 0, -1 } }, // 3
+            { "uart_8bit_5_115200bps.ols", 0, 306, 115200, 115200, Parity.NONE, new int[] { 0, -1 } }, // 4
         } );
   }
 
@@ -134,6 +137,9 @@ public class UARTAnalyserWorkerDataFilesTest
     worker.setBaudRate( this.baudrate );
     worker.setRxdIndex( this.channels[0] );
     worker.setTxdIndex( this.channels[1] );
+    worker.setBitOrder( BitOrder.LSB_FIRST );
+    worker.setBitEncoding( BitEncoding.HIGH_IS_MARK );
+    worker.setIdleLevel( BitLevel.HIGH );
 
     UARTDataSet result = worker.call();
     assertNotNull( result );

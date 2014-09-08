@@ -260,6 +260,6 @@ public class GenericDeviceConfigDialog extends JDialog implements Configurable, 
 
     final JComponent buttonPane = SwingComponentUtils.createButtonPane( okButton, closeButton );
 
-    SwingComponentUtils.setupDialogContentPane( this, contents, buttonPane, okButton );
+    SwingComponentUtils.setupWindowContentPane( this, contents, buttonPane, okButton );
   }
 }

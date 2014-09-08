@@ -206,6 +206,7 @@ public final class SPIProtocolAnalysisDialog extends BaseToolDialog<SPIDataSet> 
   private JEditorPane outText;
   private JCheckBox reportCS;
   private JCheckBox honourCS;
+  private JCheckBox invertCS;
 
   private RestorableAction runAnalysisAction;
   private Action exportAction;
@@ -287,6 +288,7 @@ public final class SPIProtocolAnalysisDialog extends BaseToolDialog<SPIDataSet> 
     this.spifiMode.setSelectedIndex( aSettings.getInt( "protocol", this.spifiMode.getSelectedIndex() ) );
     this.reportCS.setSelected( aSettings.getBoolean( "reportCS", this.reportCS.isSelected() ) );
     this.honourCS.setSelected( aSettings.getBoolean( "honourCS", this.honourCS.isSelected() ) );
+    this.invertCS.setSelected( aSettings.getBoolean( "invertCS", this.invertCS.isSelected() ) );
 
     // Issue #114: avoid setting illegal values...
     setComboBoxIndex( this.sck, aSettings, "sck" );
@@ -339,6 +341,7 @@ public final class SPIProtocolAnalysisDialog extends BaseToolDialog<SPIDataSet> 
   {
     aSettings.putBoolean( "reportCS", this.reportCS.isSelected() );
     aSettings.putBoolean( "honourCS", this.honourCS.isSelected() );
+    aSettings.putBoolean( "invertCS", this.invertCS.isSelected() );
     aSettings.putInt( "protocol", this.spifiMode.getSelectedIndex() );
     aSettings.putInt( "sck", this.sck.getSelectedIndex() );
     aSettings.putInt( "miso", this.miso.getSelectedIndex() );
@@ -441,6 +444,7 @@ public final class SPIProtocolAnalysisDialog extends BaseToolDialog<SPIDataSet> 
     toolTask.setProtocol( ( SPIFIMode )this.spifiMode.getSelectedItem() );
     toolTask.setReportCS( this.reportCS.isSelected() );
     toolTask.setHonourCS( this.honourCS.isSelected() );
+    toolTask.setInvertCS( this.invertCS.isSelected() );
     toolTask.setOrder( ( BitOrder )this.order.getSelectedItem() );
     toolTask.setSPIMode( ( SPIMode )this.mode.getSelectedItem() );
 
@@ -713,6 +717,12 @@ public final class SPIProtocolAnalysisDialog extends BaseToolDialog<SPIDataSet> 
     this.honourCS.setSelected( false );
     settings.add( this.honourCS );
 
+    settings.add( createRightAlignedLabel( "Invert CS?" ) );
+    this.invertCS = new JCheckBox();
+    this.invertCS.setToolTipText( "Whether CS is default high (= unchecked) or default low (= checked)." );
+    this.invertCS.setSelected( false );
+    settings.add( this.invertCS );
+
     SpringLayoutUtils.makeEditorGrid( settings, 10, 4 );
 
     updateSPIFIModeSettings( null );
@@ -771,7 +781,7 @@ public final class SPIProtocolAnalysisDialog extends BaseToolDialog<SPIDataSet> 
 
     final JComponent buttons = SwingComponentUtils.createButtonPane( runAnalysisButton, exportButton, closeButton );
 
-    SwingComponentUtils.setupDialogContentPane( this, contentPane, buttons, runAnalysisButton );
+    SwingComponentUtils.setupWindowContentPane( this, contentPane, buttons, runAnalysisButton );
   }
 
   /**
@@ -793,8 +803,8 @@ public final class SPIProtocolAnalysisDialog extends BaseToolDialog<SPIDataSet> 
       {
         final SPIData ds = decodedData.get( i );
 
-        final String startTime = UnitOfTime.format( aDataSet.getTime( ds.getStartSampleIndex() ) );
-        final String endTime = UnitOfTime.format( aDataSet.getTime( ds.getStartSampleIndex() ) );
+        final String startTime = Unit.Time.format( aDataSet.getTime( ds.getStartSampleIndex() ) );
+        final String endTime = Unit.Time.format( aDataSet.getTime( ds.getStartSampleIndex() ) );
         final String mosiDataValue = ds.isMosiData() ? Integer.toString( ds.getDataValue() ) : null;
         final String misoDataValue = ds.isMisoData() ? Integer.toString( ds.getDataValue() ) : null;
 
@@ -917,7 +927,7 @@ public final class SPIProtocolAnalysisDialog extends BaseToolDialog<SPIDataSet> 
 
               tr = aParent.addChild( TR ).addAttribute( "style", "background-color: " + bgColor + ";" );
               tr.addChild( TD ).addContent( String.valueOf( i ) );
-              tr.addChild( TD ).addContent( UnitOfTime.format( aDataSet.getTime( ds.getStartSampleIndex() ) ) );
+              tr.addChild( TD ).addContent( Unit.Time.format( aDataSet.getTime( ds.getStartSampleIndex() ) ) );
               tr.addChild( TD ).addContent( event );
               tr.addChild( TD );
               tr.addChild( TD );
@@ -933,7 +943,7 @@ public final class SPIProtocolAnalysisDialog extends BaseToolDialog<SPIDataSet> 
 
               tr = aParent.addChild( TR );
               tr.addChild( TD ).addContent( String.valueOf( i ) );
-              tr.addChild( TD ).addContent( UnitOfTime.format( aDataSet.getTime( sampleIdx ) ) );
+              tr.addChild( TD ).addContent( Unit.Time.format( aDataSet.getTime( sampleIdx ) ) );
 
               int mosiValue = ds.isMosiData() ? ds.getDataValue() : 0;
               int misoValue = ds.isMisoData() ? ds.getDataValue() : 0;

@@ -30,7 +30,6 @@ import java.util.regex.*;
 
 import nl.lxtreme.ols.api.acquisition.*;
 import nl.lxtreme.ols.api.data.*;
-import nl.lxtreme.ols.util.*;
 
 
 /**
@@ -46,12 +45,6 @@ public final class OlsDataHelper
   private static final Pattern OLS_INSTRUCTION_PATTERN = Pattern.compile( "^;([^:]+):\\s+([^\r\n]+)$" );
   /** The regular expression used to parse an (OLS-datafile) data value. */
   private static final Pattern OLS_DATA_PATTERN = Pattern.compile( "^([0-9a-fA-F]+)@(\\d+)$" );
-  /**
-   * The margin that is used to determine whether we need to insert an
-   * additional sample at the absolute length of the captured data in case the
-   * last timestamp deviates too much.
-   */
-  static final int ABS_TIME_MARGIN = 20;
 
   // METHODS
 
@@ -193,10 +186,11 @@ public final class OlsDataHelper
     {
       throw new IOException( "Data file is corrupt?! Channel count is not provided!" );
     }
-    // Make sure the enabled channels are defined...
+    // Make sure the enabled channels are defined; if not defined, all channels
+    // are enabled...
     if ( enabledChannels == null )
     {
-      enabledChannels = NumberUtils.getBitMask( channels );
+      enabledChannels = -1; // = 0xffffffff
     }
 
     int[] values = new int[size];
@@ -217,24 +211,8 @@ public final class OlsDataHelper
       throw new IOException( "Invalid data encountered.", exception );
     }
 
-    // Allow the absolute length to be undefined, in which case the last
-    // time stamp is used...
-    long absoluteLength = Math.max( absLen, timestamps[size - 1] );
-    // Make sure the last timestamp does not deviate too much from the absolute
-    // length of the trace...
-    if ( ( absLen - timestamps[size - 1] ) > ABS_TIME_MARGIN )
-    {
-      values = Arrays.copyOf( values, size + 1 );
-      // Copy the last value...
-      values[size] = values[size - 1];
-
-      timestamps = Arrays.copyOf( timestamps, size + 1 );
-      // Insert the absolute length as timestamp...
-      timestamps[size] = absLen - 1;
-    }
-
     // Finally set the captured data, and notify all event listeners...
-    capturedData = new CapturedData( values, timestamps, triggerPos, rate, channels, enabledChannels, absoluteLength );
+    capturedData = new CapturedData( values, timestamps, triggerPos, rate, channels, enabledChannels, absLen );
 
     return new DataSetImpl( capturedData, tempDataSet, false /* aRetainAnnotations */);
   }

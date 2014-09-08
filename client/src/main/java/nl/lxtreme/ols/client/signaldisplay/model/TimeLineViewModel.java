@@ -189,6 +189,27 @@ public class TimeLineViewModel extends AbstractViewModel
   }
 
   /**
+   * Returns the height of the time line component.
+   * 
+   * @return a height, in pixels, > 0.
+   */
+  public int getPreferredHeight()
+  {
+    return UIManager.getInt( TIMELINE_HEIGHT );
+  }
+
+  /**
+   * Returns the width of the time line component.
+   * 
+   * @return the width of the timeline, in pixels, > 0.
+   */
+  public int getPreferredWidth()
+  {
+    // timeline width *always* follows the width of the main component...
+    return this.controller.getSignalDiagram().getWidth();
+  }
+
+  /**
    * Returns the sample rate of the sampled data.
    * 
    * @return a sample rate, in Hertz.
@@ -277,16 +298,6 @@ public class TimeLineViewModel extends AbstractViewModel
   public int getTickHeight()
   {
     return UIManager.getInt( TIMELINE_TICK_HEIGHT );
-  }
-
-  /**
-   * Returns the height of the time line component.
-   * 
-   * @return a height, in pixels, > 0.
-   */
-  public int getTimeLineHeight()
-  {
-    return UIManager.getInt( TIMELINE_HEIGHT );
   }
 
   /**

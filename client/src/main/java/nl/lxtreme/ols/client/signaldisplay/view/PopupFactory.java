@@ -21,17 +21,25 @@
 package nl.lxtreme.ols.client.signaldisplay.view;
 
 
-import java.awt.*;
+import java.awt.Point;
 
-import javax.swing.*;
+import javax.swing.JCheckBoxMenuItem;
+import javax.swing.JPopupMenu;
 
-import nl.lxtreme.ols.api.*;
+import nl.lxtreme.ols.api.Ols;
 import nl.lxtreme.ols.api.data.Cursor;
 import nl.lxtreme.ols.client.action.*;
-import nl.lxtreme.ols.client.actionmanager.*;
-import nl.lxtreme.ols.client.signaldisplay.*;
-import nl.lxtreme.ols.client.signaldisplay.action.*;
-import nl.lxtreme.ols.client.signaldisplay.model.*;
+import nl.lxtreme.ols.client.actionmanager.IActionManager;
+import nl.lxtreme.ols.client.signaldisplay.MeasurementInfo;
+import nl.lxtreme.ols.client.signaldisplay.SignalDiagramController;
+import nl.lxtreme.ols.client.signaldisplay.action.DeleteCursorAction;
+import nl.lxtreme.ols.client.signaldisplay.action.EditCursorPropertiesAction;
+import nl.lxtreme.ols.client.signaldisplay.action.EditSignalElementPropertiesAction;
+import nl.lxtreme.ols.client.signaldisplay.action.RemoveChannelAnnotations;
+import nl.lxtreme.ols.client.signaldisplay.action.SetCursorAction;
+import nl.lxtreme.ols.client.signaldisplay.action.SetSignalElementVisibilityAction;
+import nl.lxtreme.ols.client.signaldisplay.action.SetSignalGroupVisibilityAction;
+import nl.lxtreme.ols.client.signaldisplay.model.SignalDiagramModel;
 import nl.lxtreme.ols.client.signaldisplay.signalelement.*;
 import nl.lxtreme.ols.client.signaldisplay.signalelement.SignalElement.SignalElementType;
 
@@ -145,34 +153,40 @@ final class PopupFactory
 
     if ( aHoveredCursor == null )
     {
-      final SignalElement signalElement = findSignalElement( aPoint );
-      if ( signalElement == null )
+      final IUIElement element = findUIElement( aPoint );
+      if ( element == null )
       {
         // Not above a cursor, nor above a signal element...
         return null;
       }
 
-      if ( signalElement.isSignalGroup() )
+      contextMenu.add( new ShowManagerViewAction( this.controller ) );
+
+      contextMenu.addSeparator();
+
+      if ( element instanceof ElementGroup )
       {
-        contextMenu.add( new SetSignalGroupVisibilityAction( this.controller, signalElement,
-            SignalElementType.DIGITAL_SIGNAL ) );
-        contextMenu.add( new SetSignalGroupVisibilityAction( this.controller, signalElement,
-            SignalElementType.GROUP_SUMMARY ) );
-        contextMenu.add( new SetSignalGroupVisibilityAction( this.controller, signalElement,
-            SignalElementType.ANALOG_SIGNAL ) );
+        ElementGroup group = ( ElementGroup )element;
+
+        contextMenu
+            .add( new SetSignalGroupVisibilityAction( this.controller, group, SignalElementType.DIGITAL_SIGNAL ) );
+        contextMenu.add( new SetSignalGroupVisibilityAction( this.controller, group, SignalElementType.GROUP_SUMMARY ) );
+        contextMenu.add( new SetSignalGroupVisibilityAction( this.controller, group, SignalElementType.ANALOG_SIGNAL ) );
       }
       else
       {
-        contextMenu.add( new EditSignalElementPropertiesAction( this.controller, signalElement, aLocationOnScreen ) );
+        SignalElement signalElement = ( SignalElement )element;
+
+        contextMenu.add( new EditSignalElementPropertiesAction( this.controller, element, aLocationOnScreen ) );
 
         contextMenu.addSeparator();
 
         contextMenu.add( new SetSignalElementVisibilityAction( this.controller, signalElement ) );
-      }
 
-      if ( signalElement.isDigitalSignal() )
-      {
-        contextMenu.add( new RemoveChannelAnnotations( this.controller, signalElement ) );
+        if ( signalElement.isDigitalSignal() )
+        {
+          contextMenu.add( new RemoveChannelAnnotations( this.controller, signalElement ) );
+        }
       }
 
       elementAdded = true;
@@ -203,9 +217,9 @@ final class PopupFactory
    *          <code>null</code>.
    * @return the channel index, or -1 if not found.
    */
-  private SignalElement findSignalElement( final Point aPoint )
+  private IUIElement findUIElement( final Point aPoint )
   {
-    return getModel().findSignalElement( aPoint );
+    return getModel().findUIElement( aPoint );
   }
 
   /**

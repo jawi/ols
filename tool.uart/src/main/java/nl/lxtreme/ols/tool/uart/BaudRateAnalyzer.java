@@ -135,7 +135,7 @@ public final class BaudRateAnalyzer
    */
   public int getBaudRateExact()
   {
-    final int bestBitLength = getBestBitLength();
+    final double bestBitLength = getBestBitLength();
     if ( bestBitLength < 0 )
     {
       return -1;
@@ -148,9 +148,30 @@ public final class BaudRateAnalyzer
    * 
    * @return the best bit length, >= 0 or -1 if there is not best bit length.
    */
-  public int getBestBitLength()
+  public double getBestBitLength()
   {
+    // Assume that the one-bit transitions are the most frequent.
     final Integer highestRanked = this.statData.getHighestRanked();
-    return ( highestRanked == null ) ? -1 : highestRanked.intValue();
+    long sum = 0, count = 0;
+
+    if ( highestRanked != null )
+    {
+      double min = highestRanked.doubleValue() * 0.75;
+      double max = highestRanked.doubleValue() * 1.25;
+
+      for ( final Integer length : this.statData.values() )
+      {
+        double bitlength = length.doubleValue();
+        if ( min < bitlength && bitlength < max )
+        {
+          final long rank = this.statData.getCount( length );
+          sum += bitlength * rank;
+          count += rank;
+        }
+      }
+    }
+
+    // Return the average of all bit lengths near the most frequent one
+    return ( highestRanked == null ) ? -1 : ( ( ( double )sum ) / count );
   }
 }

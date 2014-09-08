@@ -346,7 +346,7 @@ public class VirtualLogicSnifferDevice extends LogicSnifferAcquisitionTask
       final byte value = ( byte )( aRleMode ? 0x7F : 0xFF );
       Arrays.fill( sample, value );
 
-      for ( int i = 0; i <= aSampleCount; i++ )
+      for ( int i = 0; i < aSampleCount; i++ )
       {
         aOs.write( sample );
       }
@@ -417,6 +417,7 @@ public class VirtualLogicSnifferDevice extends LogicSnifferAcquisitionTask
     properties.put( DeviceProfile.DEVICE_CHANNEL_GROUPS, "4" );
     properties.put( DeviceProfile.DEVICE_CHANNEL_NUMBERING_SCHEMES, "DEFAULT" );
     properties.put( DeviceProfile.DEVICE_CLOCKSPEED, "100000000" );
+    properties.put( DeviceProfile.DEVICE_DIVIDER_CLOCKSPEED, "100000000" );
     properties.put( DeviceProfile.DEVICE_DESCRIPTION, aType.concat( " Device Profile" ) );
     properties.put( DeviceProfile.DEVICE_FEATURE_NOISEFILTER, "true" );
     properties.put( DeviceProfile.DEVICE_FEATURE_RLE, "true" );
@@ -459,8 +460,7 @@ public class VirtualLogicSnifferDevice extends LogicSnifferAcquisitionTask
     final long[] actualTimestamps = aResult.getTimestamps();
     Assert.assertArrayEquals( "Timestamps not as expected?!", expectedTimestamps, actualTimestamps );
 
-    // assertEquals( "Absolute length not equal?!", aExpectedLength - 1,
-    // aResult.getAbsoluteLength() );
+    assertEquals( "Absolute length not equal?!", aExpectedLength, aResult.getAbsoluteLength() );
   }
 
   /**

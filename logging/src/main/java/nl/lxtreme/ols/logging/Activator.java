@@ -21,35 +21,120 @@
 package nl.lxtreme.ols.logging;
 
 
+import java.util.logging.*;
+
+import org.apache.felix.dm.*;
 import org.osgi.framework.*;
+import org.osgi.service.log.*;
 
 
 /**
- * 
+ * Bundle activator.
  */
-public class Activator implements BundleActivator
+public class Activator extends DependencyActivatorBase
 {
-  // VARIABLES
+  // CONSTANTS
 
-  private JdkLogForwarder jdkLogForwarder;
+  private static final String PROPERTY_LOG_LEVEL = "nl.lxtreme.ols.logLevel";
+  private static final String PROPERTY_LOG_TO_CONSOLE = "nl.lxtreme.ols.logToConsole";
+  private static final String PROPERTY_FILTER_JDKUI_LOGS = "nl.lxtreme.ols.filterJdkUiLogs";
 
   // METHODS
 
   /**
-   * @see org.osgi.framework.BundleActivator#start(org.osgi.framework.BundleContext)
+   * Returns the default log level to use in JUL.
+   * 
+   * @return a log level, never <code>null</code>.
    */
-  public void start( final BundleContext aContext ) throws Exception
+  public static Level getJavaLogLevel()
   {
-    this.jdkLogForwarder = new JdkLogForwarder( aContext );
-    this.jdkLogForwarder.start();
+    int level = getOsgiLogLevel();
+
+    switch ( level )
+    {
+      case 0:
+        return Level.OFF;
+      case LogService.LOG_ERROR:
+        return Level.SEVERE;
+      case LogService.LOG_WARNING:
+        return Level.WARNING;
+      case LogService.LOG_INFO:
+        return Level.INFO;
+      case LogService.LOG_DEBUG:
+        return Level.FINE;
+      case 5:
+        return Level.FINER;
+      default:
+        return Level.FINEST;
+    }
   }
 
   /**
-   * @see org.osgi.framework.BundleActivator#stop(org.osgi.framework.BundleContext)
+   * Returns the default log level to use in OSGi LogService.
+   * 
+   * @return a log level, never <code>null</code>.
    */
-  public void stop( final BundleContext aContext ) throws Exception
+  public static int getOsgiLogLevel()
   {
-    this.jdkLogForwarder.stop();
-    this.jdkLogForwarder = null;
+    int level = 3; // = INFO
+    try
+    {
+      level = Integer.getInteger( PROPERTY_LOG_LEVEL, level ).intValue();
+    }
+    catch ( NumberFormatException exception )
+    {
+      // Ignore...
+    }
+    return level;
+  }
+
+  /**
+   * Returns whether or not we're running in debug mode.
+   * 
+   * @return <code>true</code> if debug mode is enabled, <code>false</code>
+   *         otherwise.
+   */
+  public static boolean isDebugMode()
+  {
+    return Boolean.parseBoolean( System.getProperty( PROPERTY_LOG_TO_CONSOLE, "false" ) );
+  }
+
+  /**
+   * Returns whether or not we should filter out the UI-logs from the JDK.
+   * 
+   * @return <code>true</code> if UI-logs should be filtered, <code>false</code>
+   *         otherwise.
+   */
+  public static boolean isFilterJdkUILogs()
+  {
+    return Boolean.parseBoolean( System.getProperty( PROPERTY_FILTER_JDKUI_LOGS, "true" ) );
+  }
+
+  /**
+   * {@inheritDoc}
+   */
+  @Override
+  public void destroy( BundleContext aContext, DependencyManager aManager ) throws Exception
+  {
+    // Nop
+  }
+
+  /**
+   * {@inheritDoc}
+   */
+  @Override
+  public void init( BundleContext aContext, DependencyManager aManager ) throws Exception
+  {
+    aManager.add( createComponent() //
+        .setInterface( LogService.class.getName(), null ) //
+        .setImplementation( ConsoleLogger.class ) //
+        );
+
+    aManager.add( createComponent() //
+        .setImplementation( LogHandler.class ) //
+        .add( createServiceDependency() //
+            .setService( LogService.class ) //
+            .setRequired( false ) ) //
+        );
   }
 }

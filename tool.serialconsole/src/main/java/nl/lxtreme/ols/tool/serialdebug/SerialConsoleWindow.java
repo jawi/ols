@@ -21,32 +21,67 @@
 package nl.lxtreme.ols.tool.serialdebug;
 
 
-import static nl.lxtreme.ols.util.swing.SwingComponentUtils.*;
+import static nl.lxtreme.ols.util.swing.SwingComponentUtils.createRightAlignedLabel;
 
-import java.awt.*;
-import java.awt.event.*;
-import java.io.*;
-import java.util.*;
+import java.awt.Dimension;
+import java.awt.GridBagConstraints;
+import java.awt.GridBagLayout;
+import java.awt.Insets;
+import java.awt.Window;
+import java.awt.event.ActionEvent;
+import java.awt.event.ActionListener;
+import java.awt.event.ComponentAdapter;
+import java.awt.event.ComponentEvent;
+import java.awt.event.ItemEvent;
+import java.awt.event.ItemListener;
+import java.awt.event.MouseAdapter;
+import java.awt.event.WindowAdapter;
+import java.awt.event.WindowEvent;
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.OutputStream;
+import java.io.Writer;
+import java.util.ArrayList;
+import java.util.Enumeration;
 import java.util.List;
+import java.util.TooManyListenersException;
 
-import javax.microedition.io.*;
-import javax.swing.*;
-import nl.lxtreme.ols.tool.base.*;
-import nl.lxtreme.ols.util.*;
-import nl.lxtreme.ols.util.swing.*;
+import javax.swing.JButton;
+import javax.swing.JCheckBox;
+import javax.swing.JComboBox;
+import javax.swing.JComponent;
+import javax.swing.JFrame;
+import javax.swing.JPanel;
+import javax.swing.JTextField;
+import javax.swing.SpringLayout;
+
+import nl.lxtreme.jvt220.terminal.ITerminal;
+import nl.lxtreme.jvt220.terminal.ITerminalFrontend;
+import nl.lxtreme.jvt220.terminal.swing.SwingFrontend;
+import nl.lxtreme.jvt220.terminal.vt220.AbstractTerminal;
+import nl.lxtreme.jvt220.terminal.vt220.VT220Terminal;
+import nl.lxtreme.ols.tool.base.ToolUtils;
+import nl.lxtreme.ols.util.HostUtils;
+import nl.lxtreme.ols.util.NumberUtils;
+import nl.lxtreme.ols.util.swing.SpringLayoutUtils;
 import nl.lxtreme.ols.util.swing.StandardActionFactory.CloseAction.Closeable;
-import nl.lxtreme.ols.util.swing.component.*;
-
-import org.osgi.service.io.*;
-
-import purejavacomm.*;
+import nl.lxtreme.ols.util.swing.SwingComponentUtils;
+import nl.lxtreme.ols.util.swing.component.JErrorDialog;
+import nl.lxtreme.ols.util.swing.component.JLazyComboBox;
+import purejavacomm.CommPortIdentifier;
+import purejavacomm.NoSuchPortException;
+import purejavacomm.PortInUseException;
+import purejavacomm.SerialPort;
+import purejavacomm.SerialPortEvent;
+import purejavacomm.SerialPortEventListener;
+import purejavacomm.UnsupportedCommOperationException;
 
 
 /**
  * Provides a window in which you connect to a serial port, and talk to that
  * port.
  */
-public abstract class SerialConsoleWindow extends JDialog implements Closeable
+public class SerialConsoleWindow extends JFrame implements Closeable
 {
   // CONSTANTS
 
@@ -63,8 +98,6 @@ public abstract class SerialConsoleWindow extends JDialog implements Closeable
 
   // VARIABLES
 
-  private final StringInterpreter interpreter;
-
   private boolean dialogResult;
 
   private JComboBox portSelect;
@@ -74,15 +107,16 @@ public abstract class SerialConsoleWindow extends JDialog implements Closeable
   private JComboBox paritySelect;
   private JComboBox flowControlSelect;
 
-  private ConsolePane consolePane;
+  private ITerminal terminal;
+  private ITerminalFrontend terminalFrontend;
+
   private JTextField serialInputTextField;
   private JButton sendButton;
   private JButton connectButton;
   private JButton disconnectButton;
-  private JCheckBox sendEnter;
-  private JCheckBox rawMode;
+  private JCheckBox autoNewLineMode;
 
-  private volatile StreamConnection connection;
+  private volatile SerialPort serialPort;
   private volatile InputStream serialInput;
   private volatile OutputStream serialOutput;
 
@@ -95,9 +129,7 @@ public abstract class SerialConsoleWindow extends JDialog implements Closeable
    */
   public SerialConsoleWindow( final Window aParent )
   {
-    super( aParent, "Serial Console", ModalityType.MODELESS );
-
-    this.interpreter = new StringInterpreter();
+    super( "Serial Console" );
 
     initDialog();
     buildDialog();
@@ -135,20 +167,19 @@ public abstract class SerialConsoleWindow extends JDialog implements Closeable
   {
     try
     {
-      String uri = getConnectionURI();
-      this.connection = createStreamConnection( uri );
+      this.serialPort = openSerialPort();
 
-      this.serialInput = this.connection.openInputStream();
-      this.serialOutput = this.connection.openOutputStream();
+      this.serialInput = this.serialPort.getInputStream();
+      this.serialOutput = this.serialPort.getOutputStream();
 
-      this.consolePane.connect( this.serialInput, this.serialOutput );
+      this.terminal = new VT220Terminal( 80, 24 );
+
+      this.terminalFrontend.connect( this.serialOutput );
+      this.terminalFrontend.setTerminal( this.terminal );
 
       disableControls();
-
-      this.consolePane.appendStatusText( "Connected to " + this.portSelect.getSelectedItem() + " @ "
-          + this.portRateSelect.getSelectedItem() );
     }
-    catch ( IOException exception )
+    catch ( Exception exception )
     {
       JErrorDialog.showDialog( getOwner(), "Connect failed!", exception );
     }
@@ -163,16 +194,14 @@ public abstract class SerialConsoleWindow extends JDialog implements Closeable
     {
       enableControls();
 
-      this.consolePane.disconnect();
+      this.terminalFrontend.disconnect();
 
-      if ( this.connection != null )
+      if ( this.serialPort != null )
       {
-        this.consolePane.appendStatusText( "Disconnected ..." );
-
         HostUtils.closeResource( this.serialInput );
         HostUtils.closeResource( this.serialOutput );
 
-        this.connection.close();
+        this.serialPort.close();
       }
     }
     catch ( IOException exception )
@@ -181,10 +210,38 @@ public abstract class SerialConsoleWindow extends JDialog implements Closeable
     }
     finally
     {
-      this.connection = null;
+      this.serialPort = null;
       this.serialInput = null;
       this.serialOutput = null;
     }
+  }
+
+  /**
+   * Resizes the frame to fix its contents. When the frame is only partially
+   * visible after resizing, it will be moved to make most of it visible.
+   */
+  void resizeFrameToFitContent()
+  {
+    // final Dimension frontendSize = this.terminalFrontend.getSize();
+    // final Insets frameInsets = getInsets();
+    //
+    // int width = frameInsets.left + frameInsets.right + frontendSize.width;
+    // int height = frameInsets.top + frameInsets.bottom + frontendSize.height;
+    //
+    // setSize( width, height );
+    //
+    // Rectangle screenBounds = getGraphicsConfiguration().getBounds();
+    //
+    // Rectangle frameBounds = getBounds();
+    // if ( frameBounds.x + frameBounds.width > screenBounds.width )
+    // {
+    // frameBounds.x = screenBounds.x;
+    // }
+    // if ( frameBounds.y + frameBounds.height > screenBounds.height )
+    // {
+    // frameBounds.y = screenBounds.y;
+    // }
+    // setBounds( frameBounds );
   }
 
   /**
@@ -192,25 +249,17 @@ public abstract class SerialConsoleWindow extends JDialog implements Closeable
    */
   final void sendData()
   {
-    sendData( this.serialInputTextField.getText() );
-  }
-
-  /**
-   * Sends the given data to the serial port.
-   */
-  final void sendData( final byte... aBuffer )
-  {
     boolean oldState = this.sendButton.isEnabled();
 
     try
     {
       this.sendButton.setEnabled( false );
 
-      if ( this.connection != null )
-      {
-        this.serialOutput.write( aBuffer );
-        this.serialOutput.flush();
-      }
+      final String text = new StringInterpreter().interpret( this.serialInputTextField.getText() );
+
+      final Writer writer = this.terminalFrontend.getWriter();
+      writer.write( text );
+      writer.flush();
     }
     catch ( IOException exception )
     {
@@ -227,13 +276,25 @@ public abstract class SerialConsoleWindow extends JDialog implements Closeable
    */
   final void sendData( final String aText )
   {
-    sendData( this.interpreter.interpret( aText ) );
-  }
+    boolean oldState = this.sendButton.isEnabled();
 
-  /**
-   * @return a {@link ConnectorService} instance, never <code>null</code>.
-   */
-  protected abstract ConnectorService getConnectorService();
+    try
+    {
+      this.sendButton.setEnabled( false );
+
+      final Writer writer = this.terminalFrontend.getWriter();
+      writer.write( aText );
+      writer.flush();
+    }
+    catch ( IOException exception )
+    {
+      JErrorDialog.showDialog( getOwner(), "Sending data failed!", exception );
+    }
+    finally
+    {
+      this.sendButton.setEnabled( oldState );
+    }
+  }
 
   /**
    * Builds this dialog by placing all components on it.
@@ -258,7 +319,24 @@ public abstract class SerialConsoleWindow extends JDialog implements Closeable
 
     final JComponent buttonPane = SwingComponentUtils.createButtonPane( closeButton );
 
-    SwingComponentUtils.setupDialogContentPane( this, contentPane, buttonPane );
+    SwingComponentUtils.setupWindowContentPane( this, contentPane, buttonPane );
+
+    addWindowListener( new WindowAdapter()
+    {
+      @Override
+      public void windowClosing( WindowEvent aEvent )
+      {
+        disconnect();
+      }
+    } );
+    addComponentListener( new ComponentAdapter()
+    {
+      @Override
+      public void componentResized( ComponentEvent aEvent )
+      {
+        resizeFrameToFitContent();
+      }
+    } );
 
     pack();
   }
@@ -272,7 +350,7 @@ public abstract class SerialConsoleWindow extends JDialog implements Closeable
   {
     final JPanel output = new JPanel( new GridBagLayout() );
 
-    output.add( new JScrollPane( this.consolePane ), new GridBagConstraints( 0, 0, 2, 1, 1.0, 1.0,
+    output.add( ( JComponent )this.terminalFrontend, new GridBagConstraints( 0, 0, 2, 1, 1.0, 1.0,
         GridBagConstraints.NORTH, GridBagConstraints.BOTH, new Insets( 4, 4, 4, 4 ), 0, 0 ) );
 
     output.add( this.serialInputTextField, new GridBagConstraints( 0, 1, 1, 1, 1.0, 0.0, GridBagConstraints.SOUTH,
@@ -314,11 +392,8 @@ public abstract class SerialConsoleWindow extends JDialog implements Closeable
 
     SpringLayoutUtils.addSeparator( panel, "Terminal settings" );
 
-    panel.add( createRightAlignedLabel( "Raw mode" ) );
-    panel.add( this.rawMode );
-
-    panel.add( createRightAlignedLabel( "Send newlines?" ) );
-    panel.add( this.sendEnter );
+    panel.add( createRightAlignedLabel( "Auto newline mode?" ) );
+    panel.add( this.autoNewLineMode );
 
     SpringLayoutUtils.addSeparator( panel, " " );
 
@@ -334,20 +409,6 @@ public abstract class SerialConsoleWindow extends JDialog implements Closeable
   }
 
   /**
-   * Creates a new {@link StreamConnection} instance for the given URI.
-   * 
-   * @param aUri
-   *          the URI to connect to, cannot be <code>null</code>.
-   * @return a new {@link StreamConnection} instance, never <code>null</code>.
-   * @throws IOException
-   *           in case creating the connection failed.
-   */
-  private StreamConnection createStreamConnection( final String aUri ) throws IOException
-  {
-    return ( StreamConnection )getConnectorService().open( aUri, ConnectorService.READ_WRITE, true /* timeouts */);
-  }
-
-  /**
    * Disables the controls for use when connected to a serial port.
    */
   private void disableControls()
@@ -357,7 +418,7 @@ public abstract class SerialConsoleWindow extends JDialog implements Closeable
     this.disconnectButton.setEnabled( true );
     this.sendButton.setEnabled( true );
     this.serialInputTextField.setEnabled( true );
-    this.consolePane.setEnabled( true );
+    ( ( JComponent )this.terminalFrontend ).setEnabled( true );
 
     this.portSelect.setEnabled( false );
     this.portRateSelect.setEnabled( false );
@@ -377,7 +438,7 @@ public abstract class SerialConsoleWindow extends JDialog implements Closeable
     this.disconnectButton.setEnabled( false );
     this.sendButton.setEnabled( false );
     this.serialInputTextField.setEnabled( false );
-    this.consolePane.setEnabled( false );
+    ( ( JComponent )this.terminalFrontend ).setEnabled( false );
 
     this.portSelect.setEnabled( true );
     this.portRateSelect.setEnabled( true );
@@ -388,33 +449,128 @@ public abstract class SerialConsoleWindow extends JDialog implements Closeable
   }
 
   /**
-   * Returns the connection URI for connecting to the serial port.
+   * Returns the opened serial port.
    * 
-   * @return a connection URI, never <code>null</code>.
+   * @return a serial port, never <code>null</code>.
+   * @throws NoSuchPortException
+   *           in case the defined port does not (or no longer) exist;
+   * @throws PortInUseException
+   *           in case the defined port is not available to us.
+   * @throws UnsupportedCommOperationException
+   *           in case we're trying to perform a port operation that is not
+   *           supported.
    */
-  private String getConnectionURI()
+  private SerialPort openSerialPort() throws IOException, NoSuchPortException, PortInUseException,
+      UnsupportedCommOperationException, TooManyListenersException
   {
-    final String portName = String.valueOf( this.portSelect.getSelectedItem() );
-    final String baudrate = String.valueOf( NumberUtils.smartParseInt( String.valueOf( this.portRateSelect
-        .getSelectedItem() ) ) );
+    String portName = String.valueOf( this.portSelect.getSelectedItem() );
 
-    final String bpc = String.valueOf( this.dataBitsSelect.getSelectedItem() );
-    final String parity = String.valueOf( this.paritySelect.getSelectedItem() );
-    final String stopBits = String.valueOf( this.stopBitsSelect.getSelectedItem() );
+    CommPortIdentifier portId = CommPortIdentifier.getPortIdentifier( portName );
 
-    String flowControl = "off";
-    String fcText = String.valueOf( this.flowControlSelect.getSelectedItem() );
-    if ( fcText.startsWith( "XON" ) )
+    SerialPort result = ( SerialPort )portId.open( "Serial console tool", 1000 );
+
+    int baudrate = NumberUtils.smartParseInt( String.valueOf( this.portRateSelect.getSelectedItem() ) );
+
+    String db = ( String )this.dataBitsSelect.getSelectedItem();
+    int databits;
+    if ( "5".equals( db ) )
     {
-      flowControl = "xon_xoff";
+      databits = SerialPort.DATABITS_5;
     }
-    else if ( fcText.startsWith( "RTS" ) )
+    else if ( "6".equals( db ) )
     {
-      flowControl = "rts_cts";
+      databits = SerialPort.DATABITS_6;
+    }
+    else if ( "7".equals( db ) )
+    {
+      databits = SerialPort.DATABITS_7;
+    }
+    else
+    {
+      databits = SerialPort.DATABITS_8;
     }
 
-    return String.format( "comm:%s;baudrate=%s;bitsperchar=%s;parity=%s;stopbits=%s;flowcontrol=%s", //
-        portName, baudrate, bpc, parity, stopBits, flowControl );
+    String sb = ( String )this.stopBitsSelect.getSelectedItem();
+    int stopbits;
+    if ( "2".equals( sb ) )
+    {
+      stopbits = SerialPort.STOPBITS_2;
+    }
+    else if ( "1.5".equals( sb ) )
+    {
+      stopbits = SerialPort.STOPBITS_1_5;
+    }
+    else
+    {
+      stopbits = SerialPort.STOPBITS_1;
+    }
+
+    final String par = String.valueOf( this.paritySelect.getSelectedItem() );
+    int parity;
+    if ( "Odd".equalsIgnoreCase( par ) )
+    {
+      parity = SerialPort.PARITY_NONE;
+    }
+    else if ( "Even".equalsIgnoreCase( par ) )
+    {
+      parity = SerialPort.PARITY_EVEN;
+    }
+    else
+    {
+      parity = SerialPort.PARITY_NONE;
+    }
+
+    String fc = String.valueOf( this.flowControlSelect.getSelectedItem() );
+    int flowControl;
+    if ( fc.startsWith( "XON" ) )
+    {
+      flowControl = SerialPort.FLOWCONTROL_XONXOFF_IN | SerialPort.FLOWCONTROL_XONXOFF_OUT;
+    }
+    else if ( fc.startsWith( "RTS" ) )
+    {
+      flowControl = SerialPort.FLOWCONTROL_RTSCTS_IN | SerialPort.FLOWCONTROL_RTSCTS_OUT;
+    }
+    else
+    {
+      flowControl = SerialPort.FLOWCONTROL_NONE;
+    }
+
+    result.setSerialPortParams( baudrate, databits, stopbits, parity );
+    result.setFlowControlMode( flowControl );
+    result.enableReceiveTimeout( 100 );
+    result.enableReceiveThreshold( 0 );
+
+    result.notifyOnDataAvailable( true );
+    result.addEventListener( new SerialPortEventListener()
+    {
+      @Override
+      public void serialEvent( SerialPortEvent event )
+      {
+        if ( ( event.getEventType() & SerialPortEvent.DATA_AVAILABLE ) != 0 )
+        {
+          SerialPort port = ( SerialPort )event.getSource();
+
+          try
+          {
+            InputStream is = port.getInputStream();
+
+            Integer[] buf = new Integer[is.available()];
+            for ( int i = 0; i < buf.length; i++ )
+            {
+              buf[i] = Integer.valueOf( is.read() );
+            }
+
+            terminalFrontend.writeCharacters( buf );
+          }
+          catch ( IOException e )
+          {
+            e.printStackTrace();
+          }
+        }
+      }
+    } );
+
+    return result;
   }
 
   /**
@@ -422,6 +578,15 @@ public abstract class SerialConsoleWindow extends JDialog implements Closeable
    */
   private void initDialog()
   {
+    this.terminalFrontend = new SwingFrontend();
+    ( ( JComponent )this.terminalFrontend ).addMouseListener( new MouseAdapter()
+    {
+      public void mouseClicked( java.awt.event.MouseEvent e )
+      {
+        ( ( JComponent )e.getSource() ).requestFocus();
+      }
+    } );
+
     this.portSelect = new JLazyComboBox( new JLazyComboBox.ItemProvider()
     {
       @Override
@@ -475,29 +640,16 @@ public abstract class SerialConsoleWindow extends JDialog implements Closeable
     this.flowControlSelect = new JComboBox( FLOWCONTROLS );
     this.flowControlSelect.setSelectedIndex( 0 ); // Off
 
-    this.sendEnter = new JCheckBox();
-    this.sendEnter.addActionListener( new ActionListener()
+    this.autoNewLineMode = new JCheckBox();
+    this.autoNewLineMode.addActionListener( new ActionListener()
     {
       @Override
       public void actionPerformed( final ActionEvent aEvent )
       {
         JCheckBox cb = ( JCheckBox )aEvent.getSource();
-        SerialConsoleWindow.this.interpreter.setAppendNewLine( cb.isSelected() );
+        ( ( AbstractTerminal )terminal ).setAutoNewlineMode( cb.isSelected() );
       }
     } );
-
-    this.rawMode = new JCheckBox();
-    this.rawMode.addActionListener( new ActionListener()
-    {
-      @Override
-      public void actionPerformed( final ActionEvent aEvent )
-      {
-        JCheckBox cb = ( JCheckBox )aEvent.getSource();
-        SerialConsoleWindow.this.consolePane.setRawMode( cb.isSelected() );
-      }
-    } );
-
-    this.consolePane = new ConsolePane();
 
     this.serialInputTextField = new JTextField( 80 );
     this.serialInputTextField.setToolTipText( "Enter raw commands here. Use $xx to enter ASCII characters directly." );

@@ -272,20 +272,19 @@ public class SignalDiagramComponent extends JPanel implements Scrollable
    * 
    * @return a visible view size, as {@link Dimension}, never <code>null</code>.
    */
-  public final Rectangle getVisibleViewSize()
+  @Override
+  public Rectangle getVisibleRect()
   {
-    final JComponent component = getSignalView();
-
-    final JScrollPane scrollPane = getAncestorOfClass( JScrollPane.class, component );
+    final JScrollPane scrollPane = getAncestorOfClass( JScrollPane.class, this );
 
     final Rectangle rect;
     if ( scrollPane != null )
     {
-      rect = scrollPane.getViewport().getBounds();
+      rect = scrollPane.getViewport().getViewRect();
     }
     else
     {
-      rect = getVisibleRect();
+      rect = super.getVisibleRect();
     }
 
     return rect;
@@ -308,7 +307,8 @@ public class SignalDiagramComponent extends JPanel implements Scrollable
       {
         final long endTime = System.nanoTime();
         final long renderTime = endTime - startTime;
-        System.out.println( "Rendering time = " + UnitOfTime.format( renderTime / 1.0e9 ) );
+        System.out.printf( "Rendering time = %s, View = %s.%n", Unit.Time.format( renderTime / 1.0e9 ),
+            getVisibleRect() );
       }
     }
     else
@@ -368,52 +368,6 @@ public class SignalDiagramComponent extends JPanel implements Scrollable
     rect.y = visibleRect.y;
 
     signalView.scrollRectToVisible( rect );
-  }
-
-  /**
-   * Calculates all dimensions of the contained components.
-   */
-  final void calculateDimensions()
-  {
-    final SignalView view = getSignalView();
-    final SignalDiagramModel model = getModel();
-
-    final JScrollPane scrollPane = getAncestorOfClass( JScrollPane.class, view );
-    if ( scrollPane != null )
-    {
-      final Rectangle viewPortSize = scrollPane.getViewport().getVisibleRect();
-
-      TimeLineView timeline = ( TimeLineView )scrollPane.getColumnHeader().getView();
-      ChannelLabelsView channelLabels = ( ChannelLabelsView )scrollPane.getRowHeader().getView();
-
-      final int clWidth = channelLabels.getPreferredWidth();
-      final int tlHeight = timeline.getTimeLineHeight();
-
-      final int newWidth = Math.max( viewPortSize.width, model.getAbsoluteScreenWidth() );
-      final int newHeight = Math.max( viewPortSize.height, model.getAbsoluteScreenHeight() );
-
-      // the timeline component always follows the width of the signal view, but
-      // with a fixed height...
-      timeline.setPreferredSize( new Dimension( newWidth, tlHeight ) );
-
-      // the channel label component calculates its own 'optimal' width, but
-      // doesn't know squat about the correct height...
-      channelLabels.setPreferredSize( new Dimension( clWidth, newHeight ) );
-
-      view.setPreferredSize( new Dimension( newWidth, newHeight ) );
-    }
-    else
-    {
-      final Dimension frameSize = getRootPane().getSize();
-      final Rectangle viewSize = view.getVisibleRect();
-
-      final int minWidth = Math.max( viewSize.width, frameSize.width );
-
-      final int newWidth = Math.max( minWidth, model.getAbsoluteScreenWidth() );
-      final int newHeight = Math.max( viewSize.height, model.getAbsoluteScreenHeight() );
-
-      view.setPreferredSize( new Dimension( newWidth, newHeight ) );
-    }
   }
 
   /**

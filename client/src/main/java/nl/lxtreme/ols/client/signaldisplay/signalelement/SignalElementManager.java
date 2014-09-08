@@ -22,16 +22,16 @@ package nl.lxtreme.ols.client.signaldisplay.signalelement;
 
 
 import static nl.lxtreme.ols.client.signaldisplay.signalelement.SignalElement.*;
-import java.util.*;
 
-import javax.swing.*;
+import java.util.*;
+import java.util.concurrent.atomic.*;
+
 import javax.swing.event.*;
 
 import nl.lxtreme.ols.api.*;
 import nl.lxtreme.ols.api.data.*;
 import nl.lxtreme.ols.client.signaldisplay.*;
-import nl.lxtreme.ols.client.signaldisplay.laf.*;
-import nl.lxtreme.ols.client.signaldisplay.signalelement.ISignalElementChangeListener.*;
+import nl.lxtreme.ols.client.signaldisplay.signalelement.ISignalElementChangeListener.ElementMoveEvent;
 
 
 /**
@@ -107,13 +107,8 @@ public final class SignalElementManager implements IDataModelChangeListener
 
   // VARIABLES
 
-  /** the total set of channel groups. */
-  private final List<ElementGroup> groups;
-  /** the total set of channels. */
-  private final List<SignalElement> elements;
-
+  private final AtomicReference<SignalElementModel> modelRef;
   private final EventListenerList eventListeners;
-  private final Object lock = new Object();
 
   // CONSTRUCTORS
 
@@ -122,8 +117,7 @@ public final class SignalElementManager implements IDataModelChangeListener
    */
   public SignalElementManager()
   {
-    this.groups = new ArrayList<ElementGroup>();
-    this.elements = new ArrayList<SignalElement>();
+    this.modelRef = new AtomicReference<SignalElementModel>( new SignalElementModel() );
     this.eventListeners = new EventListenerList();
   }
 
@@ -150,39 +144,7 @@ public final class SignalElementManager implements IDataModelChangeListener
    */
   public int calculateScreenHeight()
   {
-    int height = 0;
-
-    final int spacing = UIManager.getInt( UIManagerKeys.SIGNAL_ELEMENT_SPACING );
-
-    for ( ElementGroup cg : getGroups() )
-    {
-      if ( !cg.isVisible() )
-      {
-        continue;
-      }
-
-      for ( SignalElement element : cg.getElements() )
-      {
-        if ( element.isSignalGroup() )
-        {
-          height += element.getHeight() + spacing;
-        }
-        else if ( element.isDigitalSignal() && cg.isShowDigitalSignals() )
-        {
-          height += element.getHeight() + spacing;
-        }
-        else if ( element.isGroupSummary() && cg.isShowGroupSummary() )
-        {
-          height += element.getHeight() + spacing;
-        }
-        else if ( element.isAnalogSignal() && cg.isShowAnalogSignal() )
-        {
-          height += element.getHeight() + spacing;
-        }
-      }
-    }
-
-    return height;
+    return getSignalElementModel().calculateScreenHeight();
   }
 
   /**
@@ -191,24 +153,20 @@ public final class SignalElementManager implements IDataModelChangeListener
   @Override
   public void dataModelChanged( final DataSet aCapturedData )
   {
-    // Make sure only a single thread at a time modifies us...
-    synchronized ( this.lock )
-    {
-      final Channel[] newChannelList = aCapturedData.getChannels();
+    SignalElementModel oldModel = getSignalElementModel();
+    SignalElementModel newModel = new SignalElementModel();
 
+    final Channel[] newChannelList = aCapturedData.getChannels();
+
+    if ( oldModel == null || oldModel.getGroups().isEmpty() )
+    {
       // Reset channel groups so they align with the given data model...
       final int groupCount = Math.max( 1, ( int )Math.ceil( newChannelList.length / ( double )Ols.CHANNELS_PER_BLOCK ) );
       final int channelsPerGroup = ( int )Math.ceil( newChannelList.length / ( double )groupCount );
 
-      this.elements.clear();
-      this.groups.clear();
-
       for ( int g = 0; g < groupCount; g++ )
       {
-        final ElementGroup group = addGroup( "Group " + ( g + 1 ) );
-
-        // We start with a signal group element...
-        addSignalElement( group, createSignalGroupElement( group ) );
+        final ElementGroup group = newModel.addGroup( "Group " + ( g + 1 ) );
 
         for ( int c = 0; c < channelsPerGroup; c++ )
         {
@@ -217,15 +175,81 @@ public final class SignalElementManager implements IDataModelChangeListener
           {
             continue;
           }
-          addSignalElement( group, createDigitalSignalElement( newChannelList[channelIdx], group ) );
+          newModel.addSignalElement( group, createDigitalSignalElement( newChannelList[channelIdx], group ) );
         }
 
-        addSignalElement( group, createGroupSummaryElement( group ) );
-        addSignalElement( group, createAnalogScopeElement( group ) );
+        newModel.addSignalElement( group, createGroupSummaryElement( group ) );
+        newModel.addSignalElement( group, createAnalogScopeElement( group ) );
+      }
+    }
+    else
+    {
+      // Copy the structure of the existing model using the new channel data...
+      Set<Integer> seenChannelIdxs = new HashSet<Integer>();
+      ElementGroup newGroup = null;
+      for ( ElementGroup oldGroup : oldModel.getGroups() )
+      {
+        newGroup = newModel.addGroup( oldGroup.getName() );
+
+        for ( SignalElement oldElement : oldGroup.getElements() )
+        {
+          SignalElement element;
+          if ( oldElement.isDigitalSignal() )
+          {
+            int channelIdx = oldElement.getChannel().getIndex();
+            if ( channelIdx >= newChannelList.length )
+            {
+              // Not in the new data...
+              continue;
+            }
+
+            Channel newChannel = newChannelList[channelIdx];
+            seenChannelIdxs.add( Integer.valueOf( channelIdx ) );
+
+            element = createDigitalSignalElement( newChannel, newGroup );
+            element.setSignalAlignment( oldElement.getSignalAlignment() );
+            element.setSignalHeight( oldElement.getSignalHeight() );
+          }
+          else if ( oldElement.isAnalogSignal() )
+          {
+            element = createAnalogScopeElement( newGroup );
+          }
+          else if ( oldElement.isGroupSummary() )
+          {
+            element = createGroupSummaryElement( newGroup );
+          }
+          else
+          {
+            throw new RuntimeException( "Unknown/unhandled signal element: " + oldElement );
+          }
+
+          element.setColor( oldElement.getColor() );
+          element.setEnabled( oldElement.isEnabled() );
+          element.setHeight( oldElement.getHeight() );
+          element.setLabel( oldElement.getLabel() );
+
+          newModel.addSignalElement( newGroup, element );
+        }
+      }
+
+      if ( newGroup == null )
+      {
+        // Odd case, old model didn't have any groups?!
+        newGroup = newModel.addGroup( "Group 1" );
+      }
+
+      // Handle all left-over channels...
+      for ( Channel channel : newChannelList )
+      {
+        Integer channelIdx = Integer.valueOf( channel.getIndex() );
+        if ( !seenChannelIdxs.contains( channelIdx ) )
+        {
+          newModel.addSignalElement( newGroup, createDigitalSignalElement( channel, newGroup ) );
+        }
       }
     }
 
-    fireGroupStructureChangeEvent( getAssignedElements() );
+    setSignalElementModel( newModel );
   }
 
   /**
@@ -235,17 +259,8 @@ public final class SignalElementManager implements IDataModelChangeListener
    */
   public Collection<SignalElement> getAllElements()
   {
-    Collection<SignalElement> result = new ArrayList<SignalElement>();
-
-    synchronized ( this.lock )
-    {
-      if ( this.elements != null )
-      {
-        result.addAll( this.elements );
-      }
-    }
-
-    return result;
+    SignalElementModel model = getSignalElementModel();
+    return model.getAllElements();
   }
 
   /**
@@ -256,17 +271,8 @@ public final class SignalElementManager implements IDataModelChangeListener
    */
   public SortedSet<SignalElement> getAssignedElements()
   {
-    SortedSet<SignalElement> channelIndexes = new TreeSet<SignalElement>();
-
-    synchronized ( this.lock )
-    {
-      for ( ElementGroup cg : this.groups )
-      {
-        channelIndexes.addAll( cg.getElements() );
-      }
-    }
-
-    return channelIndexes;
+    SignalElementModel model = getSignalElementModel();
+    return model.getAssignedElements();
   }
 
   /**
@@ -279,21 +285,10 @@ public final class SignalElementManager implements IDataModelChangeListener
    * @return a signal element matching the given channel index, or
    *         <code>null</code> if no such element was found.
    */
-  public SignalElement getChannelByIndex( final int aChannelIndex )
+  public SignalElement getDigitalSignalByChannelIndex( final int aChannelIndex )
   {
-    SignalElement result = null;
-    synchronized ( this.lock )
-    {
-      for ( ElementGroup cg : this.groups )
-      {
-        result = cg.getChannelByIndex( aChannelIndex );
-        if ( result != null )
-        {
-          break;
-        }
-      }
-    }
-    return result;
+    SignalElementModel model = getSignalElementModel();
+    return model.getDigitalSignalByChannelIndex( aChannelIndex );
   }
 
   /**
@@ -303,12 +298,8 @@ public final class SignalElementManager implements IDataModelChangeListener
    */
   public Collection<ElementGroup> getGroups()
   {
-    Collection<ElementGroup> result;
-    synchronized ( this.groups )
-    {
-      result = Collections.unmodifiableCollection( this.groups );
-    }
-    return result;
+    SignalElementModel model = getSignalElementModel();
+    return model.getGroups();
   }
 
   /**
@@ -323,76 +314,10 @@ public final class SignalElementManager implements IDataModelChangeListener
    *          fits in the given dimensions.
    * @return an array of channels, never <code>null</code>.
    */
-  public SignalElement[] getSignalElements( final int aY, final int aHeight, final SignalElementMeasurer aMeasurer )
+  public IUIElement[] getUIElements( final int aY, final int aHeight, final SignalElementMeasurer aMeasurer )
   {
-    final List<SignalElement> result = new ArrayList<SignalElement>();
-
-    final int yMin = aY;
-    final int yMax = aHeight + aY;
-
-    final int spacing = UIManager.getInt( UIManagerKeys.SIGNAL_ELEMENT_SPACING );
-    final int halfSpacing = spacing / 2;
-
-    int yPos = 0;
-    for ( ElementGroup group : getGroups() )
-    {
-      if ( !group.isVisible() )
-      {
-        continue;
-      }
-      if ( yPos > yMax )
-      {
-        // Optimization: no need to continue after the requested end position...
-        break;
-      }
-
-      for ( SignalElement element : group.getElements() )
-      {
-        if ( element.isSignalGroup() )
-        {
-          int height = element.getHeight();
-          if ( aMeasurer.signalElementFits( yPos, height + halfSpacing, yMin, yMax ) )
-          {
-            element.setYposition( yPos );
-            result.add( element );
-          }
-          yPos += height + spacing;
-        }
-        else if ( element.isDigitalSignal() && group.isShowDigitalSignals() )
-        {
-          // Does this individual channel fit?
-          int height = element.getHeight();
-          if ( aMeasurer.signalElementFits( yPos, height + halfSpacing, yMin, yMax ) )
-          {
-            element.setYposition( yPos );
-            result.add( element );
-          }
-          yPos += height + spacing;
-        }
-        else if ( element.isGroupSummary() && group.isShowGroupSummary() )
-        {
-          int height = element.getHeight();
-          if ( aMeasurer.signalElementFits( yPos, height + halfSpacing, yMin, yMax ) )
-          {
-            element.setYposition( yPos );
-            result.add( element );
-          }
-          yPos += height + spacing;
-        }
-        else if ( element.isAnalogSignal() && group.isShowAnalogSignal() )
-        {
-          int height = element.getHeight();
-          if ( aMeasurer.signalElementFits( yPos, height + halfSpacing, yMin, yMax ) )
-          {
-            element.setYposition( yPos );
-            result.add( element );
-          }
-          yPos += height + spacing;
-        }
-      }
-    }
-
-    return result.toArray( new SignalElement[result.size()] );
+    SignalElementModel model = getSignalElementModel();
+    return model.getUIElements( aY, aHeight, aMeasurer );
   }
 
   /**
@@ -445,6 +370,16 @@ public final class SignalElementManager implements IDataModelChangeListener
   }
 
   /**
+   * @return a deep copy of the current signal element model, never
+   *         <code>null</code>.
+   */
+  final SignalElementModel createSignalElementModelCopy()
+  {
+    SignalElementModel currentModel = getSignalElementModel();
+    return new SignalElementModel( currentModel );
+  }
+
+  /**
    * Fires a {@link ElementMoveEvent} to all interested listeners.
    * 
    * @param aEvent
@@ -477,185 +412,27 @@ public final class SignalElementManager implements IDataModelChangeListener
   }
 
   /**
-   * Adds a new group to this manager.
+   * Returns the current signal element model.
    * 
-   * @param aName
-   *          the name of the new group, cannot be <code>null</code> or empty.
-   * @return the newly added group, never <code>null</code>.
-   * @throws IllegalArgumentException
-   *           in case the given name was <code>null</code> or empty;
-   * @throws IllegalStateException
-   *           in case no signal elements are available for the new group.
+   * @return the {@link SignalElementModel} instance, never <code>null</code>.
    */
-  protected ElementGroup addGroup( final String aName )
+  final SignalElementModel getSignalElementModel()
   {
-    ElementGroup result;
-    synchronized ( this.lock )
-    {
-      result = new ElementGroup( this.groups.size(), aName );
-
-      this.groups.add( result );
-    }
-
-    return result;
+    return this.modelRef.get();
   }
 
   /**
-   * Adds a given signal element to the given group.
-   * <p>
-   * If the given group already contains the given signal element, then this
-   * method is effectively a no-op.
-   * </p>
-   * 
-   * @param aGroup
-   *          the group to add the signal element to, cannot be
-   *          <code>null</code>;
-   * @param aSignalElement
-   *          the signal element to add to the group, cannot be
-   *          <code>null</code>.
-   * @throws IllegalArgumentException
-   *           in case one of the given parameters was <code>null</code>.
+   * @param aModel
    */
-  protected void addSignalElement( final ElementGroup aGroup, final SignalElement aSignalElement )
+  final void setSignalElementModel( SignalElementModel aModel )
   {
-    if ( aGroup == null )
+    SignalElementModel oldModel;
+    do
     {
-      throw new IllegalArgumentException( "Group cannot be null!" );
+      oldModel = this.modelRef.get();
     }
-    if ( aSignalElement == null )
-    {
-      throw new IllegalArgumentException( "Signal element cannot be null!" );
-    }
+    while ( !this.modelRef.compareAndSet( oldModel, aModel ) );
 
-    if ( aGroup.hasElement( aSignalElement ) )
-    {
-      // Nothing to do; we're done...
-      return;
-    }
-
-    synchronized ( this.lock )
-    {
-      if ( !this.elements.contains( aSignalElement ) )
-      {
-        this.elements.add( aSignalElement );
-      }
-
-      // Keep a reference to the former channel group...
-      final ElementGroup oldGroup = aSignalElement.getGroup();
-      // This will automatically remove the given channel from its former
-      // channel group...
-      aGroup.addElement( aSignalElement );
-      // When there are no more channels left in this channel group, remove
-      // it...
-      if ( ( oldGroup != null ) && !oldGroup.hasElements() )
-      {
-        this.groups.remove( oldGroup );
-      }
-    }
-  }
-
-  /**
-   * Returns a sorted set of all unassigned (= available) signal elements.
-   * 
-   * @return a sorted set of unassigned signal elements, never <code>null</code>
-   *         , but can be empty.
-   */
-  protected List<SignalElement> getUnassignedElements()
-  {
-    List<SignalElement> channels = new ArrayList<SignalElement>( getAllElements() );
-
-    for ( ElementGroup cg : getGroups() )
-    {
-      channels.removeAll( cg.getElements() );
-    }
-
-    return channels;
-  }
-
-  /**
-   * Removes the group with the given name.
-   * 
-   * @param aName
-   *          the name of the group to remove, cannot be <code>null</code> or
-   *          empty.
-   * @throws IllegalArgumentException
-   *           in case the given name was <code>null</code> or empty.
-   */
-  protected void removeGroup( final String aName )
-  {
-    if ( ( aName == null ) || aName.trim().isEmpty() )
-    {
-      throw new IllegalArgumentException( "Name cannot be null or empty!" );
-    }
-
-    synchronized ( this.groups )
-    {
-      ElementGroup group = getGroupByName( aName );
-      if ( group != null )
-      {
-        this.groups.remove( group );
-      }
-    }
-  }
-
-  /**
-   * Removes a given signal element from a given group.
-   * 
-   * @param aGroup
-   *          the group to remove the signal element from, cannot be
-   *          <code>null</code>;
-   * @param aSignalElement
-   *          the signal element to remove, cannot be <code>null</code>.
-   * @throws IllegalArgumentException
-   *           in case one of the given parameters was <code>null</code>.
-   */
-  protected void removeSignalElement( final ElementGroup aGroup, final SignalElement aSignalElement )
-  {
-    if ( aGroup == null )
-    {
-      throw new IllegalArgumentException( "Group cannot be null!" );
-    }
-    if ( aSignalElement == null )
-    {
-      throw new IllegalArgumentException( "Signal element cannot be null!" );
-    }
-
-    aGroup.removeElement( aSignalElement );
-  }
-
-  /**
-   * Returns the channel group with a given name.
-   * 
-   * @param aName
-   *          the name of the channel group to return, cannot be
-   *          <code>null</code> or empty.
-   * @return the channel group with the given name, or <code>null</code> if no
-   *         such channel group exists.
-   * @throws IllegalArgumentException
-   *           in case the given name was <code>null</code> or empty.
-   */
-  private ElementGroup getGroupByName( final String aName )
-  {
-    if ( ( aName == null ) || aName.trim().isEmpty() )
-    {
-      throw new IllegalArgumentException( "Name cannot be null or empty!" );
-    }
-
-    Iterator<ElementGroup> channelGroupIter;
-    synchronized ( this.lock )
-    {
-      channelGroupIter = this.groups.iterator();
-    }
-
-    while ( channelGroupIter.hasNext() )
-    {
-      ElementGroup cg = channelGroupIter.next();
-      if ( aName.equals( cg.getName() ) )
-      {
-        return cg;
-      }
-    }
-
-    return null;
+    fireGroupStructureChangeEvent( aModel.getAssignedElements() );
   }
 }

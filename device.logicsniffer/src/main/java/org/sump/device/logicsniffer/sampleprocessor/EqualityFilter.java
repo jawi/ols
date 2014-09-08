@@ -102,6 +102,6 @@ public final class EqualityFilter implements SampleProcessor
     }
 
     // Take the last seen time value as "absolete" length of this trace...
-    this.callback.ready( time - 1, ( this.trigCount - correction ) );
+    this.callback.ready( time, ( this.trigCount - correction ) );
   }
 }

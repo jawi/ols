@@ -73,7 +73,7 @@ public final class ChannelImpl implements Channel
 
     this.index = aChannel.getIndex();
     this.mask = aChannel.getMask();
-    this.label = aChannel.getLabel();
+    this.label = aChannel.hasName() ? aChannel.getLabel() : null;
     this.enabled = aChannel.isEnabled();
 
     this.annotations = new CopyOnWriteArrayList<Annotation<?>>();
@@ -120,7 +120,10 @@ public final class ChannelImpl implements Channel
     }
     else
     {
-      setLabel( aAnnotation.toString() );
+      if ( !hasName() )
+      {
+        setLabel( aAnnotation.toString() );
+      }
     }
   }
 

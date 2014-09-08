@@ -39,6 +39,8 @@ public interface UIManagerKeys
   String SNAP_CURSORS_DEFAULT = "ols.snap.cursors.default.boolean";
   /** Whether or not the tool windows are shown by default. */
   String SHOW_TOOL_WINDOWS_DEFAULT = "ols.show.tool.windows.default.boolean";
+  /** Whether or not the diagram should be centered to the trigger moment after a capture. */
+  String AUTO_CENTER_TO_TRIGGER_AFTER_CAPTURE = "ols.trigger.auto.center.boolean";
   /** The current active color scheme. */
   String COLOR_SCHEME = "ols.current.color.scheme.enum";
   /**
@@ -105,7 +107,9 @@ public interface UIManagerKeys
   /** The font used for the channel label texts. */
   String CHANNELLABELS_LABEL_FONT = "ols.channellabels.label.font";
   /** The foreground color used to display the channel label texts. */
-  String CHANNELLABELS_LABEL_FOREGROUND_COLOR = "ols.channellabels.label.foreground.color";
+  String CHANNELLABELS_SIGNALLABEL_FOREGROUND_COLOR = "ols.channellabels.label.foreground.color";
+  /** The foreground color used to display the channel label texts. */
+  String CHANNELLABELS_GROUPLABEL_FOREGROUND_COLOR = "ols.channellabels.grouplabel.foreground.color";
   /** The first gradient color used as background for the channel labels. */
   String CHANNELLABELS_LABEL_GRADIENT_COLOR1 = "ols.channellabels.label.gradient.1.color";
   /** The second gradient color used as background for the channel labels. */

@@ -49,10 +49,9 @@ public final class UARTDataSet extends BaseDataSet<UARTData>
   // VARIABLES
 
   private int decodedSymbols;
-  private int bitLength;
+  private double bitLength;
   private int detectedErrors;
 
-  private int baudRateExact;
   private int baudRate;
 
   // CONSTRUCTORS
@@ -88,7 +87,7 @@ public final class UARTDataSet extends BaseDataSet<UARTData>
    */
   public int getBaudRateExact()
   {
-    return this.baudRateExact;
+    return ( int )( this.getSampleRate() / this.bitLength );
   }
 
   /**
@@ -96,7 +95,7 @@ public final class UARTDataSet extends BaseDataSet<UARTData>
    * 
    * @return an average bit length, >= 0.
    */
-  public int getBitLength()
+  public double getBitLength()
   {
     return this.bitLength;
   }
@@ -189,17 +188,6 @@ public final class UARTDataSet extends BaseDataSet<UARTData>
   }
 
   /**
-   * Sets the baudRateExact.
-   * 
-   * @param aBaudRateExact
-   *          the baudRateExact to set
-   */
-  public void setBaudRateExact( final int aBaudRateExact )
-  {
-    this.baudRateExact = aBaudRateExact;
-  }
-
-  /**
    * Sets the (average) bit length for this data set.
    * <p>
    * A bit length is used to determine the baudrate of this data set. If there
@@ -213,7 +201,7 @@ public final class UARTDataSet extends BaseDataSet<UARTData>
    * @param aBitLength
    *          the bit length to set/add, should be >= 0.
    */
-  public void setSampledBitLength( final int aBitLength )
+  public void setSampledBitLength( final double aBitLength )
   {
     // If the given bit length is "much" smaller (smaller bit length means
     // higher baudrate) than the current one, switch to that one instead; this
@@ -228,16 +216,16 @@ public final class UARTDataSet extends BaseDataSet<UARTData>
       // Take the average as the current and the given bit lengths are "close"
       // to each other; ignore the given bit length otherwise, as it clobbers
       // our earlier results...
-      final int diff = Math.abs( aBitLength - this.bitLength );
-      if ( ( diff >= 0 ) && ( diff < 50 ) )
+      final double diff = Math.abs( aBitLength - this.bitLength );
+      if ( ( diff < 50 ) )
       {
-        this.bitLength = ( int )( ( aBitLength + this.bitLength ) / 2.0 );
+        this.bitLength = ( ( aBitLength + this.bitLength ) / 2.0 );
       }
       else
       {
         LOG.log( Level.INFO, "Ignoring sampled bit length ({0}) as it deviates "
             + "too much from current bit length ({1}).",
-            new Object[] { Integer.valueOf( aBitLength ), Integer.valueOf( this.bitLength ) } );
+            new Object[] { Double.valueOf( aBitLength ), Double.valueOf( this.bitLength ) } );
       }
     }
   }

@@ -160,15 +160,15 @@ public class SignalUI extends ComponentUI
     try
     {
       final Rectangle clip = aGraphics.getClipBounds();
-      final SignalElement[] signalElements = model.getSignalElements( clip.y, clip.height );
+      final IUIElement[] elements = model.getSignalElements( clip.y, clip.height );
 
       Graphics2D canvas = ( Graphics2D )aGraphics.create();
 
       try
       {
-        if ( signalElements.length > 0 )
+        if ( elements.length > 0 )
         {
-          paintSignals( canvas, model, signalElements );
+          paintSignals( canvas, model, elements );
         }
       }
       finally
@@ -194,7 +194,7 @@ public class SignalUI extends ComponentUI
       }
 
       // Draw the annotations...
-      paintAnnotations( canvas, model, signalElements );
+      paintAnnotations( canvas, model, elements );
     }
     finally
     {
@@ -232,7 +232,7 @@ public class SignalUI extends ComponentUI
    * @param aSignalElements
    */
   private void paintAnnotations( final Graphics2D aCanvas, final SignalViewModel aModel,
-      final SignalElement[] aSignalElements )
+      final IUIElement[] aSignalElements )
   {
     final long[] timestamps = aModel.getTimestamps();
     if ( ( timestamps == null ) || ( timestamps.length == 0 ) || ( aSignalElements.length == 0 ) )
@@ -260,85 +260,89 @@ public class SignalUI extends ComponentUI
 
     final AlphaComposite alphaComposite = AlphaComposite.SrcOver.derive( aModel.getAnnotationAlpha() );
 
-    for ( SignalElement signalElement : aSignalElements )
+    for ( IUIElement element : aSignalElements )
     {
-      if ( signalElement.isDigitalSignal() )
+      if ( element instanceof SignalElement )
       {
-        // Tell Swing how we would like to render ourselves...
-        aCanvas.setRenderingHints( createSignalRenderingHints( aModel.isRenderAnnotationAntiAliased() ) );
-
-        aCanvas.setColor( signalElement.getColor() );
-
-        if ( signalElement.isEnabled() )
+        SignalElement signalElement = ( SignalElement )element;
+        if ( signalElement.isDigitalSignal() )
         {
-          final AnnotationsHelper helper = new AnnotationsHelper( signalElement );
+          // Tell Swing how we would like to render ourselves...
+          aCanvas.setRenderingHints( createSignalRenderingHints( aModel.isRenderAnnotationAntiAliased() ) );
 
-          aCanvas.setFont( aModel.getAnnotationFont() );
+          aCanvas.setColor( signalElement.getColor() );
 
-          final FontMetrics fm = aCanvas.getFontMetrics();
-          final int fontHeight = fm.getHeight();
-
-          for ( DataAnnotation<?> ann : helper.getAnnotations( DataAnnotation.class, startTimestamp, endTimestamp ) )
+          if ( signalElement.isEnabled() )
           {
-            final long annStartTime = ann.getStartTimestamp();
-            final long annEndTime = ann.getEndTimestamp();
+            final AnnotationsHelper helper = new AnnotationsHelper( signalElement );
 
-            int x1 = ( int )( annStartTime * zoomFactor );
-            int x2 = ( int )( annEndTime * zoomFactor );
-            int y1 = signalElement.getOffset( aModel.getAnnotationAlignment() );
-            int y2 = y1 + signalElement.getSignalHeight();
-            int midY = y1 + ( ( y2 - y1 ) / 2 );
+            aCanvas.setFont( aModel.getAnnotationFont() );
 
-            final String annText = ann.getAnnotation().toString();
+            final FontMetrics fm = aCanvas.getFontMetrics();
+            final int fontHeight = fm.getHeight();
 
-            final int annotationWidth = ( x2 - x1 ) + 2;
-
-            final Composite oldComposite = aCanvas.getComposite();
-            final Stroke oldStroke = aCanvas.getStroke();
-
-            aCanvas.setComposite( alphaComposite );
-
-            // Fade out the signal itself...
-            aCanvas.setColor( aModel.getBackgroundColor() );
-            if ( annotationRenderStyle )
+            for ( DataAnnotation<?> ann : helper.getAnnotations( DataAnnotation.class, startTimestamp, endTimestamp ) )
             {
-              aCanvas.fillRect( x1, y1 + 0, annotationWidth, ( y2 - y1 ) + 1 );
-            }
-            else
-            {
-              aCanvas.fillRect( x1, y1 + 1, annotationWidth, ( y2 - y1 ) - 1 );
-            }
+              final long annStartTime = ann.getStartTimestamp();
+              final long annEndTime = ann.getEndTimestamp();
 
-            aCanvas.setComposite( oldComposite );
+              int x1 = ( int )( annStartTime * zoomFactor );
+              int x2 = ( int )( annEndTime * zoomFactor );
+              int y1 = signalElement.getOffset( aModel.getAnnotationAlignment() );
+              int y2 = y1 + signalElement.getSignalHeight();
+              int midY = y1 + ( ( y2 - y1 ) / 2 );
 
-            // Draw the thick white boundaries...
-            aCanvas.setColor( aModel.getAnnotationColor() );
-            aCanvas.setStroke( stroke );
-            aCanvas.drawLine( x1, y1 + 2, x1, y2 - 2 );
-            aCanvas.drawLine( x2, y1 + 2, x2, y2 - 2 );
+              final String annText = ann.getAnnotation().toString();
 
-            aCanvas.setStroke( oldStroke );
+              final int annotationWidth = ( x2 - x1 ) + 2;
 
-            final int textWidth = fm.stringWidth( annText );
-            final int textXoffset = ( int )( ( annotationWidth - textWidth ) / 2.0 );
+              final Composite oldComposite = aCanvas.getComposite();
+              final Stroke oldStroke = aCanvas.getStroke();
 
-            if ( textXoffset > 0 )
-            {
-              int x3 = ( x1 + textXoffset );
-              if ( annotationRenderStyle && ( ( x3 - 4 ) > 0 ) )
+              aCanvas.setComposite( alphaComposite );
+
+              // Fade out the signal itself...
+              aCanvas.setColor( aModel.getBackgroundColor() );
+              if ( annotationRenderStyle )
               {
-                aCanvas.drawLine( x1, midY, x3 - 4, midY );
-                aCanvas.drawLine( x3 + textWidth + 8, midY, x2, midY );
+                aCanvas.fillRect( x1, y1 + 0, annotationWidth, ( y2 - y1 ) + 1 );
+              }
+              else
+              {
+                aCanvas.fillRect( x1, y1 + 1, annotationWidth, ( y2 - y1 ) - 1 );
               }
 
-              aCanvas.drawString( annText, x1 + textXoffset, y1 + fontHeight );
+              aCanvas.setComposite( oldComposite );
+
+              // Draw the thick white boundaries...
+              aCanvas.setColor( aModel.getAnnotationColor() );
+              aCanvas.setStroke( stroke );
+              aCanvas.drawLine( x1, y1 + 2, x1, y2 - 2 );
+              aCanvas.drawLine( x2, y1 + 2, x2, y2 - 2 );
+
+              aCanvas.setStroke( oldStroke );
+
+              final int textWidth = fm.stringWidth( annText );
+              final int textXoffset = ( int )( ( annotationWidth - textWidth ) / 2.0 );
+
+              if ( textXoffset > 0 )
+              {
+                int x3 = ( x1 + textXoffset );
+                if ( annotationRenderStyle && ( ( x3 - 4 ) > 0 ) )
+                {
+                  aCanvas.drawLine( x1, midY, x3 - 4, midY );
+                  aCanvas.drawLine( x3 + textWidth + 8, midY, x2, midY );
+                }
+
+                aCanvas.drawString( annText, x1 + textXoffset, y1 + fontHeight );
+              }
             }
           }
         }
       }
 
       // Advance to the next channel...
-      aCanvas.translate( 0, signalElement.getHeight() + aModel.getSignalElementSpacing() );
+      aCanvas.translate( 0, element.getHeight() + aModel.getSignalElementSpacing() );
     }
   }
 
@@ -416,11 +420,10 @@ public class SignalUI extends ComponentUI
    *          the canvas to paint on, cannot be <code>null</code>;
    * @param aModel
    *          the model to use, cannot be <code>null</code>;
-   * @param aSignalElements
-   *          the signal elements to draw, cannot be <code>null</code> or empty!
+   * @param aElements
+   *          the UI-elements to draw, cannot be <code>null</code> or empty!
    */
-  private void paintSignals( final Graphics2D aCanvas, final SignalViewModel aModel,
-      final SignalElement[] aSignalElements )
+  private void paintSignals( final Graphics2D aCanvas, final SignalViewModel aModel, final IUIElement[] aElements )
   {
     final int[] values = aModel.getDataValues();
     final long[] timestamps = aModel.getTimestamps();
@@ -449,19 +452,26 @@ public class SignalUI extends ComponentUI
     }
 
     // Start drawing at the correct position in the clipped region...
-    aCanvas.translate( 0, aSignalElements[0].getYposition() );
+    aCanvas.translate( 0, aElements[0].getYposition() );
 
     final boolean enableSloppyScopePainting = aModel.isSloppyScopeRenderingAllowed();
     int lastP = 0;
 
-    for ( SignalElement signalElement : aSignalElements )
+    for ( IUIElement element : aElements )
     {
-      aCanvas.setColor( signalElement.getColor() );
-
-      if ( signalElement.isSignalGroup() )
+      if ( element instanceof ElementGroup )
       {
         // Draw nothing...
+
+        // advance to the next element...
+        aCanvas.translate( 0, element.getHeight() + aModel.getSignalElementSpacing() );
+
+        continue;
       }
+
+      aCanvas.setColor( element.getColor() );
+
+      final SignalElement signalElement = ( SignalElement )element;
 
       if ( signalElement.isDigitalSignal() )
       {

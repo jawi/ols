@@ -21,9 +21,11 @@ The current OLS client supports the following hardware:
 
  - Open-Bench Logic Sniffer;
  - Original SUMP-client;
- - LogicShrimp;
- - BusPirate;
- - IRToy.
+ - Logic Shrimp;
+ - Logic Pirate;
+ - Bus Pirate;
+ - IRToy;
+ - Arduino Generic Logic Analyzer (see [10]).
 
 In fact, all SUMP-compatible devices can be supported by the OLS client. To 
 add support for non-listed devices only a so-called "device profile" needs to
@@ -92,4 +94,5 @@ External links
     the OLS hardware, with a subforum for the OLS client;
 [7] <http://www.osgi.org/Main/OSGiSpecificationLicense>;
 [8] <http://www.apache.org/licenses/LICENSE-2.0>;
-[9] <http://www.opensource.org/licenses/bsd-license.html>.
+[9] <http://www.opensource.org/licenses/bsd-license.html>;
+[10] <https://github.com/gillham/logic_analyzer> by Andrew Gillham.

@@ -134,8 +134,13 @@ public class StringInterpreterTest
   @Test
   public void testInterpretNonEscapedTextOk() throws Exception
   {
-    assertArrayEquals( "The quick brown fox jumped over the lazy dog!".getBytes(),
-        this.interpreter.interpret( "The quick brown fox jumped over the lazy dog!" ) );
+    String text = "The quick brown fox jumped over the lazy dog!";
+    int[] values = new int[text.length()];
+    for (int i = 0; i < text.length(); i++) {
+      values[i] = text.charAt( i );
+    }
+    
+    assertInterpretation( text, values );
   }
 
   /**
@@ -171,8 +176,9 @@ public class StringInterpreterTest
   @Test
   public void testInterpretUnicodeOk() throws Exception
   {
-    assertInterpretation( "\u1234", 0xE1, 0x88, 0xB4 );
-    assertInterpretation( "\u00e9", 0xC3, 0xA9 );
+    assertInterpretation( "\u1234", 0x1234 );
+    assertInterpretation( "\u00e9", 0xe9 );
+    assertInterpretation( "\u0027", 0x27 );
   }
 
   /**
@@ -181,11 +187,11 @@ public class StringInterpreterTest
    */
   private void assertInterpretation( final String aInput, final int... aExpectedValues )
   {
-    byte[] result = this.interpreter.interpret( aInput );
-    for ( int i = 0; i < result.length; i++ )
+    String result = this.interpreter.interpret( aInput );
+    for ( int i = 0; i < result.length(); i++ )
     {
-      assertEquals( ( byte )aExpectedValues[i], result[i] );
+      assertEquals( Integer.valueOf( aExpectedValues[i] ), Integer.valueOf( result.charAt( i ) ) );
     }
-    assertEquals( aExpectedValues.length, result.length );
+    assertEquals( aExpectedValues.length, result.length() );
   }
 }

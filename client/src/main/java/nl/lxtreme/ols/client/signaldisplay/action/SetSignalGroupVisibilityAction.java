@@ -41,7 +41,7 @@ public class SetSignalGroupVisibilityAction extends AbstractAction
 
   // VARIABLES
 
-  private final ElementGroup signalGroup;
+  private final ElementGroup group;
   private final SignalDiagramController controller;
   private final SignalElementType elementType;
 
@@ -52,20 +52,16 @@ public class SetSignalGroupVisibilityAction extends AbstractAction
    * 
    * @param aController
    *          the controller to use, cannot be <code>null</code>;
-   * @param aSignalElement
-   *          the signal element to hide/show, cannot be <code>null</code>;
+   * @param aGroup
+   *          the group for which to hide/show the elements, cannot be
+   *          <code>null</code>;
    * @param aType
    *          the signal element type to show/hide.
    */
-  public SetSignalGroupVisibilityAction( final SignalDiagramController aController, final SignalElement aSignalElement,
+  public SetSignalGroupVisibilityAction( final SignalDiagramController aController, final ElementGroup aGroup,
       final SignalElementType aType )
   {
-    if ( !aSignalElement.isSignalGroup() )
-    {
-      throw new IllegalArgumentException();
-    }
-
-    this.signalGroup = aSignalElement.getGroup();
+    this.group = aGroup;
     this.controller = aController;
     this.elementType = aType;
 
@@ -74,17 +70,17 @@ public class SetSignalGroupVisibilityAction extends AbstractAction
     if ( aType == SignalElementType.DIGITAL_SIGNAL )
     {
       suffix = "digital signals";
-      visible = this.signalGroup.isShowDigitalSignals();
+      visible = this.group.isShowDigitalSignals();
     }
     else if ( aType == SignalElementType.ANALOG_SIGNAL )
     {
       suffix = "analog signal";
-      visible = this.signalGroup.isShowAnalogSignal();
+      visible = this.group.isShowAnalogSignal();
     }
     else if ( aType == SignalElementType.GROUP_SUMMARY )
     {
       suffix = "group summary";
-      visible = this.signalGroup.isShowGroupSummary();
+      visible = this.group.isShowGroupSummary();
     }
     else
     {
@@ -106,18 +102,18 @@ public class SetSignalGroupVisibilityAction extends AbstractAction
   {
     if ( this.elementType == SignalElementType.DIGITAL_SIGNAL )
     {
-      this.signalGroup.setShowDigitalSignals( !this.signalGroup.isShowDigitalSignals() );
+      this.group.setShowDigitalSignals( !this.group.isShowDigitalSignals() );
     }
     else if ( this.elementType == SignalElementType.ANALOG_SIGNAL )
     {
-      this.signalGroup.setShowAnalogSignal( !this.signalGroup.isShowAnalogSignal() );
+      this.group.setShowAnalogSignal( !this.group.isShowAnalogSignal() );
     }
     else if ( this.elementType == SignalElementType.GROUP_SUMMARY )
     {
-      this.signalGroup.setShowGroupSummary( !this.signalGroup.isShowGroupSummary() );
+      this.group.setShowGroupSummary( !this.group.isShowGroupSummary() );
     }
 
     // Signal group: entire display could be changed...
-    this.controller.recalculateDimensions();
+    this.controller.revalidateAll();
   }
 }

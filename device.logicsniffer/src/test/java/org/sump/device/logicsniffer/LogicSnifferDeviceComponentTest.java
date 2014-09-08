@@ -150,7 +150,7 @@ public class LogicSnifferDeviceComponentTest
    * {@link org.sump.device.logicsniffer.LogicSnifferAcquisitionTask#doInBackground()}
    * .
    */
-  @Test( timeout = 10000 )
+  @Test( timeout = 1000000 )
   public void testVerifyFlagsAndSentData() throws Exception
   {
     final boolean ddrMode = ( this.sampleRate > this.device.getConfig().getClockspeed() );

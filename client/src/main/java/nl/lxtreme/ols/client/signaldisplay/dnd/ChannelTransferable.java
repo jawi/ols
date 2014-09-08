@@ -42,19 +42,19 @@ public class ChannelTransferable implements Transferable
 
   // VARIABLES
 
-  private final SignalElement signalElement;
+  private final IUIElement element;
 
   // CONSTRUCTORS
 
   /**
    * Creates a new {@link ChannelTransferable} instance.
    * 
-   * @param aSignalElement
+   * @param aElement
    *          the signal element to transfer, cannot be <code>null</code>.
    */
-  public ChannelTransferable( final SignalElement aSignalElement )
+  public ChannelTransferable( final IUIElement aElement )
   {
-    this.signalElement = aSignalElement;
+    this.element = aElement;
   }
 
   // METHODS
@@ -63,11 +63,11 @@ public class ChannelTransferable implements Transferable
    * {@inheritDoc}
    */
   @Override
-  public SignalElement getTransferData( final DataFlavor aFlavor ) throws UnsupportedFlavorException
+  public IUIElement getTransferData( final DataFlavor aFlavor ) throws UnsupportedFlavorException
   {
     if ( CHANNEL_FLAVOR.equals( aFlavor ) )
     {
-      return this.signalElement;
+      return this.element;
     }
 
     throw new UnsupportedFlavorException( aFlavor );

@@ -104,8 +104,8 @@ public class SignalView extends AbstractViewLayer implements IMeasurementListene
       {
         setMouseCursor( aEvent, null );
 
-        SignalElement element = findSignalElement( point );
-        if ( ( element != null ) && element.isDigitalSignal() )
+        SignalElement element = findDigitalSignal( point );
+        if ( element != null )
         {
           final AnnotationsHelper helper = new AnnotationsHelper( element );
 
@@ -131,9 +131,14 @@ public class SignalView extends AbstractViewLayer implements IMeasurementListene
      *          <code>null</code>.
      * @return the channel index, or -1 if not found.
      */
-    private SignalElement findSignalElement( final Point aPoint )
+    private SignalElement findDigitalSignal( final Point aPoint )
     {
-      return this.controller.getSignalDiagramModel().findSignalElement( aPoint );
+      IUIElement element = this.controller.getSignalDiagramModel().findUIElement( aPoint );
+      if ( element instanceof SignalElement && ( ( SignalElement )element ).isDigitalSignal() )
+      {
+        return ( SignalElement )element;
+      }
+      return null;
     }
   }
 

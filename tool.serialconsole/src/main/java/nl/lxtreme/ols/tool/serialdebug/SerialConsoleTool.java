@@ -21,16 +21,20 @@
 package nl.lxtreme.ols.tool.serialdebug;
 
 
-import java.awt.*;
+import java.awt.Window;
 
-import javax.swing.*;
+import javax.swing.SwingUtilities;
 
-import org.apache.felix.dm.*;
+import nl.lxtreme.ols.api.data.annotation.AnnotationListener;
+import nl.lxtreme.ols.api.tools.Tool;
+import nl.lxtreme.ols.api.tools.ToolCategory;
+import nl.lxtreme.ols.api.tools.ToolContext;
+import nl.lxtreme.ols.api.tools.ToolProgressListener;
+import nl.lxtreme.ols.api.tools.ToolTask;
+
 import org.apache.felix.dm.Component;
-import org.osgi.service.io.*;
-
-import nl.lxtreme.ols.api.data.annotation.*;
-import nl.lxtreme.ols.api.tools.*;
+import org.apache.felix.dm.DependencyManager;
+import org.osgi.service.log.LogService;
 
 
 /**
@@ -40,7 +44,6 @@ public class SerialConsoleTool implements Tool<Void>
 {
   // VARIABLES
 
-  private volatile ConnectorService connectorService;
   private volatile SerialConsoleWindow consoleWindow;
 
   // METHODS
@@ -81,16 +84,7 @@ public class SerialConsoleTool implements Tool<Void>
   {
     disposeConsoleWindow();
 
-    this.consoleWindow = new SerialConsoleWindow( aParent )
-    {
-      private static final long serialVersionUID = 1L;
-
-      @Override
-      protected ConnectorService getConnectorService()
-      {
-        return SerialConsoleTool.this.connectorService;
-      }
-    };
+    this.consoleWindow = new SerialConsoleWindow( aParent );
     this.consoleWindow.showDialog();
   }
 
@@ -124,10 +118,9 @@ public class SerialConsoleTool implements Tool<Void>
 
     aComponent //
         .add( dependencyManager.createServiceDependency() //
-            .setService( ConnectorService.class ) //
-            .setAutoConfig( "connectorService" ) //
+            .setService( LogService.class ) //
             .setInstanceBound( true ) //
-            .setRequired( true ) //
+            .setRequired( false ) //
         );
   }
 

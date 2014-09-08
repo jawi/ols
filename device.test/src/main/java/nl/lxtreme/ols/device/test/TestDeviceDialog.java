@@ -219,7 +219,7 @@ public class TestDeviceDialog extends JDialog implements Configurable, Closeable
 
     final JComponent buttonPane = SwingComponentUtils.createButtonPane( okButton, closeButton );
 
-    SwingComponentUtils.setupDialogContentPane( this, contents, buttonPane, okButton );
+    SwingComponentUtils.setupWindowContentPane( this, contents, buttonPane, okButton );
   }
 
 }

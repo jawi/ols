@@ -40,9 +40,9 @@ final class AboutPane extends JPanel
 
   private static final String ABOUT_MESSAGE = //
   "<html><body><h3>%s</h3>" //
-      + "<p>Copyright 2006-2010 Michael Poppitz<br>" //
-      + "Copyright 2010-2011 J.W. Janssen<br><br></p>" //
-      + "<p>This software is released under the GNU GPLv2.<br><br></p>" //
+      + "<p>\u00A9 Copyright 2006-2010 Michael Poppitz<br>" //
+      + "\u00A9 Copyright 2010-2013 J.W. Janssen<br><br></p>" //
+      + "<p>This software is released under the GNU GPLv2 license.<br><br></p>" //
       + "<p>Version: %s<br><br></p>" //
       + "<p>For more information see:</p>" //
       + "<ul>" //
@@ -93,11 +93,13 @@ final class AboutPane extends JPanel
     final JLabel iconLabel = new JLabel( new ImageIcon( url ) );
     iconLabel.setBackground( Color.WHITE );
 
+    final JLabel aboutMsg = new JLabel( String.format( ABOUT_MESSAGE, aName, aVersion ) );
+
     add( iconLabel, //
         new GridBagConstraints( 0, 0, 1, 1, 1.0, 0.0, GridBagConstraints.NORTH, GridBagConstraints.HORIZONTAL, //
             new Insets( 0, 0, 5, 0 ), 0, 0 ) );
 
-    add( new JLabel( String.format( ABOUT_MESSAGE, aName, aVersion ) ), //
+    add( aboutMsg, //
         new GridBagConstraints( 0, 1, 1, 1, 1.0, 1.0, GridBagConstraints.NORTH, GridBagConstraints.BOTH, //
             new Insets( 5, 10, 5, 10 ), 0, 0 ) );
   }

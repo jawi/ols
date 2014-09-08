@@ -21,17 +21,17 @@
 package nl.lxtreme.ols.api.util;
 
 
-import static org.junit.Assert.*;
-
 import java.util.*;
+
+import nl.lxtreme.ols.api.util.Unit.SizeSI;
 
 import org.junit.*;
 
 
 /**
- * Test cases for {@link SizeUnit}.
+ * Test cases for {@link SizeSI}.
  */
-public class SizeUnitTest
+public class SizeUnitTest extends UnitTestBase
 {
   // METHODS
 
@@ -51,9 +51,9 @@ public class SizeUnitTest
   @Test
   public void testFormatAutoScaleOk()
   {
-    assertEquals( "0.00B", SizeUnit.format( 0 ) );
-    assertEquals( "10.00kB", SizeUnit.format( 10240 ) );
-    assertEquals( "10.00MB", SizeUnit.format( 10240 * 1024 ) );
-    assertEquals( "-10.00MB", SizeUnit.format( -10240 * 1024 ) );
+    assertUnitEquals( "0.00", "B", SizeSI.format( 0 ) );
+    assertUnitEquals( "10.00", "kB", SizeSI.format( 10240 ) );
+    assertUnitEquals( "10.00", "MB", SizeSI.format( 10240 * 1024 ) );
+    assertUnitEquals( "-10.00", "MB", SizeSI.format( -10240 * 1024 ) );
   }
 }

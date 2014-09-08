@@ -372,7 +372,7 @@ public final class ClientController implements ActionProvider, AcquisitionProgre
       long time = System.currentTimeMillis() - this.acquisitionStartTime;
 
       setStatusOnEDT( "Capture finished at {0,date,medium} {0,time,medium}, and took {1}.", new Date(),
-          UnitOfTime.format( time / 1.0e3 ) );
+          Unit.Time.format( time / 1.0e3 ) );
     }
 
     updateActionsOnEDT();
@@ -1302,6 +1302,9 @@ public final class ClientController implements ActionProvider, AcquisitionProgre
           {
             if ( dialog.showDialog() )
             {
+              // Update the default settings (if needed)...
+              updateDefaultSettings();
+
               // Ensure all UI-related changes are immediately visible...
               repaintMainFrame();
             }
@@ -1322,7 +1325,7 @@ public final class ClientController implements ActionProvider, AcquisitionProgre
   {
     final HostProperties hostProperties = getHostProperties();
 
-    initOSSpecifics( hostProperties.getShortName() );
+    initOSSpecifics( hostProperties.getShortName(), hostProperties.getVersion() );
 
     // Make sure we're running on the EDT to ensure the Swing threading model is
     // correctly defined...
@@ -1342,7 +1345,7 @@ public final class ClientController implements ActionProvider, AcquisitionProgre
 
         // ensure that all changes to cursors are reflected in the UI...
         ClientController.this.signalDiagramController.addCursorChangeListener( new CursorActionListener() );
-        ClientController.this.signalDiagramController.setDefaultSettings();
+        updateDefaultSettings();
 
         mf.setTitle( hostProperties.getFullName() );
         mf.setStatus( "{0} v{1} ready ...", hostProperties.getShortName(), hostProperties.getVersion() );
@@ -1625,6 +1628,7 @@ public final class ClientController implements ActionProvider, AcquisitionProgre
         getAction( RemoveAnnotationsAction.ID ).setEnabled( dataAvailable );
 
         getAction( SetMeasurementModeAction.ID ).setEnabled( dataAvailable );
+        getAction( ShowManagerViewAction.ID ).setEnabled( dataAvailable );
 
         // Update the tools...
         final IManagedAction[] toolActions = getActionsByType( RunToolAction.class );
@@ -1644,6 +1648,14 @@ public final class ClientController implements ActionProvider, AcquisitionProgre
         }
       }
     } );
+  }
+
+  /**
+   * Updates the default settings.
+   */
+  final void updateDefaultSettings()
+  {
+    this.signalDiagramController.setDefaultSettings();
   }
 
   /**
@@ -1819,12 +1831,28 @@ public final class ClientController implements ActionProvider, AcquisitionProgre
    * @param aApplicationName
    *          the name of the application (when this needs to be passed to the
    *          guest OS);
+   * @param aVersion
+   *          the version of the application.
    * @param aApplicationCallback
    *          the application callback used to report application events on some
    *          platforms (Mac OS), may be <code>null</code>.
    */
-  private void initOSSpecifics( final String aApplicationName )
+  private void initOSSpecifics( final String aApplicationName, String aVersion )
   {
+    System.setProperty( "nl.lxtreme.ols.client.version", aVersion );
+
+    // Use the defined email address...
+    System.setProperty( JErrorDialog.PROPERTY_REPORT_INCIDENT_EMAIL_ADDRESS,
+        this.hostProperties.getReportIncidentAddress() );
+
+    if ( this.hostProperties.isDebugMode() )
+    {
+      // Install a custom repaint manager that detects whether Swing
+      // components are created outside the EDT; if so, it will yield a
+      // stack trace to the offending parts of the code...
+      ThreadViolationDetectionRepaintManager.install();
+    }
+
     final HostInfo hostInfo = HostUtils.getHostInfo();
     if ( hostInfo.isMacOS() )
     {

@@ -59,7 +59,7 @@ import javax.swing.SpringLayout;
 import nl.lxtreme.ols.api.UserSettings;
 import nl.lxtreme.ols.api.tools.ToolContext;
 import nl.lxtreme.ols.api.tools.ToolTask;
-import nl.lxtreme.ols.api.util.UnitOfTime;
+import nl.lxtreme.ols.api.util.Unit;
 import nl.lxtreme.ols.tool.base.BaseToolDialog;
 import nl.lxtreme.ols.tool.base.ExportAware;
 import nl.lxtreme.ols.tool.base.ToolUtils;
@@ -417,7 +417,7 @@ public final class JTAGProtocolAnalysisDialog extends BaseToolDialog<JTAGDataSet
 
     final JComponent buttons = SwingComponentUtils.createButtonPane( runAnalysisButton, exportButton, closeButton );
 
-    SwingComponentUtils.setupDialogContentPane( this, contentPane, buttons, runAnalysisButton );
+    SwingComponentUtils.setupWindowContentPane( this, contentPane, buttons, runAnalysisButton );
   }
 
   /**
@@ -439,7 +439,7 @@ public final class JTAGProtocolAnalysisDialog extends BaseToolDialog<JTAGDataSet
       {
         final JTAGData data = dataSet.get( i );
 
-        final String time = UnitOfTime.format( aDataSet.getTime( data.getStartSampleIndex() ) );
+        final String time = Unit.Time.format( aDataSet.getTime( data.getStartSampleIndex() ) );
         final String event = data.isEvent() ? data.getEventName() : null;
 
         BigInteger tdiData = null;
@@ -548,7 +548,7 @@ public final class JTAGProtocolAnalysisDialog extends BaseToolDialog<JTAGDataSet
             {
               tr = aParent.addChild( TR ).addAttribute( "style", "background-color: #fefeff;" );
               tr.addChild( TD ).addContent( String.valueOf( i ) );
-              tr.addChild( TD ).addContent( UnitOfTime.format( aAnalysisResult.getTime( data.getStartSampleIndex() ) ) );
+              tr.addChild( TD ).addContent( Unit.Time.format( aAnalysisResult.getTime( data.getStartSampleIndex() ) ) );
               tr.addChild( TD ).addContent( String.valueOf( data.getDataValue() ) );
               tr.addChild( TD ).addAttribute( "colspan", "4" );
             }
@@ -556,7 +556,7 @@ public final class JTAGProtocolAnalysisDialog extends BaseToolDialog<JTAGDataSet
             {
               tr = aParent.addChild( TR );
               tr.addChild( TD ).addContent( String.valueOf( i ) );
-              tr.addChild( TD ).addContent( UnitOfTime.format( aAnalysisResult.getTime( data.getStartSampleIndex() ) ) );
+              tr.addChild( TD ).addContent( Unit.Time.format( aAnalysisResult.getTime( data.getStartSampleIndex() ) ) );
               tr.addChild( TD ).addContent( data.getEventName() );
 
               BigInteger tdiData = null;
