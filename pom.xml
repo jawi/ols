@@ -158,7 +158,11 @@
 			<plugin>
 				<groupId>org.apache.maven.plugins</groupId>
 				<artifactId>maven-javadoc-plugin</artifactId>
-				<version>2.9</version>
+				<version>2.9.1</version>
+                <configuration>
+                    <quiet/>
+                    <additionalparam>-Xdoclint:none</additionalparam>
+                </configuration>
 			</plugin>
 		</plugins>
 	</build>
@@ -339,23 +343,23 @@
 			<dependency>
 				<groupId>org.osgi</groupId>
 				<artifactId>org.osgi.core</artifactId>
-				<version>4.2.0</version>
+				<version>4.3.0</version>
 			</dependency>
 			<dependency>
 				<groupId>org.osgi</groupId>
 				<artifactId>org.osgi.compendium</artifactId>
-				<version>4.2.0</version>
+				<version>4.3.1</version>
 			</dependency>
 
 			<dependency>
 				<groupId>org.apache.felix</groupId>
 				<artifactId>org.apache.felix.main</artifactId>
-				<version>4.0.2</version>
+				<version>4.4.1</version>
 			</dependency>
 			<dependency>
 				<groupId>org.apache.felix</groupId>
 				<artifactId>org.apache.felix.prefs</artifactId>
-				<version>1.0.4</version>
+				<version>1.0.6</version>
 			</dependency>
 			<dependency>
 				<groupId>org.apache.felix</groupId>
@@ -370,12 +374,12 @@
 			<dependency>
 				<groupId>org.apache.felix</groupId>
 				<artifactId>org.apache.felix.configadmin</artifactId>
-				<version>1.4.0</version>
+				<version>1.8.0</version>
 			</dependency>
 			<dependency>
 				<groupId>org.apache.felix</groupId>
 				<artifactId>org.apache.felix.dependencymanager</artifactId>
-				<version>3.0.0</version>
+				<version>3.2.0</version>
 			</dependency>
 
 			<dependency>

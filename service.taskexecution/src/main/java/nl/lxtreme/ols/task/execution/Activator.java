@@ -1,5 +1,5 @@
 /*
- * OpenBench LogicSniffer / SUMP project 
+ * OpenBench LogicSniffer / SUMP project
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -52,7 +52,7 @@ public class Activator implements BundleActivator
 
     this.toolExecutionService = new BackgroundTaskExecutionService( this.taskStatusListenerHelper );
 
-    final Properties props = new Properties();
+    final Dictionary<String, Object> props = new Hashtable<String, Object>();
     props.put( "invocation", "asynchonous" );
 
     aContext.registerService( TaskExecutionService.class.getName(), this.toolExecutionService, props );

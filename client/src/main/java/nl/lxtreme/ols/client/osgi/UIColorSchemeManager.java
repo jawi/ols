@@ -1,5 +1,5 @@
 /*
- * OpenBench LogicSniffer / SUMP project 
+ * OpenBench LogicSniffer / SUMP project
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -60,7 +60,7 @@ public class UIColorSchemeManager implements ManagedServiceFactory
 
   /**
    * Retrieves the color scheme by its name.
-   * 
+   *
    * @param aName
    *          the name of the color scheme, can be <code>null</code> or empty.
    * @return a {@link Properties} map with the requested color scheme, or
@@ -115,21 +115,35 @@ public class UIColorSchemeManager implements ManagedServiceFactory
    * {@inheritDoc}
    */
   @Override
-  public void updated( final String aPid, final Dictionary aProperties ) throws ConfigurationException
+  public void updated( final String aPid, final Dictionary<String, ?> aProperties ) throws ConfigurationException
   {
     this.colorSchemes.put( aPid, parseColorScheme( aProperties ) );
+  }
+
+  private Object getPropertyValue( final Dictionary<String, ?> aProperties, final String aKey )
+  {
+    Object val = aProperties.get( aKey );
+    if ( val instanceof String )
+    {
+      String ref = ( String )val;
+      if ( ref.startsWith( "${" ) && ref.endsWith( "}" ) )
+      {
+        val = getPropertyValue( aProperties, ref.substring( 2, ref.length() - 1 ) );
+      }
+    }
+    return val;
   }
 
   /**
    * Parses the given dictionary as color scheme and returns it as a
    * {@link Properties} object.
-   * 
+   *
    * @param aDictionary
    *          the dictionary to parse, cannot be <code>null</code>.
    * @return a {@link Properties} object with the parsed color scheme, never
    *         <code>null</code>.
    */
-  private Properties parseColorScheme( final Dictionary aDictionary ) throws ConfigurationException
+  private Properties parseColorScheme( final Dictionary<String, ?> aDictionary ) throws ConfigurationException
   {
     String name = ( String )aDictionary.get( SCHEME_NAME );
     if ( ( name == null ) || "".equals( name.trim() ) )
@@ -148,7 +162,7 @@ public class UIColorSchemeManager implements ManagedServiceFactory
         continue;
       }
 
-      Object value = aDictionary.get( key );
+      Object value = getPropertyValue( aDictionary, key );
       if ( key.endsWith( ".color" ) )
       {
         value = ColorUtils.parseColor( value.toString() );

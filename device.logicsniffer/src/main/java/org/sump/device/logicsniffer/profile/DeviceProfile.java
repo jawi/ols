@@ -1,5 +1,5 @@
 /*
- * OpenBench LogicSniffer / SUMP project 
+ * OpenBench LogicSniffer / SUMP project
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -15,7 +15,7 @@
  * with this program; if not, write to the Free Software Foundation, Inc.,
  * 51 Franklin St, Fifth Floor, Boston, MA 02110, USA
  *
- * 
+ *
  * Copyright (C) 2010-2011 - J.W. Janssen, http://www.lxtreme.nl
  */
 package org.sump.device.logicsniffer.profile;
@@ -135,8 +135,6 @@ public final class DeviceProfile implements Cloneable
    */
   public static final String DEVICE_OPEN_PORT_DTR = "device.open.portdtr";
 
-  /** Filename of the actual file picked up by Felix's FileInstall. */
-  public static final String FELIX_FILEINSTALL_FILENAME = "felix.fileinstall.filename";
   /** Service PID of this device profile. */
   private static final String FELIX_SERVICE_PID = "service.pid";
   /** Factory Service PID of this device profile. */
@@ -148,8 +146,7 @@ public final class DeviceProfile implements Cloneable
       DEVICE_CAPTURESIZES, DEVICE_FEATURE_NOISEFILTER, DEVICE_FEATURE_RLE, DEVICE_FEATURE_TEST_MODE,
       DEVICE_FEATURE_TRIGGERS, DEVICE_TRIGGER_STAGES, DEVICE_TRIGGER_COMPLEX, DEVICE_CHANNEL_COUNT,
       DEVICE_CHANNEL_GROUPS, DEVICE_CAPTURESIZE_BOUND, DEVICE_CHANNEL_NUMBERING_SCHEMES, DEVICE_OPEN_PORT_DELAY,
-      DEVICE_METADATA_KEYS, DEVICE_SAMPLE_REVERSE_ORDER, DEVICE_OPEN_PORT_DTR, DEVICE_RECEIVE_TIMEOUT,
-      FELIX_FILEINSTALL_FILENAME } );
+      DEVICE_METADATA_KEYS, DEVICE_SAMPLE_REVERSE_ORDER, DEVICE_OPEN_PORT_DTR, DEVICE_RECEIVE_TIMEOUT, } );
   private static final List<String> IGNORED_KEYS = Arrays.asList( new String[] { FELIX_SERVICE_PID,
       FELIX_SERVICE_FACTORY_PID } );
 
@@ -186,7 +183,7 @@ public final class DeviceProfile implements Cloneable
 
   /**
    * Returns a deep copy of this device profile, including all properties.
-   * 
+   *
    * @return a deep copy of this device profile, never <code>null</code>.
    * @see java.lang.Object#clone()
    */
@@ -226,7 +223,7 @@ public final class DeviceProfile implements Cloneable
 
   /**
    * Returns the capture clock sources supported by the device.
-   * 
+   *
    * @return an array of capture clock sources, never <code>null</code>.
    */
   public CaptureClockSource[] getCaptureClock()
@@ -243,7 +240,7 @@ public final class DeviceProfile implements Cloneable
 
   /**
    * Returns all supported capture sizes.
-   * 
+   *
    * @return an array of capture sizes, in bytes, never <code>null</code>.
    */
   public Integer[] getCaptureSizes()
@@ -261,7 +258,7 @@ public final class DeviceProfile implements Cloneable
 
   /**
    * Returns the total number of capture channels.
-   * 
+   *
    * @return a capture channel count, greater than 0.
    */
   public int getChannelCount()
@@ -272,7 +269,7 @@ public final class DeviceProfile implements Cloneable
 
   /**
    * Returns the total number of channel groups.
-   * 
+   *
    * @return a channel group count, greater than 0.
    */
   public int getChannelGroupCount()
@@ -283,7 +280,7 @@ public final class DeviceProfile implements Cloneable
 
   /**
    * Returns all supported channel numbering schemes.
-   * 
+   *
    * @return an array of numbering schemes, never <code>null</code>.
    */
   public NumberingScheme[] getChannelNumberingSchemes()
@@ -300,7 +297,7 @@ public final class DeviceProfile implements Cloneable
 
   /**
    * Returns the (maximum) capture clock of the device.
-   * 
+   *
    * @return a capture clock, in Hertz.
    */
   public int getClockspeed()
@@ -311,7 +308,7 @@ public final class DeviceProfile implements Cloneable
 
   /**
    * Returns the description of the device this profile denotes.
-   * 
+   *
    * @return a device description, never <code>null</code>.
    */
   public String getDescription()
@@ -327,7 +324,7 @@ public final class DeviceProfile implements Cloneable
    * <code>null</code>, but <code>""</code>!), it means that this profile can be
    * used for <em>all</em> devices.
    * </p>
-   * 
+   *
    * @return an array of metadata keys this profile supports, never
    *         <code>null</code>.
    */
@@ -339,7 +336,7 @@ public final class DeviceProfile implements Cloneable
 
   /**
    * Returns the interface over which the device communicates.
-   * 
+   *
    * @return the device interface, never <code>null</code>.
    */
   public DeviceInterface getInterface()
@@ -357,7 +354,7 @@ public final class DeviceProfile implements Cloneable
    * by the given group count, otherwise the maximum capture size will be
    * returned.
    * </p>
-   * 
+   *
    * @param aChannelGroups
    *          the number of channel groups that should be enabled, > 0 && <
    *          channel group count.
@@ -398,7 +395,7 @@ public final class DeviceProfile implements Cloneable
   /**
    * Returns the delay between opening the port to the device and starting the
    * device detection cycle.
-   * 
+   *
    * @return a delay, in milliseconds, >= 0.
    */
   public int getOpenPortDelay()
@@ -413,7 +410,7 @@ public final class DeviceProfile implements Cloneable
    * WARNING: if no receive timeout is used, the communication essentially
    * results in a non-blocking I/O operation which can not be cancelled!
    * </p>
-   * 
+   *
    * @return the receive timeout, in ms, or <code>null</code> when no receive
    *         timeout should be used.
    */
@@ -430,7 +427,7 @@ public final class DeviceProfile implements Cloneable
 
   /**
    * Returns all supported sample rates.
-   * 
+   *
    * @return an array of sample rates, in Hertz, never <code>null</code>.
    */
   public Integer[] getSampleRates()
@@ -449,7 +446,7 @@ public final class DeviceProfile implements Cloneable
 
   /**
    * Returns the total number of trigger stages (in the complex trigger mode).
-   * 
+   *
    * @return a trigger stage count, greater than 0.
    */
   public int getTriggerStages()
@@ -460,7 +457,7 @@ public final class DeviceProfile implements Cloneable
 
   /**
    * Returns the device type this profile denotes.
-   * 
+   *
    * @return a device type name, never <code>null</code>.
    */
   public String getType()
@@ -483,7 +480,7 @@ public final class DeviceProfile implements Cloneable
 
   /**
    * Returns whether or not the capture size is bound to the number of channels.
-   * 
+   *
    * @return <code>true</code> if the capture size is bound to the number of
    *         channels, <code>false</code> otherwise.
    */
@@ -495,7 +492,7 @@ public final class DeviceProfile implements Cloneable
 
   /**
    * Returns whether or not the device supports "complex" triggers.
-   * 
+   *
    * @return <code>true</code> if complex triggers are supported by the device,
    *         <code>false</code> otherwise.
    */
@@ -508,7 +505,7 @@ public final class DeviceProfile implements Cloneable
   /**
    * Returns whether or not the device supports "double-data rate" sampling,
    * also known as "demux"-sampling.
-   * 
+   *
    * @return <code>true</code> if DDR is supported by the device,
    *         <code>false</code> otherwise.
    */
@@ -520,7 +517,7 @@ public final class DeviceProfile implements Cloneable
 
   /**
    * Returns whether or not the device supports a noise filter.
-   * 
+   *
    * @return <code>true</code> if a noise filter is present in the device,
    *         <code>false</code> otherwise.
    */
@@ -537,7 +534,7 @@ public final class DeviceProfile implements Cloneable
    * This method has no meaning if the used interface is <em>not</em>
    * {@link DeviceInterface#SERIAL}.
    * </p>
-   * 
+   *
    * @return <code>true</code> if the DTR line needs to be set upon opening the
    *         serial port, <code>false</code> if the DTR line needs to be reset
    *         upon opening the serial port.
@@ -550,7 +547,7 @@ public final class DeviceProfile implements Cloneable
 
   /**
    * Returns whether or not the device supports RLE (Run-Length Encoding).
-   * 
+   *
    * @return <code>true</code> if a RLE encoder is present in the device,
    *         <code>false</code> otherwise.
    */
@@ -562,7 +559,7 @@ public final class DeviceProfile implements Cloneable
 
   /**
    * Returns whether the device send its samples in "reverse" order.
-   * 
+   *
    * @return <code>true</code> if samples are send in reverse order (= last
    *         sample first), <code>false</code> otherwise.
    */
@@ -574,7 +571,7 @@ public final class DeviceProfile implements Cloneable
 
   /**
    * Returns whether or not the device supports a testing mode.
-   * 
+   *
    * @return <code>true</code> if testing mode is supported by the device,
    *         <code>false</code> otherwise.
    */
@@ -586,7 +583,7 @@ public final class DeviceProfile implements Cloneable
 
   /**
    * Returns whether or not the device supports triggers.
-   * 
+   *
    * @return <code>true</code> if the device supports triggers,
    *         <code>false</code> otherwise.
    */
@@ -603,18 +600,6 @@ public final class DeviceProfile implements Cloneable
   public String toString()
   {
     return getType();
-  }
-
-  /**
-   * Returns the configuration file picked up by Felix's FileInstall bundle.
-   * 
-   * @return a configuration file, never <code>null</code>.
-   */
-  final File getConfigurationFile()
-  {
-    final String value = this.properties.get( FELIX_FILEINSTALL_FILENAME );
-    assert value != null : "Internal error: no fileinstall filename?!";
-    return createFile( value );
   }
 
   /**

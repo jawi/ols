@@ -1,5 +1,5 @@
 /*
- * OpenBench LogicSniffer / SUMP project 
+ * OpenBench LogicSniffer / SUMP project
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -15,7 +15,7 @@
  * with this program; if not, write to the Free Software Foundation, Inc.,
  * 51 Franklin St, Fifth Floor, Boston, MA 02110, USA
  *
- * 
+ *
  * Copyright (C) 2010-2011 - J.W. Janssen, http://www.lxtreme.nl
  */
 package nl.lxtreme.ols.client.icons;
@@ -23,8 +23,11 @@ package nl.lxtreme.ols.client.icons;
 
 import java.awt.*;
 import java.net.*;
+import java.util.logging.*;
 
 import javax.swing.*;
+
+import org.osgi.framework.*;
 
 import nl.lxtreme.ols.util.swing.component.icon.*;
 
@@ -49,7 +52,7 @@ public final class IconFactory
 
     /**
      * Creates a new CompoundTextIcon instance, placing the text in the center.
-     * 
+     *
      * @param aIconName
      *          the (symbolic) name of the icon;
      * @param aTextOverlay
@@ -63,7 +66,7 @@ public final class IconFactory
     /**
      * Creates a new CompoundTextIcon instance, placing the text at the given
      * position.
-     * 
+     *
      * @param aIconName
      *          the (symbolic) name of the icon;
      * @param aTextOverlay
@@ -77,6 +80,10 @@ public final class IconFactory
       super( createIcon( aIconName ), aTextOverlay, aPosition );
     }
   }
+
+  // CONSTANTS
+
+  private static final Logger LOG = Logger.getLogger( IconFactory.class.getName() );
 
   // CONSTRUCTORS
 
@@ -92,7 +99,7 @@ public final class IconFactory
 
   /**
    * Creates an icon for the resource with the given name.
-   * 
+   *
    * @param aIconName
    *          the (symbolic) name of the resource to load as icon, cannot be
    *          <code>null</code>.
@@ -102,18 +109,22 @@ public final class IconFactory
   {
     try
     {
-      final URL url = IconLocator.class.getResource( aIconName );
-      return new ImageIcon( url );
+      final URL url = getResource( aIconName );
+      if ( url != null )
+      {
+        return new ImageIcon( url );
+      }
     }
     catch ( Exception exception )
     {
-      return new ImageIcon();
+      exception.printStackTrace();
     }
+    return new ImageIcon();
   }
 
   /**
    * Creates an image for the resource with the given name.
-   * 
+   *
    * @param aIconName
    *          the (symbolic) name of the resource to load as image, cannot be
    *          <code>null</code>.
@@ -121,14 +132,14 @@ public final class IconFactory
    */
   public static Image createImage( final String aImageName )
   {
-    final URL url = IconLocator.class.getResource( aImageName );
+    final URL url = getResource( aImageName );
     return Toolkit.getDefaultToolkit().createImage( url );
   }
 
   /**
    * Creates an icon with a text overlay positioned at the south east corner of
    * the icon.
-   * 
+   *
    * @param aIconName
    *          the (symbolic) name of the resource to load as icon, cannot be
    *          <code>null</code>;
@@ -139,5 +150,25 @@ public final class IconFactory
   public static Icon createOverlayIcon( final String aIconName, final String aText )
   {
     return new CompoundTextIcon( aIconName, aText, SwingConstants.EAST );
+  }
+
+  private static URL getResource( final String aIconName )
+  {
+    URL resource;
+    Bundle bundle = FrameworkUtil.getBundle( IconLocator.class );
+    if ( bundle == null )
+    {
+      // Old-fashioned way...
+      resource = IconLocator.class.getResource( aIconName );
+      LOG.log( Level.FINE, "Get icon resource without bundle: {0} => {1}...", new Object[] { aIconName, resource } );
+    }
+    else
+    {
+      String path = IconLocator.class.getPackage().getName().replaceAll( "\\.", "/" );
+
+      resource = bundle.getResource( path + "/" + aIconName );
+      LOG.log( Level.FINE, "Get icon resource from bundle: {0} => {1}...", new Object[] { aIconName, resource } );
+    }
+    return resource;
   }
 }
