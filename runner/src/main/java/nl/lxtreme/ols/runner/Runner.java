@@ -175,6 +175,7 @@ public final class Runner
   private static String getApplicationName()
   {
     Class<Runner> clazz = Runner.class;
+    String result = null;
 
     URL loc = clazz.getProtectionDomain().getCodeSource().getLocation();
 
@@ -185,7 +186,7 @@ public final class Runner
       Manifest manifest = jis.getManifest();
       if ( manifest != null )
       {
-        return manifest.getMainAttributes().getValue( "X-AppName" );
+        result = manifest.getMainAttributes().getValue( "X-AppName" );
       }
     }
     catch ( Exception exception )
@@ -207,7 +208,11 @@ public final class Runner
       }
     }
 
-    return "Runner";
+    if ( result == null )
+    {
+      result = "OLS client"; // XXX
+    }
+    return result;
   }
 
   /**
@@ -343,8 +348,7 @@ public final class Runner
     config.put( FelixConstants.LOG_LEVEL_PROP, logLevel );
     config.put( FelixConstants.LOG_LOGGER_PROP, this.fwLogger );
 
-    config.put( "org.amdatu.configurator.properties.dir", this.options.pluginDir.getAbsolutePath() );
-    config.put( "org.amdatu.configurator.properties.prefix", "" );
+    config.put( "nl.lxtreme.ols.config.dir", this.options.pluginDir.getAbsolutePath() );
 
     return config;
   }

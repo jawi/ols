@@ -82,6 +82,11 @@
 			<artifactId>service.acquisition</artifactId>
 			<scope>runtime</scope>
 		</dependency>
+        <dependency>
+            <groupId>nl.lxtreme.ols</groupId>
+            <artifactId>service.config</artifactId>
+            <scope>runtime</scope>
+        </dependency>
 		<dependency>
 			<groupId>nl.lxtreme.ols</groupId>
 			<artifactId>service.io</artifactId>

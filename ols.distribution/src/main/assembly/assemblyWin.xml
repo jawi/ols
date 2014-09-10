@@ -13,8 +13,6 @@
 			<outputDirectory>bin</outputDirectory>
 			<includes>
 				<include>org.apache.felix:org.apache.felix.main</include>
-				<include>org.apache.felix:org.apache.felix.fileinstall</include>
-				<include>org.apache.felix:org.apache.felix.configadmin</include>
 				<include>com.jgoodies:looks</include>
 				<include>nl.lxtreme.ols:runner</include>
 			</includes>
@@ -28,6 +26,7 @@
 			<outputDirectory>plugins</outputDirectory>
 			<includes>
 				<include>org.osgi:org.osgi.compendium</include>
+                <include>org.apache.felix:org.apache.felix.configadmin</include>
 				<include>org.apache.felix:org.apache.felix.log</include>
 				<include>org.apache.felix:org.apache.felix.prefs</include>
 				<include>org.apache.felix:org.apache.felix.dependencymanager</include>
@@ -37,6 +36,7 @@
 				<include>nl.lxtreme.ols.client:client.project</include>
 				<include>nl.lxtreme.ols:logging</include>
 				<include>nl.lxtreme.ols:service.acquisition</include>
+                <include>nl.lxtreme.ols:service.config</include>
 				<include>nl.lxtreme.ols:service.io</include>
 				<include>nl.lxtreme.ols:service.taskexecution</include>
 				<include>nl.lxtreme.ols:util</include>

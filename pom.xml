@@ -41,6 +41,7 @@
 		<module>test.util</module>
 		<module>logging</module>
 		<module>rxtx</module>
+		<module>service.config</module>
 		<module>service.io</module>
 		<module>service.acquisition</module>
 		<module>service.taskexecution</module>
@@ -240,6 +241,11 @@
 			<dependency>
 				<groupId>nl.lxtreme.ols</groupId>
 				<artifactId>logging</artifactId>
+				<version>1.0.0</version>
+			</dependency>
+			<dependency>
+				<groupId>nl.lxtreme.ols</groupId>
+				<artifactId>service.config</artifactId>
 				<version>1.0.0</version>
 			</dependency>
 			<dependency>

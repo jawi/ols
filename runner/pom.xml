@@ -25,11 +25,11 @@
 			<artifactId>looks</artifactId>
 			<scope>runtime</scope>
 		</dependency>
-        <dependency>
-            <groupId>nl.lxtreme.ols</groupId>
-            <artifactId>util</artifactId>
-            <scope>provided</scope>
-        </dependency>
+		<dependency>
+			<groupId>nl.lxtreme.ols</groupId>
+			<artifactId>util</artifactId>
+			<scope>provided</scope>
+		</dependency>
 	</dependencies>
 	<build>
 		<plugins>
