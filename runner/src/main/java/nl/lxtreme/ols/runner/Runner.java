@@ -25,8 +25,6 @@ import java.io.*;
 import java.net.*;
 import java.util.*;
 import java.util.concurrent.*;
-import java.util.jar.*;
-
 import org.apache.felix.framework.*;
 import org.apache.felix.framework.util.*;
 import org.osgi.framework.*;
@@ -161,58 +159,9 @@ public final class Runner
    */
   public static void main( final String[] aArgs ) throws Exception
   {
-    String applicationName = getApplicationName();
-    System.setProperty( "com.apple.mrj.application.apple.menu.about.name", applicationName );
-
-    final Runner runner = new Runner( new CmdLineOptions( aArgs ) );
+    Runner runner = new Runner( new CmdLineOptions( aArgs ) );
     runner.run();
     runner.waitForStop();
-  }
-
-  /**
-   * @return the application name, never <code>null</code>.
-   */
-  private static String getApplicationName()
-  {
-    Class<Runner> clazz = Runner.class;
-    String result = null;
-
-    URL loc = clazz.getProtectionDomain().getCodeSource().getLocation();
-
-    JarInputStream jis = null;
-    try
-    {
-      jis = new JarInputStream( loc.openStream() );
-      Manifest manifest = jis.getManifest();
-      if ( manifest != null )
-      {
-        result = manifest.getMainAttributes().getValue( "X-AppName" );
-      }
-    }
-    catch ( Exception exception )
-    {
-      exception.printStackTrace();
-    }
-    finally
-    {
-      try
-      {
-        if ( jis != null )
-        {
-          jis.close();
-        }
-      }
-      catch ( IOException exception )
-      {
-        // Ignore...
-      }
-    }
-
-    if ( result == null )
-    {
-      result = "OLS client"; // XXX
-    }
-    return result;
   }
 
   /**
