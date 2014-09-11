@@ -155,6 +155,10 @@ dl.faq dd {
 	
     <h3 id="news">News</h3>
     <ul>
+      <li>September 11th, 2014, OLS version 0.9.7 SP1 released. Major highlights: fixes compilation and running issues on latest Java versions (Java 8);</li>
+      <li>September 10th, 2014, yes, this project is <b>still</b> alive, but development happens on a much lower pace than before due to other obligations (both work and private). 
+        The past couple of days I've been busy fixing some urgent issues causing the current release no longer to build and run on more recent Java versions. Expect a new
+        (service pack) release to be made available soon!
       <li>August 12th, 2013, OLS version 0.9.7 released. Major highlights: no longer crashes on recent Linux kernels (3.x), add serial console plugin, added support for creating 
         custom signal groups/"busses", added support for <a href="http://dangerousprototypes.com/docs/Logic_Pirate">Logic Pirate</a> and 
         <a href="https://github.com/gillham/logic_analyzer">Arduino Generic Logic Analyzer</a>;</li>
@@ -216,10 +220,11 @@ dl.faq dd {
 	
     <h3 id="download">Download</h3>
     <p>
-      The current release of Logic Sniffer is <strong><a href="ols-0.9.7-full.tar.gz">0.9.7</a></strong>.
+      The current release of Logic Sniffer is <strong><a href="ols-0.9.7.1-full.tar.gz">0.9.7 SP1</a></strong>.
       Older releases, for historical reasons:
     </p>
     <ul id="releases">
+      <li>ols-0.9.7 SP1 [<a href="ols-0.9.7.1-full.tar.gz">tar.gz</a>] [<a href="ols-0.9.7.1-full.zip">zip</a>] [<a href="ols-0.9.7.1-full.dmg">dmg</a>] [<a href="ols-0.9.7.1-api.zip">API</a>] <span>released <em>September 11th, 2014</em>, 4.5M;</span></li>
       <li>ols-0.9.7 [<a href="ols-0.9.7-full.tar.gz">tar.gz</a>] [<a href="ols-0.9.7-full.zip">zip</a>] [<a href="ols-0.9.7-full.dmg">dmg</a>] [<a href="ols-0.9.7-api.zip">API</a>] <span>released <em>August 12th, 2013</em>, 4.4M;</span></li>
       <li>ols-0.9.6 SP1 [<a href="ols-0.9.6.1-full.tar.gz">tar.gz</a>] [<a href="ols-0.9.6.1-full.zip">zip</a>] [<a href="ols-0.9.6.1-full.dmg">dmg</a>] [<a href="ols-0.9.6.1-api.zip">API</a>] <span>released <em>October 29th, 2012</em>, 4.2M;</span></li>
       <li>ols-0.9.6 [<a href="ols-0.9.6-full.tar.gz">tar.gz</a>] [<a href="ols-0.9.6-full.zip">zip</a>] [<a href="ols-0.9.6-full.dmg">dmg</a>] [<a href="ols-0.9.6-api.zip">API</a>] <span>released <em>September 9th, 2012</em>, 4.4M;</span></li>
@@ -273,8 +278,7 @@ dl.faq dd {
     <h3 id="license">License</h3>
     <p>
       The OLS client is developed and released under the <em>General Public License, version 2</em>.
-      For the license details, see the full <a href="http://www.gnu.org/licenses/gpl-2.0-standalone.html">license 
-      text</a>.
+      For the license details, see the full <a href="http://www.gnu.org/licenses/gpl-2.0-standalone.html">license text</a>.
     </p>
     
     <h3 id="links">Links</h3>
@@ -315,12 +319,16 @@ dl.faq dd {
     </p>
     <ul class="no-style">
       <li><a href="http://www.flattr.com">Flattr</a>: <a class="FlattrButton" style="display:none;" rev="flattr;button:compact;" href="http://www.lxtreme.nl/ols/" title="flatter link"></a></li>
-      <li><a href="http://www.paypal.com">PayPal</a>: <form action="https://www.paypal.com/cgi-bin/webscr" method="post" target="_top"><input type="hidden" name="cmd" value="_s-xclick"><input type="hidden" name="encrypted" value="-----BEGIN PKCS7-----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-----END PKCS7-----
-"><input type="image" src="https://www.paypalobjects.com/en_GB/i/btn/btn_donate_SM.gif" border="0" name="submit" alt="Donate using PayPal"><img alt="" border="0" src="https://www.paypalobjects.com/nl_NL/i/scr/pixel.gif" width="1" height="1"></form></li> 
+      <li><a href="http://www.paypal.com">PayPal</a>: <form class="inline" action="https://www.paypal.com/cgi-bin/webscr" method="post">
+<input type="hidden" name="cmd" value="_s-xclick">
+<input type="hidden" name="encrypted" value="-----BEGIN PKCS7-----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-----END PKCS7-----">
+<input type="image" src="https://www.paypal.com/en_GB/i/btn/btn_donate_SM.gif" border="0" name="submit" alt="PayPal - The safer, easier way to pay online.">
+</form>
+      </li> 
     </ul>
 	<hr/>
 	<p class="x-small right">
-	  &copy; Copyright 2010-2013 - <a href="mailto:j.w.janssen@lxtreme.nl">J.W. Janssen</a>.
+	  &copy; Copyright 2010-2014 - <a href="mailto:j.w.janssen@lxtreme.nl">J.W. Janssen</a>.
 	</p>
 <!-- optimized for loading. -->
 <script type="text/javascript">
