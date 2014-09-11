@@ -5,9 +5,12 @@
 -runproperties: \
 	org.apache.felix.log.storeDebug=true,\
     org.apache.felix.log.maxSize=-1,\
-    org.osgi.framework.bootdelegation="com.yourkit.*,com.sun.*,sun.*,apple.*,com.apple.*"
+    org.osgi.framework.bootdelegation="com.yourkit.*,com.sun.*,sun.*,apple.*,com.apple.*",\
+    nl.lxtreme.ols.config.dir="../ols.client/resources, ../ols.device/profiles",\
+    nl.lxtreme.ols.client.debug=true,\
+    nl.lxtreme.ols.filterJdkUiLog=true
 -runvm: \
-	-Xdock:name=LogicSniffer -Xmx2048m -Dnl.lxtreme.ols.client.debug=true -Dnl.lxtreme.ols.filterJdkUiLog=true 
+	-Xdock:name=LogicSniffer -Xmx2048m 
 -runrequires: \
 	osgi.identity;filter:='(&(osgi.identity=com.jidesoft.docking)(version>=3.5.8))',\
 	osgi.identity;filter:='(osgi.identity=org.apache.felix.dependencymanager)',\
@@ -23,19 +26,18 @@
 	osgi.identity;filter:='(osgi.identity=lib.swing)',\
 	osgi.identity;filter:='(osgi.identity=service.acquisition.api)',\
 	osgi.identity;filter:='(osgi.identity=service.acquisition.impl)',\
+	osgi.identity;filter:='(osgi.identity=service.config)',\
 	osgi.identity;filter:='(osgi.identity=service.taskexecution.api)',\
 	osgi.identity;filter:='(osgi.identity=service.taskexecution.impl)',\
 	osgi.identity;filter:='(osgi.identity=service.io)',\
 	osgi.identity;filter:='(osgi.identity=ols.common)',\
 	osgi.identity;filter:='(osgi.identity=ols.client.api)',\
 	osgi.identity;filter:='(osgi.identity=ols.client.ui)',\
-	osgi.identity;filter:='(osgi.identity=ols.client.config)',\
 	osgi.identity;filter:='(osgi.identity=ols.client.project)',\
 	osgi.identity;filter:='(osgi.identity=ols.device.api)',\
 	osgi.identity;filter:='(osgi.identity=ols.device.demo)',\
 	osgi.identity;filter:='(osgi.identity=ols.device.generic)',\
 	osgi.identity;filter:='(osgi.identity=ols.device.sump.core)',\
-	osgi.identity;filter:='(osgi.identity=ols.device.sump.profile)',\
 	osgi.identity;filter:='(osgi.identity=ols.tool.api)',\
 	osgi.identity;filter:='(osgi.identity=ols.tool.1wire)',\
 	osgi.identity;filter:='(osgi.identity=ols.tool.asm45)',\
@@ -61,7 +63,6 @@
 	lib.tdl.editor;version=latest,\
 	lib.swing;version=latest,\
 	ols.client.api;version=latest,\
-	ols.client.config;version=latest,\
 	ols.client.project;version=latest,\
 	ols.client.ui;version=latest,\
 	ols.common;version=latest,\
@@ -69,7 +70,6 @@
 	ols.device.demo;version=latest,\
 	ols.device.generic;version=latest,\
 	ols.device.sump.core;version=latest,\
-	ols.device.sump.profile;version=latest,\
 	ols.export.api;version=latest,\
 	ols.export.csv;version=latest,\
 	ols.export.image;version=latest,\
@@ -101,6 +101,7 @@
 	purejavacomm;version=latest,\
 	service.acquisition.api;version=latest,\
 	service.acquisition.impl;version=latest,\
+	service.config;version=latest,\
 	service.io;version=latest,\
 	service.taskexecution.api;version=latest,\
 	service.taskexecution.impl;version=latest

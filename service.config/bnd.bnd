@@ -1,0 +1,11 @@
+-buildpath: ${^-buildpath}, \
+	${osgi_core},\
+	${osgi_cmpn},\
+	${felix_dm}
+
+Bundle-Description: Provisions configuration files.
+Bundle-Copyright: Copyright (c) 2010-2014 The Amdatu Foundation / Jan Willem Janssen
+Bundle-License: ALv2;link=http://www.apache.org/licenses/LICENSE-2.0.html
+Bundle-Activator: nl.lxtreme.ols.config.provision.impl.Activator
+Export-Package: nl.lxtreme.ols.config.provision
+Private-Package: nl.lxtreme.ols.config.provision.impl

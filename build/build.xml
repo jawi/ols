@@ -40,9 +40,14 @@
 			<fileset dir="../runner/generated" includes="*.jar" />
 			<fileset dir="resources/lib" includes="*.jar" />
 		</copy>
-
-		<!-- the run files -->
+		<!-- the configuration files -->
 		<filter filtersfile="ols.version" />
+		<copy todir="${release.base}/plugins" flatten="true" filtering="true">
+			<fileset dir="..">
+				<include name="**/resources/*.cfg" />
+			</fileset>
+		</copy>
+		<!-- the run files -->
 		<copy todir="${release.base}" flatten="true" filtering="true">
 			<fileset dir="resources/run" includes="*" />
 		</copy>

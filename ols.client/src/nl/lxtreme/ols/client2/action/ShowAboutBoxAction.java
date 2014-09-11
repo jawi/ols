@@ -47,7 +47,7 @@ public class ShowAboutBoxAction extends AbstractManagedAction
   {
     super( ID );
 
-    putValue( NAME, "About OLS" );
+    putValue( NAME, "About LogicSniffer" );
     putValue( MNEMONIC_KEY, Integer.valueOf( KeyEvent.VK_A ) );
 
     putValue( MENU_NAME, ClientConstants.HELP_MENU );

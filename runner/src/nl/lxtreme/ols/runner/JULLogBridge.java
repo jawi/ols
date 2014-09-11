@@ -21,7 +21,6 @@
 package nl.lxtreme.ols.runner;
 
 
-import java.lang.reflect.*;
 import java.text.*;
 import java.util.logging.*;
 
@@ -35,27 +34,6 @@ import org.osgi.service.log.*;
  */
 public class JULLogBridge extends Handler
 {
-  // INNER TYPES
-
-  final class CustomLogManager extends LogManager
-  {
-    // METHODS
-
-    @Override
-    public synchronized boolean addLogger( Logger aLogger )
-    {
-      boolean result = super.addLogger( aLogger );
-      Handler[] handlers = aLogger.getHandlers();
-      for ( Handler handler : handlers )
-      {
-        aLogger.removeHandler( handler );
-      }
-      aLogger.addHandler( JULLogBridge.this );
-      aLogger.setLevel( Level.FINEST );
-      return result;
-    }
-  }
-
   // CONSTANTS
 
   private static final String PROPERTY_FILTER_JDKUI_LOGS = "nl.lxtreme.ols.filterJdkUiLogs";
@@ -137,28 +115,10 @@ public class JULLogBridge extends Handler
    */
   public void start( BundleContext aContext ) throws Exception
   {
-    CustomLogManager newManager = new CustomLogManager();
-    LogManager oldManager;
-
-    Class<LogManager> clazz = LogManager.class;
-    synchronized ( clazz )
-    {
-      // Replace current manager with our own sub-class...
-      Field field = clazz.getDeclaredField( "manager" );
-      field.setAccessible( true );
-      oldManager = ( LogManager )field.get( null );
-      field.set( null, newManager );
-
-      // Copy old root logger...
-      field = clazz.getDeclaredField( "rootLogger" );
-      field.setAccessible( true );
-      Logger oldRootLogger = ( Logger )field.get( oldManager );
-      field.set( newManager, oldRootLogger );
-      newManager.addLogger( oldRootLogger );
-    }
-
-    // Cleanup resources of old log manager...
-    oldManager.reset();
+    LogManager manager = LogManager.getLogManager();
+    manager.reset();
+    manager.getLogger( "" ).setLevel( Level.FINE );
+    manager.getLogger( "" ).addHandler( this );
   }
 
   /**

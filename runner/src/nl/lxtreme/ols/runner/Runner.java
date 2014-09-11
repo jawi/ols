@@ -25,7 +25,6 @@ import java.io.*;
 import java.net.*;
 import java.util.*;
 import java.util.concurrent.*;
-import java.util.jar.*;
 
 import nl.lxtreme.ols.runner.MiniLogger.LogTarget;
 
@@ -184,9 +183,6 @@ public final class Runner
    */
   public static void main( final String[] aArgs ) throws Exception
   {
-    String applicationName = getApplicationName();
-    System.setProperty( "com.apple.mrj.application.apple.menu.about.name", applicationName );
-
     final Runner runner = new Runner( new CmdLineOptions( aArgs ) );
     runner.run();
     runner.waitForStop();
@@ -220,47 +216,6 @@ public final class Runner
 
       throw exception;
     }
-  }
-
-  /**
-   * @return the application name, never <code>null</code>.
-   */
-  private static String getApplicationName()
-  {
-    Class<Runner> clazz = Runner.class;
-
-    URL loc = clazz.getProtectionDomain().getCodeSource().getLocation();
-
-    JarInputStream jis = null;
-    try
-    {
-      jis = new JarInputStream( loc.openStream() );
-      Manifest manifest = jis.getManifest();
-      if ( manifest != null )
-      {
-        return manifest.getMainAttributes().getValue( "X-AppName" );
-      }
-    }
-    catch ( Exception exception )
-    {
-      exception.printStackTrace();
-    }
-    finally
-    {
-      try
-      {
-        if ( jis != null )
-        {
-          jis.close();
-        }
-      }
-      catch ( IOException exception )
-      {
-        // Ignore...
-      }
-    }
-
-    return "Runner";
   }
 
   /**
@@ -362,6 +317,8 @@ public final class Runner
     // Felix specific configuration options...
     config.put( FelixConstants.SYSTEMBUNDLE_ACTIVATORS_PROP, Arrays.asList( this.hostActivator ) );
     config.put( FelixConstants.LOG_LEVEL_PROP, "2" );
+    // Where can we find our configuration files?
+    config.put( "nl.lxtreme.ols.config.dir", this.options.pluginDir );
 
     return config;
   }
