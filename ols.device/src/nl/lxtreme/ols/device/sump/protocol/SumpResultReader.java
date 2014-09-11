@@ -22,7 +22,8 @@ package nl.lxtreme.ols.device.sump.protocol;
 
 
 import java.io.*;
-import java.util.logging.*;
+
+import org.slf4j.*;
 
 import nl.lxtreme.ols.device.sump.*;
 
@@ -34,7 +35,7 @@ public class SumpResultReader implements Closeable, SumpProtocolConstants
 {
   // CONSTANTS
 
-  private static final Logger LOG = Logger.getLogger( SumpResultReader.class.getName() );
+  private static final Logger LOG = LoggerFactory.getLogger( SumpResultReader.class.getName() );
 
   // VARIABLES
 
@@ -75,15 +76,15 @@ public class SumpResultReader implements Closeable, SumpProtocolConstants
 
     if ( id == SLA_V0 )
     {
-      LOG.log( Level.INFO, "Found (unsupported!) Sump Logic Analyzer ...", Integer.toHexString( id ) );
+      LOG.info( "Found (unsupported!) Sump Logic Analyzer ({})...", Integer.toHexString( id ) );
     }
     else if ( id == SLA_V1 )
     {
-      LOG.log( Level.INFO, "Found Sump Logic Analyzer/LogicSniffer compatible device ...", Integer.toHexString( id ) );
+      LOG.info( "Found Sump Logic Analyzer/LogicSniffer compatible device ..." );
     }
     else
     {
-      LOG.log( Level.INFO, "Found unknown device: 0x{0} ...", Integer.toHexString( id ) );
+      LOG.info( "Found unknown device: 0x{} ...", Integer.toHexString( id ) );
       id = -1;
     }
     return id;
@@ -138,7 +139,7 @@ public class SumpResultReader implements Closeable, SumpProtocolConstants
           }
           else
           {
-            LOG.log( Level.INFO, "Ignoring unknown metadata type: {0}", Integer.valueOf( type ) );
+            LOG.info( "Ignoring unknown metadata type: {}", Integer.valueOf( type ) );
           }
         }
       }
@@ -154,7 +155,7 @@ public class SumpResultReader implements Closeable, SumpProtocolConstants
         }
         else
         {
-          LOG.log( Level.INFO, "I/O exception", exception );
+          LOG.warn( "I/O exception", exception );
         }
       }
     }

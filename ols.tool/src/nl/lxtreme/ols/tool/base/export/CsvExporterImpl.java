@@ -22,7 +22,8 @@ package nl.lxtreme.ols.tool.base.export;
 
 
 import java.io.*;
-import java.util.logging.*;
+
+import org.slf4j.*;
 
 import nl.lxtreme.ols.tool.base.ExportUtils.CsvExporter;
 
@@ -34,7 +35,7 @@ public class CsvExporterImpl implements CsvExporter
 {
   // CONSTANTS
 
-  private static final Logger LOG = Logger.getAnonymousLogger();
+  private static final Logger LOG = LoggerFactory.getLogger( CsvExporterImpl.class );
 
   // VARIABLES
 
@@ -84,8 +85,8 @@ public class CsvExporterImpl implements CsvExporter
   {
     if ( aValues.length != this.headerCount )
     {
-      LOG.warning( "Number of cells not equal to header count! Header count = " + this.headerCount + ", cell count = "
-          + aValues.length );
+      LOG.warn( "Number of cells not equal to header count! Header count = {}, cell count = {}", this.headerCount,
+          aValues.length );
     }
 
     // If set, use the header count as leading cell count...

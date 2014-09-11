@@ -22,7 +22,8 @@ package nl.lxtreme.ols.device.sump.protocol;
 
 
 import java.io.*;
-import java.util.logging.*;
+
+import org.slf4j.*;
 
 import nl.lxtreme.ols.device.sump.*;
 
@@ -80,7 +81,7 @@ public class SumpCommandWriter implements SumpProtocolConstants, Closeable
   /** Testing mode (internal) */
   public static final int FLAG_INTERNAL_TEST_MODE = 0x00000800;
 
-  private static final Logger LOG = Logger.getLogger( SumpCommandWriter.class.getName() );
+  private static final Logger LOG = LoggerFactory.getLogger( SumpCommandWriter.class );
 
   // VARIABLES
 
@@ -209,7 +210,7 @@ public class SumpCommandWriter implements SumpProtocolConstants, Closeable
    */
   protected final void sendCommand( final int aOpcode ) throws IOException
   {
-    LOG.log( Level.INFO, "Sending short command: 0x{0}", new Object[] { Integer.toHexString( aOpcode & 0xFF ) } );
+    LOG.debug( "Sending short command: 0x{}", Integer.toHexString( aOpcode & 0xFF ) );
 
     this.outputStream.writeByte( aOpcode );
     this.outputStream.flush();
@@ -239,9 +240,7 @@ public class SumpCommandWriter implements SumpProtocolConstants, Closeable
       shift += 8;
     }
 
-    LOG.log(
-        Level.INFO,
-        "Sending long command: 0x{0} with data 0x{1} 0x{2} 0x{3} 0x{4}",
+    LOG.debug( "Sending long command: 0x{} with data 0x{} 0x{2} 0x{} 0x{}",
         new Object[] { Integer.toHexString( raw[0] & 0xFF ), String.format( "%02x", raw[1] ),
             String.format( "%02x", raw[2] ), String.format( "%02x", raw[3] ), String.format( "%02x", raw[4] ) } );
 

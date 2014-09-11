@@ -29,7 +29,6 @@ import java.io.*;
 import java.text.*;
 import java.util.*;
 import java.util.List;
-import java.util.logging.*;
 
 import javax.swing.*;
 
@@ -46,6 +45,7 @@ import nl.lxtreme.ols.util.swing.*;
 import nl.lxtreme.ols.util.swing.component.*;
 
 import org.osgi.framework.*;
+import org.slf4j.*;
 
 
 /**
@@ -60,7 +60,7 @@ public final class Asm45ProtocolAnalysisDialog extends BaseToolDialog<Asm45DataS
 
   private static final long serialVersionUID = 1L;
 
-  private static final Logger LOG = Logger.getLogger( Asm45ProtocolAnalysisDialog.class.getName() );
+  private static final Logger LOG = LoggerFactory.getLogger( Asm45ProtocolAnalysisDialog.class );
 
   // VARIABLES
 
@@ -390,7 +390,7 @@ public final class Asm45ProtocolAnalysisDialog extends BaseToolDialog<Asm45DataS
     final int channelCount = getData().getChannelCount();
 
     final JPanel panel = new JPanel( new SpringLayout() );
-    
+
     addDecoderAreaPane( panel );
 
     SpringLayoutUtils.addSeparator( panel, "Settings" );
@@ -580,7 +580,7 @@ public final class Asm45ProtocolAnalysisDialog extends BaseToolDialog<Asm45DataS
     }
     catch ( final IOException exception )
     {
-      LOG.log( Level.WARNING, "CSV export failed!", exception );
+      LOG.warn( "CSV export failed!", exception );
     }
   }
 
@@ -598,7 +598,7 @@ public final class Asm45ProtocolAnalysisDialog extends BaseToolDialog<Asm45DataS
     }
     catch ( final IOException exception )
     {
-      LOG.log( Level.WARNING, "HTML export failed!", exception );
+      LOG.warn( "HTML export failed!", exception );
     }
   }
 

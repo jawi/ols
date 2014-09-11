@@ -305,7 +305,7 @@ public final class Runner
     final Map<String, Object> config = new HashMap<String, Object>();
 
     config.put( Constants.FRAMEWORK_BOOTDELEGATION, "com.yourkit.*,com.sun.*,sun.*,apple.*,com.apple.*" );
-    config.put( Constants.FRAMEWORK_SYSTEMPACKAGES_EXTRA, "com.apple.mrj,com.apple.eawt,javax.swing,javax.media.jai" );
+    config.put( Constants.FRAMEWORK_SYSTEMPACKAGES_EXTRA, "com.apple.mrj,com.apple.eawt,javax.swing,javax.media.jai,org.slf4j;version=1.6,org.osgi.service.log;version=1.3" );
     // Issue #36: explicitly set the location to the bundle cache directory,
     // otherwise it is created /relatively/ to the current working directory,
     // which is problematic when you start the client with a relative path...
@@ -318,7 +318,7 @@ public final class Runner
     config.put( FelixConstants.SYSTEMBUNDLE_ACTIVATORS_PROP, Arrays.asList( this.hostActivator ) );
     config.put( FelixConstants.LOG_LEVEL_PROP, "2" );
     // Where can we find our configuration files?
-    config.put( "nl.lxtreme.ols.config.dir", this.options.pluginDir );
+    config.put( "nl.lxtreme.ols.config.dir", this.options.pluginDir.getAbsolutePath() );
 
     return config;
   }

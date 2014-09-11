@@ -22,7 +22,8 @@ package nl.lxtreme.ols.device.generic;
 
 
 import java.io.*;
-import java.util.logging.*;
+
+import org.slf4j.*;
 
 import nl.lxtreme.ols.common.acquisition.*;
 import nl.lxtreme.ols.task.execution.*;
@@ -35,7 +36,7 @@ public final class GenericDeviceAcquisitionTask implements Task<AcquisitionData>
 {
   // CONSTANTS
 
-  private static final Logger LOG = Logger.getLogger( GenericDeviceAcquisitionTask.class.getName() );
+  private static final Logger LOG = LoggerFactory.getLogger( GenericDeviceAcquisitionTask.class );
 
   // VARIABLES
 
@@ -95,10 +96,7 @@ public final class GenericDeviceAcquisitionTask implements Task<AcquisitionData>
       {
         final int sample = readSample( this.sampleWidth );
 
-        if ( LOG.isLoggable( Level.FINE ) )
-        {
-          LOG.log( Level.FINE, "Read: 0x{0}", Integer.toHexString( sample ) );
-        }
+        LOG.debug( "Read: 0x{}", Integer.toHexString( sample ) );
 
         builder.addSample( idx, sample );
 

@@ -21,7 +21,7 @@
 package nl.lxtreme.ols.tool.base.export;
 
 
-import java.util.logging.*;
+import org.slf4j.*;
 
 import nl.lxtreme.ols.tool.base.ExportUtils.HtmlExporter;
 
@@ -33,7 +33,7 @@ public class HtmlExporterImpl implements HtmlExporter
 {
   // INNER TYPES
 
-  private static final Logger LOG = Logger.getAnonymousLogger();
+  private static final Logger LOG = LoggerFactory.getLogger( HtmlExporterImpl.class );
 
   // VARIABLES
 
@@ -53,10 +53,6 @@ public class HtmlExporterImpl implements HtmlExporter
    */
   public HtmlExporterImpl( final boolean aIncludeDTD )
   {
-    if ( LOG.isLoggable( Level.FINE ) )
-    {
-      LOG.fine( "Creating new HtmlExporter..." );
-    }
     this.includeDTD = aIncludeDTD;
 
     this.root = new TagElement( "html" );
@@ -138,10 +134,7 @@ public class HtmlExporterImpl implements HtmlExporter
     }
     sb.append( this.root.toString( aResolver ) );
 
-    if ( LOG.isLoggable( Level.FINE ) )
-    {
-      LOG.fine( "+++\n" + sb + "\n---\n" );
-    }
+    LOG.debug( "+++\n{}\n---\n", sb );
 
     return sb.toString();
   }

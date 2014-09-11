@@ -26,9 +26,10 @@ import static nl.lxtreme.ols.util.swing.SwingComponentUtils.*;
 
 import java.awt.event.*;
 import java.io.*;
-import java.util.logging.*;
 
 import javax.swing.filechooser.*;
+
+import org.slf4j.*;
 
 import nl.lxtreme.ols.client2.*;
 import nl.lxtreme.ols.client2.icons.*;
@@ -44,7 +45,7 @@ public class SaveAction extends AbstractManagedAction
 
   private static final long serialVersionUID = 1L;
 
-  private static final Logger LOG = Logger.getLogger( SaveAction.class.getName() );
+  private static final Logger LOG = LoggerFactory.getLogger( SaveAction.class );
 
   public static final String ID = "Save";
 
@@ -91,7 +92,8 @@ public class SaveAction extends AbstractManagedAction
     File file = client.getFile();
     if ( showFileChooserDialogNeeded( file ) )
     {
-      file = showFileSaveDialog( client, new FileNameExtensionFilter( "OLS client files", OLS_FILE_EXTENSION, OLS_PROJECT_EXTENSION ) );
+      file = showFileSaveDialog( client, new FileNameExtensionFilter( "OLS client files", OLS_FILE_EXTENSION,
+          OLS_PROJECT_EXTENSION ) );
     }
 
     if ( file == null )
@@ -139,7 +141,7 @@ public class SaveAction extends AbstractManagedAction
    */
   private void saveDataFile( Client aClient, File aFile )
   {
-    LOG.log( Level.INFO, "Saving data file: {0}", aFile );
+    LOG.info( "Saving data file: {}", aFile );
 
     try
     {
@@ -147,7 +149,7 @@ public class SaveAction extends AbstractManagedAction
     }
     catch ( IOException exception )
     {
-      LOG.log( Level.WARNING, "Saving data file failed!", exception );
+      LOG.warn( "Saving data file failed!", exception );
       JErrorDialog.showDialog( aClient, "Saving the data file failed!", exception );
     }
   }
@@ -157,7 +159,7 @@ public class SaveAction extends AbstractManagedAction
    */
   private void saveProjectFile( Client aClient, File aFile )
   {
-    LOG.log( Level.INFO, "Saving project file: {0}", aFile );
+    LOG.info( "Saving project file: {}", aFile );
 
     try
     {
@@ -165,7 +167,7 @@ public class SaveAction extends AbstractManagedAction
     }
     catch ( IOException exception )
     {
-      LOG.log( Level.WARNING, "Saving project file failed!", exception );
+      LOG.warn( "Saving project file failed!", exception );
       JErrorDialog.showDialog( aClient, "Saving the project file failed!", exception );
     }
   }

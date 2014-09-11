@@ -22,7 +22,8 @@ package nl.lxtreme.ols.client2.platform.osx;
 
 
 import java.lang.reflect.*;
-import java.util.logging.*;
+
+import org.slf4j.*;
 
 import nl.lxtreme.ols.client2.platform.*;
 
@@ -277,7 +278,7 @@ public final class OSXApplicationCallback
     }
     catch ( Exception exception )
     {
-      Logger.getAnonymousLogger().log( Level.FINE, "Install application callback failed!", exception );
+      LoggerFactory.getLogger( OSXApplicationCallback.class ).warn( "Install application callback failed!", exception );
     }
   }
 }

@@ -23,9 +23,10 @@ package nl.lxtreme.ols.device.sump.config;
 
 import java.io.*;
 import java.util.*;
-import java.util.logging.*;
 
 import javax.microedition.io.*;
+
+import org.slf4j.*;
 
 import nl.lxtreme.ols.device.sump.*;
 import nl.lxtreme.ols.device.sump.protocol.*;
@@ -39,7 +40,7 @@ public class SumpDetectionTask implements SumpProtocolConstants
 {
   // CONSTANTS
 
-  private static final Logger LOG = Logger.getLogger( SumpDetectionTask.class.getName() );
+  private static final Logger LOG = LoggerFactory.getLogger( SumpDetectionTask.class );
 
   // METHODS
 
@@ -73,7 +74,7 @@ public class SumpDetectionTask implements SumpProtocolConstants
         writeCmdGetDeviceId( outputStream );
         readDeviceId( inputStream );
 
-        LOG.log( Level.INFO, "Detected SUMP-compatible device ..." );
+        LOG.info( "Detected SUMP-compatible device ..." );
 
         // Make sure nothing is left in our input buffer...
         flushInputStream( inputStream );
@@ -85,8 +86,8 @@ public class SumpDetectionTask implements SumpProtocolConstants
         if ( gotResponse = readMetadata( inputStream, metadata ) )
         {
           // Log the read results...
-          LOG.log( Level.INFO, "Found device type: {0}", metadata.getName() );
-          LOG.log( Level.FINE, "Device metadata = \n{0}", metadata.toString() );
+          LOG.info( "Found device type: {}", metadata.getName() );
+          LOG.info( "Device metadata = \n{}", metadata.toString() );
         }
       }
       while ( !Thread.currentThread().isInterrupted() && !gotResponse && ( tries-- > 0 ) );
@@ -111,7 +112,7 @@ public class SumpDetectionTask implements SumpProtocolConstants
       }
       catch ( IOException exception )
       {
-        LOG.log( Level.INFO, "I/O connection while trying to close connection after device detect!", exception );
+        LOG.debug( "I/O connection while trying to close connection after device detect!", exception );
       }
     }
   }
@@ -145,15 +146,15 @@ public class SumpDetectionTask implements SumpProtocolConstants
 
     if ( id == SLA_V0 )
     {
-      LOG.log( Level.INFO, "Found (unsupported!) Sump Logic Analyzer ...", Integer.toHexString( id ) );
+      LOG.info( "Found (unsupported!) Sump Logic Analyzer ({})...", Integer.toHexString( id ) );
     }
     else if ( id == SLA_V1 )
     {
-      LOG.log( Level.INFO, "Found Sump Logic Analyzer/LogicSniffer compatible device ...", Integer.toHexString( id ) );
+      LOG.info( "Found Sump Logic Analyzer/LogicSniffer compatible device ..." );
     }
     else
     {
-      LOG.log( Level.INFO, "Found unknown device: 0x{0} ...", Integer.toHexString( id ) );
+      LOG.info( "Found unknown device: 0x{} ...", Integer.toHexString( id ) );
       id = -1;
     }
     return id;
@@ -202,7 +203,7 @@ public class SumpDetectionTask implements SumpProtocolConstants
           }
           else
           {
-            LOG.log( Level.INFO, "Ignoring unknown metadata type: {0}", Integer.valueOf( type ) );
+            LOG.warn( "Ignoring unknown metadata type: {}", Integer.valueOf( type ) );
           }
         }
       }

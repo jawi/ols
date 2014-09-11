@@ -25,17 +25,18 @@ import java.awt.*;
 import java.awt.event.*;
 import java.io.*;
 import java.util.List;
-import java.util.logging.*;
 
 import javax.swing.*;
 import javax.swing.plaf.basic.*;
-
-import org.osgi.framework.*;
 
 import nl.lxtreme.ols.device.sump.*;
 import nl.lxtreme.ols.device.sump.profile.*;
 import nl.lxtreme.ols.util.swing.*;
 import nl.lxtreme.ols.util.swing.Configurable;
+
+import org.osgi.framework.*;
+import org.slf4j.*;
+import org.slf4j.Logger;
 
 
 /**
@@ -189,7 +190,7 @@ public abstract class SumpDeviceProfilePanel implements Configurable
       }
       catch ( InvalidSyntaxException exception )
       {
-        LOG.log( Level.WARNING, "Failed to show device metadata due to an invalid filter!", exception );
+        LOG.warn( "Failed to show device metadata due to an invalid filter!", exception );
       }
       finally
       {
@@ -206,7 +207,7 @@ public abstract class SumpDeviceProfilePanel implements Configurable
 
   // CONSTANTS
 
-  private static final Logger LOG = Logger.getLogger( SumpDeviceProfilePanel.class.getName() );
+  private static final Logger LOG = LoggerFactory.getLogger( SumpDeviceProfilePanel.class );
 
   private static final String DETAILS_TMPL = "<html><style>body { font-family: sans-serif; font-size: 8px; margin-left: 8px; } th { text-align: right; }</style><body><table>"
       + "<tr><th>%s</th><td>%s</td></tr>" //
@@ -304,7 +305,7 @@ public abstract class SumpDeviceProfilePanel implements Configurable
       }
       catch ( IOException exception )
       {
-        LOG.log( Level.INFO, "Failed to detect device!", exception );
+        LOG.info( "Failed to detect device!", exception );
         details = getErrorMetadataDetails( exception );
       }
 
@@ -354,16 +355,16 @@ public abstract class SumpDeviceProfilePanel implements Configurable
 
       if ( profile != null )
       {
-        LOG.log( Level.INFO, "Using device profile: {0}", profile.getDescription() );
+        LOG.info( "Using device profile: {}", profile.getDescription() );
       }
       else
       {
-        LOG.log( Level.SEVERE, "No device profile found matching: {0}", aMetadata.getName() );
+        LOG.warn( "No device profile found matching: {}", aMetadata.getName() );
       }
     }
     else
     {
-      LOG.log( Level.SEVERE, "No metadata provided! Cannot determine device profile..." );
+      LOG.warn( "No metadata provided! Cannot determine device profile..." );
     }
 
     return profile;

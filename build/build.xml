@@ -27,17 +27,25 @@
 		<delete dir="${osx.releasedir-tmp}" followsymlinks="false" includeemptydirs="true" removeNotFollowedSymlinks="true" />
 	</target>
 
-	<target name="package" depends="init, prepare, package-zip, package-tarball, package-dmg" description="Packages the artifacts for all supported platforms." />
+	<target name="package" depends="prepare, package-zip, package-tarball, package-dmg" description="Packages the artifacts for all supported platforms." />
 
-	<target name="prepare">
+	<target name="prepare" depends="init">
 		<delete dir="${release.base}" quiet="true" />
 		<mkdir dir="${release.base}/bin" />
 		<mkdir dir="${release.base}/plugins" />
 
 		<createDist rootDir="../" allowSnapshots="true" bndFile="local.bndrun" outputdir="${release.dir}" />
-		<!-- the actual running + fw -->
+		<!-- remove GoGo & DM shell bundles -->
+		<delete>
+			<fileset dir="${release.base}/plugins" includes="org.apache.felix.*shell*.jar" />
+			<fileset dir="${release.base}/plugins" includes="org.apache.felix.gogo.*.jar" />
+		</delete>
+		<!-- move "runner" bundle to the "bin" directory -->
+		<move todir="${release.base}/bin">
+			<fileset dir="${release.base}/plugins" includes="runner*.jar" />
+		</move>
+		<!-- the dependencies -->
 		<copy todir="${release.base}/bin" flatten="true">
-			<fileset dir="../runner/generated" includes="*.jar" />
 			<fileset dir="resources/lib" includes="*.jar" />
 		</copy>
 		<!-- the configuration files -->

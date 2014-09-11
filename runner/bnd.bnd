@@ -1,9 +1,17 @@
 -include: ../build/ols.version
-X-Felix-Version: 4.2.1
+X-Felix-Version: 4.4.0
 X-AppName: ${ols.shortName}
--buildpath: org.apache.felix.framework;version=${X-Felix-Version},\
+-buildpath: ${^-buildpath}, \
+	org.apache.felix.framework;version=${X-Felix-Version},\
 	${osgi_cmpn}
+Import-Package: \
+	!javax.security.auth.x500,\
+	*
+Export-Package: \
+	org.slf4j,\
+	org.slf4j.impl
 Private-Package: \
+	org.slf4j.*,\
 	nl.lxtreme.ols.runner
 Include-Resource: \
 	@org.apache.felix.framework-${X-Felix-Version}.jar!/org/*,\

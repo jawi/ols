@@ -21,7 +21,7 @@
 package nl.lxtreme.ols.tool.uart.impl;
 
 
-import java.util.logging.*;
+import org.slf4j.*;
 
 import nl.lxtreme.ols.common.acquisition.*;
 import nl.lxtreme.ols.tool.base.*;
@@ -35,7 +35,7 @@ public final class UARTDataSet extends BaseDataSet<UARTData>
 {
   // CONSTANTS
 
-  private static final Logger LOG = Logger.getLogger( UARTDataSet.class.getName() );
+  private static final Logger LOG = LoggerFactory.getLogger( UARTDataSet.class );
 
   // VARIABLES
 
@@ -214,8 +214,7 @@ public final class UARTDataSet extends BaseDataSet<UARTData>
       }
       else
       {
-        LOG.log( Level.INFO, "Ignoring sampled bit length ({0}) as it deviates "
-            + "too much from current bit length ({1}).",
+        LOG.info( "Ignoring sampled bit length ({}) as it deviates too much from current bit length ({}).",
             new Object[] { Double.valueOf( aBitLength ), Double.valueOf( this.bitLength ) } );
       }
     }

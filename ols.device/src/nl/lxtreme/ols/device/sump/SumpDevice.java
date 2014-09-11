@@ -26,7 +26,6 @@ import java.io.*;
 import java.util.*;
 import java.util.List;
 import java.util.concurrent.*;
-import java.util.logging.*;
 
 import javax.microedition.io.*;
 
@@ -42,6 +41,7 @@ import org.apache.felix.dm.Component;
 import org.osgi.framework.*;
 import org.osgi.service.cm.*;
 import org.osgi.service.io.*;
+import org.slf4j.*;
 
 
 /**
@@ -55,7 +55,7 @@ public class SumpDevice implements Device
 
   private static final String NAME = "OpenBench LogicSniffer";
 
-  private static final Logger LOG = Logger.getLogger( SumpDevice.class.getName() );
+  private static final Logger LOG = LoggerFactory.getLogger( SumpDevice.class );
 
   // VARIABLES
 
@@ -226,10 +226,7 @@ public class SumpDevice implements Device
   {
     final String uri = this.config.getConnectionURI();
 
-    if ( LOG.isLoggable( Level.INFO ) )
-    {
-      LOG.info( "Connecting to " + uri );
-    }
+    LOG.info( "Connecting to {}...", uri );
 
     return createStreamConnection( uri );
   }

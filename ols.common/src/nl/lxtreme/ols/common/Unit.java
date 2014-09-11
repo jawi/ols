@@ -25,10 +25,10 @@ import static java.util.FormattableFlags.*;
 
 import java.awt.*;
 import java.util.*;
-import java.util.Formatter;
-import java.util.logging.*;
 
 import javax.swing.*;
+
+import org.slf4j.*;
 
 
 /**
@@ -507,13 +507,13 @@ public interface Unit
      */
     public static Character getSeparator()
     {
-      Logger logger = Logger.getLogger( Unit.class.getName() );
+      Logger logger = LoggerFactory.getLogger( Unit.class );
 
       char sep;
       if ( GraphicsEnvironment.isHeadless() )
       {
         // Cannot determine the optimal result, use a sensible default...
-        logger.fine( "Using SPACE (headless fallback)..." );
+        logger.debug( "Using SPACE (headless fallback)..." );
 
         sep = SPACE;
       }
@@ -523,25 +523,25 @@ public interface Unit
 
         if ( font.canDisplay( HAIR ) )
         {
-          logger.fine( "Using HAIR..." );
+          logger.debug( "Using HAIR..." );
 
           sep = HAIR;
         }
         else if ( font.canDisplay( THIN ) )
         {
-          logger.fine( "Using THIN..." );
+          logger.debug( "Using THIN..." );
 
           sep = THIN;
         }
         else if ( font.canDisplay( NB ) )
         {
-          logger.fine( "Using NB..." );
+          logger.debug( "Using NB..." );
 
           sep = NB;
         }
         else
         {
-          logger.fine( "Using SPACE (fallback)..." );
+          logger.debug( "Using SPACE (fallback)..." );
 
           sep = SPACE;
         }

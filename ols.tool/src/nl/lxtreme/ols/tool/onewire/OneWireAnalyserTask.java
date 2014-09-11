@@ -24,7 +24,7 @@ package nl.lxtreme.ols.tool.onewire;
 import static nl.lxtreme.ols.common.annotation.DataAnnotation.*;
 import static nl.lxtreme.ols.tool.base.NumberUtils.*;
 
-import java.util.logging.*;
+import org.slf4j.*;
 
 import nl.lxtreme.ols.common.Unit.Value;
 import nl.lxtreme.ols.common.acquisition.*;
@@ -50,7 +50,7 @@ public class OneWireAnalyserTask implements ToolTask<OneWireDataSet>
 
   private static final String OW_1_WIRE = "1-Wire";
 
-  private static final Logger LOG = Logger.getLogger( OneWireAnalyserTask.class.getName() );
+  private static final Logger LOG = LoggerFactory.getLogger( OneWireAnalyserTask.class );
 
   // VARIABLES
 
@@ -98,10 +98,7 @@ public class OneWireAnalyserTask implements ToolTask<OneWireDataSet>
 
     final int dataMask = this.owLineMask;
 
-    if ( LOG.isLoggable( Level.FINE ) )
-    {
-      LOG.log( Level.FINE, "1-Wire Line mask = 0x{0}", Integer.toHexString( this.owLineMask ) );
-    }
+    LOG.debug( "1-Wire Line mask = 0x{}", Integer.toHexString( this.owLineMask ) );
 
     // Search the moment on which the 1-wire line is idle (= high)...
     for ( sampleIdx = this.startOfDecode; sampleIdx < this.endOfDecode; sampleIdx++ )
@@ -118,7 +115,7 @@ public class OneWireAnalyserTask implements ToolTask<OneWireDataSet>
     if ( sampleIdx >= this.endOfDecode )
     {
       // no idle state could be found
-      LOG.log( Level.WARNING, "No IDLE state found in data; aborting analysis..." );
+      LOG.warn( "No IDLE state found in data; aborting analysis..." );
       throw new IllegalStateException( "No IDLE state found!" );
     }
 
@@ -213,7 +210,7 @@ public class OneWireAnalyserTask implements ToolTask<OneWireDataSet>
       {
         Value endTime = Value.asTime( time / ( double )aData.getSampleRate() );
 
-        LOG.log( Level.INFO, "Decoding ended at {0}; no falling edge found...", endTime );
+        LOG.info( "Decoding ended at {}; no falling edge found...", endTime );
         break;
       }
       long risingEdge = findEdge( aData, fallingEdge, endOfDecode, Edge.RISING );
@@ -241,7 +238,7 @@ public class OneWireAnalyserTask implements ToolTask<OneWireDataSet>
         // Advance the time until *after* the reset pulse...
         time = ( long )( fallingEdge + ( this.owTiming.getResetFrameLength() / timingCorrection ) );
 
-        LOG.log( Level.FINE, "Master bus reset; slave is {0}present...", ( slavePresent ? "" : "NOT " ) );
+        LOG.debug( "Master bus reset; slave is {}present...", ( slavePresent ? "" : "NOT " ) );
 
         reportReset( aDataSet, fallingEdge, time, slavePresent );
       }

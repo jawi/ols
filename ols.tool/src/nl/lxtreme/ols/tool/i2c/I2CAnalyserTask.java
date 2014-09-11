@@ -25,7 +25,8 @@ import static nl.lxtreme.ols.common.annotation.DataAnnotation.*;
 import static nl.lxtreme.ols.tool.base.NumberUtils.*;
 
 import java.beans.*;
-import java.util.logging.*;
+
+import org.slf4j.*;
 
 import nl.lxtreme.ols.common.acquisition.*;
 import nl.lxtreme.ols.tool.api.*;
@@ -55,7 +56,7 @@ public class I2CAnalyserTask implements ToolTask<I2CDataSet>
 
   private static final int I2C_BITCOUNT = 8;
 
-  private static final Logger LOG = Logger.getLogger( I2CAnalyserTask.class.getName() );
+  private static final Logger LOG = LoggerFactory.getLogger( I2CAnalyserTask.class );
 
   // VARIABLES
 
@@ -131,11 +132,8 @@ public class I2CAnalyserTask implements ToolTask<I2CDataSet>
     int oldSCL, oldSDA, bitCount;
     int byteValue;
 
-    if ( LOG.isLoggable( Level.FINE ) )
-    {
-      LOG.log( Level.FINE, "Line A mask = 0x{0}", Integer.toHexString( this.lineAmask ) );
-      LOG.log( Level.FINE, "Line B mask = 0x{0}", Integer.toHexString( this.lineBmask ) );
-    }
+    LOG.debug( "Line A mask = 0x{}", Integer.toHexString( this.lineAmask ) );
+    LOG.debug( "Line B mask = 0x{}", Integer.toHexString( this.lineBmask ) );
 
     if ( this.detectSDA_SCL )
     {
@@ -238,7 +236,7 @@ public class I2CAnalyserTask implements ToolTask<I2CDataSet>
 
               annotation = String.format( tenBitAddress ? "Setup %s slave: 0x%X " : "Setup %s slave: 0x%X [0x%X]",
                   ( direction == 1 ) ? "read from" : "write to", Integer.valueOf( slaveAddress ),
-                      Integer.valueOf( byteValue ) );
+                  Integer.valueOf( byteValue ) );
 
               tenBitAddress = false;
               type = TYPE_EVENT;
@@ -331,7 +329,7 @@ public class I2CAnalyserTask implements ToolTask<I2CDataSet>
       oldSDA = sda;
 
       this.progressListener
-      .setProgress( getPercentage( idx, i2cDataSet.getStartOfDecode(), i2cDataSet.getEndOfDecode() ) );
+          .setProgress( getPercentage( idx, i2cDataSet.getStartOfDecode(), i2cDataSet.getEndOfDecode() ) );
     }
 
     return i2cDataSet;
@@ -484,7 +482,7 @@ public class I2CAnalyserTask implements ToolTask<I2CDataSet>
     if ( sampleIdx == aEndOfDecode )
     {
       // no idle state could be found
-      LOG.log( Level.WARNING, "No IDLE state found in data; aborting analysis..." );
+      LOG.warn( "No IDLE state found in data; aborting analysis..." );
       throw new IllegalStateException( "No IDLE state found!" );
     }
 
@@ -524,7 +522,7 @@ public class I2CAnalyserTask implements ToolTask<I2CDataSet>
     if ( sampleIdx == aEndOfDecode )
     {
       // no start condition could be found
-      LOG.log( Level.WARNING, "No START condition found! Analysis aborted..." );
+      LOG.warn( "No START condition found! Analysis aborted..." );
       throw new IllegalStateException( "No START condition found!" );
     }
 
@@ -576,8 +574,8 @@ public class I2CAnalyserTask implements ToolTask<I2CDataSet>
    * @param aTime
    * @param aByteValue
    */
-  private void reportData( final I2CDataSet aDataSet, final int aStartSampleIdx, final int aEndSampleIdx, final long aStartTime, final long aEndTime,
-      final int aByteValue, final String aDescription, final String aType )
+  private void reportData( final I2CDataSet aDataSet, final int aStartSampleIdx, final int aEndSampleIdx,
+      final long aStartTime, final long aEndTime, final int aByteValue, final String aDescription, final String aType )
   {
     aDataSet.reportData( this.sdaIdx, aStartSampleIdx, aEndSampleIdx, aByteValue );
 
@@ -588,7 +586,8 @@ public class I2CAnalyserTask implements ToolTask<I2CDataSet>
   /**
    * @param aTime
    */
-  private void reportIncompleteSymbol( final I2CDataSet aDataSet, final int aSampleIdx, final long aTimestamp, final int aBitCount )
+  private void reportIncompleteSymbol( final I2CDataSet aDataSet, final int aSampleIdx, final long aTimestamp,
+      final int aBitCount )
   {
     aDataSet.reportBusError( this.sdaIdx, aSampleIdx );
 

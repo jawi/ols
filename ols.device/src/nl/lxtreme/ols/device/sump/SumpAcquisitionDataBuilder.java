@@ -21,7 +21,7 @@
 package nl.lxtreme.ols.device.sump;
 
 
-import java.util.logging.*;
+import org.slf4j.*;
 
 import nl.lxtreme.ols.common.acquisition.*;
 import nl.lxtreme.ols.device.sump.config.*;
@@ -35,7 +35,7 @@ public class SumpAcquisitionDataBuilder
 {
   // CONSTANTS
 
-  private static final Logger LOG = Logger.getLogger( SumpAcquisitionDataBuilder.class.getName() );
+  private static final Logger LOG = LoggerFactory.getLogger( SumpAcquisitionDataBuilder.class );
 
   // VARIABLES
 
@@ -109,7 +109,7 @@ public class SumpAcquisitionDataBuilder
         if ( timestamp == 0 )
         {
           // RLE count seen as first value?! This shouldn't happen...
-          LOG.warning( "Ignoring RLE count without preceeding sample value @ " + Long.toString( timestamp ) );
+          LOG.warn( "Ignoring RLE count without preceeding sample value @ {}", Long.toString( timestamp ) );
           continue;
         }
         // RLE count value, simply add the last sample value X-1 times...

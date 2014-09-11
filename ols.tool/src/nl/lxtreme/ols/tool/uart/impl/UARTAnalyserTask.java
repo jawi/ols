@@ -25,7 +25,8 @@ import static nl.lxtreme.ols.common.annotation.DataAnnotation.*;
 import static nl.lxtreme.ols.tool.base.NumberUtils.*;
 
 import java.util.*;
-import java.util.logging.*;
+
+import org.slf4j.*;
 
 import nl.lxtreme.ols.common.acquisition.*;
 import nl.lxtreme.ols.common.annotation.*;
@@ -176,7 +177,7 @@ public class UARTAnalyserTask implements ToolTask<UARTDataSet>
 
   static final String KEY_EVENT_TYPE = "eventType";
 
-  private static final Logger LOG = Logger.getLogger( UARTAnalyserTask.class.getName() );
+  private static final Logger LOG = LoggerFactory.getLogger( UARTAnalyserTask.class );
 
   /**
    * A constant used to distinguish between "real" baudrates and the auto-detect
@@ -269,7 +270,7 @@ public class UARTAnalyserTask implements ToolTask<UARTDataSet>
     // Make sure we've got a valid range to decode..
     if ( this.startOfDecode >= this.endOfDecode )
     {
-      LOG.log( Level.WARNING, "No valid data range found for UART analysis! Analysis aborted..." );
+      LOG.warn( "No valid data range found for UART analysis! Analysis aborted..." );
       throw new IllegalStateException( "No valid data range found for UART analysis!" );
     }
 
@@ -485,10 +486,7 @@ public class UARTAnalyserTask implements ToolTask<UARTDataSet>
   {
     final AcquisitionData data = this.context.getData();
 
-    if ( LOG.isLoggable( Level.FINE ) )
-    {
-      LOG.log( Level.FINE, "Decoding control: {0} ...", aName );
-    }
+    LOG.debug( "Decoding control: {0} ...", aName );
 
     final int mask = ( 1 << aChannelIndex );
 
@@ -551,11 +549,11 @@ public class UARTAnalyserTask implements ToolTask<UARTDataSet>
 
     this.context.addAnnotation( new BaudrateAnnotation( data.getChannels()[aChannelIndex], baudRateAnalyzer ) );
 
-    LOG.log( Level.FINE, "Baudrate = {0}bps", Integer.valueOf( this.baudRate ) );
+    LOG.debug( "Baudrate = {} bps", Integer.valueOf( this.baudRate ) );
 
     if ( this.baudRate <= 0 )
     {
-      LOG.log( Level.INFO, "No (usable) {0}-data found for determining bitlength/baudrate ...",
+      LOG.info( "No (usable) {}-data found for determining bitlength/baudrate ...",
           aChannelIndex == this.rxdIndex ? UART_RXD : UART_TXD );
     }
     else
@@ -636,49 +634,49 @@ public class UARTAnalyserTask implements ToolTask<UARTDataSet>
     if ( this.rxdIndex >= 0 )
     {
       final int mask = ( 1 << this.rxdIndex );
-      LOG.log( Level.FINE, "RxD mask = 0x{0}", Integer.toHexString( mask ) );
+      LOG.debug( "RxD mask = 0x{}", Integer.toHexString( mask ) );
       result |= mask;
     }
     if ( this.txdIndex >= 0 )
     {
       final int mask = ( 1 << this.txdIndex );
-      LOG.log( Level.FINE, "TxD mask = 0x{0}", Integer.toHexString( mask ) );
+      LOG.debug( "TxD mask = 0x{}", Integer.toHexString( mask ) );
       result |= mask;
     }
     if ( this.ctsIndex >= 0 )
     {
       final int mask = ( 1 << this.ctsIndex );
-      LOG.log( Level.FINE, "CTS mask = 0x{0}", Integer.toHexString( mask ) );
+      LOG.debug( "CTS mask = 0x{}", Integer.toHexString( mask ) );
       result |= mask;
     }
     if ( this.rtsIndex >= 0 )
     {
       final int mask = ( 1 << this.rtsIndex );
-      LOG.log( Level.FINE, "RTS mask = 0x{0}", Integer.toHexString( mask ) );
+      LOG.debug( "RTS mask = 0x{}", Integer.toHexString( mask ) );
       result |= mask;
     }
     if ( this.dcdIndex >= 0 )
     {
       final int mask = ( 1 << this.dcdIndex );
-      LOG.log( Level.FINE, "DCD mask = 0x{0}", Integer.toHexString( mask ) );
+      LOG.debug( "DCD mask = 0x{}", Integer.toHexString( mask ) );
       result |= mask;
     }
     if ( this.riIndex >= 0 )
     {
       final int mask = ( 1 << this.riIndex );
-      LOG.log( Level.FINE, "RI mask = 0x{0}", Integer.toHexString( mask ) );
+      LOG.debug( "RI mask = 0x{}", Integer.toHexString( mask ) );
       result |= mask;
     }
     if ( this.dsrIndex >= 0 )
     {
       final int mask = ( 1 << this.dsrIndex );
-      LOG.log( Level.FINE, "DSR mask = 0x{0}", Integer.toHexString( mask ) );
+      LOG.debug( "DSR mask = 0x{}", Integer.toHexString( mask ) );
       result |= mask;
     }
     if ( this.dtrIndex >= 0 )
     {
       final int mask = ( 1 << this.dtrIndex );
-      LOG.log( Level.FINE, "DTR mask = 0x{0}", Integer.toHexString( mask ) );
+      LOG.debug( "DTR mask = 0x{}", Integer.toHexString( mask ) );
       result |= mask;
     }
     return result;

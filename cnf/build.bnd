@@ -42,6 +42,7 @@ javac.debug:            on
 
 # By default, include JUnit & Mockito to the build path...
 -buildpath: ${junit},\
+			slf4j.api;version='[1.6,1.7)',\
 			org.mockito.mockito-all;version='[1.9,2)',\
 
 ## Properties from ext/*.bnd can be referenced in order to extend them. For

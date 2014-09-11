@@ -26,9 +26,10 @@ import static nl.lxtreme.ols.util.swing.SwingComponentUtils.*;
 
 import java.awt.event.*;
 import java.io.*;
-import java.util.logging.*;
 
 import javax.swing.filechooser.*;
+
+import org.slf4j.*;
 
 import nl.lxtreme.ols.client2.*;
 import nl.lxtreme.ols.client2.icons.*;
@@ -51,7 +52,7 @@ public class OpenAction extends AbstractManagedAction
 
   private static final long serialVersionUID = 1L;
 
-  private static final Logger LOG = Logger.getLogger( OpenAction.class.getName() );
+  private static final Logger LOG = LoggerFactory.getLogger( OpenAction.class );
 
   public static final String OLS_FILE_EXTENSION = "ols";
   public static final String OLS_PROJECT_EXTENSION = "olp";
@@ -113,17 +114,17 @@ public class OpenAction extends AbstractManagedAction
       switch ( type )
       {
         case DATA_FILE:
-          LOG.log( Level.INFO, "Opening data file: {0}", file );
+          LOG.info( "Opening data file: {}", file );
           client.openDataFile( file );
           break;
 
         case PROJECT_FILE:
-          LOG.log( Level.INFO, "Opening project file: {0}", file );
+          LOG.info( "Opening project file: {}", file );
           client.openProjectFile( file );
           break;
 
         default:
-          LOG.log( Level.INFO, "Unknown file: {0}", file );
+          LOG.warn( "Unknown file: {}", file );
           JErrorDialog.showDialog( client, "Open failed", "Unable to open file " + file.getName(),
               "Unable to detect file type." );
           break;
@@ -131,7 +132,7 @@ public class OpenAction extends AbstractManagedAction
     }
     catch ( IOException exception )
     {
-      LOG.log( Level.WARNING, "Open file failed!", exception );
+      LOG.warn( "Open file failed!", exception );
       JErrorDialog.showDialog( client, "Opening file '" + file.getName() + "' failed!", exception );
     }
   }
@@ -161,7 +162,7 @@ public class OpenAction extends AbstractManagedAction
     }
     catch ( IOException exception )
     {
-      LOG.log( Level.WARNING, "File detection failed: {0}", exception.getMessage() );
+      LOG.warn( "File detection failed!", exception );
       return result;
     }
     finally

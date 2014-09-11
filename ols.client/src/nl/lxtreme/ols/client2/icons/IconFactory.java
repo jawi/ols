@@ -23,11 +23,11 @@ package nl.lxtreme.ols.client2.icons;
 
 import java.awt.*;
 import java.net.*;
-import java.util.logging.*;
 
 import javax.swing.*;
 
 import org.osgi.framework.*;
+import org.slf4j.*;
 
 import nl.lxtreme.ols.util.swing.component.icon.*;
 
@@ -83,7 +83,7 @@ public final class IconFactory
 
   // CONSTANTS
 
-  private static final Logger LOG = Logger.getLogger( IconFactory.class.getName() );
+  private static final Logger LOG = LoggerFactory.getLogger( IconFactory.class );
 
   // CONSTRUCTORS
 
@@ -160,14 +160,14 @@ public final class IconFactory
     {
       // Old-fashioned way...
       resource = IconLocator.class.getResource( aIconName );
-      LOG.log( Level.FINE, "Get icon resource without bundle: {0} => {1}...", new Object[] { aIconName, resource } );
+      LOG.debug( "Get icon resource without bundle: {} => {}...", aIconName, resource );
     }
     else
     {
       String path = IconLocator.class.getPackage().getName().replaceAll( "\\.", "/" );
 
       resource = bundle.getResource( path + "/" + aIconName );
-      LOG.log( Level.FINE, "Get icon resource from bundle: {0} => {1}...", new Object[] { aIconName, resource } );
+      LOG.debug( "Get icon resource from bundle: {} => {}...", aIconName, resource );
     }
     return resource;
   }

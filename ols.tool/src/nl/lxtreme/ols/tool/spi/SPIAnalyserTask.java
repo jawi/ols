@@ -25,7 +25,8 @@ import static nl.lxtreme.ols.common.annotation.DataAnnotation.*;
 import static nl.lxtreme.ols.tool.base.NumberUtils.*;
 
 import java.beans.*;
-import java.util.logging.*;
+
+import org.slf4j.*;
 
 import nl.lxtreme.ols.common.acquisition.*;
 import nl.lxtreme.ols.tool.api.*;
@@ -49,7 +50,7 @@ public class SPIAnalyserTask implements ToolTask<SPIDataSet>
 
   static final String KEY_DATA_TYPE = "type";
 
-  private static final Logger LOG = Logger.getLogger( SPIAnalyserTask.class.getName() );
+  private static final Logger LOG = LoggerFactory.getLogger( SPIAnalyserTask.class );
 
   public static final String PROPERTY_AUTO_DETECT_MODE = "AutoDetectSPIMode";
 
@@ -123,20 +124,17 @@ public class SPIAnalyserTask implements ToolTask<SPIDataSet>
   @Override
   public SPIDataSet call() throws Exception
   {
-    if ( LOG.isLoggable( Level.FINE ) )
-    {
-      LOG.fine( "csmask   = 0x" + Integer.toHexString( 1 << this.csIdx ) );
-      LOG.fine( "sckmask  = 0x" + Integer.toHexString( 1 << this.sckIdx ) );
-      LOG.fine( "misomask = 0x" + Integer.toHexString( 1 << this.misoIdx ) );
-      LOG.fine( "mosimask = 0x" + Integer.toHexString( 1 << this.mosiIdx ) );
-    }
+    LOG.debug( "csmask   = 0x{}", Integer.toHexString( 1 << this.csIdx ) );
+    LOG.debug( "sckmask  = 0x{}", Integer.toHexString( 1 << this.sckIdx ) );
+    LOG.debug( "misomask = 0x{}", Integer.toHexString( 1 << this.misoIdx ) );
+    LOG.debug( "mosimask = 0x{}", Integer.toHexString( 1 << this.mosiIdx ) );
 
     final int slaveSelected = slaveSelected( this.startOfDecode, this.endOfDecode );
 
     if ( ( this.honourCS && ( slaveSelected < 0 ) ) || ( this.startOfDecode >= this.endOfDecode ) )
     {
       // no CS edge found, look for trigger
-      LOG.log( Level.WARNING, "No CS start-condition found! Analysis aborted..." );
+      LOG.warn( "No CS start-condition found! Analysis aborted..." );
       throw new IllegalStateException( "No CS start-condition found!" );
     }
 
@@ -145,7 +143,7 @@ public class SPIAnalyserTask implements ToolTask<SPIDataSet>
 
     if ( ( this.spiMode == null ) || ( this.spiMode == SPIMode.AUTODETECT ) )
     {
-      LOG.log( Level.INFO, "Detecting which SPI mode is most probably used..." );
+      LOG.warn( "Detecting which SPI mode is most probably used..." );
       this.spiMode = detectSPIMode( this.startOfDecode, this.endOfDecode );
     }
 
@@ -448,7 +446,7 @@ public class SPIAnalyserTask implements ToolTask<SPIDataSet>
           dataStartIdx = idx;
         }
 
-        LOG.log( Level.FINE, "Clock edge: {0}, idx: {1}, sample? {2}", //
+        LOG.debug( "Clock edge: {}, idx: {}, sample? {}", //
             new Object[] { clockEdge, Integer.valueOf( clockEdgeIdx ), Boolean.valueOf( sampleEdgeSeen ) } );
       }
       else
@@ -564,7 +562,7 @@ public class SPIAnalyserTask implements ToolTask<SPIDataSet>
     for ( int i = aStartIndex; i < aEndIndex; i++ )
     {
       final int newValue = ( values[i] & sckMask ) >> this.sckIdx;
-    valueStats.addValue( Integer.valueOf( newValue ) );
+      valueStats.addValue( Integer.valueOf( newValue ) );
     }
 
     SPIMode result;
@@ -573,12 +571,12 @@ public class SPIAnalyserTask implements ToolTask<SPIDataSet>
     // we're fairly sure that CPOL == 1...
     if ( valueStats.getHighestRanked().intValue() == 1 )
     {
-      LOG.log( Level.INFO, "SPI mode is probably mode 2 or 3 (CPOL == 1). Assuming mode 2 ..." );
+      LOG.info( "SPI mode is probably mode 2 or 3 (CPOL == 1). Assuming mode 2 ..." );
       result = SPIMode.MODE_2;
     }
     else
     {
-      LOG.log( Level.INFO, "SPI mode is probably mode 0 or 1 (CPOL == 0). Assuming mode 0 ..." );
+      LOG.info( "SPI mode is probably mode 0 or 1 (CPOL == 0). Assuming mode 0 ..." );
       result = SPIMode.MODE_0;
     }
 
@@ -677,8 +675,8 @@ public class SPIAnalyserTask implements ToolTask<SPIDataSet>
    * @param aMisoValue
    *          the MISO data value.
    */
-  private void reportData( final SPIDataSet aDecodedData, final int aStartIdx, final int aEndIdx, final long aStartTimestamp,
-      final long aEndTimestamp, final int aMosiValue, final int aMisoValue )
+  private void reportData( final SPIDataSet aDecodedData, final int aStartIdx, final int aEndIdx,
+      final long aStartTimestamp, final long aEndTimestamp, final int aMosiValue, final int aMisoValue )
   {
     long[] timestamps = this.context.getData().getTimestamps();
 
@@ -761,10 +759,7 @@ public class SPIAnalyserTask implements ToolTask<SPIDataSet>
       if ( ( this.invertCS && edge.isRising() ) || ( !this.invertCS && edge.isFalling() ) )
       {
         // found first falling edge; start decoding from here...
-        if ( LOG.isLoggable( Level.FINE ) )
-        {
-          LOG.fine( "CS found at " + i );
-        }
+        LOG.debug( "CS found at {}", i );
 
         return i;
       }

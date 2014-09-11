@@ -25,10 +25,11 @@ import static nl.lxtreme.ols.util.swing.SwingComponentUtils.*;
 
 import java.awt.event.*;
 import java.io.*;
-import java.util.logging.*;
 
 import javax.swing.*;
 import javax.swing.filechooser.*;
+
+import org.slf4j.*;
 
 import nl.lxtreme.ols.client2.*;
 import nl.lxtreme.ols.export.api.*;
@@ -46,7 +47,7 @@ public class ExportDataAction extends AbstractManagedAction
 
   private static final String ID = "ExportAction.";
 
-  private static final Logger LOG = Logger.getLogger( ExportDataAction.class.getName() );
+  private static final Logger LOG = LoggerFactory.getLogger( ExportDataAction.class );
 
   // VARIABLES
 
@@ -115,10 +116,7 @@ public class ExportDataAction extends AbstractManagedAction
 
     File actualFile = setFileExtension( exportFileName, preferredExtension );
 
-    if ( LOG.isLoggable( Level.INFO ) )
-    {
-      LOG.info( "Exporting data to file: " + actualFile.getName() + " using " + exporterName );
-    }
+    LOG.info( "Exporting data to file: {} using {}", actualFile.getName(), exporterName );
 
     try
     {
@@ -126,7 +124,7 @@ public class ExportDataAction extends AbstractManagedAction
     }
     catch ( IOException exception )
     {
-      LOG.log( Level.WARNING, "Export to " + exporterName + " failed!", exception );
+      LOG.warn( "Export to " + exporterName + " failed!", exception );
 
       JErrorDialog.showDialog( client, "Export data to " + exporterName + " failed!", exception );
     }

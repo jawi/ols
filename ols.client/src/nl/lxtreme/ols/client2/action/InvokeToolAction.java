@@ -22,9 +22,10 @@ package nl.lxtreme.ols.client2.action;
 
 
 import java.awt.event.*;
-import java.util.logging.*;
 
 import javax.swing.*;
+
+import org.slf4j.*;
 
 import nl.lxtreme.ols.client2.*;
 import nl.lxtreme.ols.tool.api.*;
@@ -41,7 +42,7 @@ public class InvokeToolAction extends AbstractManagedAction
 
   private static final String ID = "RunTool.";
 
-  private static final Logger LOG = Logger.getLogger( InvokeToolAction.class.getName() );
+  private static final Logger LOG = LoggerFactory.getLogger( InvokeToolAction.class );
 
   // VARIABLES
 
@@ -116,10 +117,7 @@ public class InvokeToolAction extends AbstractManagedAction
       return;
     }
 
-    if ( LOG.isLoggable( Level.INFO ) )
-    {
-      LOG.log( Level.INFO, "Invoking tool: \"{0}\" ...", this.tool.getName() );
-    }
+    LOG.info( "Invoking tool: \"{}\" ...", this.tool.getName() );
 
     final ToolContext context = client.createToolContext();
 

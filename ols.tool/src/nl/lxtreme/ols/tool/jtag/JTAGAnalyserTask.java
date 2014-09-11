@@ -25,7 +25,8 @@ import static nl.lxtreme.ols.common.annotation.DataAnnotation.*;
 import static nl.lxtreme.ols.tool.jtag.JTAGState.*;
 
 import java.math.*;
-import java.util.logging.*;
+
+import org.slf4j.*;
 
 import nl.lxtreme.ols.common.acquisition.*;
 import nl.lxtreme.ols.tool.api.*;
@@ -41,7 +42,7 @@ public class JTAGAnalyserTask implements ToolTask<JTAGDataSet>
 {
   // CONSTANTS
 
-  private static final Logger LOG = Logger.getLogger( JTAGAnalyserTask.class.getName() );
+  private static final Logger LOG = LoggerFactory.getLogger( JTAGAnalyserTask.class );
 
   public static final String PROPERTY_AUTO_DETECT_MODE = "AutoDetectJTAGMode";
 
@@ -89,13 +90,10 @@ public class JTAGAnalyserTask implements ToolTask<JTAGDataSet>
   @Override
   public JTAGDataSet call() throws Exception
   {
-    if ( LOG.isLoggable( Level.FINE ) )
-    {
-      LOG.fine( "tmsmask = 0x" + Integer.toHexString( 1 << this.tmsIdx ) );
-      LOG.fine( "tckmask = 0x" + Integer.toHexString( 1 << this.tckIdx ) );
-      LOG.fine( "tdomask = 0x" + Integer.toHexString( 1 << this.tdoIdx ) );
-      LOG.fine( "tdimask = 0x" + Integer.toHexString( 1 << this.tdiIdx ) );
-    }
+    LOG.debug( "tmsmask = 0x{}", Integer.toHexString( 1 << this.tmsIdx ) );
+    LOG.debug( "tckmask = 0x{}", Integer.toHexString( 1 << this.tckIdx ) );
+    LOG.debug( "tdomask = 0x{}", Integer.toHexString( 1 << this.tdoIdx ) );
+    LOG.debug( "tdimask = 0x{}", Integer.toHexString( 1 << this.tdiIdx ) );
 
     // Initialize the channel labels + clear any existing annotations...
     prepareResults();
@@ -216,7 +214,7 @@ public class JTAGAnalyserTask implements ToolTask<JTAGDataSet>
     this.oldState = TEST_LOGIC_RESET;
     this.startIdx = startOfDecode;
 
-    LOG.log( Level.INFO, "clockDataOnEdge: " + startOfDecode + " to " + endOfDecode );
+    LOG.debug( "clockDataOnEdge: {} to {} ", startOfDecode, endOfDecode );
 
     final double length = endOfDecode - startOfDecode;
     for ( int idx = startOfDecode + 1; idx < endOfDecode; idx++ )

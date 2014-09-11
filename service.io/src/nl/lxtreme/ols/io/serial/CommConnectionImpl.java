@@ -22,9 +22,10 @@ package nl.lxtreme.ols.io.serial;
 
 
 import java.io.*;
-import java.util.logging.*;
 
 import javax.microedition.io.*;
+
+import org.slf4j.*;
 
 import purejavacomm.*;
 
@@ -40,7 +41,7 @@ final class CommConnectionImpl implements CommConnection
 {
   // CONSTANTS
 
-  private static final Logger LOG = Logger.getLogger( CommConnectionImpl.class.getName() );
+  private static final Logger LOG = LoggerFactory.getLogger( CommConnectionImpl.class );
 
   // VARIABLES
 
@@ -98,7 +99,7 @@ final class CommConnectionImpl implements CommConnection
       catch ( IOException exception )
       {
         // Ignore...
-        LOG.log( Level.WARNING, "I/O exception during flush!", exception );
+        LOG.warn( "I/O exception during flush!", exception );
       }
       finally
       {
@@ -111,7 +112,7 @@ final class CommConnectionImpl implements CommConnection
         catch ( IOException exception )
         {
           // Ignore...
-          LOG.log( Level.WARNING, "I/O exception during close!", exception );
+          LOG.warn( "I/O exception during close!", exception );
         }
       }
 

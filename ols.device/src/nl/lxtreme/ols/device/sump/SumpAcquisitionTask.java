@@ -22,9 +22,10 @@ package nl.lxtreme.ols.device.sump;
 
 
 import java.io.*;
-import java.util.logging.*;
 
 import javax.microedition.io.*;
+
+import org.slf4j.*;
 
 import nl.lxtreme.ols.common.acquisition.*;
 import nl.lxtreme.ols.device.sump.config.*;
@@ -40,7 +41,7 @@ public class SumpAcquisitionTask implements SumpProtocolConstants, Task<Acquisit
 {
   // CONSTANTS
 
-  private static final Logger LOG = Logger.getLogger( SumpAcquisitionTask.class.getName() );
+  private static final Logger LOG = LoggerFactory.getLogger( SumpAcquisitionTask.class );
 
   // VARIABLES
 
@@ -199,11 +200,11 @@ public class SumpAcquisitionTask implements SumpProtocolConstants, Task<Acquisit
       catch ( InterruptedIOException exception )
       {
         // Ok; we're closing anyway, so lets continue for now...
-        LOG.log( Level.WARNING, "Closing of device was interrupted!", exception );
+        LOG.warn( "Closing of device was interrupted!", exception );
       }
       catch ( IOException exception )
       {
-        LOG.log( Level.WARNING, "Closing of device failed!", exception );
+        LOG.warn( "Closing of device failed!", exception );
       }
       finally
       {
@@ -216,7 +217,7 @@ public class SumpAcquisitionTask implements SumpProtocolConstants, Task<Acquisit
         }
         catch ( IOException exception )
         {
-          LOG.log( Level.WARNING, "Closing connection failed!", exception );
+          LOG.warn( "Closing connection failed!", exception );
         }
         finally
         {
@@ -235,7 +236,7 @@ public class SumpAcquisitionTask implements SumpProtocolConstants, Task<Acquisit
   {
     if ( this.inputStream != null )
     {
-      LOG.fine( "Flusing input..." );
+      LOG.debug( "Flusing input..." );
 
       byte[] buf = new byte[1024 * 1024]; // 1 MB
       int read = 0;
@@ -245,7 +246,7 @@ public class SumpAcquisitionTask implements SumpProtocolConstants, Task<Acquisit
       }
       while ( read > 0 );
 
-      LOG.fine( "Flusing complete..." );
+      LOG.debug( "Flusing complete..." );
     }
   }
 
@@ -285,7 +286,7 @@ public class SumpAcquisitionTask implements SumpProtocolConstants, Task<Acquisit
 
     try
     {
-      LOG.fine( "Opening connection to device ..." );
+      LOG.debug( "Opening connection to device ..." );
 
       if ( conn == null )
       {
@@ -301,8 +302,8 @@ public class SumpAcquisitionTask implements SumpProtocolConstants, Task<Acquisit
     }
     catch ( InterruptedIOException exception )
     {
-      LOG.log( Level.WARNING, "Failed to open connection! I/O was interrupted!" );
-      LOG.log( Level.FINE, "Detailed stack trace:", exception );
+      LOG.warn( "Failed to open connection! I/O was interrupted!" );
+      LOG.debug( "Detailed stack trace:", exception );
 
       Thread.currentThread().interrupt();
     }
@@ -333,7 +334,7 @@ public class SumpAcquisitionTask implements SumpProtocolConstants, Task<Acquisit
    */
   private void detectDevice() throws IOException
   {
-    LOG.fine( "Detecting device ..." );
+    LOG.debug( "Detecting device ..." );
 
     int tries = 3;
     int id = -1;
@@ -369,18 +370,18 @@ public class SumpAcquisitionTask implements SumpProtocolConstants, Task<Acquisit
 
     if ( id == SLA_V0 )
     { // SLA0
-      LOG.fine( "Obsolete device 'SLA0' found ..." );
+      LOG.debug( "Obsolete device 'SLA0' found ..." );
 
       throw new IOException( "Device is obsolete. Please upgrade firmware." );
     }
     else if ( id != SLA_V1 )
     { // SLA1
-      LOG.fine( "Unknown device (" + Integer.toHexString( id ) + ") found ..." );
+      LOG.debug( "Unknown device (" + Integer.toHexString( id ) + ") found ..." );
 
       throw new IOException( "Device not found!" );
     }
 
-    LOG.fine( "SUMP-compatible device 'SLA1' found ..." );
+    LOG.debug( "SUMP-compatible device 'SLA1' found ..." );
   }
 
   /**
@@ -394,7 +395,7 @@ public class SumpAcquisitionTask implements SumpProtocolConstants, Task<Acquisit
    */
   private AcquisitionData readSampleData() throws IOException, InterruptedException
   {
-    LOG.fine( "Awaiting data and processing sample information ..." );
+    LOG.debug( "Awaiting data and processing sample information ..." );
 
     final int length = this.config.getEnabledGroupCount() * this.config.getSampleCount();
     final byte[] rawData = new byte[length];
@@ -414,13 +415,13 @@ public class SumpAcquisitionTask implements SumpProtocolConstants, Task<Acquisit
           // We've been interrupted, check what we need to do...
           if ( this.config.isAdvancedTriggerEnabled() || this.config.isRleEnabled() )
           {
-            LOG.log( Level.INFO, "Interrupted. Sending 'finish now' command..." );
+            LOG.info( "Interrupted. Sending 'finish now' command..." );
 
             this.outputStream.writeCmdFinishNow();
           }
           else
           {
-            LOG.log( Level.INFO, "Interrupted. Stop reading of sample data..." );
+            LOG.info( "Interrupted. Stop reading of sample data..." );
             // Re-interrupt ourselves as this flag is cleared...
             Thread.currentThread().interrupt();
           }
@@ -434,7 +435,7 @@ public class SumpAcquisitionTask implements SumpProtocolConstants, Task<Acquisit
         {
           if ( !Thread.currentThread().isInterrupted() )
           {
-            LOG.log( Level.INFO, "Read zero bytes?! Stats = [{0}/{1}/{2}].", new Object[] { offset, count, zerosRead } );
+            LOG.info( "Read zero bytes?! Stats = [{}/{}/{}].", new Object[] { offset, count, zerosRead } );
           }
 
           if ( ++zerosRead == 10000 )
@@ -455,7 +456,7 @@ public class SumpAcquisitionTask implements SumpProtocolConstants, Task<Acquisit
     catch ( InterruptedIOException exception )
     {
       // We're stopping already...
-      LOG.log( Level.WARNING, "Reading of samples interrupted!", exception );
+      LOG.warn( "Reading of samples interrupted!", exception );
     }
     finally
     {

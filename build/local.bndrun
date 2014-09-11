@@ -3,60 +3,16 @@
 -resolve.effective: active
 -runsystemcapabilities: ${native_capability}
 -runproperties: \
+    org.osgi.framework.bootdelegation="com.yourkit.*,com.sun.*,sun.*,apple.*,com.apple.*",\
+    org.osgi.framework.system.packages.extra="com.apple.mrj,com.apple.eawt,javax.swing,javax.media.jai,org.slf4j;version=1.6,org.osgi.service.log;version=1.3",\
 	org.apache.felix.log.storeDebug=true,\
     org.apache.felix.log.maxSize=-1,\
-    org.osgi.framework.bootdelegation="com.yourkit.*,com.sun.*,sun.*,apple.*,com.apple.*",\
     nl.lxtreme.ols.config.dir="../ols.client/resources, ../ols.device/profiles",\
-    nl.lxtreme.ols.client.debug=true,\
-    nl.lxtreme.ols.filterJdkUiLog=true
+    nl.lxtreme.ols.client.debug=true
 -runvm: \
 	-Xdock:name=LogicSniffer -Xmx2048m 
--runrequires: \
-	osgi.identity;filter:='(&(osgi.identity=com.jidesoft.docking)(version>=3.5.8))',\
-	osgi.identity;filter:='(osgi.identity=org.apache.felix.dependencymanager)',\
-	osgi.identity;filter:='(osgi.identity=org.apache.felix.metatype)',\
-	osgi.identity;filter:='(osgi.identity=org.apache.felix.configadmin)',\
-	osgi.identity;filter:='(osgi.identity=org.apache.felix.eventadmin)',\
-	osgi.identity;filter:='(osgi.identity=org.apache.felix.prefs)',\
-	osgi.identity;filter:='(osgi.identity=org.apache.felix.log)',\
-	osgi.identity;filter:='(osgi.identity=lib.tdl.core)',\
-	osgi.identity;filter:='(osgi.identity=lib.tdl.editor)',\
-	osgi.identity;filter:='(&(osgi.identity=jvt220)(version>=1.1.1))',\
-	osgi.identity;filter:='(&(osgi.identity=purejavacomm)(version>=0.0.21))',\
-	osgi.identity;filter:='(osgi.identity=lib.swing)',\
-	osgi.identity;filter:='(osgi.identity=service.acquisition.api)',\
-	osgi.identity;filter:='(osgi.identity=service.acquisition.impl)',\
-	osgi.identity;filter:='(osgi.identity=service.config)',\
-	osgi.identity;filter:='(osgi.identity=service.taskexecution.api)',\
-	osgi.identity;filter:='(osgi.identity=service.taskexecution.impl)',\
-	osgi.identity;filter:='(osgi.identity=service.io)',\
-	osgi.identity;filter:='(osgi.identity=ols.common)',\
-	osgi.identity;filter:='(osgi.identity=ols.client.api)',\
-	osgi.identity;filter:='(osgi.identity=ols.client.ui)',\
-	osgi.identity;filter:='(osgi.identity=ols.client.project)',\
-	osgi.identity;filter:='(osgi.identity=ols.device.api)',\
-	osgi.identity;filter:='(osgi.identity=ols.device.demo)',\
-	osgi.identity;filter:='(osgi.identity=ols.device.generic)',\
-	osgi.identity;filter:='(osgi.identity=ols.device.sump.core)',\
-	osgi.identity;filter:='(osgi.identity=ols.tool.api)',\
-	osgi.identity;filter:='(osgi.identity=ols.tool.1wire)',\
-	osgi.identity;filter:='(osgi.identity=ols.tool.asm45)',\
-	osgi.identity;filter:='(osgi.identity=ols.tool.can)',\
-	osgi.identity;filter:='(osgi.identity=ols.tool.dmx512)',\
-	osgi.identity;filter:='(osgi.identity=ols.tool.i2c)',\
-	osgi.identity;filter:='(osgi.identity=ols.tool.i2s)',\
-	osgi.identity;filter:='(osgi.identity=ols.tool.jtag)',\
-	osgi.identity;filter:='(osgi.identity=ols.tool.manchester)',\
-	osgi.identity;filter:='(osgi.identity=ols.tool.nrza)',\
-	osgi.identity;filter:='(osgi.identity=ols.tool.serialconsole)',\
-	osgi.identity;filter:='(osgi.identity=ols.tool.spi)',\
-	osgi.identity;filter:='(osgi.identity=ols.tool.state)',\
-	osgi.identity;filter:='(osgi.identity=ols.tool.uart)',\
-	osgi.identity;filter:='(osgi.identity=ols.export.api)',\
-	osgi.identity;filter:='(osgi.identity=ols.export.csv)',\
-	osgi.identity;filter:='(osgi.identity=ols.export.image)',\
-	osgi.identity;filter:='(osgi.identity=ols.export.vcd)'
 -runbundles: \
+	runner;version=latest,\
 	com.jidesoft.docking;version='[3.5.8,3.5.9)',\
 	jvt220;version='[1.1.1,1.1.2)',\
 	lib.tdl.core;version=latest,\
@@ -88,12 +44,12 @@
 	ols.tool.spi;version=latest,\
 	ols.tool.state;version=latest,\
 	ols.tool.uart;version=latest,\
-	org.apache.felix.configadmin;version='[1.4,1.6)',\
+	org.apache.felix.configadmin;version='[1.8,1.9)',\
 	org.apache.felix.dependencymanager;version='[3.1.0,3.1.1)',\
 	org.apache.felix.dependencymanager.shell;version='[3.0.1,3.0.2)',\
 	org.apache.felix.eventadmin;version='[1.3.2,1.3.3)',\
+	org.apache.felix.metatype;version='[1.0.10,1.0.11)',\
 	org.apache.felix.log;version='[1.0.1,1.0.2)',\
-	org.apache.felix.metatype;version='[1.0.4,1.0.5)',\
 	org.apache.felix.prefs;version='[1.0.4,1.0.5)',\
 	org.apache.felix.gogo.runtime;version=latest,\
 	org.apache.felix.gogo.command;version=latest,\

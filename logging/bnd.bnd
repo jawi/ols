@@ -1,9 +1,0 @@
--buildpath: \
-	${osgi_core},\
-	${osgi_cmpn},\
-	${felix_dm}
-Private-Package: nl.lxtreme.ols.logging
-Bundle-Activator: nl.lxtreme.ols.logging.Activator
-Bundle-Name: Provides a logger redirector.
-Bundle-Copyright: J.W. Janssen (lxtreme.nl) (C) 2010-2013
-Bundle-License: GPLv2;link=http://www.gnu.org/licenses/gpl-2.0.html

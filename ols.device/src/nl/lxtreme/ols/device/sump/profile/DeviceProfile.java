@@ -26,7 +26,8 @@ import static nl.lxtreme.ols.device.sump.profile.Constants.*;
 import java.io.*;
 import java.util.*;
 import java.util.concurrent.*;
-import java.util.logging.*;
+
+import org.slf4j.*;
 
 
 /**
@@ -114,7 +115,7 @@ public final class DeviceProfile implements Cloneable, Comparable<DeviceProfile>
   private static final List<String> IGNORED_KEYS = Arrays.asList( new String[] { FELIX_SERVICE_PID,
       FELIX_SERVICE_FACTORY_PID } );
 
-  private static final Logger LOG = Logger.getLogger( DeviceProfile.class.getName() );
+  private static final Logger LOG = LoggerFactory.getLogger( DeviceProfile.class );
 
   // VARIABLES
 
@@ -636,7 +637,7 @@ public final class DeviceProfile implements Cloneable, Comparable<DeviceProfile>
       final String key = ( String )keys.nextElement();
       if ( !KNOWN_KEYS.contains( key ) && !IGNORED_KEYS.contains( key ) )
       {
-        LOG.log( Level.WARNING, "Unknown/unsupported profile key: " + key );
+        LOG.warn( "Unknown/unsupported profile key: {}", key );
         continue;
       }
 
@@ -654,7 +655,6 @@ public final class DeviceProfile implements Cloneable, Comparable<DeviceProfile>
 
     this.properties.putAll( newProps );
 
-    LOG.log( Level.INFO, "New device profile settings applied for {1} ({0}) ...", //
-        new Object[] { getType(), getDescription() } );
+    LOG.info( "New device profile settings applied for {} ({}) ...", getDescription(), getType() );
   }
 }

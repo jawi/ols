@@ -3,7 +3,6 @@
 -dependson: \
 	lib.tdl,\
 	lib.swing,\
-	logging,\
 	service.config,\
 	service.acquisition,\
 	service.io,\
