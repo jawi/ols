@@ -1,5 +1,5 @@
 /*
- * OpenBench LogicSniffer / SUMP project 
+ * OpenBench LogicSniffer / SUMP project
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -15,7 +15,7 @@
  * with this program; if not, write to the Free Software Foundation, Inc.,
  * 51 Franklin St, Fifth Floor, Boston, MA 02110, USA
  *
- * 
+ *
  * Copyright (C) 2010-2011 - J.W. Janssen, http://www.lxtreme.nl
  */
 package nl.lxtreme.ols.client.action;
@@ -42,13 +42,13 @@ public class HelpAboutAction extends BaseAction
 
   /**
    * Creates a new HelpAboutAction instance.
-   * 
+   *
    * @param aController
    *          the client controller to use, cannot be <code>null</code>.
    */
   public HelpAboutAction( final ClientController aController )
   {
-    super( ID, aController, "About OLS", "" );
+    super( ID, aController, "About LogicSniffer", "" );
     putValue( MNEMONIC_KEY, Integer.valueOf( KeyEvent.VK_A ) );
   }
 
