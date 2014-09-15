@@ -25,6 +25,7 @@ import java.io.*;
 import java.net.*;
 import java.util.*;
 import java.util.concurrent.*;
+
 import org.apache.felix.framework.*;
 import org.apache.felix.framework.util.*;
 import org.osgi.framework.*;
@@ -54,9 +55,8 @@ public final class Runner
     public CmdLineOptions( final String... aCmdLineArgs ) throws IOException
     {
       String _pluginDir = getPluginDir();
+      String _cacheDir = null;
       boolean _cleanCache = false;
-      boolean _logToConsole = false;
-      boolean _logToFile = false;
       int _logLevel = 2;
 
       for ( String cmdLineArg : aCmdLineArgs )
@@ -72,28 +72,37 @@ public final class Runner
         }
         else if ( cmdLineArg.startsWith( "-pluginDir=" ) )
         {
-          String arg = cmdLineArg.substring( 11 );
-          _pluginDir = arg;
+          _pluginDir = cmdLineArg.substring( 11 );
+        }
+        else if ( cmdLineArg.startsWith( "-cacheDir=" ) )
+        {
+          _cacheDir = cmdLineArg.substring( 10 );
         }
       }
 
       if ( ( _logLevel < 0 ) || ( _logLevel > 6 ) )
       {
-        throw new IllegalArgumentException( "Invalid log level, should be between 0 and 5!" );
+        throw new IllegalArgumentException( "Invalid log level, should be between 0 and 6!" );
       }
       if ( "".equals( _pluginDir ) || !new File( _pluginDir ).exists() )
       {
-        throw new IllegalArgumentException( "Invalid plugin directory: no such directory!" );
+        throw new IllegalArgumentException( "Invalid plugin directory: no such directory (" + _pluginDir + ")!" );
       }
-      if ( _logToConsole && _logToFile )
+      if ( _cacheDir == null )
       {
-        throw new IllegalArgumentException( "Cannot log to both console and file!" );
+        _cacheDir = new File( _pluginDir.concat( "/../.fwcache" ) ).getAbsolutePath();
       }
 
       this.pluginDir = new File( _pluginDir ).getCanonicalFile();
-      this.cacheDir = new File( _pluginDir.concat( "/../.fwcache" ) ).getCanonicalFile();
+      this.cacheDir = new File( _cacheDir ).getCanonicalFile();
       this.cleanCache = _cleanCache;
       this.logLevel = _logLevel;
+
+      // One final test: make sure we can create our cache folder...
+      if ( !this.cacheDir.exists() && !this.cacheDir.mkdirs() )
+      {
+        throw new IllegalArgumentException( "Invalid cache directory: unable to create directory (" + _cacheDir + ")!" );
+      }
     }
 
     // METHODS
@@ -307,7 +316,6 @@ public final class Runner
     final List<String> plugins = new ArrayList<String>();
     pluginDir.listFiles( new FilenameFilter()
     {
-
       @Override
       public boolean accept( final File aDir, final String aName )
       {
