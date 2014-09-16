@@ -84,25 +84,27 @@ public final class Runner
       {
         throw new IllegalArgumentException( "Invalid log level, should be between 0 and 6!" );
       }
-      if ( "".equals( _pluginDir ) || !new File( _pluginDir ).exists() )
-      {
-        throw new IllegalArgumentException( "Invalid plugin directory: no such directory (" + _pluginDir + ")!" );
-      }
-      if ( _cacheDir == null )
-      {
-        _cacheDir = new File( _pluginDir.concat( "/../.fwcache" ) ).getAbsolutePath();
-      }
 
       this.pluginDir = new File( _pluginDir ).getCanonicalFile();
-      this.cacheDir = new File( _cacheDir ).getCanonicalFile();
-      this.cleanCache = _cleanCache;
-      this.logLevel = _logLevel;
+      if ( "".equals( _pluginDir ) || !this.pluginDir.exists() )
+      {
+        throw new IllegalArgumentException( String.format( "Invalid plugin directory (%s)!", this.pluginDir ) );
+      }
 
-      // One final test: make sure we can create our cache folder...
+      if ( _cacheDir == null )
+      {
+        _cacheDir = new File( _pluginDir, "/../.fwcache" ).getAbsolutePath();
+      }
+
+      this.cacheDir = new File( _cacheDir ).getCanonicalFile();
       if ( !this.cacheDir.exists() && !this.cacheDir.mkdirs() )
       {
-        throw new IllegalArgumentException( "Invalid cache directory: unable to create directory (" + _cacheDir + ")!" );
+        throw new IllegalArgumentException( String.format( "Invalid cache directory (%s): cannot create directory!",
+            this.cacheDir ) );
       }
+
+      this.cleanCache = _cleanCache;
+      this.logLevel = _logLevel;
     }
 
     // METHODS
