@@ -437,11 +437,6 @@ public class SumpAcquisitionTask implements SumpProtocolConstants, Task<Acquisit
           {
             LOG.info( "Read zero bytes?! Stats = [{}/{}/{}].", new Object[] { offset, count, zerosRead } );
           }
-
-          if ( ++zerosRead == 10000 )
-          {
-            throw new IOException( "Device did not respond with any data within valid time bound!" );
-          }
         }
         else
         {
