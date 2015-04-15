@@ -1,5 +1,5 @@
 /*
- * OpenBench LogicSniffer / SUMP project 
+ * OpenBench LogicSniffer / SUMP project
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -15,7 +15,7 @@
  * with this program; if not, write to the Free Software Foundation, Inc.,
  * 51 Franklin St, Fifth Floor, Boston, MA 02110, USA
  *
- * 
+ *
  * Copyright (C) 2010-2011 - J.W. Janssen, http://www.lxtreme.nl
  */
 package org.sump.device.logicsniffer.profile;
@@ -114,7 +114,6 @@ public class DeviceProfileManagerTest
     properties.put( DeviceProfile.DEVICE_TRIGGER_COMPLEX, "true" );
     properties.put( DeviceProfile.DEVICE_TRIGGER_STAGES, "0" );
     properties.put( DeviceProfile.DEVICE_TYPE, aType );
-    properties.put( DeviceProfile.FELIX_FILEINSTALL_FILENAME, "" );
     return properties;
   }
 

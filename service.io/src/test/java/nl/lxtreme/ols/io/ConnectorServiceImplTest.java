@@ -1,5 +1,5 @@
 /*
- * OpenBench LogicSniffer / SUMP project 
+ * OpenBench LogicSniffer / SUMP project
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -15,7 +15,7 @@
  * with this program; if not, write to the Free Software Foundation, Inc.,
  * 51 Franklin St, Fifth Floor, Boston, MA 02110, USA
  *
- * 
+ *
  * Copyright (C) 2010-2011 - J.W. Janssen, http://www.lxtreme.nl
  */
 package nl.lxtreme.ols.io;
@@ -128,7 +128,7 @@ public class ConnectorServiceImplTest
 
   /**
    * Tests that the activator works correctly.
-   * 
+   *
    * @throws Exception
    */
   @Test
@@ -388,7 +388,7 @@ public class ConnectorServiceImplTest
   }
 
   /**
-   * 
+   *
    */
   @Before
   public void setUp()
@@ -396,26 +396,26 @@ public class ConnectorServiceImplTest
     this.context = mock( BundleContext.class );
 
     final Answer<ServiceRegistration> csAnswer = new Answer<ServiceRegistration>()
-    {
+        {
       @Override
       public ServiceRegistration answer( final InvocationOnMock aInvocation ) throws Throwable
       {
         ConnectorServiceImplTest.this.connectorService = ( ConnectorServiceImpl )aInvocation.getArguments()[1];
         return mock( ServiceRegistration.class );
       }
-    };
+        };
 
-    when(
-        this.context.registerService( matches( ConnectorService.class.getName() ), anyObject(),
-            ( Dictionary<?, ?> )isNull() ) ).thenAnswer( csAnswer );
+        when(
+            this.context.registerService( matches( ConnectorService.class.getName() ), anyObject(),
+                ( Dictionary<String, ?> )isNull() ) ).thenAnswer( csAnswer );
 
-    this.connectorService = new ConnectorServiceImpl( this.context );
+        this.connectorService = new ConnectorServiceImpl( this.context );
 
-    this.pid = 0;
+        this.pid = 0;
   }
 
   /**
-   * 
+   *
    */
   @Test
   public void testDetermineSchemeName()

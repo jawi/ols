@@ -1,5 +1,5 @@
 /*
- * OpenBench LogicSniffer / SUMP project 
+ * OpenBench LogicSniffer / SUMP project
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -15,7 +15,7 @@
  * with this program; if not, write to the Free Software Foundation, Inc.,
  * 51 Franklin St, Fifth Floor, Boston, MA 02110, USA
  *
- * 
+ *
  * Copyright (C) 2010-2011 J.W. Janssen, www.lxtreme.nl
  */
 package org.sump.device.logicsniffer;
@@ -54,7 +54,7 @@ public class VirtualLogicSnifferDevice extends LogicSnifferAcquisitionTask
 
     /**
      * Writes the samples.
-     * 
+     *
      * @param aOs
      * @param aSampleWidth
      * @param aSampleCount
@@ -434,7 +434,6 @@ public class VirtualLogicSnifferDevice extends LogicSnifferAcquisitionTask
     properties.put( DeviceProfile.DEVICE_TRIGGER_COMPLEX, "true" );
     properties.put( DeviceProfile.DEVICE_TRIGGER_STAGES, "4" );
     properties.put( DeviceProfile.DEVICE_TYPE, aType );
-    properties.put( DeviceProfile.FELIX_FILEINSTALL_FILENAME, "" );
     // Update the properties of a 'virtual' PID...
     getDeviceProfileManager().updated( "PID-" + aType, properties );
 
@@ -526,7 +525,7 @@ public class VirtualLogicSnifferDevice extends LogicSnifferAcquisitionTask
 
   /**
    * Sets the divider as written to the device.
-   * 
+   *
    * @param aDividerValue
    *          the divider value.
    */
@@ -537,7 +536,7 @@ public class VirtualLogicSnifferDevice extends LogicSnifferAcquisitionTask
 
   /**
    * Sets the flags value as written to the device.
-   * 
+   *
    * @param aFlags
    *          the flags.
    */
@@ -548,7 +547,7 @@ public class VirtualLogicSnifferDevice extends LogicSnifferAcquisitionTask
 
   /**
    * Sets the read- and delay-count as written to the device.
-   * 
+   *
    * @param aReadCount
    *          the read counter value;
    * @param aDelayCount

@@ -1,5 +1,5 @@
 /*
- * OpenBench LogicSniffer / SUMP project 
+ * OpenBench LogicSniffer / SUMP project
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -56,8 +56,7 @@ public class UIManagerConfigurator implements ManagedService
    * {@inheritDoc}
    */
   @Override
-  @SuppressWarnings( "rawtypes" )
-  public void updated( final Dictionary aProperties ) throws ConfigurationException
+  public void updated( final Dictionary<String, ?> aProperties ) throws ConfigurationException
   {
     // Fall back to the defaults by removing all keys from UIManager...
     removeOlsSpecificKeys();
@@ -118,23 +117,24 @@ public class UIManagerConfigurator implements ManagedService
    * @param aProperties
    * @throws ConfigurationException
    */
-  @SuppressWarnings( "rawtypes" )
-  private void applyOlsSpecificKeys( final Dictionary aProperties ) throws ConfigurationException
+  private void applyOlsSpecificKeys( final Dictionary<String, ?> aProperties ) throws ConfigurationException
   {
     final Properties config = new Properties();
 
-    final Enumeration keys = aProperties.keys();
+    final Enumeration<String> keys = aProperties.keys();
     while ( keys.hasMoreElements() )
     {
-      String key = ( String )keys.nextElement();
+      String key = keys.nextElement();
       if ( !key.startsWith( PREFIX ) )
       {
         continue;
       }
 
+      Object getValue = getPropertyValue( aProperties, key );
+
       try
       {
-        Object value = parseAsValue( key, aProperties.get( key ) );
+        Object value = parseAsValue( key, getValue );
         if ( value != null )
         {
           config.put( key, value );
@@ -142,8 +142,7 @@ public class UIManagerConfigurator implements ManagedService
       }
       catch ( Exception exception )
       {
-        System.err.println( "Configuration problem for '" + key + "' (value = '" + aProperties.get( key ) + "')!" );
-        exception.printStackTrace();
+        System.err.println( "Configuration problem for '" + key + "' (value = '" + getValue + "')!" );
         throw new ConfigurationException( key, "Unable to parse value!", exception );
       }
     }
@@ -161,6 +160,21 @@ public class UIManagerConfigurator implements ManagedService
 
       defaults.put( key, value );
     }
+  }
+
+  @SuppressWarnings( "rawtypes" )
+  private Object getPropertyValue( final Dictionary aProperties, final String aKey )
+  {
+    Object val = aProperties.get( aKey );
+    if ( val instanceof String )
+    {
+      String ref = ( String )val;
+      if ( ref.startsWith( "${" ) && ref.endsWith( "}" ) )
+      {
+        val = getPropertyValue( aProperties, ref.substring( 2, ref.length() - 1 ) );
+      }
+    }
+    return val;
   }
 
   /**
@@ -249,7 +263,7 @@ public class UIManagerConfigurator implements ManagedService
   }
 
   /**
-   * 
+   *
    */
   private void removeOlsSpecificKeys()
   {

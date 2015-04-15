@@ -1,5 +1,5 @@
 /*
- * OpenBench LogicSniffer / SUMP project 
+ * OpenBench LogicSniffer / SUMP project
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -161,7 +161,7 @@ public class PreferencesDialog extends JDialog implements StatusAwareCloseableDi
 
   /**
    * Creates a new {@link PreferencesDialog} instance.
-   * 
+   *
    * @param aParent
    *          the parent of the preferences window, can be <code>null</code>;
    * @param aColorSchemeManager
@@ -191,7 +191,7 @@ public class PreferencesDialog extends JDialog implements StatusAwareCloseableDi
 
     this.retainAnnotations = new JCheckBox();
     this.retainAnnotations.setToolTipText( "Whether or not annotations should be retained after a recapture. Will be applied immediately." );
-    
+
     this.showToolWindows = new JCheckBox();
     this.showToolWindows.setToolTipText( "Whether or not the tool windows are shown by default. Will be applied after a restart." );
     
@@ -249,7 +249,7 @@ public class PreferencesDialog extends JDialog implements StatusAwareCloseableDi
 
   /**
    * Display the bundles dialog.
-   * 
+   *
    * @return always <code>true</code>.
    */
   public boolean showDialog()
@@ -264,14 +264,13 @@ public class PreferencesDialog extends JDialog implements StatusAwareCloseableDi
   /**
    * Called upon start of this component by the dependency manager.
    */
-  @SuppressWarnings( "unchecked" )
   protected void start() throws IOException
   {
     this.config = this.configAdmin.getConfiguration( UIManagerConfigurator.PID );
 
     // The properties are in string format; so we need to do some conversions
     // prior to applying them to our components...
-    Dictionary<Object, Object> properties = this.config.getProperties();
+    Dictionary<String, Object> properties = this.config.getProperties();
 
     // Apply values to our components...
     this.mouseWheelZooms.setSelected( getBoolean( properties.get( MOUSEWHEEL_ZOOM_DEFAULT ) ) );
@@ -298,13 +297,13 @@ public class PreferencesDialog extends JDialog implements StatusAwareCloseableDi
 
   /**
    * Applies the new color scheme by copying its colors to the given dictionary.
-   * 
+   *
    * @param colorScheme
    *          the name of the new color scheme to apply;
    * @param dictionary
    *          the dictionary to fill with the new color scheme.
    */
-  private void applyNewColorScheme( final String colorScheme, final Dictionary<Object, Object> dictionary )
+  private void applyNewColorScheme( final String colorScheme, final Dictionary<String, Object> dictionary )
   {
     dictionary.put( COLOR_SCHEME, colorScheme );
 
@@ -319,7 +318,7 @@ public class PreferencesDialog extends JDialog implements StatusAwareCloseableDi
       Object value = props.get( key );
       if ( value instanceof Color )
       {
-        dictionary.put( key, ColorUtils.toHexString( ( Color )value ) );
+        dictionary.put( ( String )key, ColorUtils.toHexString( ( Color )value ) );
       }
     }
   }
@@ -330,12 +329,11 @@ public class PreferencesDialog extends JDialog implements StatusAwareCloseableDi
    * preferences. The reason for this is that the changes will now be persisted
    * automatically.
    */
-  @SuppressWarnings( "unchecked" )
   private void applyNewPreferences() throws IOException
   {
     // The properties are in string format; so we need to do some conversions
     // prior to persisting them...
-    Dictionary<Object, Object> properties = this.config.getProperties();
+    Dictionary<String, Object> properties = this.config.getProperties();
     properties.put( MOUSEWHEEL_ZOOM_DEFAULT, Boolean.toString( this.mouseWheelZooms.isSelected() ) );
     properties.put( SNAP_CURSORS_DEFAULT, Boolean.toString( this.cursorSnapToEdge.isSelected() ) );
     properties.put( GROUP_SUMMARY_VISIBLE_DEFAULT, Boolean.toString( this.showGroupSummary.isSelected() ) );
@@ -433,7 +431,7 @@ public class PreferencesDialog extends JDialog implements StatusAwareCloseableDi
 
   /**
    * Returns the boolean value for the given value representation.
-   * 
+   *
    * @param aValue
    *          the value to parse as boolean, can be <code>null</code>.
    * @return a boolean representation for the given value, defaults to
@@ -450,7 +448,7 @@ public class PreferencesDialog extends JDialog implements StatusAwareCloseableDi
 
   /**
    * Returns the {@link SignalAlignment} for the given value representation.
-   * 
+   *
    * @param aValue
    *          the value parse as {@link SignalAlignment}, can be
    *          <code>null</code>.
@@ -468,11 +466,11 @@ public class PreferencesDialog extends JDialog implements StatusAwareCloseableDi
 
   /**
    * Purges the current color scheme from the given dictionary.
-   * 
+   *
    * @param dictionary
    *          the dictionary to purge any existing color scheme from.
    */
-  private void purgeOldColorScheme( final Dictionary<Object, Object> dictionary )
+  private void purgeOldColorScheme( final Dictionary<String, Object> dictionary )
   {
     String oldColorScheme = ( String )dictionary.get( COLOR_SCHEME );
     Properties props = this.colorSchemeManager.getColorScheme( oldColorScheme );
@@ -486,7 +484,7 @@ public class PreferencesDialog extends JDialog implements StatusAwareCloseableDi
       Object value = props.get( key );
       if ( value instanceof Color )
       {
-        dictionary.put( key, "" );
+        dictionary.put( ( String )key, "" );
       }
     }
   }

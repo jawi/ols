@@ -1,5 +1,5 @@
 /*
- * OpenBench LogicSniffer / SUMP project 
+ * OpenBench LogicSniffer / SUMP project
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -15,7 +15,7 @@
  * with this program; if not, write to the Free Software Foundation, Inc.,
  * 51 Franklin St, Fifth Floor, Boston, MA 02110, USA
  *
- * 
+ *
  * Copyright (C) 2010-2011 J.W. Janssen, www.lxtreme.nl
  */
 package org.sump.device.logicsniffer.profile;
@@ -402,7 +402,7 @@ public class DeviceProfileTest
 
   /**
    * Tests whether Unicode escapes are interpreted correctly.
-   * 
+   *
    * @see http
    *      ://download.oracle.com/javase/6/docs/api/java/util/Properties.html#
    *      load(java.io.Reader)
@@ -450,7 +450,7 @@ public class DeviceProfileTest
 
   /**
    * Tests whether Unicode escapes are interpreted correctly.
-   * 
+   *
    * @see http
    *      ://download.oracle.com/javase/6/docs/api/java/util/Properties.html#
    *      load(java.io.Reader)
@@ -492,7 +492,6 @@ public class DeviceProfileTest
     properties.put( DeviceProfile.DEVICE_TRIGGER_COMPLEX, "true" );
     properties.put( DeviceProfile.DEVICE_TRIGGER_STAGES, "0" );
     properties.put( DeviceProfile.DEVICE_TYPE, "MOCK" );
-    properties.put( DeviceProfile.FELIX_FILEINSTALL_FILENAME, "" );
     return properties;
   }
 

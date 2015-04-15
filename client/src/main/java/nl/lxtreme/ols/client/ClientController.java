@@ -1,5 +1,5 @@
 /*
- * OpenBench LogicSniffer / SUMP project 
+ * OpenBench LogicSniffer / SUMP project
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -15,7 +15,7 @@
  * with this program; if not, write to the Free Software Foundation, Inc.,
  * 51 Franklin St, Fifth Floor, Boston, MA 02110, USA
  *
- * 
+ *
  * Copyright (C) 2010-2011 - J.W. Janssen, http://www.lxtreme.nl
  */
 package nl.lxtreme.ols.client;
@@ -61,7 +61,7 @@ import org.osgi.service.cm.*;
  * Denotes a front-end controller for the client.
  */
 public final class ClientController implements ActionProvider, AcquisitionProgressListener, AcquisitionStatusListener,
-    AcquisitionDataListener, AnnotationListener, ApplicationCallback
+AcquisitionDataListener, AnnotationListener, ApplicationCallback
 {
   // INNER TYPES
 
@@ -170,7 +170,7 @@ public final class ClientController implements ActionProvider, AcquisitionProgre
 
     /**
      * Creates a new DefaultToolContext instance.
-     * 
+     *
      * @param aStartSampleIdx
      *          the starting sample index;
      * @param aEndSampleIdx
@@ -296,7 +296,7 @@ public final class ClientController implements ActionProvider, AcquisitionProgre
 
   /**
    * Creates a new ClientController instance.
-   * 
+   *
    * @param aBundleContext
    *          the bundle context to use for interaction with the OSGi framework;
    * @param aHost
@@ -403,7 +403,7 @@ public final class ClientController implements ActionProvider, AcquisitionProgre
    * <p>
    * This method is called by the dependency manager.
    * </p>
-   * 
+   *
    * @param aDevice
    *          the device to add, cannot be <code>null</code>.
    */
@@ -420,7 +420,7 @@ public final class ClientController implements ActionProvider, AcquisitionProgre
    * <p>
    * This method is called by the dependency manager.
    * </p>
-   * 
+   *
    * @param aExporter
    *          the exporter to add, cannot be <code>null</code>.
    */
@@ -438,7 +438,7 @@ public final class ClientController implements ActionProvider, AcquisitionProgre
    * <p>
    * This method is called by the Dependency Manager.
    * </p>
-   * 
+   *
    * @param aProvider
    *          the component provider, cannot be <code>null</code>.
    */
@@ -470,7 +470,7 @@ public final class ClientController implements ActionProvider, AcquisitionProgre
    * <p>
    * This method is called by the dependency manager.
    * </p>
-   * 
+   *
    * @param aTool
    *          the tool to add, cannot be <code>null</code>.
    */
@@ -640,7 +640,7 @@ public final class ClientController implements ActionProvider, AcquisitionProgre
   /**
    * Exports the current data set to a file using an {@link Exporter} with a
    * given name.
-   * 
+   *
    * @param aExporterName
    *          the name of the exporter to use, cannot be <code>null</code>;
    * @param aExportFile
@@ -685,7 +685,7 @@ public final class ClientController implements ActionProvider, AcquisitionProgre
 
   /**
    * Provides direct access to the cursor with the given index.
-   * 
+   *
    * @param aCursorIdx
    *          the index of the cursor, >= 0 && < {@link Ols#MAX_CURSORS}.
    * @return a cursor, never <code>null</code>.
@@ -702,7 +702,7 @@ public final class ClientController implements ActionProvider, AcquisitionProgre
 
   /**
    * Returns the current selected device.
-   * 
+   *
    * @return the selected device, can be <code>null</code> if no device is
    *         selected.
    */
@@ -722,7 +722,7 @@ public final class ClientController implements ActionProvider, AcquisitionProgre
 
   /**
    * Returns all available devices.
-   * 
+   *
    * @return an array of device names, never <code>null</code>, but an empty
    *         array is possible.
    */
@@ -745,7 +745,7 @@ public final class ClientController implements ActionProvider, AcquisitionProgre
 
   /**
    * Returns all available exporters.
-   * 
+   *
    * @return an array of exporter names, never <code>null</code>, but an empty
    *         array is possible.
    */
@@ -761,7 +761,7 @@ public final class ClientController implements ActionProvider, AcquisitionProgre
   /**
    * Returns the "supported" export extensions for the exporter with the given
    * name.
-   * 
+   *
    * @param aExporterName
    *          the name of the exporter to get the possible file extensions for,
    *          cannot be <code>null</code>.
@@ -779,7 +779,7 @@ public final class ClientController implements ActionProvider, AcquisitionProgre
 
   /**
    * Returns the current host properties.
-   * 
+   *
    * @return the host properties, can be <code>null</code>.
    */
   public HostProperties getHostProperties()
@@ -789,7 +789,7 @@ public final class ClientController implements ActionProvider, AcquisitionProgre
 
   /**
    * Returns the current project's file name.
-   * 
+   *
    * @return the project file name, can be <code>null</code> if it is never
    *         saved before.
    */
@@ -800,7 +800,7 @@ public final class ClientController implements ActionProvider, AcquisitionProgre
 
   /**
    * Returns the signal diagram controller.
-   * 
+   *
    * @return a signal diagram controller, never <code>null</code>.
    */
   public SignalDiagramController getSignalDiagramController()
@@ -810,7 +810,7 @@ public final class ClientController implements ActionProvider, AcquisitionProgre
 
   /**
    * Returns all available tools.
-   * 
+   *
    * @return an array of tool names, never <code>null</code>, but an empty array
    *         is possible.
    */
@@ -872,7 +872,7 @@ public final class ClientController implements ActionProvider, AcquisitionProgre
 
   /**
    * Returns whether or not there's captured data to display.
-   * 
+   *
    * @return <code>true</code> if there's captured data, <code>false</code>
    *         otherwise.
    */
@@ -893,7 +893,7 @@ public final class ClientController implements ActionProvider, AcquisitionProgre
 
   /**
    * Runs the tool denoted by the given name.
-   * 
+   *
    * @param aToolName
    *          the name of the tool to run, cannot be <code>null</code>;
    * @param aParent
@@ -923,7 +923,7 @@ public final class ClientController implements ActionProvider, AcquisitionProgre
 
   /**
    * Returns whether or not a device is selected.
-   * 
+   *
    * @return <code>true</code> if a device is selected, <code>false</code>
    *         otherwise.
    */
@@ -942,7 +942,7 @@ public final class ClientController implements ActionProvider, AcquisitionProgre
 
   /**
    * Returns whether or not the current project is changed.
-   * 
+   *
    * @return <code>true</code> if the current project is changed,
    *         <code>false</code> otherwise.
    */
@@ -971,7 +971,7 @@ public final class ClientController implements ActionProvider, AcquisitionProgre
 
   /**
    * Opens a given file as OLS-data file.
-   * 
+   *
    * @param aFile
    *          the file to open, cannot be <code>null</code>.
    * @throws IOException
@@ -996,7 +996,7 @@ public final class ClientController implements ActionProvider, AcquisitionProgre
 
   /**
    * Opens a given file as OLS-project file.
-   * 
+   *
    * @param aFile
    *          the file to open, cannot be <code>null</code>.
    * @throws IOException
@@ -1029,7 +1029,7 @@ public final class ClientController implements ActionProvider, AcquisitionProgre
    * <p>
    * This method is called by the dependency manager.
    * </p>
-   * 
+   *
    * @param aDevice
    *          the device to remove, cannot be <code>null</code>.
    */
@@ -1060,7 +1060,7 @@ public final class ClientController implements ActionProvider, AcquisitionProgre
    * <p>
    * This method is called by the dependency manager.
    * </p>
-   * 
+   *
    * @param aExporter
    *          the exporter to remove, cannot be <code>null</code>.
    */
@@ -1090,7 +1090,7 @@ public final class ClientController implements ActionProvider, AcquisitionProgre
    * <p>
    * This method is called by the Dependency Manager.
    * </p>
-   * 
+   *
    * @param aProvider
    *          the menu component provider, cannot be <code>null</code>.
    */
@@ -1120,7 +1120,7 @@ public final class ClientController implements ActionProvider, AcquisitionProgre
    * <p>
    * This method is called by the dependency manager.
    * </p>
-   * 
+   *
    * @param aTool
    *          the tool to remove, cannot be <code>null</code>.
    */
@@ -1182,7 +1182,7 @@ public final class ClientController implements ActionProvider, AcquisitionProgre
   /**
    * Stores the current acquisition data to the given file, in the OLS-data file
    * format.
-   * 
+   *
    * @param aFile
    *          the file to write the data to, cannot be <code>null</code>.
    * @throws IOException
@@ -1206,7 +1206,7 @@ public final class ClientController implements ActionProvider, AcquisitionProgre
   /**
    * Stores the current acquisition data to the given file, in the OLS-project
    * file format.
-   * 
+   *
    * @param aName
    *          the name of the project to store, cannot be <code>null</code>;
    * @param aFile
@@ -1236,7 +1236,7 @@ public final class ClientController implements ActionProvider, AcquisitionProgre
 
   /**
    * Selects the device with the given name.
-   * 
+   *
    * @param aDeviceName
    *          the name of the device to select, can be <code>null</code> to
    *          deselect the current selected device.
@@ -1265,7 +1265,7 @@ public final class ClientController implements ActionProvider, AcquisitionProgre
 
   /**
    * Shows a dialog with all current bundles.
-   * 
+   *
    * @param aOwner
    *          the owning window to use, can be <code>null</code>.
    */
@@ -1280,7 +1280,7 @@ public final class ClientController implements ActionProvider, AcquisitionProgre
 
   /**
    * Shows the global preferences dialog.
-   * 
+   *
    * @param aParent
    *          the parent window of the dialog, can be <code>null</code>.
    */
@@ -1325,7 +1325,7 @@ public final class ClientController implements ActionProvider, AcquisitionProgre
   {
     final HostProperties hostProperties = getHostProperties();
 
-    initOSSpecifics( hostProperties.getShortName(), hostProperties.getVersion() );
+    initOSSpecifics( hostProperties.getVersion() );
 
     // Make sure we're running on the EDT to ensure the Swing threading model is
     // correctly defined...
@@ -1401,7 +1401,7 @@ public final class ClientController implements ActionProvider, AcquisitionProgre
 
   /**
    * Returns the current data set.
-   * 
+   *
    * @return the current data set, never <code>null</code>.
    */
   final DataSet getCurrentDataSet()
@@ -1416,7 +1416,7 @@ public final class ClientController implements ActionProvider, AcquisitionProgre
 
   /**
    * Returns the current project.
-   * 
+   *
    * @return the current project, never <code>null</code>.
    */
   final Project getCurrentProject()
@@ -1430,7 +1430,7 @@ public final class ClientController implements ActionProvider, AcquisitionProgre
 
   /**
    * Returns the current main frame.
-   * 
+   *
    * @return the main frame, can be <code>null</code>.
    */
   final MainFrame getMainFrame()
@@ -1440,7 +1440,7 @@ public final class ClientController implements ActionProvider, AcquisitionProgre
 
   /**
    * Returns the main menu bar.
-   * 
+   *
    * @return the main menu bar, can be <code>null</code>.
    */
   final JMenuBar getMainMenuBar()
@@ -1470,7 +1470,7 @@ public final class ClientController implements ActionProvider, AcquisitionProgre
   /**
    * Called by the dependency manager when the project manager service is going
    * away.
-   * 
+   *
    * @param aProjectManager
    *          the old project manager to remove.
    */
@@ -1523,7 +1523,7 @@ public final class ClientController implements ActionProvider, AcquisitionProgre
   /**
    * Called by the dependency manager when a (new) project manager service
    * becomes available.
-   * 
+   *
    * @param aProjectManager
    *          the projectManager to set.
    */
@@ -1546,7 +1546,7 @@ public final class ClientController implements ActionProvider, AcquisitionProgre
 
   /**
    * Sets the given message + arguments as status message.
-   * 
+   *
    * @param aMessage
    *          the message to set;
    * @param aMessageArgs
@@ -1660,7 +1660,7 @@ public final class ClientController implements ActionProvider, AcquisitionProgre
 
   /**
    * Returns whether or not the cursors are enabled.
-   * 
+   *
    * @return <code>true</code> if cursors are enabled, <code>false</code>
    *         otherwise.
    */
@@ -1671,7 +1671,7 @@ public final class ClientController implements ActionProvider, AcquisitionProgre
 
   /**
    * Returns all actions of a given type.
-   * 
+   *
    * @param aActionType
    *          the type of action to return, cannot be <code>null</code>.
    * @return an array of requested actions, never <code>null</code>.
@@ -1687,7 +1687,7 @@ public final class ClientController implements ActionProvider, AcquisitionProgre
 
   /**
    * Returns whether or not there is trigger data available.
-   * 
+   *
    * @return <code>true</code> if there is trigger data available,
    *         <code>false</code> otherwise.
    */
@@ -1704,7 +1704,7 @@ public final class ClientController implements ActionProvider, AcquisitionProgre
   /**
    * Returns whether or not the current project is "anonymous", i.e., not yet
    * saved.
-   * 
+   *
    * @return <code>true</code> if the current project is anonymous,
    *         <code>false</code> otherwise.
    */
@@ -1720,7 +1720,7 @@ public final class ClientController implements ActionProvider, AcquisitionProgre
 
   /**
    * Returns whether or not a cursor with the given index is set.
-   * 
+   *
    * @param aCursorIdx
    *          the index of the cursor test.
    * @return <code>true</code> if the cursor with the given index is set,
@@ -1739,7 +1739,7 @@ public final class ClientController implements ActionProvider, AcquisitionProgre
   /**
    * Creates the tool context denoting the range of samples that should be
    * analysed by a tool.
-   * 
+   *
    * @return a tool context, never <code>null</code>.
    */
   private ToolContext createToolContext()
@@ -1784,7 +1784,7 @@ public final class ClientController implements ActionProvider, AcquisitionProgre
 
   /**
    * Returns the {@link Channel} with the given index.
-   * 
+   *
    * @param aChannelIdx
    *          the index of the channel to return, >= 0.
    * @return a {@link Channel} instance, never <code>null</code>.
@@ -1801,7 +1801,7 @@ public final class ClientController implements ActionProvider, AcquisitionProgre
 
   /**
    * Returns the data acquisition service.
-   * 
+   *
    * @return a data acquisition service, never <code>null</code>.
    */
   private DataAcquisitionService getDataAcquisitionService()
@@ -1827,17 +1827,14 @@ public final class ClientController implements ActionProvider, AcquisitionProgre
 
   /**
    * Initializes the OS-specific stuff.
-   * 
-   * @param aApplicationName
-   *          the name of the application (when this needs to be passed to the
-   *          guest OS);
+   *
    * @param aVersion
    *          the version of the application.
    * @param aApplicationCallback
    *          the application callback used to report application events on some
    *          platforms (Mac OS), may be <code>null</code>.
    */
-  private void initOSSpecifics( final String aApplicationName, String aVersion )
+  private void initOSSpecifics( final String aVersion )
   {
     System.setProperty( "nl.lxtreme.ols.client.version", aVersion );
 
@@ -1859,7 +1856,6 @@ public final class ClientController implements ActionProvider, AcquisitionProgre
       // Moves the main menu bar to the screen menu bar location...
       System.setProperty( "apple.laf.useScreenMenuBar", "true" );
       System.setProperty( "apple.awt.graphics.EnableQ2DX", "true" );
-      System.setProperty( "com.apple.mrj.application.apple.menu.about.name", aApplicationName );
       System.setProperty( "com.apple.mrj.application.growbox.intrudes", "false" );
       System.setProperty( "com.apple.mrj.application.live-resize", "false" );
       System.setProperty( "com.apple.macos.smallTabs", "true" );
