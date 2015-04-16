@@ -1,5 +1,5 @@
 /*
- * OpenBench LogicSniffer / SUMP project 
+ * OpenBench LogicSniffer / SUMP project
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -48,7 +48,7 @@ public class RemoveChannelAnnotations extends AbstractAction
 
   /**
    * Creates a new {@link RemoveChannelAnnotations} instance.
-   * 
+   *
    * @param aController
    *          the controller to use;
    * @param aSignalElement
@@ -75,7 +75,7 @@ public class RemoveChannelAnnotations extends AbstractAction
     getChannel().clearAnnotations();
 
     // Repaint the affected area...
-    getSignalDiagram().repaintSignalElement( this.signalElement );
+    this.controller.repaintSignalElement( this.signalElement );
   }
 
   /**
@@ -89,7 +89,7 @@ public class RemoveChannelAnnotations extends AbstractAction
 
   /**
    * Returns the channel of the contained signal element.
-   * 
+   *
    * @return a channel, never <code>null</code>.
    */
   private Channel getChannel()
@@ -98,19 +98,9 @@ public class RemoveChannelAnnotations extends AbstractAction
   }
 
   /**
-   * Returns the {@link SignalDiagramComponent} instance.
-   * 
-   * @return the signal diagram component, never <code>null</code>.
-   */
-  private SignalDiagramComponent getSignalDiagram()
-  {
-    return this.controller.getSignalDiagram();
-  }
-
-  /**
    * Determines whether or not there are annotations available for the signal
    * element.
-   * 
+   *
    * @return <code>true</code> if there are any annotations available for the
    *         channel, <code>false</code> otherwise.
    */

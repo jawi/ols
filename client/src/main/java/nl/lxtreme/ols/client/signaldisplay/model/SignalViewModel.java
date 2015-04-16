@@ -138,7 +138,7 @@ public class SignalViewModel extends AbstractViewModel
    */
   public int[] getDataValues()
   {
-    return this.controller.getSignalDiagramModel().getValues();
+    return this.controller.getViewModel().getValues();
   }
 
   /**
@@ -223,7 +223,7 @@ public class SignalViewModel extends AbstractViewModel
    */
   public long[] getTimestamps()
   {
-    return this.controller.getSignalDiagramModel().getTimestamps();
+    return this.controller.getViewModel().getTimestamps();
   }
 
   /**

@@ -61,7 +61,7 @@ import org.osgi.service.cm.*;
  * Denotes a front-end controller for the client.
  */
 public final class ClientController implements ActionProvider, AcquisitionProgressListener, AcquisitionStatusListener,
-AcquisitionDataListener, AnnotationListener, ApplicationCallback
+    AcquisitionDataListener, AnnotationListener, ApplicationCallback
 {
   // INNER TYPES
 
@@ -662,7 +662,7 @@ AcquisitionDataListener, AnnotationListener, ApplicationCallback
       writer = new FileOutputStream( aExportFile );
 
       final Exporter exporter = getExporter( aExporterName );
-      exporter.export( getCurrentDataSet(), this.mainFrame.getDiagramScrollPane(), writer );
+      exporter.export( getCurrentDataSet(), this.mainFrame.getViewComponent(), writer );
 
       setStatusOnEDT( "Export to {0} succesful ...", aExporterName );
     }
@@ -1476,10 +1476,6 @@ AcquisitionDataListener, AnnotationListener, ApplicationCallback
    */
   final void removeProjectManager( final ProjectManager aProjectManager )
   {
-    if ( this.signalDiagramController != null )
-    {
-      aProjectManager.removePropertyChangeListener( this.signalDiagramController );
-    }
     if ( this.mainFrame != null )
     {
       aProjectManager.removePropertyChangeListener( this.mainFrame );
@@ -1533,10 +1529,6 @@ AcquisitionDataListener, AnnotationListener, ApplicationCallback
 
     if ( this.projectManager != null )
     {
-      if ( this.signalDiagramController != null )
-      {
-        this.projectManager.addPropertyChangeListener( this.signalDiagramController );
-      }
       if ( this.mainFrame != null )
       {
         this.projectManager.addPropertyChangeListener( this.mainFrame );
@@ -1583,6 +1575,7 @@ AcquisitionDataListener, AnnotationListener, ApplicationCallback
         final boolean deviceControllerSet = ( device != null );
         final boolean deviceCapturing = ( acquisitionService != null ) && acquisitionService.isAcquiring();
         final boolean deviceSetup = deviceControllerSet && !deviceCapturing && device.isSetup();
+        final boolean timingDataPresent = hasTimingData();
 
         getAction( CaptureAction.ID ).setEnabled( deviceControllerSet );
         getAction( CancelCaptureAction.ID ).setEnabled( deviceCapturing );
@@ -1618,7 +1611,7 @@ AcquisitionDataListener, AnnotationListener, ApplicationCallback
           getAction( GotoNthCursorAction.getID( c ) ).setEnabled( gotoCursorNEnabled );
         }
 
-        final boolean snapCursorMode = getSignalDiagramController().getSignalDiagramModel().isSnapCursorMode();
+        final boolean snapCursorMode = getSignalDiagramController().getViewModel().isSnapCursorMode();
         getAction( SetCursorSnapModeAction.ID ).putValue( Action.SELECTED_KEY, Boolean.valueOf( snapCursorMode ) );
 
         getAction( GotoFirstCursorAction.ID ).setEnabled( enableCursors && anyCursorSet );
@@ -1627,7 +1620,7 @@ AcquisitionDataListener, AnnotationListener, ApplicationCallback
         getAction( DeleteAllCursorsAction.ID ).setEnabled( enableCursors && anyCursorSet );
         getAction( RemoveAnnotationsAction.ID ).setEnabled( dataAvailable );
 
-        getAction( SetMeasurementModeAction.ID ).setEnabled( dataAvailable );
+        getAction( SetMeasurementModeAction.ID ).setEnabled( timingDataPresent && dataAvailable );
         getAction( ShowManagerViewAction.ID ).setEnabled( dataAvailable );
 
         // Update the tools...
@@ -1646,6 +1639,11 @@ AcquisitionDataListener, AnnotationListener, ApplicationCallback
         {
           exportAction.setEnabled( dataAvailable );
         }
+
+        getAction( ZoomAllAction.ID ).setEnabled( timingDataPresent );
+        getAction( ZoomInAction.ID ).setEnabled( timingDataPresent );
+        getAction( ZoomOriginalAction.ID ).setEnabled( timingDataPresent );
+        getAction( ZoomOutAction.ID ).setEnabled( timingDataPresent );
       }
     } );
   }
@@ -1666,7 +1664,7 @@ AcquisitionDataListener, AnnotationListener, ApplicationCallback
    */
   protected boolean areCursorsEnabled()
   {
-    return this.signalDiagramController.getSignalDiagramModel().isCursorMode();
+    return this.signalDiagramController.getViewModel().isCursorMode();
   }
 
   /**
@@ -1699,6 +1697,22 @@ AcquisitionDataListener, AnnotationListener, ApplicationCallback
       return false;
     }
     return currentDataSet.getCapturedData().hasTriggerData();
+  }
+
+  /**
+   * Returns whether or not there is timing data available.
+   *
+   * @return <code>true</code> if there is timing data available,
+   *         <code>false</code> otherwise.
+   */
+  protected boolean hasTimingData()
+  {
+    final DataSet currentDataSet = getCurrentDataSet();
+    if ( ( currentDataSet == null ) || ( currentDataSet.getCapturedData() == null ) )
+    {
+      return false;
+    }
+    return currentDataSet.getCapturedData().hasTimingData();
   }
 
   /**

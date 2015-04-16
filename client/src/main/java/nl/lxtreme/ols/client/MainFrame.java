@@ -15,7 +15,7 @@
  * with this program; if not, write to the Free Software Foundation, Inc.,
  * 51 Franklin St, Fifth Floor, Boston, MA 02110, USA
  *
- * 
+ *
  * Copyright (C) 2010-2011 - J.W. Janssen, http://www.lxtreme.nl
  */
 package nl.lxtreme.ols.client;
@@ -34,6 +34,7 @@ import javax.swing.event.*;
 import javax.swing.plaf.*;
 
 import nl.lxtreme.ols.api.*;
+import nl.lxtreme.ols.api.data.*;
 import nl.lxtreme.ols.api.data.Cursor;
 import nl.lxtreme.ols.api.data.project.*;
 import nl.lxtreme.ols.client.about.*;
@@ -154,7 +155,7 @@ public final class MainFrame extends JFrame implements Closeable, PropertyChange
 
     /**
      * Factory method for creating a menu item for the given name.
-     * 
+     *
      * @param aName
      *          the name of the menu item, never <code>null</code>.
      * @return a new menu item instance, never <code>null</code>.
@@ -163,14 +164,14 @@ public final class MainFrame extends JFrame implements Closeable, PropertyChange
 
     /**
      * Returns all names of menu items.
-     * 
+     *
      * @return an array of menu item names, never <code>null</code>.
      */
     protected abstract String[] getMenuItemNames();
 
     /**
      * Returns the name to display in case no other menu items are available.
-     * 
+     *
      * @return a 'no items' menu item name, never <code>null</code>.
      */
     protected abstract String getNoItemsName();
@@ -178,7 +179,7 @@ public final class MainFrame extends JFrame implements Closeable, PropertyChange
     /**
      * Returns whether or not the given menu item is "persistent", i.e., it
      * should not be removed automagically from the menu.
-     * 
+     *
      * @param aMenuItem
      *          the menu item to test, cannot be <code>null</code>.
      * @return <code>true</code> if the menu item is persistent,
@@ -194,7 +195,7 @@ public final class MainFrame extends JFrame implements Closeable, PropertyChange
      * Removes all obsolete menu items from the given menu, meaning that all
      * items that are not persistent and are not contained in the given list of
      * menu items are removed.
-     * 
+     *
      * @param aMenu
      *          the menu to remove the obsolete items from;
      * @param aMenuItems
@@ -346,7 +347,7 @@ public final class MainFrame extends JFrame implements Closeable, PropertyChange
     /**
      * Returns whether or not the given device name is to be selected in the
      * menu.
-     * 
+     *
      * @param aDeviceName
      *          the name of the device to test.
      * @return {@link Boolean#TRUE} if the device is to be selected,
@@ -431,11 +432,11 @@ public final class MainFrame extends JFrame implements Closeable, PropertyChange
 
     /**
      * Creates a new {@link MouseWheelZoomAdapter} instance.
-     * 
+     *
      * @param aZoomController
      *          the zoom controller to adapt, cannot be <code>null</code>.
      */
-    public MouseWheelZoomAdapter( final ZoomController aZoomController, SignalDiagramController aController )
+    public MouseWheelZoomAdapter( final ZoomController aZoomController, final SignalDiagramController aController )
     {
       this.zoomController = aZoomController;
       this.controller = aController;
@@ -450,7 +451,7 @@ public final class MainFrame extends JFrame implements Closeable, PropertyChange
     public void mouseWheelMoved( final MouseWheelEvent aEvent )
     {
       // Convert to the component under the mouse-cursor...
-      Component view = this.controller.getSignalDiagram();
+      Component view = this.controller.getViewComponent();
       Point newPoint = SwingUtilities.convertPoint( aEvent.getComponent(), aEvent.getPoint(), view );
 
       // Dispatch the actual zooming to the zoom controller...
@@ -576,14 +577,14 @@ public final class MainFrame extends JFrame implements Closeable, PropertyChange
 
     /**
      * Creates a new {@link ZoomCapableScrollPane} instance.
-     * 
+     *
      * @param aController
      *          the signal diagram controller to use, cannot be
      *          <code>null</code>.
      */
     public ZoomCapableScrollPane( final SignalDiagramController aController )
     {
-      super( aController.getSignalDiagram() );
+      super( aController.getViewComponent() );
 
       this.zoomAdapter = new MouseWheelZoomAdapter( aController.getZoomController(), aController );
 
@@ -708,7 +709,7 @@ public final class MainFrame extends JFrame implements Closeable, PropertyChange
 
     /**
      * Tests whether the given {@link MouseWheelEvent} is a zooming event.
-     * 
+     *
      * @param aEvent
      *          the {@link MouseWheelEvent} to test, may be <code>null</code>.
      * @return <code>true</code> if the given {@link MouseWheelEvent} is
@@ -749,7 +750,7 @@ public final class MainFrame extends JFrame implements Closeable, PropertyChange
 
   // VARIABLES
 
-  private final SignalDiagramComponent signalDiagram;
+  private final SignalDiagramController viewController;
   private final JTextStatusBar status;
   private final ClientController controller;
   private final DockController dockController;
@@ -766,7 +767,7 @@ public final class MainFrame extends JFrame implements Closeable, PropertyChange
 
   /**
    * Creates a new MainFrame instance.
-   * 
+   *
    * @param aDockController
    *          the dock controller to use, cannot be <code>null</code>;
    * @param aClientController
@@ -787,15 +788,13 @@ public final class MainFrame extends JFrame implements Closeable, PropertyChange
     // Add the window icon...
     setIconImages( internalGetIconImages() );
 
-    SignalDiagramController signalDiagramController = this.controller.getSignalDiagramController();
-
-    this.signalDiagram = signalDiagramController.getSignalDiagram();
+    this.viewController = this.controller.getSignalDiagramController();
     this.status = new JTextStatusBar();
 
     final JToolBar tools = createMenuBars();
 
     // Create a scrollpane for the diagram...
-    this.dockController.setMainContent( new ZoomCapableScrollPane( signalDiagramController ) );
+    this.dockController.setMainContent( new JLabel() );
 
     final JPanel contentPane = new JPanel( new BorderLayout() );
     contentPane.add( tools, BorderLayout.PAGE_START );
@@ -831,7 +830,7 @@ public final class MainFrame extends JFrame implements Closeable, PropertyChange
 
   /**
    * Returns the name of the current selected device in the devices menu.
-   * 
+   *
    * @return the name of the current selected device, or <code>null</code> if no
    *         device is selected.
    */
@@ -842,13 +841,13 @@ public final class MainFrame extends JFrame implements Closeable, PropertyChange
 
   /**
    * Sets the view to the position indicated by the given sample position.
-   * 
+   *
    * @param aSamplePos
    *          the sample position, >= 0.
    */
   public void gotoPosition( final int aChannelIdx, final long aSamplePos )
   {
-    this.signalDiagram.scrollToTimestamp( aSamplePos );
+    this.viewController.scrollToTimestamp( aSamplePos );
   }
 
   /**
@@ -860,13 +859,29 @@ public final class MainFrame extends JFrame implements Closeable, PropertyChange
     final String propertyName = aEvent.getPropertyName();
     if ( "project".equals( propertyName ) )
     {
-      Project project = ( Project )aEvent.getNewValue();
+      final Project project = ( Project )aEvent.getNewValue();
 
-      updateWindowDecorations( project );
+      SwingComponentUtils.invokeOnEDT( new Runnable()
+      {
+        @Override
+        public void run()
+        {
+          updateViewData( project.getDataSet() );
+        }
+      } );
     }
     else if ( "capturedData".equals( propertyName ) )
     {
-      updateWindowDecorations( this.controller.getCurrentProject() );
+      final DataSet dataSet = ( DataSet )aEvent.getNewValue();
+
+      SwingComponentUtils.invokeOnEDT( new Runnable()
+      {
+        @Override
+        public void run()
+        {
+          updateViewData( dataSet );
+        }
+      } );
     }
 
     this.controller.updateActionsOnEDT();
@@ -885,7 +900,7 @@ public final class MainFrame extends JFrame implements Closeable, PropertyChange
 
   /**
    * Updates the progress bar to the given percentage.
-   * 
+   *
    * @param aPercentage
    *          the percentage to set, >= 0 && <= 100.
    */
@@ -896,7 +911,7 @@ public final class MainFrame extends JFrame implements Closeable, PropertyChange
 
   /**
    * Sets the status bar message to the message given.
-   * 
+   *
    * @param aMessage
    *          the message to set as status text;
    * @param aMessageArgs
@@ -939,23 +954,22 @@ public final class MainFrame extends JFrame implements Closeable, PropertyChange
    */
   final void diagramSettingsUpdated()
   {
-    this.signalDiagram.revalidate();
+    this.viewController.revalidateAll();
   }
 
   /**
    * Returns the scroll pane of the current diagram instance.
-   * 
+   *
    * @return a scroll pane instance, can be <code>null</code>.
    */
-  final JComponent getDiagramScrollPane()
+  final JComponent getViewComponent()
   {
-    final Container viewport = this.signalDiagram.getParent();
-    return ( JComponent )viewport.getParent();
+    return this.viewController.getViewComponent();
   }
 
   /**
    * Sets the name of the current selected device in the devices menu.
-   * 
+   *
    * @param aSelectedDeviceName
    *          the name of the selected device, can be <code>null</code>.
    */
@@ -964,9 +978,27 @@ public final class MainFrame extends JFrame implements Closeable, PropertyChange
     this.lastSelectedDeviceName = aSelectedDeviceName;
   }
 
+  protected void updateViewData( final DataSet aDataSet )
+  {
+    this.viewController.setDataModel( aDataSet );
+
+    JComponent mainContent;
+    if ( this.viewController.isViewZoomable() )
+    {
+      mainContent = new ZoomCapableScrollPane( this.viewController );
+    }
+    else
+    {
+      mainContent = this.viewController.getViewComponent();
+    }
+    this.dockController.setMainContent( mainContent );
+
+    updateWindowDecorations( this.controller.getCurrentProject() );
+  }
+
   /**
    * Creates the menu bar with all menu's and the accompanying toolbar.
-   * 
+   *
    * @return the toolbar, never <code>null</code>.
    */
   private JToolBar createMenuBars()
@@ -1047,7 +1079,7 @@ public final class MainFrame extends JFrame implements Closeable, PropertyChange
     this.toolsMenu = bar.add( new JMenu( "Tools" ) );
     this.toolsMenu.setMnemonic( 'T' );
     this.toolsMenu.add( new JCheckBoxMenuItem( this.controller.getAction( SetMeasurementModeAction.ID ) ) ) //
-        .putClientProperty( PERSISTENT_MENU_ITEM_KEY, Boolean.TRUE );
+    .putClientProperty( PERSISTENT_MENU_ITEM_KEY, Boolean.TRUE );
     this.toolsMenu.addSeparator();
     this.toolsMenu.addMenuListener( new ToolMenuBuilder( this.controller ) );
 
@@ -1059,9 +1091,9 @@ public final class MainFrame extends JFrame implements Closeable, PropertyChange
       // Add two items that remain constant for the remainder of the lifetime of
       // this client...
       this.windowMenu.add( new JMenuItem( StandardActionFactory.createCloseAction() ) ) //
-          .putClientProperty( PERSISTENT_MENU_ITEM_KEY, Boolean.TRUE );
+      .putClientProperty( PERSISTENT_MENU_ITEM_KEY, Boolean.TRUE );
       this.windowMenu.add( new JMenuItem( new MinimizeWindowAction() ) ) //
-          .putClientProperty( PERSISTENT_MENU_ITEM_KEY, Boolean.TRUE );
+      .putClientProperty( PERSISTENT_MENU_ITEM_KEY, Boolean.TRUE );
 
       this.windowMenu.addSeparator();
 
@@ -1108,7 +1140,7 @@ public final class MainFrame extends JFrame implements Closeable, PropertyChange
 
   /**
    * Creates a list of icon images that are used to decorate this frame.
-   * 
+   *
    * @return a list of images, never <code>null</code>.
    */
   private List<? extends Image> internalGetIconImages()
@@ -1124,7 +1156,7 @@ public final class MainFrame extends JFrame implements Closeable, PropertyChange
   /**
    * Updates the title and any other window decorations for the current running
    * platform.
-   * 
+   *
    * @param aProject
    *          the project to take the current properties from, can be
    *          <code>null</code>.

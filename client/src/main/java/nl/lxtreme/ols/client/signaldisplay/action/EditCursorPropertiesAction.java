@@ -232,7 +232,7 @@ public class EditCursorPropertiesAction extends AbstractAction
     final EditCursorDialog dialog = new EditCursorDialog( SwingComponentUtils.getOwningWindow( aEvent ), this.cursor );
     if ( dialog.showDialog() )
     {
-      final SignalDiagramModel model = this.controller.getSignalDiagramModel();
+      final SignalDiagramModel model = this.controller.getViewModel();
 
       // XXX shouldn't this be set directly on the cursor?!!!
       model.setCursorLabel( this.cursor.getIndex(), dialog.getLabel() );

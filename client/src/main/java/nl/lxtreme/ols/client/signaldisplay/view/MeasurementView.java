@@ -641,7 +641,7 @@ public class MeasurementView extends AbstractViewLayer implements IToolWindow, I
    */
   final SignalDiagramModel getSignalDiagramModel()
   {
-    return getController().getSignalDiagramModel();
+    return getController().getViewModel();
   }
 
   /**
@@ -807,7 +807,7 @@ public class MeasurementView extends AbstractViewLayer implements IToolWindow, I
    */
   private boolean canPerformMeasurement()
   {
-    if ( !getController().getSignalDiagramModel().isMeasurementMode() )
+    if ( !getController().getViewModel().isMeasurementMode() )
     {
       return false;
     }

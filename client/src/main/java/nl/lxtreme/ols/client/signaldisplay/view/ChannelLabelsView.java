@@ -1,5 +1,5 @@
 /*
- * OpenBench LogicSniffer / SUMP project 
+ * OpenBench LogicSniffer / SUMP project
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -72,7 +72,7 @@ public class ChannelLabelsView extends AbstractViewLayer
     public void mouseClicked( final MouseEvent aEvent )
     {
       // Ensure the focus is moved to the main signal diagram component...
-      getSignalDiagram().requestFocusInWindow();
+      getViewComponent().requestFocusInWindow();
 
       if ( !aEvent.isConsumed() && ( aEvent.getClickCount() == 2 ) )
       {
@@ -81,7 +81,7 @@ public class ChannelLabelsView extends AbstractViewLayer
         {
           ActionEvent stubEvent = new ActionEvent( this, ActionEvent.ACTION_PERFORMED, "" );
           new EditSignalElementPropertiesAction( this.controller, element, aEvent.getLocationOnScreen() )
-              .actionPerformed( stubEvent );
+          .actionPerformed( stubEvent );
 
           // Do not process this event any further...
           aEvent.consume();
@@ -115,7 +115,7 @@ public class ChannelLabelsView extends AbstractViewLayer
 
     /**
      * Creates the context-sensitive popup menu for channel labels.
-     * 
+     *
      * @param aRelativePoint
      *          the current mouse location to show the popup menu, cannot be
      *          <code>null</code>.
@@ -131,7 +131,7 @@ public class ChannelLabelsView extends AbstractViewLayer
 
     /**
      * Finds the UI-element under the given point.
-     * 
+     *
      * @param aPoint
      *          the coordinate of the potential channel, cannot be
      *          <code>null</code>.
@@ -139,12 +139,12 @@ public class ChannelLabelsView extends AbstractViewLayer
      */
     private IUIElement findSignalElement( final Point aPoint )
     {
-      return this.controller.getSignalDiagramModel().findUIElement( aPoint );
+      return this.controller.getViewModel().findUIElement( aPoint );
     }
 
     /**
      * Handles the given event if it represents a popup trigger.
-     * 
+     *
      * @param aEvent
      *          the mouse event to handle as popup trigger, cannot be
      *          <code>null</code>.
@@ -447,7 +447,7 @@ public class ChannelLabelsView extends AbstractViewLayer
 
   /**
    * Creates a new {@link ChannelLabelsView} instance.
-   * 
+   *
    * @param aController
    *          the controller to use, cannot be <code>null</code>.
    * @return a new {@link ChannelLabelsView} instance, never <code>null</code>.
@@ -460,7 +460,7 @@ public class ChannelLabelsView extends AbstractViewLayer
 
   /**
    * Installs all listeners and the support for DnD.
-   * 
+   *
    * @see javax.swing.JComponent#addNotify()
    */
   @Override
@@ -478,7 +478,7 @@ public class ChannelLabelsView extends AbstractViewLayer
 
   /**
    * Returns the current value of model.
-   * 
+   *
    * @return the model
    */
   public ChannelLabelsViewModel getModel()
@@ -510,7 +510,7 @@ public class ChannelLabelsView extends AbstractViewLayer
    * Overridden in order to set a custom UI, which not only paints this diagram,
    * but also can be used to manage the various settings, such as colors,
    * height, and so on.
-   * 
+   *
    * @see javax.swing.JComponent#updateUI()
    */
   @Override

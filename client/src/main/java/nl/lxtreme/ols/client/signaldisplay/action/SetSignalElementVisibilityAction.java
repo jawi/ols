@@ -1,5 +1,5 @@
 /*
- * OpenBench LogicSniffer / SUMP project 
+ * OpenBench LogicSniffer / SUMP project
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -47,7 +47,7 @@ public class SetSignalElementVisibilityAction extends AbstractAction
 
   /**
    * Creates a new {@link SetSignalElementVisibilityAction} instance.
-   * 
+   *
    * @param aController
    *          the controller to use, cannot be <code>null</code>;
    * @param aSignalElement
@@ -65,7 +65,7 @@ public class SetSignalElementVisibilityAction extends AbstractAction
 
   /**
    * Determines the label for this action.
-   * 
+   *
    * @param aType
    *          the signal element to determine the label of this action for,
    *          cannot be <code>null</code>;
@@ -111,7 +111,7 @@ public class SetSignalElementVisibilityAction extends AbstractAction
     if ( this.signalElement.isDigitalSignal() )
     {
       // Digital signal stays on screen; so we can redraw this easily...
-      getSignalDiagram().repaintSignalElement( this.signalElement );
+      this.controller.repaintSignalElement( this.signalElement );
     }
     else
     {
@@ -119,13 +119,5 @@ public class SetSignalElementVisibilityAction extends AbstractAction
       // the entire frame...
       this.controller.revalidateAll();
     }
-  }
-
-  /**
-   * @return the signal diagram component, never <code>null</code>.
-   */
-  private SignalDiagramComponent getSignalDiagram()
-  {
-    return this.controller.getSignalDiagram();
   }
 }

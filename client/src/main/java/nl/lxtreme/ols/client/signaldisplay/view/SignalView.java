@@ -133,7 +133,7 @@ public class SignalView extends AbstractViewLayer implements IMeasurementListene
      */
     private SignalElement findDigitalSignal( final Point aPoint )
     {
-      IUIElement element = this.controller.getSignalDiagramModel().findUIElement( aPoint );
+      IUIElement element = this.controller.getViewModel().findUIElement( aPoint );
       if ( element instanceof SignalElement && ( ( SignalElement )element ).isDigitalSignal() )
       {
         return ( SignalElement )element;
@@ -377,6 +377,6 @@ public class SignalView extends AbstractViewLayer implements IMeasurementListene
    */
   private SignalDiagramModel getSignalDiagramModel()
   {
-    return getController().getSignalDiagramModel();
+    return getController().getViewModel();
   }
 }

@@ -1,5 +1,5 @@
 /*
- * OpenBench LogicSniffer / SUMP project 
+ * OpenBench LogicSniffer / SUMP project
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -44,7 +44,7 @@ public class ChannelLabelsViewModel extends AbstractViewModel
 
   /**
    * Creates a new ChannelLabelsViewModel instance.
-   * 
+   *
    * @param aController
    *          the diagram controller to use, cannot be <code>null</code>.
    */
@@ -60,7 +60,7 @@ public class ChannelLabelsViewModel extends AbstractViewModel
    * <p>
    * Channels can only be moved within a single group.
    * </p>
-   * 
+   *
    * @param aMovedElement
    *          the channel that is moved;
    * @param aInsertPoint
@@ -84,7 +84,7 @@ public class ChannelLabelsViewModel extends AbstractViewModel
 
   /**
    * Finds the signal element located at the given X,Y-coordinate.
-   * 
+   *
    * @param aCoordinate
    *          the coordinate to find the signal element for, cannot be
    *          <code>null</code>.
@@ -99,7 +99,7 @@ public class ChannelLabelsViewModel extends AbstractViewModel
   /**
    * Determines the virtual signal element row corresponding to the given
    * X,Y-coordinate.
-   * 
+   *
    * @param aCoordinate
    *          the coordinate to return the channel row for, cannot be
    *          <code>null</code>.
@@ -119,7 +119,7 @@ public class ChannelLabelsViewModel extends AbstractViewModel
 
   /**
    * Returns all available channels.
-   * 
+   *
    * @return a collection of all channels, never <code>null</code>.
    */
   public final Collection<Channel> getAllChannels()
@@ -138,7 +138,7 @@ public class ChannelLabelsViewModel extends AbstractViewModel
 
   /**
    * Returns the arc width.
-   * 
+   *
    * @return an arc width, in pixels.
    */
   public int getArcWidth()
@@ -148,7 +148,7 @@ public class ChannelLabelsViewModel extends AbstractViewModel
 
   /**
    * Returns the background color for the channel labels.
-   * 
+   *
    * @return a color, never <code>null</code>.
    */
   public Color getBackgroundColor()
@@ -163,7 +163,7 @@ public class ChannelLabelsViewModel extends AbstractViewModel
 
   /**
    * Returns the foreground color for the labels themselves.
-   * 
+   *
    * @return a color, never <code>null</code>.
    */
   public Color getGroupLabelForegroundColor()
@@ -178,7 +178,7 @@ public class ChannelLabelsViewModel extends AbstractViewModel
 
   /**
    * Returns the gutter width.
-   * 
+   *
    * @return a width, in pixels.
    */
   public int getGutterWidth()
@@ -196,7 +196,7 @@ public class ChannelLabelsViewModel extends AbstractViewModel
 
   /**
    * Returns the font for the channel indexes.
-   * 
+   *
    * @return a font, never <code>null</code>.
    */
   public Font getIndexFont()
@@ -212,7 +212,7 @@ public class ChannelLabelsViewModel extends AbstractViewModel
 
   /**
    * Returns the foreground color for the channel indexes.
-   * 
+   *
    * @return a color, never <code>null</code>.
    */
   public Color getIndexForegroundColor()
@@ -227,7 +227,7 @@ public class ChannelLabelsViewModel extends AbstractViewModel
 
   /**
    * Returns the font for the labels.
-   * 
+   *
    * @return a font, never <code>null</code>.
    */
   public Font getLabelFont()
@@ -242,7 +242,7 @@ public class ChannelLabelsViewModel extends AbstractViewModel
 
   /**
    * Returns the background color for the labels themselves.
-   * 
+   *
    * @return a color, never <code>null</code>.
    */
   public Color getLabelGradientColor1()
@@ -257,7 +257,7 @@ public class ChannelLabelsViewModel extends AbstractViewModel
 
   /**
    * Returns the background color for the labels themselves.
-   * 
+   *
    * @return a color, never <code>null</code>.
    */
   public Color getLabelGradientColor2()
@@ -272,7 +272,7 @@ public class ChannelLabelsViewModel extends AbstractViewModel
 
   /**
    * Returns the minimal width of the channel labels.
-   * 
+   *
    * @return a minimal width, in pixels.
    */
   public int getMinimalWidth()
@@ -286,13 +286,13 @@ public class ChannelLabelsViewModel extends AbstractViewModel
   public int getPreferredHeight()
   {
     // channel height *always* follows the height of the main component...
-    return this.controller.getSignalDiagram().getHeight();
+    return this.controller.getViewComponent().getHeight();
   }
 
   /**
    * Determines the preferred width of this view, based on the current set of
    * channel labels.
-   * 
+   *
    * @return a width, in pixels.
    */
   public int getPreferredWidth()
@@ -332,7 +332,7 @@ public class ChannelLabelsViewModel extends AbstractViewModel
 
   /**
    * Returns the foreground color for the labels themselves.
-   * 
+   *
    * @return a color, never <code>null</code>.
    */
   public Color getSignalLabelForegroundColor()
@@ -378,7 +378,7 @@ public class ChannelLabelsViewModel extends AbstractViewModel
 
   /**
    * Moves a given channel row to another position.
-   * 
+   *
    * @param aMovedElement
    *          the channel that is moved, cannot be <code>null</code>;
    * @param aInsertElement

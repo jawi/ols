@@ -1,5 +1,5 @@
 /*
- * OpenBench LogicSniffer / SUMP project 
+ * OpenBench LogicSniffer / SUMP project
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -77,7 +77,7 @@ public class SignalDiagramModel
 
   /**
    * Creates a new SignalDiagramModel instance.
-   * 
+   *
    * @param aController
    *          the controller to use, cannot be <code>null</code>.
    */
@@ -106,7 +106,7 @@ public class SignalDiagramModel
    * {@link Arrays#binarySearch(long[], long)} implementation, slightly modified
    * to only perform a single comparison-action.
    * </p>
-   * 
+   *
    * @param aArray
    *          the array of long values to search in;
    * @param aFromIndex
@@ -128,21 +128,21 @@ public class SignalDiagramModel
     while ( low <= high )
     {
       mid = ( low + high ) >>> 1;
-      final long midVal = aArray[mid];
+  final long midVal = aArray[mid];
 
-      final int c = ( aKey < midVal ? -1 : ( aKey == midVal ? 0 : 1 ) );
-      if ( c > 0 )
-      {
-        low = mid + 1;
-      }
-      else if ( c < 0 )
-      {
-        high = mid - 1;
-      }
-      else
-      {
-        return mid; // key found
-      }
+  final int c = ( aKey < midVal ? -1 : ( aKey == midVal ? 0 : 1 ) );
+  if ( c > 0 )
+  {
+    low = mid + 1;
+  }
+  else if ( c < 0 )
+  {
+    high = mid - 1;
+  }
+  else
+  {
+    return mid; // key found
+  }
     }
 
     if ( mid < 0 )
@@ -170,7 +170,7 @@ public class SignalDiagramModel
    * <p>
    * NOTE: the given array's contents will be mutated!
    * </p>
-   * 
+   *
    * @param aInput
    *          the input array to move the elements from, cannot be
    *          <code>null</code>;
@@ -194,7 +194,7 @@ public class SignalDiagramModel
 
   /**
    * Adds a cursor change listener.
-   * 
+   *
    * @param aListener
    *          the listener to add, cannot be <code>null</code>.
    */
@@ -205,7 +205,7 @@ public class SignalDiagramModel
 
   /**
    * Adds a data model change listener.
-   * 
+   *
    * @param aListener
    *          the listener to add, cannot be <code>null</code>.
    */
@@ -216,7 +216,7 @@ public class SignalDiagramModel
 
   /**
    * Adds a measurement listener.
-   * 
+   *
    * @param aListener
    *          the listener to add, cannot be <code>null</code>.
    */
@@ -227,7 +227,7 @@ public class SignalDiagramModel
 
   /**
    * Adds a property change listener.
-   * 
+   *
    * @param aListener
    *          the listener to add, cannot be <code>null</code>.
    */
@@ -308,7 +308,7 @@ public class SignalDiagramModel
 
   /**
    * Finds a UI-element based on a given screen coordinate.
-   * 
+   *
    * @param aPoint
    *          the coordinate to find the channel for, cannot be
    *          <code>null</code>.
@@ -381,7 +381,7 @@ public class SignalDiagramModel
 
   /**
    * Returns all defined cursors.
-   * 
+   *
    * @return an array of defined cursors, never <code>null</code>.
    */
   public Cursor[] getDefinedCursors()
@@ -404,12 +404,12 @@ public class SignalDiagramModel
 
   /**
    * Returns the time interval displayed by the current view.
-   * 
+   *
    * @return a time interval, in seconds.
    */
   public Double getDisplayedTimeInterval()
   {
-    final int width = this.controller.getSignalDiagram().getVisibleRect().width;
+    final int width = this.controller.getViewComponent().getVisibleRect().width;
     if ( !hasData() )
     {
       return null;
@@ -436,7 +436,7 @@ public class SignalDiagramModel
    * otherwise</li>
    * <li>do not scroll.</li>
    * </ol>
-   * 
+   *
    * @param aVisibleRect
    *          the visible rectangle of the component, never <code>null</code>;
    * @param aDirection
@@ -510,7 +510,7 @@ public class SignalDiagramModel
 
   /**
    * Returns the index of the current selected channel.
-   * 
+   *
    * @return the selected channel index, or -1 if no channel is selected.
    */
   public int getSelectedChannelIndex()
@@ -520,7 +520,7 @@ public class SignalDiagramModel
 
   /**
    * Returns channel group manager.
-   * 
+   *
    * @return the channel group manager, never <code>null</code>.
    */
   public final SignalElementManager getSignalElementManager()
@@ -531,7 +531,7 @@ public class SignalDiagramModel
   /**
    * Returns the hover area of the signal under the given coordinate (= mouse
    * position).
-   * 
+   *
    * @param aPoint
    *          the mouse coordinate to determine the signal rectangle for, cannot
    *          be <code>null</code>.
@@ -657,7 +657,7 @@ public class SignalDiagramModel
 
   /**
    * Returns the amount of pixels that represents one second on the timeline.
-   * 
+   *
    * @return the number of pixels to display for 1 second, > 0.
    */
   public Double getTimelinePixelsPerSecond()
@@ -671,7 +671,7 @@ public class SignalDiagramModel
 
   /**
    * Returns the number of seconds that represents one pixel on the timeline.
-   * 
+   *
    * @return the number of seconds per pixel, > 0.
    * @see #getTimelinePixelsPerSecond()
    */
@@ -688,7 +688,7 @@ public class SignalDiagramModel
   /**
    * Returns the unit of time the timeline is currently is displaying, in
    * multiples of 10 (for human readability).
-   * 
+   *
    * @return a timeline unit of time, > 0, can only be <code>null</code> if
    *         there is no data.
    */
@@ -705,7 +705,7 @@ public class SignalDiagramModel
   /**
    * Converts the X-coordinate of the given {@link Point} to a precise
    * timestamp, useful for display purposes.
-   * 
+   *
    * @param aAbsTimestamp
    *          the timestamp to convert to a relative timestamp, should be >= 0.
    * @return a precise timestamp, as double value.
@@ -735,7 +735,7 @@ public class SignalDiagramModel
   /**
    * Converts the X-coordinate of the given {@link Point} to a precise
    * timestamp, useful for display purposes.
-   * 
+   *
    * @param aPoint
    *          the X,Y-coordinate to convert to a precise timestamp, cannot be
    *          <code>null</code>.
@@ -796,7 +796,7 @@ public class SignalDiagramModel
 
   /**
    * Returns the trigger position, if available.
-   * 
+   *
    * @return a trigger position, as timestamp, or <code>null</code> if no
    *         trigger is used/present.
    */
@@ -835,7 +835,7 @@ public class SignalDiagramModel
    * <li>if the last channel is fully shown, and there is some room left at the
    * bottom, show the remaining space.</li>
    * </ol>
-   * 
+   *
    * @param aVisibleRect
    *          the visible rectangle of the component, never <code>null</code>;
    * @param aDirection
@@ -892,7 +892,7 @@ public class SignalDiagramModel
 
   /**
    * Returns the zoom controller of this diagram.
-   * 
+   *
    * @return the zoom controller, never <code>null</code>.
    */
   public final ZoomController getZoomController()
@@ -902,7 +902,7 @@ public class SignalDiagramModel
 
   /**
    * Returns the current zoom factor.
-   * 
+   *
    * @return a zoom factor.
    */
   public final double getZoomFactor()
@@ -912,7 +912,7 @@ public class SignalDiagramModel
 
   /**
    * Returns whether or not there is captured data to display.
-   * 
+   *
    * @return <code>true</code> if there is any data to display,
    *         <code>false</code> otherwise.
    */
@@ -923,7 +923,7 @@ public class SignalDiagramModel
 
   /**
    * Returns whether the data is a timed-capture or a state-capture.
-   * 
+   *
    * @return <code>true</code> if there is timing data available,
    *         <code>false</code> if not.
    */
@@ -957,7 +957,7 @@ public class SignalDiagramModel
 
   /**
    * Returns whether or not the cursor-mode is enabled.
-   * 
+   *
    * @return <code>true</code> if cursor-mode is enabled, thereby making all
    *         defined cursors visible, <code>false</code> otherwise.
    */
@@ -994,7 +994,7 @@ public class SignalDiagramModel
 
   /**
    * Converts the given coordinate to the corresponding sample index.
-   * 
+   *
    * @param aCoordinate
    *          the coordinate to convert to a sample index, cannot be
    *          <code>null</code>.
@@ -1020,7 +1020,7 @@ public class SignalDiagramModel
 
   /**
    * Converts the given coordinate to the corresponding sample index.
-   * 
+   *
    * @param aCoordinate
    *          the coordinate to convert to a sample index, cannot be
    *          <code>null</code>.
@@ -1068,7 +1068,7 @@ public class SignalDiagramModel
 
   /**
    * Removes a cursor change listener.
-   * 
+   *
    * @param aListener
    *          the listener to remove, cannot be <code>null</code>.
    */
@@ -1079,7 +1079,7 @@ public class SignalDiagramModel
 
   /**
    * Removes a data model change listener.
-   * 
+   *
    * @param aListener
    *          the listener to remove, cannot be <code>null</code>.
    */
@@ -1090,7 +1090,7 @@ public class SignalDiagramModel
 
   /**
    * Removes the given measurement listener from the list of listeners.
-   * 
+   *
    * @param aListener
    *          the listener to remove, cannot be <code>null</code>.
    */
@@ -1101,7 +1101,7 @@ public class SignalDiagramModel
 
   /**
    * Removes a property change listener.
-   * 
+   *
    * @param aListener
    *          the listener to remove, cannot be <code>null</code>.
    */
@@ -1132,7 +1132,7 @@ public class SignalDiagramModel
 
   /**
    * Returns the color for a cursor with the given index.
-   * 
+   *
    * @param aCursorIdx
    *          the index of the cursor to retrieve the color for;
    * @param aColor
@@ -1158,7 +1158,7 @@ public class SignalDiagramModel
 
   /**
    * Returns the color for a cursor with the given index.
-   * 
+   *
    * @param aCursorIdx
    *          the index of the cursor to retrieve the color for;
    * @param aLabel
@@ -1184,7 +1184,7 @@ public class SignalDiagramModel
 
   /**
    * Enables or disables the cursors.
-   * 
+   *
    * @param aSelected
    *          <code>true</code> to enable the cursors, <code>false</code> to
    *          disable the cursors.
@@ -1209,7 +1209,7 @@ public class SignalDiagramModel
 
   /**
    * Sets the data model for this controller.
-   * 
+   *
    * @param aDataSet
    *          the dataModel to set, cannot be <code>null</code>.
    */
@@ -1259,7 +1259,7 @@ public class SignalDiagramModel
 
   /**
    * Sets the selected channel index to the given value.
-   * 
+   *
    * @param aChannelIndex
    *          the index to set, or -1 if no channel is to be selected.
    */

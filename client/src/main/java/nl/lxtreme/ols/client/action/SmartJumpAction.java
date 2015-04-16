@@ -173,6 +173,6 @@ public class SmartJumpAction extends BaseAction
    */
   private SignalDiagramModel getSignalDiagramModel()
   {
-    return getSignalDiagramController().getSignalDiagramModel();
+    return getSignalDiagramController().getViewModel();
   }
 }

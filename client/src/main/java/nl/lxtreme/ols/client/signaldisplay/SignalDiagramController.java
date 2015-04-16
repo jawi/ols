@@ -1,5 +1,5 @@
 /*
- * OpenBench LogicSniffer / SUMP project 
+ * OpenBench LogicSniffer / SUMP project
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -30,7 +30,6 @@ import javax.swing.*;
 import nl.lxtreme.ols.api.acquisition.AcquisitionResult;
 import nl.lxtreme.ols.api.data.*;
 import nl.lxtreme.ols.api.data.Cursor;
-import nl.lxtreme.ols.api.data.project.*;
 import nl.lxtreme.ols.client.Activator;
 import nl.lxtreme.ols.client.action.*;
 import nl.lxtreme.ols.client.actionmanager.*;
@@ -49,7 +48,7 @@ import nl.lxtreme.ols.util.swing.*;
 /**
  * Provides the main component controller for the signal diagram component.
  */
-public final class SignalDiagramController implements ZoomListener, PropertyChangeListener
+public final class SignalDiagramController implements ZoomListener
 {
   // VARIABLES
 
@@ -57,13 +56,13 @@ public final class SignalDiagramController implements ZoomListener, PropertyChan
   private final IActionManager actionManager;
 
   private SignalDiagramModel signalDiagramModel;
-  private SignalDiagramComponent signalDiagram;
+  private JComponent signalDiagram;
 
   // CONSTRUCTORS
 
   /**
    * Creates a new {@link SignalDiagramController} instance.
-   * 
+   *
    * @param aActionManager
    *          the action manager to use, cannot be <code>null</code>.
    */
@@ -78,62 +77,62 @@ public final class SignalDiagramController implements ZoomListener, PropertyChan
 
   /**
    * Adds a channel change listener.
-   * 
+   *
    * @param aListener
    *          the listener to add, cannot be <code>null</code>.
    */
   public void addChannelChangeListener( final ISignalElementChangeListener aListener )
   {
-    getSignalDiagramModel().getSignalElementManager().addChannelChangeListener( aListener );
+    getViewModel().getSignalElementManager().addChannelChangeListener( aListener );
   }
 
   /**
    * Adds a cursor change listener.
-   * 
+   *
    * @param aListener
    *          the listener to add, cannot be <code>null</code>.
    */
   public void addCursorChangeListener( final ICursorChangeListener aListener )
   {
-    getSignalDiagramModel().addCursorChangeListener( aListener );
+    getViewModel().addCursorChangeListener( aListener );
   }
 
   /**
    * Adds a data model change listener.
-   * 
+   *
    * @param aListener
    *          the listener to add, cannot be <code>null</code>.
    */
   public void addDataModelChangeListener( final IDataModelChangeListener aListener )
   {
-    getSignalDiagramModel().addDataModelChangeListener( aListener );
+    getViewModel().addDataModelChangeListener( aListener );
   }
 
   /**
    * Adds a measurement listener.
-   * 
+   *
    * @param aListener
    *          the listener to add, cannot be <code>null</code>.
    */
   public void addMeasurementListener( final IMeasurementListener aListener )
   {
-    getSignalDiagramModel().addMeasurementListener( aListener );
+    getViewModel().addMeasurementListener( aListener );
   }
 
   /**
    * Adds a property change listener.
-   * 
+   *
    * @param aListener
    *          the listener to add, cannot be <code>null</code>.
    */
   public void addPropertyChangeListener( final PropertyChangeListener aListener )
   {
-    getSignalDiagramModel().addPropertyChangeListener( aListener );
+    getViewModel().addPropertyChangeListener( aListener );
   }
 
   /**
    * Returns the current value of actionManager.
-   * 
+   *
    * @return the actionManager
    */
   public final IActionManager getActionManager()
@@ -143,12 +142,12 @@ public final class SignalDiagramController implements ZoomListener, PropertyChan
 
   /**
    * Returns the set of defined cursors, never <code>null</code>.
-   * 
+   *
    * @return all defined cursors, never <code>null</code>.
    */
   public Cursor[] getDefinedCursors()
   {
-    return getSignalDiagramModel().getDefinedCursors();
+    return getViewModel().getDefinedCursors();
   }
 
   /**
@@ -160,24 +159,8 @@ public final class SignalDiagramController implements ZoomListener, PropertyChan
   }
 
   /**
-   * @return the signal diagram component, never <code>null</code>.
-   */
-  public final SignalDiagramComponent getSignalDiagram()
-  {
-    return this.signalDiagram;
-  }
-
-  /**
-   * @return the signal diagram model, never <code>null</code>.
-   */
-  public final SignalDiagramModel getSignalDiagramModel()
-  {
-    return this.signalDiagramModel;
-  }
-
-  /**
    * Returns the signal element type that is underneat the given coordinate.
-   * 
+   *
    * @param aPoint
    *          the coordinate to determine what signal element is underneat, may
    *          be <code>null</code>.
@@ -186,7 +169,7 @@ public final class SignalDiagramController implements ZoomListener, PropertyChan
    */
   public SignalElementType getSignalHoverType( final Point aPoint )
   {
-    final IUIElement element = getSignalDiagramModel().findUIElement( aPoint );
+    final IUIElement element = getViewModel().findUIElement( aPoint );
     if ( element instanceof SignalElement )
     {
       return ( ( SignalElement )element ).getType();
@@ -195,8 +178,24 @@ public final class SignalDiagramController implements ZoomListener, PropertyChan
   }
 
   /**
+   * @return the signal diagram component, never <code>null</code>.
+   */
+  public final JComponent getViewComponent()
+  {
+    return this.signalDiagram;
+  }
+
+  /**
+   * @return the signal diagram model, never <code>null</code>.
+   */
+  public final SignalDiagramModel getViewModel()
+  {
+    return this.signalDiagramModel;
+  }
+
+  /**
    * Returns the zoom controller of this diagram.
-   * 
+   *
    * @return the zoom controller, never <code>null</code>.
    */
   public ZoomController getZoomController()
@@ -206,7 +205,7 @@ public final class SignalDiagramController implements ZoomListener, PropertyChan
 
   /**
    * Factory method to create a new {@link SignalDiagramController} instance.
-   * 
+   *
    * @param aActionManager
    *          the action manager to use for the controller instance, cannot be
    *          <code>null</code>.
@@ -216,18 +215,15 @@ public final class SignalDiagramController implements ZoomListener, PropertyChan
   public void initialize()
   {
     final SignalDiagramModel model = new SignalDiagramModel( this );
-    setSignalDiagramModel( model );
-
     // Register our controller as listener for zooming events...
     model.getZoomController().addZoomListener( this );
 
-    final SignalDiagramComponent diagram = new SignalDiagramComponent( this );
-    setSignalDiagram( diagram );
+    setSignalDiagramModel( model );
   }
 
   /**
    * Returns whether the cursor denoted by the given index is defined.
-   * 
+   *
    * @param aCursorIdx
    *          the index of the cursor to check.
    * @return <code>true</code> if the cursor with the given index is defined,
@@ -235,24 +231,37 @@ public final class SignalDiagramController implements ZoomListener, PropertyChan
    */
   public boolean isCursorDefined( final int aCursorIdx )
   {
-    return getSignalDiagramModel().isCursorDefined( aCursorIdx );
+    return getViewModel().isCursorDefined( aCursorIdx );
   }
 
   /**
    * Returns whether or not the cursor mode is enabled.
-   * 
+   *
    * @return <code>true</code> if the cursor mode is enabled, <code>false</code>
    *         otherwise.
    */
   public boolean isCursorMode()
   {
-    return getSignalDiagramModel().isCursorMode();
+    return getViewModel().isCursorMode();
+  }
+
+  /**
+   * @return <code>true</code> if the current view is able to handle zoom
+   *         operations, <code>false</code> otherwise.
+   */
+  public boolean isViewZoomable()
+  {
+    if ( this.signalDiagram instanceof SignalDiagramComponent )
+    {
+      return true;
+    }
+    return false;
   }
 
   /**
    * Drags a cursor with a given index to a given point, possibly snapping to a
    * signal edge.
-   * 
+   *
    * @param aCursorIdx
    *          the cursor index to move, should be &gt;= 0 && &lt; 10;
    * @param aPoint
@@ -263,7 +272,7 @@ public final class SignalDiagramController implements ZoomListener, PropertyChan
   {
     final long newCursorTimestamp = locationToTimestamp( aPoint );
 
-    getSignalDiagramModel().setCursor( aCursorIdx, newCursorTimestamp );
+    getViewModel().setCursor( aCursorIdx, newCursorTimestamp );
   }
 
   /**
@@ -284,13 +293,13 @@ public final class SignalDiagramController implements ZoomListener, PropertyChan
    * <li>the timeline and channel labels follow the width/height of the signal
    * view.
    * </ul>
-   * 
+   *
    * @see http://stackoverflow.com/questions/115103
    */
   @Override
   public void notifyZoomChange( final ZoomEvent aEvent )
   {
-    final boolean dataAvailable = getSignalDiagramModel().hasData();
+    final boolean hasTimingData = getViewModel().hasTimingData();
 
     SwingComponentUtils.invokeOnEDT( new Runnable()
     {
@@ -301,19 +310,19 @@ public final class SignalDiagramController implements ZoomListener, PropertyChan
 
         // Update the zoom action's state...
         Action zoomInAction = getActionManager().getAction( ZoomInAction.ID );
-        zoomInAction.setEnabled( dataAvailable && zoomCtrl.canZoomIn() );
+        zoomInAction.setEnabled( hasTimingData && zoomCtrl.canZoomIn() );
 
         Action zoomOutAction = getActionManager().getAction( ZoomOutAction.ID );
-        zoomOutAction.setEnabled( dataAvailable && zoomCtrl.canZoomOut() );
+        zoomOutAction.setEnabled( hasTimingData && zoomCtrl.canZoomOut() );
 
         Action zoomAllAction = getActionManager().getAction( ZoomAllAction.ID );
-        zoomAllAction.setEnabled( dataAvailable && !zoomCtrl.isZoomAll() );
+        zoomAllAction.setEnabled( hasTimingData && !zoomCtrl.isZoomAll() );
 
         Action zoomOriginalAction = getActionManager().getAction( ZoomOriginalAction.ID );
-        zoomOriginalAction.setEnabled( dataAvailable && !zoomCtrl.isZoomDefault() );
+        zoomOriginalAction.setEnabled( hasTimingData && !zoomCtrl.isZoomDefault() );
 
         // Idea based on <http://stackoverflow.com/questions/115103>
-        JScrollPane scrollPane = SwingComponentUtils.getAncestorOfClass( JScrollPane.class, getSignalDiagram() );
+        JScrollPane scrollPane = SwingComponentUtils.getAncestorOfClass( JScrollPane.class, getViewComponent() );
         if ( scrollPane == null )
         {
           // Nothing to do...
@@ -347,24 +356,81 @@ public final class SignalDiagramController implements ZoomListener, PropertyChan
   }
 
   /**
-   * {@inheritDoc}
+   * Removes a channel change listener.
+   *
+   * @param aListener
+   *          the listener to remove, cannot be <code>null</code>.
    */
-  @Override
-  public void propertyChange( final PropertyChangeEvent aEvent )
+  public void removeChannelChangeListener( final ISignalElementChangeListener aListener )
   {
-    String name = aEvent.getPropertyName();
-    if ( "project".equals( name ) )
-    {
-      Project project = ( Project )aEvent.getNewValue();
-      setDataModel( project.getDataSet() );
-    }
-    else if ( "capturedData".equals( name ) )
-    {
-      DataSet dataSet = ( DataSet )aEvent.getNewValue();
-      setDataModel( dataSet );
+    getViewModel().getSignalElementManager().removeChannelChangeListener( aListener );
+  }
 
-      // Make sure the view is updated accordingly...
-      getZoomController().restoreZoomLevel();
+  /**
+   * Removes the cursor denoted by the given index. If the cursor with the given
+   * index is <em>undefined</em> this method does nothing (not even call event
+   * listeners!).
+   *
+   * @param aCursorIdx
+   *          the index of the cursor to remove.
+   */
+  public void removeCursor( final int aCursorIdx )
+  {
+    getViewModel().removeCursor( aCursorIdx );
+  }
+
+  /**
+   * Removes a cursor change listener.
+   *
+   * @param aListener
+   *          the listener to remove, cannot be <code>null</code>.
+   */
+  public void removeCursorChangeListener( final ICursorChangeListener aListener )
+  {
+    getViewModel().removeCursorChangeListener( aListener );
+  }
+
+  /**
+   * Removes a data model change listener.
+   *
+   * @param aListener
+   *          the listener to remove, cannot be <code>null</code>.
+   */
+  public void removeDataModelChangeListener( final IDataModelChangeListener aListener )
+  {
+    getViewModel().removeDataModelChangeListener( aListener );
+  }
+
+  /**
+   * Removes the given measurement listener from the list of listeners.
+   *
+   * @param aListener
+   *          the listener to remove, cannot be <code>null</code>.
+   */
+  public void removeMeasurementListener( final IMeasurementListener aListener )
+  {
+    getViewModel().removeMeasurementListener( aListener );
+  }
+
+  /**
+   * Removes a property change listener.
+   *
+   * @param aListener
+   *          the listener to remove, cannot be <code>null</code>.
+   */
+  public void removePropertyChangeListener( final PropertyChangeListener aListener )
+  {
+    getViewModel().removePropertyChangeListener( aListener );
+  }
+
+  /**
+   * @param aSignalElement
+   */
+  public void repaintSignalElement( final SignalElement aSignalElement )
+  {
+    if ( this.signalDiagram instanceof SignalDiagramComponent )
+    {
+      ( ( SignalDiagramComponent )this.signalDiagram ).repaintSignalElement( aSignalElement );
     }
   }
 
@@ -376,87 +442,33 @@ public final class SignalDiagramController implements ZoomListener, PropertyChan
    */
   public void revalidateAll()
   {
-    this.signalDiagram.revalidateAll();
-    this.signalDiagram.repaintAll();
-  }
-
-  /**
-   * Removes a channel change listener.
-   * 
-   * @param aListener
-   *          the listener to remove, cannot be <code>null</code>.
-   */
-  public void removeChannelChangeListener( final ISignalElementChangeListener aListener )
-  {
-    getSignalDiagramModel().getSignalElementManager().removeChannelChangeListener( aListener );
-  }
-
-  /**
-   * Removes the cursor denoted by the given index. If the cursor with the given
-   * index is <em>undefined</em> this method does nothing (not even call event
-   * listeners!).
-   * 
-   * @param aCursorIdx
-   *          the index of the cursor to remove.
-   */
-  public void removeCursor( final int aCursorIdx )
-  {
-    getSignalDiagramModel().removeCursor( aCursorIdx );
-  }
-
-  /**
-   * Removes a cursor change listener.
-   * 
-   * @param aListener
-   *          the listener to remove, cannot be <code>null</code>.
-   */
-  public void removeCursorChangeListener( final ICursorChangeListener aListener )
-  {
-    getSignalDiagramModel().removeCursorChangeListener( aListener );
-  }
-
-  /**
-   * Removes a data model change listener.
-   * 
-   * @param aListener
-   *          the listener to remove, cannot be <code>null</code>.
-   */
-  public void removeDataModelChangeListener( final IDataModelChangeListener aListener )
-  {
-    getSignalDiagramModel().removeDataModelChangeListener( aListener );
-  }
-
-  /**
-   * Removes the given measurement listener from the list of listeners.
-   * 
-   * @param aListener
-   *          the listener to remove, cannot be <code>null</code>.
-   */
-  public void removeMeasurementListener( final IMeasurementListener aListener )
-  {
-    getSignalDiagramModel().removeMeasurementListener( aListener );
-  }
-
-  /**
-   * Removes a property change listener.
-   * 
-   * @param aListener
-   *          the listener to remove, cannot be <code>null</code>.
-   */
-  public void removePropertyChangeListener( final PropertyChangeListener aListener )
-  {
-    getSignalDiagramModel().removePropertyChangeListener( aListener );
+    if ( this.signalDiagram instanceof SignalDiagramComponent )
+    {
+      ( ( SignalDiagramComponent )this.signalDiagram ).revalidateAll();
+      ( ( SignalDiagramComponent )this.signalDiagram ).repaintAll();
+    }
+    else
+    {
+      this.signalDiagram.revalidate();
+    }
   }
 
   /**
    * Jumps to a given timestamp in the diagram.
-   * 
+   *
    * @param aTimestamp
    *          the time stamp to jump to.
    */
   public void scrollToTimestamp( final long aTimestamp )
   {
-    getSignalDiagram().scrollToTimestamp( aTimestamp );
+    if ( this.signalDiagram instanceof SignalDiagramComponent )
+    {
+      ( ( SignalDiagramComponent )this.signalDiagram ).scrollToTimestamp( aTimestamp );
+    }
+    else if ( this.signalDiagram instanceof StateViewComponent )
+    {
+      ( ( StateViewComponent )this.signalDiagram ).scrollToTimestamp( aTimestamp );
+    }
   }
 
   /**
@@ -466,44 +478,57 @@ public final class SignalDiagramController implements ZoomListener, PropertyChan
    * This method does <em>not</em> modify any cursor, only whether they are
    * displayed or not!
    * </p>
-   * 
+   *
    * @param aVisible
    *          <code>true</code> if the cursors should be made visible,
    *          <code>false</code> if the cursors should be made invisible.
    */
   public void setCursorMode( final boolean aVisible )
   {
-    getSignalDiagramModel().setCursorMode( aVisible );
+    getViewModel().setCursorMode( aVisible );
   }
 
   /**
    * Sets the data model for this controller.
-   * 
+   *
    * @param aDataSet
    *          the data set to set, cannot be <code>null</code>.
    */
   public void setDataModel( final DataSet aDataSet )
   {
-    getSignalDiagramModel().setDataModel( aDataSet );
+    getViewModel().setDataModel( aDataSet );
 
-    // will update the view and show the signals...
-    revalidateAll();
-
-    // optionally center the view on the trigger moment...
-    boolean autoCenterOnTrigger = UIManager.getBoolean( UIManagerKeys.AUTO_CENTER_TO_TRIGGER_AFTER_CAPTURE );
-    final AcquisitionResult capturedData = aDataSet.getCapturedData();
-
-    // Issue #181
-    if ( autoCenterOnTrigger && ( capturedData != null ) && capturedData.hasTriggerData() )
+    // Create a proper view for the data...
+    SwingComponentUtils.invokeOnEDT( new Runnable()
     {
-      SwingComponentUtils.invokeOnEDT( new Runnable()
+      @Override
+      public void run()
       {
-        public void run()
+        JComponent viewComp = null;
+        if ( aDataSet.getCapturedData().hasTimingData() )
+        {
+          viewComp = new SignalDiagramComponent( SignalDiagramController.this );
+        }
+        else
+        {
+          viewComp = new StateViewComponent( SignalDiagramController.this );
+        }
+        setViewComponent( viewComp );
+
+        // Make sure the view is updated accordingly...
+        getZoomController().restoreZoomLevel();
+
+        // optionally center the view on the trigger moment...
+        boolean autoCenterOnTrigger = UIManager.getBoolean( UIManagerKeys.AUTO_CENTER_TO_TRIGGER_AFTER_CAPTURE );
+        final AcquisitionResult capturedData = aDataSet.getCapturedData();
+
+        // Issue #181
+        if ( autoCenterOnTrigger && ( capturedData != null ) && capturedData.hasTriggerData() )
         {
           scrollToTimestamp( capturedData.getTriggerPosition() );
         }
-      } );
-    }
+      }
+    } );
   }
 
   /**
@@ -513,7 +538,7 @@ public final class SignalDiagramController implements ZoomListener, PropertyChan
   {
     // Set the correct defaults...
     final boolean snapCursorsDefault = UIManager.getBoolean( UIManagerKeys.SNAP_CURSORS_DEFAULT );
-    final boolean snapCursorsValue = getSignalDiagramModel().isSnapCursorMode();
+    final boolean snapCursorsValue = getViewModel().isSnapCursorMode();
 
     if ( snapCursorsValue ^ snapCursorsDefault )
     {
@@ -523,14 +548,14 @@ public final class SignalDiagramController implements ZoomListener, PropertyChan
 
   /**
    * Enables or disables the measurement mode.
-   * 
+   *
    * @param aEnabled
    *          <code>true</code> to enable the measurement mode,
    *          <code>false</code> to disable this mode.
    */
   public void setMeasurementMode( final boolean aEnabled )
   {
-    getSignalDiagramModel().setMeasurementMode( aEnabled );
+    getViewModel().setMeasurementMode( aEnabled );
   }
 
   /**
@@ -538,7 +563,7 @@ public final class SignalDiagramController implements ZoomListener, PropertyChan
    */
   public void setSelectedChannel( final Point aPosition )
   {
-    SignalDiagramModel model = getSignalDiagramModel();
+    SignalDiagramModel model = getViewModel();
 
     final IUIElement element = model.findUIElement( aPosition );
     if ( !( element instanceof SignalElement ) )
@@ -592,14 +617,14 @@ public final class SignalDiagramController implements ZoomListener, PropertyChan
 
   /**
    * Disables the cursor "snap" mode.
-   * 
+   *
    * @param aSnapMode
    *          <code>true</code> if the snap mode should be enabled,
    *          <code>false</code> otherwise.
    */
   public void setSnapModeEnabled( final boolean aSnapMode )
   {
-    getSignalDiagramModel().setSnapCursorMode( aSnapMode );
+    getViewModel().setSnapCursorMode( aSnapMode );
   }
 
   /**
@@ -620,16 +645,8 @@ public final class SignalDiagramController implements ZoomListener, PropertyChan
   }
 
   /**
-   * @param aComponent
-   */
-  final void setSignalDiagram( final SignalDiagramComponent aComponent )
-  {
-    this.signalDiagram = aComponent;
-  }
-
-  /**
    * Sets signalDiagramModel to the given value.
-   * 
+   *
    * @param aSignalDiagramModel
    *          the signalDiagramModel to set.
    */
@@ -639,11 +656,19 @@ public final class SignalDiagramController implements ZoomListener, PropertyChan
   }
 
   /**
+   * @param aComponent
+   */
+  final void setViewComponent( final JComponent aComponent )
+  {
+    this.signalDiagram = aComponent;
+  }
+
+  /**
    * @return
    */
   private ChannelLabelsView getChannelLabelsView()
   {
-    JScrollPane scrollPane = getAncestorOfClass( JScrollPane.class, getSignalDiagram() );
+    JScrollPane scrollPane = getAncestorOfClass( JScrollPane.class, getViewComponent() );
     if ( scrollPane != null )
     {
       return ( ChannelLabelsView )scrollPane.getRowHeader().getView();
@@ -657,6 +682,6 @@ public final class SignalDiagramController implements ZoomListener, PropertyChan
    */
   private long locationToTimestamp( final Point aPoint )
   {
-    return this.signalDiagram.getModel().locationToTimestamp( aPoint );
+    return this.signalDiagramModel.locationToTimestamp( aPoint );
   }
 }

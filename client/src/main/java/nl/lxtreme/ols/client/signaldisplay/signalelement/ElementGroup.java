@@ -1,5 +1,5 @@
 /*
- * OpenBench LogicSniffer / SUMP project 
+ * OpenBench LogicSniffer / SUMP project
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -63,7 +63,7 @@ public class ElementGroup implements IUIElement
 
     /**
      * Creates a new ChannelScreenElementType instance.
-     * 
+     *
      * @param aValue
      *          the numeric value, >= 1.
      */
@@ -76,7 +76,7 @@ public class ElementGroup implements IUIElement
 
     /**
      * Returns the mask of this {@link ChannelElementType}.
-     * 
+     *
      * @return the mask value, >= 1.
      */
     public int getMask()
@@ -108,11 +108,11 @@ public class ElementGroup implements IUIElement
   /**
    * Creates a new {@link ElementGroup} instance as deep copy of a given
    * {@link ElementGroup}.
-   * 
+   *
    * @param aElementGroup
    *          the element group to copy, cannot be <code>null</code>.
    */
-  protected ElementGroup( ElementGroup aElementGroup )
+  protected ElementGroup( final ElementGroup aElementGroup )
   {
     if ( aElementGroup == null )
     {
@@ -137,7 +137,7 @@ public class ElementGroup implements IUIElement
 
   /**
    * Creates a new {@link ElementGroup} instance.
-   * 
+   *
    * @param aIndex
    *          the index of this channel group, >= 0;
    * @param aName
@@ -184,7 +184,7 @@ public class ElementGroup implements IUIElement
    * If the given element is already contained by this group, this method is
    * effectively a no-op.
    * </p>
-   * 
+   *
    * @param aElement
    *          the signal element to add, cannot be <code>null</code>.
    * @throws IllegalArgumentException
@@ -251,7 +251,7 @@ public class ElementGroup implements IUIElement
 
   /**
    * Returns the label used for the analog scope of this channel group.
-   * 
+   *
    * @return the label for the analog scope, can be <code>null</code>.
    */
   public String getAnalogSignalLabel()
@@ -265,7 +265,7 @@ public class ElementGroup implements IUIElement
 
   /**
    * Returns the color of this channel group.
-   * 
+   *
    * @return the color used by this channel group, never <code>null</code>.
    */
   public Color getColor()
@@ -281,7 +281,7 @@ public class ElementGroup implements IUIElement
   /**
    * Returns the signal element that represents the digital channel with the
    * given index.
-   * 
+   *
    * @param aChannelIndex
    *          the index of the channel to retrieve the corresponding signal
    *          element for.
@@ -305,7 +305,7 @@ public class ElementGroup implements IUIElement
 
   /**
    * Returns the number of all element in this group.
-   * 
+   *
    * @return an element count, >= 0.
    */
   public int getElementCount()
@@ -318,7 +318,7 @@ public class ElementGroup implements IUIElement
 
   /**
    * Returns the number of elements specified by the given type in this group.
-   * 
+   *
    * @param aType
    *          the type to count, cannot be <code>null</code>.
    * @return an element count, >= 0.
@@ -341,7 +341,7 @@ public class ElementGroup implements IUIElement
 
   /**
    * Returns all channels assigned to this channel group.
-   * 
+   *
    * @return an array of channels, never <code>null</code>.
    */
   public List<SignalElement> getElements()
@@ -353,7 +353,7 @@ public class ElementGroup implements IUIElement
     }
     return Collections.unmodifiableList( result );
   }
-  
+
   /**
    * {@inheritDoc}
    */
@@ -365,7 +365,7 @@ public class ElementGroup implements IUIElement
 
   /**
    * Returns the label used for the group summary of this channel group.
-   * 
+   *
    * @return the label for the group summary, can be <code>null</code>.
    */
   public String getGroupSummaryLabel()
@@ -401,11 +401,11 @@ public class ElementGroup implements IUIElement
   {
     return getName();
   }
-  
+
   /**
    * Returns the bitwise mask for all channels that belong to this channel
    * group.
-   * 
+   *
    * @return a bitmask, >= 0.
    */
   public int getMask()
@@ -415,12 +415,20 @@ public class ElementGroup implements IUIElement
 
   /**
    * Returns the name of this channel group.
-   * 
+   *
    * @return a name, never <code>null</code> or empty.
    */
   public String getName()
   {
     return this.name;
+  }
+
+  /**
+   * @return the masked sample value.
+   */
+  public int getValue( final int aSampleValue )
+  {
+    return aSampleValue & this.mask;
   }
 
   /**
@@ -433,7 +441,7 @@ public class ElementGroup implements IUIElement
 
   /**
    * Returns whether or not a element belong to this group.
-   * 
+   *
    * @param aElement
    *          the element to test, cannot be <code>null</code>.
    * @return <code>true</code> if the given channel is contained by this channel
@@ -453,7 +461,7 @@ public class ElementGroup implements IUIElement
 
   /**
    * Returns whether or not this group has any elements.
-   * 
+   *
    * @return <code>true</code> if this group contains at least one signal
    *         element, <code>false</code> otherwise.
    */
@@ -488,7 +496,7 @@ public class ElementGroup implements IUIElement
 
   /**
    * Returns whether we should show the analog signal for this group.
-   * 
+   *
    * @return <code>true</code> if the analog signal is to be shown,
    *         <code>false</code> to hide it.
    */
@@ -499,7 +507,7 @@ public class ElementGroup implements IUIElement
 
   /**
    * Returns whether we should show digital signals in this group.
-   * 
+   *
    * @return <code>true</code> if the individual digital signals are to be
    *         shown, <code>false</code> to hide them.
    */
@@ -510,7 +518,7 @@ public class ElementGroup implements IUIElement
 
   /**
    * Returns whether we should show the summary for this group.
-   * 
+   *
    * @return <code>true</code> if the summary is to be shown, <code>false</code>
    *         to hide this summary.
    */
@@ -521,7 +529,7 @@ public class ElementGroup implements IUIElement
 
   /**
    * Returns whether or not this entire channel group is visible.
-   * 
+   *
    * @return <code>true</code> if this channel group is visible,
    *         <code>false</code> otherwise.
    */
@@ -532,7 +540,7 @@ public class ElementGroup implements IUIElement
 
   /**
    * Sets the label for the analog signal of this channel group.
-   * 
+   *
    * @param aSignalLabel
    *          the label to set for the analog signal of this channel group.
    */
@@ -540,10 +548,10 @@ public class ElementGroup implements IUIElement
   {
     this.analogSignalLabel = aSignalLabel;
   }
-  
+
   /**
    * Sets the color of this channel group.
-   * 
+   *
    * @param aColor
    *          the color to set, cannot be <code>null</code>.
    */
@@ -558,7 +566,7 @@ public class ElementGroup implements IUIElement
 
   /**
    * Sets the label for the group summary of this channel group.
-   * 
+   *
    * @param aSummaryLabel
    *          the label to set for the group summary.
    */
@@ -571,7 +579,7 @@ public class ElementGroup implements IUIElement
    * @param aHeight
    *          the new height of this element group, in pixels.
    */
-  public void setHeight( int aHeight )
+  public void setHeight( final int aHeight )
   {
     this.height = aHeight;
   }
@@ -580,14 +588,14 @@ public class ElementGroup implements IUIElement
    * {@inheritDoc}
    */
   @Override
-  public void setLabel( String aLabel )
+  public void setLabel( final String aLabel )
   {
     setName( aLabel );
   }
 
   /**
    * Sets name to the given value.
-   * 
+   *
    * @param aName
    *          the name to set.
    * @throws IllegalArgumentException
@@ -604,7 +612,7 @@ public class ElementGroup implements IUIElement
 
   /**
    * Sets whether or not the analog signal is to be shown.
-   * 
+   *
    * @param aShowAnalogSignal
    *          <code>true</code> to show the analog signal, <code>false</code> to
    *          hide it.
@@ -624,7 +632,7 @@ public class ElementGroup implements IUIElement
 
   /**
    * Sets whether or not the individual digital signals are to be shown.
-   * 
+   *
    * @param aShowDigitalSignals
    *          <code>true</code> to show the individual digital signals,
    *          <code>false</code> to hide them.
@@ -644,7 +652,7 @@ public class ElementGroup implements IUIElement
 
   /**
    * Sets whether or not the data values are to be shown.
-   * 
+   *
    * @param aShowSummary
    *          <code>true</code> to show the group summary, <code>false</code> to
    *          hide it.
@@ -664,7 +672,7 @@ public class ElementGroup implements IUIElement
 
   /**
    * Sets visible to the given value.
-   * 
+   *
    * @param aVisible
    *          the visible to set.
    */
@@ -689,7 +697,7 @@ public class ElementGroup implements IUIElement
    * @return the signal element with the given index, or <code>null</code> if no
    *         such element was found.
    */
-  final SignalElement getElementByIndex( int aIndex )
+  final SignalElement getElementByIndex( final int aIndex )
   {
     List<SignalElement> elements = getElements();
     for ( SignalElement element : elements )
@@ -704,7 +712,7 @@ public class ElementGroup implements IUIElement
 
   /**
    * Returns the virtual index for a given channel.
-   * 
+   *
    * @param aElement
    *          the channel to return the virtual index for, cannot be
    *          <code>null</code>.
@@ -735,7 +743,7 @@ public class ElementGroup implements IUIElement
 
   /**
    * Moves a given channel to a new index in this channel group.
-   * 
+   *
    * @param aElement
    *          the channel to move, cannot be <code>null</code>;
    * @param aNewIndex
@@ -774,7 +782,7 @@ public class ElementGroup implements IUIElement
    * If the given channel is <em>not</em> contained by this channel group, this
    * method is effectively a no-op.
    * </p>
-   * 
+   *
    * @param aElement
    *          the channel to remove, cannot be <code>null</code>.
    * @throws IllegalArgumentException
@@ -797,7 +805,7 @@ public class ElementGroup implements IUIElement
 
   /**
    * Sets yPosition to the given value.
-   * 
+   *
    * @param aYPosition
    *          the yPosition to set.
    */
@@ -817,7 +825,7 @@ public class ElementGroup implements IUIElement
 
   /**
    * Crafts a default name for use when an analog scope has no label set.
-   * 
+   *
    * @return an analog scope name, never <code>null</code>.
    */
   private String getDefaultAnalogSignalName()
@@ -827,7 +835,7 @@ public class ElementGroup implements IUIElement
 
   /**
    * Crafts a default name for use when a group summary has no label set.
-   * 
+   *
    * @return a group summary name, never <code>null</code>.
    */
   private String getDefaultGroupSummaryName()

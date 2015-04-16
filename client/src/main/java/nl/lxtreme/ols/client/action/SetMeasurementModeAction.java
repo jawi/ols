@@ -58,7 +58,7 @@ public class SetMeasurementModeAction extends AbstractAction implements IManaged
 
     this.controller = aController;
 
-    putValue( SELECTED_KEY, Boolean.valueOf( aController.getSignalDiagramModel().isMeasurementMode() ) );
+    putValue( SELECTED_KEY, Boolean.valueOf( aController.getViewModel().isMeasurementMode() ) );
   }
 
   // METHODS

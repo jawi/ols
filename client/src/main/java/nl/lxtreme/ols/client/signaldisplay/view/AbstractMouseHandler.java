@@ -1,5 +1,5 @@
 /*
- * OpenBench LogicSniffer / SUMP project 
+ * OpenBench LogicSniffer / SUMP project
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -79,7 +79,7 @@ abstract class AbstractMouseHandler extends MouseAdapter
   public void mouseClicked( final MouseEvent aEvent )
   {
     // Ensure the focus is moved to the main signal diagram component...
-    getSignalDiagram().requestFocusInWindow();
+    getViewComponent().requestFocusInWindow();
 
     if ( aEvent.getClickCount() == 2 )
     {
@@ -136,7 +136,7 @@ abstract class AbstractMouseHandler extends MouseAdapter
       if ( ( scrollPane != null ) && ( this.lastClickPosition != null ) )
       {
         final JViewport viewPort = scrollPane.getViewport();
-        final Component signalView = this.controller.getSignalDiagram().getSignalView();
+        final Component signalView = viewPort.getView();
 
         boolean horizontalOnly = ( aEvent.getModifiersEx() & InputEvent.ALT_DOWN_MASK ) != 0;
         boolean verticalOnly = horizontalOnly && ( ( aEvent.getModifiersEx() & InputEvent.SHIFT_DOWN_MASK ) != 0 );
@@ -246,7 +246,7 @@ abstract class AbstractMouseHandler extends MouseAdapter
 
   /**
    * Finds the cursor under the given point.
-   * 
+   *
    * @param aPoint
    *          the coordinate of the potential cursor, cannot be
    *          <code>null</code>.
@@ -275,15 +275,15 @@ abstract class AbstractMouseHandler extends MouseAdapter
    */
   protected final SignalDiagramModel getModel()
   {
-    return this.controller.getSignalDiagramModel();
+    return this.controller.getViewModel();
   }
 
   /**
-   * @return the {@link SignalDiagramComponent}, never <code>null</code>.
+   * @return the view component, never <code>null</code>.
    */
-  protected final SignalDiagramComponent getSignalDiagram()
+  protected final JComponent getViewComponent()
   {
-    return this.controller.getSignalDiagram();
+    return this.controller.getViewComponent();
   }
 
   /**
@@ -344,7 +344,7 @@ abstract class AbstractMouseHandler extends MouseAdapter
 
   /**
    * Sets the current mouse cursor.
-   * 
+   *
    * @param aMouseCursor
    *          a mouse cursor, can be <code>null</code> to use the default
    *          cursor.
@@ -356,7 +356,7 @@ abstract class AbstractMouseHandler extends MouseAdapter
 
   /**
    * Creates the context-sensitive popup menu for cursors.
-   * 
+   *
    * @param aPoint
    *          the current mouse location to show the cursor, cannot be
    *          <code>null</code>;
@@ -371,7 +371,7 @@ abstract class AbstractMouseHandler extends MouseAdapter
 
   /**
    * Shows the "edit properties" dialog for the given cursor.
-   * 
+   *
    * @param aCursor
    *          the cursor to edit the properties for, cannot be <code>null</code>
    *          .
@@ -384,7 +384,7 @@ abstract class AbstractMouseHandler extends MouseAdapter
 
   /**
    * Calculates the drop point for the cursor under the given coordinate.
-   * 
+   *
    * @param aCoordinate
    *          the coordinate to return the channel drop point for, cannot be
    *          <code>null</code>.
@@ -410,7 +410,7 @@ abstract class AbstractMouseHandler extends MouseAdapter
   /**
    * Determines whether or not the given mouse event is actually a popup
    * trigger.
-   * 
+   *
    * @param aPoint
    *          the <em>corrected</em> mouse position, where the popup is to be
    *          shown, cannot be <code>null</code>;
@@ -452,7 +452,7 @@ abstract class AbstractMouseHandler extends MouseAdapter
 
   /**
    * Returns whether or not the 'edit cursor' popup is to be shown.
-   * 
+   *
    * @param aEvent
    *          the event to test, may be <code>null</code>.
    * @return <code>true</code> if the 'edit cursor' popup is to be shown,

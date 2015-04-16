@@ -181,7 +181,7 @@ public class AcquisitionDetailsView extends AbstractViewLayer implements IToolWi
   public void notifyZoomChange( final ZoomEvent aEvent )
   {
 
-    final SignalDiagramModel model = getController().getSignalDiagramModel();
+    final SignalDiagramModel model = getController().getViewModel();
 
     final Double dt = model.getDisplayedTimeInterval();
     final String dtText, dtTextLabel;

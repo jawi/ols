@@ -1,5 +1,5 @@
 /*
- * OpenBench LogicSniffer / SUMP project 
+ * OpenBench LogicSniffer / SUMP project
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -34,14 +34,14 @@ import nl.lxtreme.ols.client.signaldisplay.signalelement.*;
 
 
 /**
- * 
+ *
  */
 public final class SmartJumpHelper
 {
   // INNER TYPES
 
   /**
-   * 
+   *
    */
   private static class CursorComparator implements Comparator<Cursor>
   {
@@ -79,9 +79,10 @@ public final class SmartJumpHelper
    */
   public long getSmartJumpPosition( final int aChannelIndex )
   {
-    Rectangle viewSize = getSignalDiagram().getSignalView().getVisibleRect();
+    Rectangle viewSize = this.controller.getViewComponent().getVisibleRect();
 
-    SignalElement signalElement = getSignalDiagramModel().getSignalElementManager().getDigitalSignalByChannelIndex( aChannelIndex );
+    SignalElement signalElement = getSignalDiagramModel().getSignalElementManager().getDigitalSignalByChannelIndex(
+        aChannelIndex );
     if ( signalElement != null )
     {
       Point refPoint = new Point( ( int )Math.round( viewSize.getCenterX() ), signalElement.getYposition() );
@@ -179,17 +180,9 @@ public final class SmartJumpHelper
   /**
    * @return
    */
-  private SignalDiagramComponent getSignalDiagram()
-  {
-    return this.controller.getSignalDiagram();
-  }
-
-  /**
-   * @return
-   */
   private SignalDiagramModel getSignalDiagramModel()
   {
-    return this.controller.getSignalDiagramModel();
+    return this.controller.getViewModel();
   }
 
   /**

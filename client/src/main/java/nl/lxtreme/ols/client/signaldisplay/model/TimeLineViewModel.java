@@ -1,5 +1,5 @@
 /*
- * OpenBench LogicSniffer / SUMP project 
+ * OpenBench LogicSniffer / SUMP project
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -39,7 +39,7 @@ public class TimeLineViewModel extends AbstractViewModel
 
   /**
    * Creates a new TimeLineModel instance.
-   * 
+   *
    * @param aController
    *          the diagram controller to use, cannot be <code>null</code>.
    */
@@ -52,7 +52,7 @@ public class TimeLineViewModel extends AbstractViewModel
 
   /**
    * Returns the background color for the timeline.
-   * 
+   *
    * @return a color, never <code>null</code>.
    */
   public Color getBackgroundColor()
@@ -67,7 +67,7 @@ public class TimeLineViewModel extends AbstractViewModel
 
   /**
    * Returns the font for the cursor flags.
-   * 
+   *
    * @return a font, never <code>null</code>.
    */
   public Font getCursorFlagFont()
@@ -83,7 +83,7 @@ public class TimeLineViewModel extends AbstractViewModel
   /**
    * Determines the ending time stamp until which the time line should be drawn
    * given the clip boundaries of this component.
-   * 
+   *
    * @param aClip
    *          the clip boundaries of the timeline component, cannot be
    *          <code>null</code>.
@@ -97,7 +97,7 @@ public class TimeLineViewModel extends AbstractViewModel
 
   /**
    * Returns the color in which the major ticks should be painted.
-   * 
+   *
    * @return a color, never <code>null</code>.
    */
   public Color getMajorTickColor()
@@ -112,7 +112,7 @@ public class TimeLineViewModel extends AbstractViewModel
 
   /**
    * Returns the major tick height.
-   * 
+   *
    * @return a height, in pixels.
    */
   public int getMajorTickHeight()
@@ -122,7 +122,7 @@ public class TimeLineViewModel extends AbstractViewModel
 
   /**
    * Returns the font for the major tick labels.
-   * 
+   *
    * @return a font, never <code>null</code>.
    */
   public Font getMajorTickLabelFont()
@@ -137,7 +137,7 @@ public class TimeLineViewModel extends AbstractViewModel
 
   /**
    * Returns the color in which the minor ticks should be painted.
-   * 
+   *
    * @return a color, never <code>null</code>.
    */
   public Color getMinorTickColor()
@@ -152,7 +152,7 @@ public class TimeLineViewModel extends AbstractViewModel
 
   /**
    * Returns the minor tick height.
-   * 
+   *
    * @return a height, in pixels.
    */
   public int getMinorTickHeight()
@@ -162,7 +162,7 @@ public class TimeLineViewModel extends AbstractViewModel
 
   /**
    * Returns the font for the minor tick labels.
-   * 
+   *
    * @return a font, never <code>null</code>.
    */
   public Font getMinorTickLabelFont()
@@ -190,7 +190,7 @@ public class TimeLineViewModel extends AbstractViewModel
 
   /**
    * Returns the height of the time line component.
-   * 
+   *
    * @return a height, in pixels, > 0.
    */
   public int getPreferredHeight()
@@ -200,18 +200,18 @@ public class TimeLineViewModel extends AbstractViewModel
 
   /**
    * Returns the width of the time line component.
-   * 
+   *
    * @return the width of the timeline, in pixels, > 0.
    */
   public int getPreferredWidth()
   {
     // timeline width *always* follows the width of the main component...
-    return this.controller.getSignalDiagram().getWidth();
+    return this.controller.getViewComponent().getWidth();
   }
 
   /**
    * Returns the sample rate of the sampled data.
-   * 
+   *
    * @return a sample rate, in Hertz.
    */
   public int getSampleRate()
@@ -235,7 +235,7 @@ public class TimeLineViewModel extends AbstractViewModel
   /**
    * Determines the starting time stamp from which the time line should be drawn
    * given the clip boundaries of this component.
-   * 
+   *
    * @param aClip
    *          the clip boundaries of the timeline component, cannot be
    *          <code>null</code>.
@@ -249,7 +249,7 @@ public class TimeLineViewModel extends AbstractViewModel
 
   /**
    * Returns the color in which the texts should be painted.
-   * 
+   *
    * @return a color, never <code>null</code>.
    */
   public Color getTextColor()
@@ -277,7 +277,7 @@ public class TimeLineViewModel extends AbstractViewModel
 
   /**
    * Returns the color of the individual ticks.
-   * 
+   *
    * @return a color, never <code>null</code>.
    */
   public Color getTickColor()
@@ -292,7 +292,7 @@ public class TimeLineViewModel extends AbstractViewModel
 
   /**
    * Returns the height of the individual ticks.
-   * 
+   *
    * @return a height, in pixels.
    */
   public int getTickHeight()
@@ -315,7 +315,7 @@ public class TimeLineViewModel extends AbstractViewModel
 
   /**
    * Returns whether the data is a timed-capture or a state-capture.
-   * 
+   *
    * @return <code>true</code> if there is timing data available,
    *         <code>false</code> if not.
    */
@@ -336,7 +336,7 @@ public class TimeLineViewModel extends AbstractViewModel
   /**
    * Returns whether or not the minor timestamps on the timeline are to be
    * painted.
-   * 
+   *
    * @return <code>true</code> if the minor timestamps are to be painted,
    *         <code>false</code> if they should be hidden.
    */

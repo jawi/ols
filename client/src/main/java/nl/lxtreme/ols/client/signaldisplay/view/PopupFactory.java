@@ -252,6 +252,6 @@ final class PopupFactory
    */
   private SignalDiagramModel getModel()
   {
-    return this.controller.getSignalDiagramModel();
+    return this.controller.getViewModel();
   }
 }

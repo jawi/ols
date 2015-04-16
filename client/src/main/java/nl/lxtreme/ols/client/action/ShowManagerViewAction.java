@@ -62,7 +62,7 @@ public class ShowManagerViewAction extends BaseAction
   {
     super( ID, aController, NAME, DESC );
     this.controller = aController.getSignalDiagramController();
-    this.elementManager = this.controller.getSignalDiagramModel().getSignalElementManager();
+    this.elementManager = this.controller.getViewModel().getSignalElementManager();
   }
 
   /**
@@ -75,7 +75,7 @@ public class ShowManagerViewAction extends BaseAction
   {
     super( ID, null, NAME, DESC );
     this.controller = aController;
-    this.elementManager = this.controller.getSignalDiagramModel().getSignalElementManager();
+    this.elementManager = this.controller.getViewModel().getSignalElementManager();
   }
 
   // METHODS

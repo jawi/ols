@@ -1,5 +1,5 @@
 /*
- * OpenBench LogicSniffer / SUMP project 
+ * OpenBench LogicSniffer / SUMP project
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -43,7 +43,7 @@ import nl.lxtreme.ols.util.swing.*;
  * cursors.
  */
 public class CursorDetailsView extends AbstractViewLayer implements IToolWindow, ICursorChangeListener,
-    IDataModelChangeListener, LinkListener
+IDataModelChangeListener, LinkListener
 {
   // CONSTANTS
 
@@ -56,7 +56,7 @@ public class CursorDetailsView extends AbstractViewLayer implements IToolWindow,
 
   /**
    * Creates a new SignalDetailsView instance.
-   * 
+   *
    * @param aController
    *          the diagram controller to use, cannot be <code>null</code>.
    */
@@ -71,7 +71,7 @@ public class CursorDetailsView extends AbstractViewLayer implements IToolWindow,
 
   /**
    * Factory method to create a new {@link CursorDetailsView} instance.
-   * 
+   *
    * @param aController
    *          the controller to use for the SignalDetailsView instance, cannot
    *          be <code>null</code>.
@@ -171,7 +171,7 @@ public class CursorDetailsView extends AbstractViewLayer implements IToolWindow,
     if ( aLinkId instanceof Long )
     {
       long timestamp = ( ( Long )aLinkId ).longValue();
-      getController().getSignalDiagram().scrollToTimestamp( timestamp );
+      getController().scrollToTimestamp( timestamp );
     }
   }
 
@@ -194,7 +194,7 @@ public class CursorDetailsView extends AbstractViewLayer implements IToolWindow,
   {
     final SignalDiagramController ctrl = getController();
 
-    final SignalDiagramModel model = ctrl.getSignalDiagramModel();
+    final SignalDiagramModel model = ctrl.getViewModel();
     final boolean cursorsEnabled;
 
     final Cursor[] cursors;

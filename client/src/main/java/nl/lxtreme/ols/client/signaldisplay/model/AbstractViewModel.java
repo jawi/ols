@@ -1,5 +1,5 @@
 /*
- * OpenBench LogicSniffer / SUMP project 
+ * OpenBench LogicSniffer / SUMP project
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -49,7 +49,7 @@ public abstract class AbstractViewModel
 
   /**
    * Creates a new AbstractViewModel instance.
-   * 
+   *
    * @param aController
    *          the diagram controller to use, cannot be <code>null</code>.
    */
@@ -57,14 +57,14 @@ public abstract class AbstractViewModel
   {
     this.controller = aController;
 
-    this.cursorFlagRender = new CursorFlagTextFormatter( this.controller.getSignalDiagramModel() );
+    this.cursorFlagRender = new CursorFlagTextFormatter( this.controller.getViewModel() );
   }
 
   // METHODS
 
   /**
    * Returns the color for a cursor with the given index.
-   * 
+   *
    * @param aCursorIndex
    *          the index of the cursor to retrieve the color for.
    * @return a cursor color, never <code>null</code>.
@@ -77,7 +77,7 @@ public abstract class AbstractViewModel
 
   /**
    * Returns the cursor flag text for a cursor with the given index.
-   * 
+   *
    * @param aCursorIndex
    *          the index of the cursor to retrieve the flag text for;
    * @param aStyle
@@ -93,7 +93,7 @@ public abstract class AbstractViewModel
   /**
    * Returns the X-position of the cursor with the given index, for displaying
    * purposes on screen.
-   * 
+   *
    * @param aCursorIdx
    *          the index of the cursor to retrieve the X-position for, >= 0.
    * @return the screen X-position of the cursor with the given index, or -1 if
@@ -111,7 +111,7 @@ public abstract class AbstractViewModel
 
   /**
    * Returns the text color for a cursor with the given index.
-   * 
+   *
    * @param aCursorIndex
    *          the index of the cursor to retrieve the color for.
    * @return a cursor text color, never <code>null</code>.
@@ -123,7 +123,7 @@ public abstract class AbstractViewModel
 
   /**
    * Returns the index of the current selected channel.
-   * 
+   *
    * @return the current selected channel index, or -1 if no channel is
    *         selected.
    */
@@ -142,7 +142,7 @@ public abstract class AbstractViewModel
 
   /**
    * Returns all channels the given range of all visible channel groups.
-   * 
+   *
    * @param aY
    *          the screen Y-coordinate;
    * @param aHeight
@@ -158,7 +158,7 @@ public abstract class AbstractViewModel
 
   /**
    * Returns the spacing between two signal elements.
-   * 
+   *
    * @return a signal element spacing, in pixels.
    */
   public int getSignalElementSpacing()
@@ -168,7 +168,7 @@ public abstract class AbstractViewModel
 
   /**
    * Returns the color to use for painting a trigger moment.
-   * 
+   *
    * @return the trigger color, never <code>null</code>.
    */
   public Color getTriggerColor()
@@ -183,7 +183,7 @@ public abstract class AbstractViewModel
 
   /**
    * Returns the trigger position, as relative offset from zero.
-   * 
+   *
    * @return a trigger position, as offset.
    */
   public long getTriggerOffset()
@@ -198,7 +198,7 @@ public abstract class AbstractViewModel
 
   /**
    * Returns the current zoom factor that is used to display the signals with.
-   * 
+   *
    * @return a zoom factor, >= 0.0.
    */
   public double getZoomFactor()
@@ -208,7 +208,7 @@ public abstract class AbstractViewModel
 
   /**
    * Returns whether or not there is captured data to display.
-   * 
+   *
    * @return <code>true</code> if there is any data to display,
    *         <code>false</code> otherwise.
    */
@@ -219,7 +219,7 @@ public abstract class AbstractViewModel
 
   /**
    * Returns whether or not there is trigger data present.
-   * 
+   *
    * @return <code>true</code> if there is trigger data present,
    *         <code>false</code> otherwise.
    */
@@ -246,7 +246,7 @@ public abstract class AbstractViewModel
 
   /**
    * Converts a given time stamp to a screen coordinate.
-   * 
+   *
    * @param aTimestamp
    *          the time stamp to convert, >= 0.
    * @return a screen coordinate, >= 0.
@@ -266,7 +266,7 @@ public abstract class AbstractViewModel
    */
   protected final SignalDiagramModel getSignalDiagramModel()
   {
-    return this.controller.getSignalDiagramModel();
+    return this.controller.getViewModel();
   }
 
   /**
@@ -275,7 +275,7 @@ public abstract class AbstractViewModel
    */
   protected int locationToSampleIndex( final Point aPoint )
   {
-    final SignalDiagramModel model = this.controller.getSignalDiagram().getModel();
+    final SignalDiagramModel model = this.controller.getViewModel();
     return model.locationToSampleIndex( aPoint );
   }
 }

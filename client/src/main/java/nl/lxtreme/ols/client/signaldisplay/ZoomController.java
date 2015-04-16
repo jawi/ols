@@ -1,5 +1,5 @@
 /*
- * OpenBench LogicSniffer / SUMP project 
+ * OpenBench LogicSniffer / SUMP project
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -105,7 +105,7 @@ public final class ZoomController
 
     /**
      * Returns the <em>relative</em> zoom factor.
-     * 
+     *
      * @return the zoom factor, >= 0.0.
      */
     public double getFactor()
@@ -146,7 +146,7 @@ public final class ZoomController
 
     /**
      * Called upon each change of zoom factor.
-     * 
+     *
      * @param aEvent
      *          the zoom event with current zoom information, never
      *          <code>null</code>.
@@ -171,7 +171,7 @@ public final class ZoomController
       this( ZoomAction.DEFAULT, DEFAULT_ZOOM_FACTOR );
     }
 
-    public ZoomStateHolder( ZoomAction aAction, double aFactor )
+    public ZoomStateHolder( final ZoomAction aAction, final double aFactor )
     {
       this.lastAction = aAction;
       this.factor = aFactor;
@@ -209,7 +209,7 @@ public final class ZoomController
 
   /**
    * Creates a new {@link ZoomController} instance.
-   * 
+   *
    * @param aController
    *          the signal diagram controller to use.
    */
@@ -225,7 +225,7 @@ public final class ZoomController
 
   /**
    * Adds a given zoom listener.
-   * 
+   *
    * @param aListener
    *          the listener to add, cannot be <code>null</code>.
    */
@@ -236,7 +236,7 @@ public final class ZoomController
 
   /**
    * Returns whether or not we can zoom in further.
-   * 
+   *
    * @return <code>true</code> if we can zoom in, <code>false</code> if the
    *         maximum zoom level has been reached.
    */
@@ -249,7 +249,7 @@ public final class ZoomController
 
   /**
    * Returns whether or not we can zoom out further.
-   * 
+   *
    * @return <code>true</code> if we can zoom out, <code>false</code> if the
    *         maximum zoom level has been reached.
    */
@@ -262,7 +262,7 @@ public final class ZoomController
 
   /**
    * Returns the current value of factor.
-   * 
+   *
    * @return the factor
    */
   public double getFactor()
@@ -278,7 +278,7 @@ public final class ZoomController
 
   /**
    * Returns whether or not we're zooming to fit all.
-   * 
+   *
    * @return <code>true</code> if zoom-all is enabled, <code>false</code>
    *         otherwise.
    */
@@ -304,7 +304,7 @@ public final class ZoomController
 
   /**
    * Removes a given zoom listener.
-   * 
+   *
    * @param aListener
    *          the listener to remove, cannot be <code>null</code>.
    */
@@ -327,7 +327,7 @@ public final class ZoomController
       action = zh.lastAction;
       factor = zh.factor;
     }
-    if ( action == null || ZoomAction.IN == action || ZoomAction.OUT == action )
+    if ( ( action == null ) || ( ZoomAction.IN == action ) || ( ZoomAction.OUT == action ) )
     {
       action = ZoomAction.RESTORE;
     }
@@ -338,14 +338,14 @@ public final class ZoomController
   /**
    * Zooms in or out with a constant factor, according to the given mouse wheel
    * event.
-   * 
+   *
    * @param aRotation
    *          the mouse wheel rotation, either positive or negative;
    * @param aPoint
    *          the location of the mouse pointer, can be <code>null</code>.
    * @see MouseWheelEvent#getWheelRotation()
    */
-  public void zoom( int aRotation, Point aPoint )
+  public void zoom( final int aRotation, final Point aPoint )
   {
     if ( aRotation > 0 )
     {
@@ -417,14 +417,14 @@ public final class ZoomController
 
   /**
    * Determines the new zoom state for the given action and factor.
-   * 
+   *
    * @param aAction
    *          the zoom action to perform, cannot be <code>null</code>;
    * @param aFactor
    *          the relative zoom factor to apply.
    * @return the new zoom state, never <code>null</code>.
    */
-  private ZoomStateHolder calculateNewZoomState( ZoomAction aAction, double aFactor )
+  private ZoomStateHolder calculateNewZoomState( final ZoomAction aAction, final double aFactor )
   {
     final double oldFactor = getFactor();
 
@@ -488,14 +488,14 @@ public final class ZoomController
   /**
    * Calculates the visible rectangle of the view component given a zoom-action,
    * a relative zoom-factor, a center position and the new zoom state.
-   * 
+   *
    * @return a rectangle denoting the visible view of the component, never
    *         <code>null</code>.
    */
   private Rectangle calculateVisibleViewRect( final ZoomStateHolder aZoomState, final Point aCenterPoint )
   {
-    SignalDiagramComponent signalDiagram = getSignalDiagram();
-    SignalDiagramModel model = getModel();
+    JComponent signalDiagram = this.controller.getViewComponent();
+    SignalDiagramModel model = this.controller.getViewModel();
 
     // Take the location of the signal diagram component, as it is the
     // only one that is shifted in location by its (parent) scrollpane...
@@ -524,7 +524,7 @@ public final class ZoomController
         // Recalculate the new screen position of the visible view
         // rectangle; the X-coordinate shifts relative to the zoom
         // factor, while the Y-coordinate remains as-is...
-        visibleRect.x = ( int )Math.round( currentLocation.x - ( mx * relFactor ) + mx );
+        visibleRect.x = ( int )Math.round( ( currentLocation.x - ( mx * relFactor ) ) + mx );
         visibleRect.y = currentLocation.y;
         break;
       }
@@ -550,7 +550,7 @@ public final class ZoomController
         // Recalculate the new screen position of the visible view
         // rectangle; the X-coordinate shifts relative to the zoom
         // factor, while the Y-coordinate remains as-is...
-        visibleRect.x = ( int )Math.round( currentLocation.x - ( mx * relFactor ) + mx );
+        visibleRect.x = ( int )Math.round( ( currentLocation.x - ( mx * relFactor ) ) + mx );
         visibleRect.y = currentLocation.y;
         break;
       }
@@ -612,17 +612,17 @@ public final class ZoomController
 
   /**
    * Creates a new ZoomEvent instance, based on the current situation.
-   * 
+   *
    * @return a new {@link ZoomEvent} instance, never <code>null</code>.
    */
-  private ZoomEvent createZoomEvent( ZoomAction aAction, final double aFactor, final Rectangle aVisibleRect )
+  private ZoomEvent createZoomEvent( final ZoomAction aAction, final double aFactor, final Rectangle aVisibleRect )
   {
     return new ZoomEvent( aAction, aFactor, aVisibleRect );
   }
 
   /**
    * Fires a given {@link ZoomEvent} to all interested listeners.
-   * 
+   *
    * @param aEvent
    *          the event to fire, cannot be <code>null</code>.
    */
@@ -642,13 +642,13 @@ public final class ZoomController
    * It appears that the maximum width of a component can be
    * {@link Integer#MAX_VALUE} pixels wide.
    * </p>
-   * 
+   *
    * @return a maximum zoom level.
    * @see #MAX_COMP_WIDTH
    */
   private double getMaxZoomLevel()
   {
-    final SignalDiagramModel model = getModel();
+    final SignalDiagramModel model = this.controller.getViewModel();
     if ( !model.hasData() )
     {
       return DEFAULT_ZOOM_FACTOR;
@@ -662,19 +662,19 @@ public final class ZoomController
   /**
    * Determines the minimum zoom level that we can causes all signals to be
    * displayed in the current width and height.
-   * 
+   *
    * @return a minimum zoom level.
    */
   private double getMinZoomLevel()
   {
-    final SignalDiagramComponent signalDiagram = getSignalDiagram();
-    final SignalDiagramModel model = signalDiagram.getModel();
+    final JComponent viewComponent = this.controller.getViewComponent();
+    final SignalDiagramModel model = this.controller.getViewModel();
     if ( !model.hasData() )
     {
       return DEFAULT_ZOOM_FACTOR;
     }
 
-    final double width = getOuterViewSize( signalDiagram, true, true ).width;
+    final double width = getOuterViewSize( viewComponent, true, true ).width;
     final double length = model.getAbsoluteLength();
     final double min = 1.0 / MAX_COMP_WIDTH;
 
@@ -682,25 +682,9 @@ public final class ZoomController
   }
 
   /**
-   * @return the signal diagram model, never <code>null</code>.
-   */
-  private SignalDiagramModel getModel()
-  {
-    return this.controller.getSignalDiagramModel();
-  }
-
-  /**
-   * @return
-   */
-  private SignalDiagramComponent getSignalDiagram()
-  {
-    return this.controller.getSignalDiagram();
-  }
-
-  /**
    * Performs the zoom action as given using the given relative factor and
    * center point.
-   * 
+   *
    * @param aAction
    * @param aFactor
    * @param aCenterPoint
@@ -724,8 +708,8 @@ public final class ZoomController
    * @return the view size of the given component, including any width/height of
    *         visible scrollbars.
    */
-  private Dimension getOuterViewSize( JComponent aComponent, boolean aIncludeVertScrollbar,
-      boolean aIncludeHorzScrollbar )
+  private Dimension getOuterViewSize( final JComponent aComponent, final boolean aIncludeVertScrollbar,
+      final boolean aIncludeHorzScrollbar )
   {
     final Rectangle rect = aComponent.getVisibleRect();
 

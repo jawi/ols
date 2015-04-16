@@ -197,7 +197,7 @@ public class SignalDiagramComponent extends JPanel implements Scrollable
    */
   public final SignalDiagramModel getModel()
   {
-    return this.controller.getSignalDiagramModel();
+    return this.controller.getViewModel();
   }
 
   /**
