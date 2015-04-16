@@ -34,11 +34,11 @@ import nl.lxtreme.ols.util.*;
 /**
  * Provides a generic acquisition task that can read from any file-based source.
  */
-public final class GenericDeviceAcquisitionTask implements AcquisitionTask
+public final class RawDataAcquisitionTask implements AcquisitionTask
 {
   // CONSTANTS
 
-  private static final Logger LOG = Logger.getLogger( GenericDeviceAcquisitionTask.class.getName() );
+  private static final Logger LOG = Logger.getLogger( RawDataAcquisitionTask.class.getName() );
 
   // VARIABLES
 
@@ -57,7 +57,7 @@ public final class GenericDeviceAcquisitionTask implements AcquisitionTask
    * @param aDeviceConfig
    *          the device configuration to use.
    */
-  public GenericDeviceAcquisitionTask( final GenericDeviceConfigDialog aDeviceConfig,
+  public RawDataAcquisitionTask( final GenericDeviceConfigDialog aDeviceConfig,
       final AcquisitionProgressListener aProgressListener )
   {
     this.deviceConfig = aDeviceConfig;

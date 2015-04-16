@@ -15,7 +15,7 @@
  * with this program; if not, write to the Free Software Foundation, Inc.,
  * 51 Franklin St, Fifth Floor, Boston, MA 02110, USA
  *
- * 
+ *
  * Copyright (C) 2010-2011 - J.W. Janssen, http://www.lxtreme.nl
  */
 package nl.lxtreme.ols.device.generic;
@@ -30,6 +30,7 @@ import javax.swing.*;
 import nl.lxtreme.ols.api.Configurable;
 import nl.lxtreme.ols.api.UserSettings;
 import nl.lxtreme.ols.util.NumberUtils;
+import nl.lxtreme.ols.util.NumberUtils.*;
 import nl.lxtreme.ols.util.swing.SpringLayoutUtils;
 import nl.lxtreme.ols.util.swing.StandardActionFactory;
 import nl.lxtreme.ols.util.swing.StandardActionFactory.CloseAction.Closeable;
@@ -39,16 +40,23 @@ import static nl.lxtreme.ols.util.swing.SwingComponentUtils.createRightAlignedLa
 
 
 /**
- * @author jawi
+ * Configuration dialog for supporting capturing raw or OLS capture file data.
  */
 public class GenericDeviceConfigDialog extends JDialog implements Configurable, Closeable
 {
   // CONSTANTS
 
+  public static final String[] DATA_FORMATS = { "Raw", "OLS data format" };
+
+  private static final String DEFAULT_DATA_FORMAT = DATA_FORMATS[0];
+
   private static final long serialVersionUID = 1L;
 
   // VARIABLES
 
+  private JComboBox dataFormat;
+
+  private JCheckBox timeDataPresent;
   private JTextField devicePath;
   private JTextField sampleRate;
   private JTextField sampleDepth;
@@ -91,8 +99,15 @@ public class GenericDeviceConfigDialog extends JDialog implements Configurable, 
    */
   public int getChannelCount()
   {
-    final int result = NumberUtils.smartParseInt( this.channelCount.getText(), 8 );
-    return result;
+    return NumberUtils.safeParseInt( this.channelCount.getText(), 8 );
+  }
+
+  /**
+   * @return the selected data format, as string value.
+   */
+  public String getDataFormat()
+  {
+    return ( String )this.dataFormat.getSelectedItem();
   }
 
   /**
@@ -106,7 +121,7 @@ public class GenericDeviceConfigDialog extends JDialog implements Configurable, 
   }
 
   /**
-   * @return
+   * @return the bitmask of the enabled channels.
    */
   public int getEnabledChannelsMask()
   {
@@ -122,8 +137,7 @@ public class GenericDeviceConfigDialog extends JDialog implements Configurable, 
    */
   public int getSampleDepth()
   {
-    final int result = NumberUtils.smartParseInt( this.sampleDepth.getText(), 1024 );
-    return result;
+    return NumberUtils.smartParseInt( this.sampleDepth.getText(), 1024 );
   }
 
   /**
@@ -133,8 +147,7 @@ public class GenericDeviceConfigDialog extends JDialog implements Configurable, 
    */
   public int getSampleRate()
   {
-    final int result = NumberUtils.smartParseInt( this.sampleRate.getText(), 1000000 );
-    return result;
+    return NumberUtils.smartParseInt( this.sampleRate.getText(), UnitDefinition.SI, 1000000 );
   }
 
   /**
@@ -144,8 +157,17 @@ public class GenericDeviceConfigDialog extends JDialog implements Configurable, 
    */
   public int getSampleWidth()
   {
-    final int result = NumberUtils.smartParseInt( this.sampleWidth.getText(), 1 );
-    return result;
+    return NumberUtils.safeParseInt( this.sampleWidth.getText(), 1 );
+  }
+
+  /**
+   * Returns the number of channels in each sample.
+   *
+   * @return the channel count, >= 0.
+   */
+  public boolean isTimingDataPresent()
+  {
+    return this.timeDataPresent.isSelected();
   }
 
   /**
@@ -154,9 +176,11 @@ public class GenericDeviceConfigDialog extends JDialog implements Configurable, 
   @Override
   public void readPreferences( final UserSettings aSettings )
   {
-    this.channelCount.setText( aSettings.get( "channelCount", this.channelCount.getText() ) );
+    this.dataFormat.setSelectedItem( aSettings.get( "dataFormat", ( String )this.dataFormat.getSelectedItem() ) );
     this.devicePath.setText( aSettings.get( "devicePath", this.devicePath.getText() ) );
+    this.channelCount.setText( aSettings.get( "channelCount", this.channelCount.getText() ) );
     this.sampleDepth.setText( aSettings.get( "sampleDepth", this.sampleDepth.getText() ) );
+    this.timeDataPresent.setSelected( aSettings.getBoolean( "timeDataPresent", this.timeDataPresent.isSelected() ) );
     this.sampleRate.setText( aSettings.get( "sampleRate", this.sampleRate.getText() ) );
     this.sampleWidth.setText( aSettings.get( "sampleWidth", this.sampleWidth.getText() ) );
   }
@@ -182,11 +206,30 @@ public class GenericDeviceConfigDialog extends JDialog implements Configurable, 
   @Override
   public void writePreferences( final UserSettings aSettings )
   {
-    aSettings.put( "channelCount", this.channelCount.getText() );
+    aSettings.put( "dataFormat", ( String )this.dataFormat.getSelectedItem() );
     aSettings.put( "devicePath", this.devicePath.getText() );
+    aSettings.put( "channelCount", this.channelCount.getText() );
     aSettings.put( "sampleDepth", this.sampleDepth.getText() );
+    aSettings.getBoolean( "timeDataPresent", this.timeDataPresent.isSelected() );
     aSettings.put( "sampleRate", this.sampleRate.getText() );
     aSettings.put( "sampleWidth", this.sampleWidth.getText() );
+  }
+
+  /**
+   * Ensures the UI components are in the right state.
+   *
+   * @param aDataFormat
+   *          the selected data format.
+   */
+  final void updateComponents( final String aDataFormat )
+  {
+    boolean rawDataSelected = DATA_FORMATS[0].equals( aDataFormat );
+    // Raw data: user should enter more data...
+    this.channelCount.setEnabled( rawDataSelected );
+    this.sampleDepth.setEnabled( rawDataSelected );
+    this.timeDataPresent.setEnabled( rawDataSelected );
+    this.sampleRate.setEnabled( rawDataSelected && this.timeDataPresent.isSelected() );
+    this.sampleWidth.setEnabled( rawDataSelected );
   }
 
   /**
@@ -196,23 +239,55 @@ public class GenericDeviceConfigDialog extends JDialog implements Configurable, 
    */
   private JComponent createContents()
   {
+    this.dataFormat = new JComboBox( DATA_FORMATS );
+    this.dataFormat.addActionListener( new ActionListener()
+    {
+      @Override
+      public void actionPerformed( final ActionEvent aEvent )
+      {
+        JComboBox cb = ( JComboBox )aEvent.getSource();
+        updateComponents( ( String )cb.getSelectedItem() );
+      }
+    } );
+
+    this.devicePath = new JTextField( 10 );
+    this.devicePath.setToolTipText( "The path to the socket, file or pipe to read data from." );
+
     this.channelCount = new JTextField( 10 );
     this.channelCount.setText( "1" );
     this.channelCount.setInputVerifier( JComponentInputVerifier.create( Integer.TYPE, "Invalid channel count!" ) );
-
-    this.devicePath = new JTextField( 10 );
+    this.channelCount.setToolTipText( "The number of channels contained in the raw data." );
 
     this.sampleDepth = new JTextField( 10 );
     this.sampleDepth.setText( "256" );
     this.sampleDepth.setInputVerifier( JComponentInputVerifier.create( Integer.TYPE, "Invalid sample depth!" ) );
+    this.sampleDepth.setToolTipText( "The number of samples to read from the input source." );
+
+    this.timeDataPresent = new JCheckBox();
+    this.timeDataPresent.setToolTipText( "Whether or not the raw data represents samples or state data." );
+    this.timeDataPresent.addActionListener( new ActionListener()
+    {
+      @Override
+      public void actionPerformed( final ActionEvent aEvent )
+      {
+        JCheckBox cb = ( JCheckBox )aEvent.getSource();
+        GenericDeviceConfigDialog.this.sampleRate.setEnabled( cb.isSelected() );
+      }
+    } );
 
     this.sampleRate = new JTextField( 10 );
     this.sampleRate.setText( "1000000" );
     this.sampleRate.setInputVerifier( JComponentInputVerifier.create( Integer.TYPE, "Invalid sample rate!" ) );
+    this.sampleRate.setToolTipText( "The sample rate of the raw data, in Hertz." );
 
     this.sampleWidth = new JTextField( 10 );
     this.sampleWidth.setText( "1" );
     this.sampleWidth.setInputVerifier( JComponentInputVerifier.create( Integer.TYPE, "Invalid sample width!" ) );
+    this.sampleWidth.setToolTipText( "The number of bytes to read for each sample." );
+
+    // Should cause the proper initial state to be selected...
+    this.timeDataPresent.setSelected( true );
+    this.dataFormat.setSelectedItem( DEFAULT_DATA_FORMAT );
 
     final JPanel result = new JPanel( new SpringLayout() );
 
@@ -221,8 +296,16 @@ public class GenericDeviceConfigDialog extends JDialog implements Configurable, 
     result.add( createRightAlignedLabel( "Device path" ) );
     result.add( this.devicePath );
 
+    result.add( createRightAlignedLabel( "Data format" ) );
+    result.add( this.dataFormat );
+
+    SpringLayoutUtils.addSeparator( result, null );
+
     result.add( createRightAlignedLabel( "Channel count" ) );
     result.add( this.channelCount );
+
+    result.add( createRightAlignedLabel( "Time data present?" ) );
+    result.add( this.timeDataPresent );
 
     result.add( createRightAlignedLabel( "Sample rate" ) );
     result.add( this.sampleRate );

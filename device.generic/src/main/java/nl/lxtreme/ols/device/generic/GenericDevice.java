@@ -1,5 +1,5 @@
 /*
- * OpenBench LogicSniffer / SUMP project 
+ * OpenBench LogicSniffer / SUMP project
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -15,7 +15,7 @@
  * with this program; if not, write to the Free Software Foundation, Inc.,
  * 51 Franklin St, Fifth Floor, Boston, MA 02110, USA
  *
- * 
+ *
  * Copyright (C) 2010-2011 - J.W. Janssen, http://www.lxtreme.nl
  */
 package nl.lxtreme.ols.device.generic;
@@ -61,7 +61,13 @@ public class GenericDevice implements Device
   public AcquisitionTask createAcquisitionTask( final AcquisitionProgressListener aProgressListener )
       throws IOException
   {
-    return new GenericDeviceAcquisitionTask( this.deviceConfig, aProgressListener );
+    String dataFormat = this.deviceConfig.getDataFormat();
+    if ( GenericDeviceConfigDialog.DATA_FORMATS[0].equals( dataFormat ) )
+    {
+      return new RawDataAcquisitionTask( this.deviceConfig, aProgressListener );
+    }
+
+    return new OlsDataAcquisitionTask( this.deviceConfig, aProgressListener );
   }
 
   /**
