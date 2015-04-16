@@ -27,8 +27,7 @@ import java.awt.event.ActionListener;
 
 import javax.swing.*;
 
-import nl.lxtreme.ols.api.Configurable;
-import nl.lxtreme.ols.api.UserSettings;
+import nl.lxtreme.ols.api.*;
 import nl.lxtreme.ols.util.NumberUtils;
 import nl.lxtreme.ols.util.NumberUtils.*;
 import nl.lxtreme.ols.util.swing.SpringLayoutUtils;
@@ -143,11 +142,15 @@ public class GenericDeviceConfigDialog extends JDialog implements Configurable, 
   /**
    * Returns the sample rate of the generic device.
    *
-   * @return the sample rate in Hertz (Hz).
+   * @return the sample rate in Hertz (Hz), or -1 if not available.
    */
   public int getSampleRate()
   {
-    return NumberUtils.smartParseInt( this.sampleRate.getText(), UnitDefinition.SI, 1000000 );
+    if ( isTimingDataPresent() )
+    {
+      return NumberUtils.smartParseInt( this.sampleRate.getText(), UnitDefinition.SI, 1000000 );
+    }
+    return Ols.NOT_AVAILABLE;
   }
 
   /**
