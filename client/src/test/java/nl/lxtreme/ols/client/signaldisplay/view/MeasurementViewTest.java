@@ -1,5 +1,5 @@
 /*
- * OpenBench LogicSniffer / SUMP project 
+ * OpenBench LogicSniffer / SUMP project
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -75,21 +75,21 @@ public class MeasurementViewTest
   {
     return Arrays.asList( new Object[][] { //
         // { resource name, expected frequency (Hz) }
-            { "1.8432MHz_1.852MHz.ols", 1884352, 1843200 }, // 0
-            { "4.0MHz_4.0MHz.ols", 4014227, 4000000 }, // 1
-            { "4.7174MHz_4.762MHz.ols", 4735256, 4717400 }, // 2
-            { "4.9152MHz_5.0MHz.ols", 4925683, 4915200 }, // 3
-            { "5.12MHz_5.0MHz.ols", 5121079, 5120000 }, // 4
-            { "7.234MHz_7.143MHz.ols", 7232669, 7234000 }, // 5
-            { "7.5MHz_7.143MHz.ols", 7506775, 7500000 }, // 6
-            { "10.0MHz_10.0MHz.ols", 10004066, 10000000 }, // 7
-            { "14.31818MHz_14.286MHz.ols", 14318967, 14318180 }, // 8
-            { "16.257MHz_16.667MHz.ols", 16258414, 16257000 }, // 9
-            { "17.836MHz_16.667MHz.ols", 17838770, 17836000 }, // 10
-            { "18.0MHz_16.667MHz.ols", 18002034, 18000000 }, // 11
-            { "20.0MHz_20.0MHz.ols", 20000000, 20000000 }, // 12
-            { "24.0MHz_20.0MHz.ols", 24002966, 24000000 }, // 13
-            { "32.0MHz_33.333MHz.ols", 32001732, 32000000 }, // 14
+            { "1.8432MHz_1.852MHz.ols", 1844838, 1843200 }, // 0
+            { "4.0MHz_4.0MHz.ols", 4001139, 4000000 }, // 1
+            { "4.7174MHz_4.762MHz.ols", 4719111, 4717400 }, // 2
+            { "4.9152MHz_5.0MHz.ols", 4916164, 4915200 }, // 3
+            { "5.12MHz_5.0MHz.ols", 5120273, 5120000 }, // 4
+            { "7.234MHz_7.143MHz.ols", 7233767, 7234000 }, // 5
+            { "7.5MHz_7.143MHz.ols", 7502175, 7500000 }, // 6
+            { "10.0MHz_10.0MHz.ols", 10002034, 10000000 }, // 7
+            { "14.31818MHz_14.286MHz.ols", 14318500, 14318180 }, // 8
+            { "16.257MHz_16.667MHz.ols", 16257681, 16257000 }, // 9
+            { "17.836MHz_16.667MHz.ols", 17837070, 17836000 }, // 10
+            { "18.0MHz_16.667MHz.ols", 18000597, 18000000 }, // 11
+            { "20.0MHz_20.0MHz.ols", 19999498, 20000000 }, // 12
+            { "24.0MHz_20.0MHz.ols", 24000976, 24000000 }, // 13
+            { "32.0MHz_33.333MHz.ols", 32001302, 32000000 }, // 14
         } );
   }
 
@@ -106,8 +106,8 @@ public class MeasurementViewTest
 
     int channel = 0;
 
-    MeasurementView.SignalMeasurer worker = new MeasurementView.SignalMeasurer( container, channel,
-        toolContext.getStartSampleIndex(), toolContext.getEndSampleIndex() );
+    MeasurementView.SignalMeasurer worker = new MeasurementView.SignalMeasurer( container, channel, 0L, toolContext
+        .getData().getAbsoluteLength() );
 
     this.result = worker.run();
     assertNotNull( this.result );
