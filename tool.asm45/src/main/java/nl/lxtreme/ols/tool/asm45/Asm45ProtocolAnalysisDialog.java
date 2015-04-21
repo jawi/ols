@@ -15,13 +15,14 @@
  * with this program; if not, write to the Free Software Foundation, Inc.,
  * 51 Franklin St, Fifth Floor, Boston, MA 02110, USA
  *
- * 
+ *
  * Copyright (C) 2010-2011 - J.W. Janssen, http://www.lxtreme.nl
  */
 package nl.lxtreme.ols.tool.asm45;
 
 
 import static nl.lxtreme.ols.util.ExportUtils.HtmlExporter.*;
+import static nl.lxtreme.ols.util.StringUtils.*;
 import static nl.lxtreme.ols.util.swing.SwingComponentUtils.*;
 
 import java.awt.*;
@@ -51,11 +52,11 @@ import org.osgi.framework.*;
 
 /**
  * Provides a main dialog for the Asm45 analyser.
- * 
+ *
  * @author Ansgar Kueckes
  */
 public final class Asm45ProtocolAnalysisDialog extends BaseToolDialog<Asm45DataSet> implements
-    ExportAware<Asm45DataSet>
+ExportAware<Asm45DataSet>
 {
   // CONSTANTS
 
@@ -96,7 +97,7 @@ public final class Asm45ProtocolAnalysisDialog extends BaseToolDialog<Asm45DataS
 
   /**
    * Creates a new Asm45ProtocolAnalysisDialog instance.
-   * 
+   *
    * @param aOwner
    *          the owner of this dialog;
    * @param aName
@@ -287,7 +288,7 @@ public final class Asm45ProtocolAnalysisDialog extends BaseToolDialog<Asm45DataS
 
   /**
    * Creates the HTML template for exports to HTML.
-   * 
+   *
    * @param aExporter
    *          the HTML exporter instance to use, cannot be <code>null</code>.
    * @return a HTML exporter filled with the template, never <code>null</code>.
@@ -464,7 +465,7 @@ public final class Asm45ProtocolAnalysisDialog extends BaseToolDialog<Asm45DataS
 
   /**
    * Returns an "empty" HTML page.
-   * 
+   *
    * @return an empty HTML page string, never <code>null</code>.
    */
   private String getEmptyHtmlPage()
@@ -556,7 +557,7 @@ public final class Asm45ProtocolAnalysisDialog extends BaseToolDialog<Asm45DataS
 
   /**
    * Stores the given analysis results to the given file in CSV format.
-   * 
+   *
    * @param aSelectedFile
    * @param aAnalysisResult
    */
@@ -573,9 +574,8 @@ public final class Asm45ProtocolAnalysisDialog extends BaseToolDialog<Asm45DataS
       {
         final Asm45Data ds = dataSet.get( i );
         exporter.addRow( Integer.valueOf( i ), Integer.valueOf( ds.getClocks() ),
-            StringUtils.integerToHexString( ds.getBlock(), 2 ), StringUtils.integerToHexString( ds.getAddress(), 4 ),
-            StringUtils.integerToHexString( ds.getValue(), 4 ), ds.getBusGrant() ? "X" : "-", ds.getType(),
-            ds.getEvent() );
+            integerToHexString( ds.getBlock(), 2 ), StringUtils.integerToHexString( ds.getAddress(), 4 ),
+            integerToHexString( ds.getValue(), 4 ), ds.getBusGrant() ? "X" : "-", ds.getType(), ds.getEvent() );
       }
 
       exporter.close();
@@ -592,7 +592,7 @@ public final class Asm45ProtocolAnalysisDialog extends BaseToolDialog<Asm45DataS
 
   /**
    * Stores the given analysis results to the given file as HTML.
-   * 
+   *
    * @param aSelectedFile
    * @param aAnalysisResult
    */
@@ -614,7 +614,7 @@ public final class Asm45ProtocolAnalysisDialog extends BaseToolDialog<Asm45DataS
 
   /**
    * generate a HTML page
-   * 
+   *
    * @param aEmpty
    *          if this is true an empty output is generated
    * @return String with HTML data
@@ -707,9 +707,9 @@ public final class Asm45ProtocolAnalysisDialog extends BaseToolDialog<Asm45DataS
                 .addAttribute( "style", "background-color: " + bgColor + "; text-align: center;" );
             tr.addChild( TD ).addContent( String.valueOf( index ) );
             tr.addChild( TD ).addContent( String.valueOf( data.getClocks() ) );
-            tr.addChild( TD ).addContent( StringUtils.integerToHexString( data.getBlock(), 2 ) );
-            tr.addChild( TD ).addContent( StringUtils.integerToHexString( data.getAddress(), 4 ) );
-            tr.addChild( TD ).addContent( StringUtils.integerToHexString( data.getValue(), 4 ) );
+            tr.addChild( TD ).addContent( integerToHexString( data.getBlock(), 2 ) );
+            tr.addChild( TD ).addContent( integerToHexString( data.getAddress(), 4 ) );
+            tr.addChild( TD ).addContent( integerToHexString( data.getValue(), 4 ) );
             tr.addChild( TD ).addContent( data.getBusGrant() ? "X" : "-" );
             tr.addChild( TD ).addContent( data.getType() );
             tr.addChild( TD ).addAttribute( "style", "text-align: left;" ).addContent( data.getEvent() );

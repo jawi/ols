@@ -15,13 +15,14 @@
  * with this program; if not, write to the Free Software Foundation, Inc.,
  * 51 Franklin St, Fifth Floor, Boston, MA 02110, USA
  *
- * 
+ *
  * Copyright (C) 2010-2011 - J.W. Janssen, http://www.lxtreme.nl
  */
 package nl.lxtreme.ols.tool.onewire;
 
 
 import static nl.lxtreme.ols.util.ExportUtils.HtmlExporter.*;
+import static nl.lxtreme.ols.util.StringUtils.*;
 import static nl.lxtreme.ols.util.swing.SwingComponentUtils.*;
 
 import java.awt.*;
@@ -70,7 +71,7 @@ public class OneWireAnalyserDialog extends BaseToolDialog<OneWireDataSet> implem
 
   /**
    * Creates a new OneWireAnalyserDialog instance.
-   * 
+   *
    * @param aOwner
    *          the owner of this dialog;
    * @param aToolContext
@@ -218,7 +219,7 @@ public class OneWireAnalyserDialog extends BaseToolDialog<OneWireDataSet> implem
 
   /**
    * Creates the HTML template for exports to HTML.
-   * 
+   *
    * @param aExporter
    *          the HTML exporter instance to use, cannot be <code>null</code>.
    * @return a HTML exporter filled with the template, never <code>null</code>.
@@ -289,7 +290,7 @@ public class OneWireAnalyserDialog extends BaseToolDialog<OneWireDataSet> implem
 
   /**
    * Creates the settings pane.
-   * 
+   *
    * @return a settings pane, never <code>null</code>.
    */
   private JComponent createSettingsPane()
@@ -318,7 +319,7 @@ public class OneWireAnalyserDialog extends BaseToolDialog<OneWireDataSet> implem
 
   /**
    * Returns an "empty" HTML page.
-   * 
+   *
    * @return an empty HTML page string, never <code>null</code>.
    */
   private String getEmptyHtmlPage()
@@ -385,7 +386,7 @@ public class OneWireAnalyserDialog extends BaseToolDialog<OneWireDataSet> implem
 
   /**
    * generate a HTML page
-   * 
+   *
    * @param aEmpty
    *          if this is true an empty output is generated
    * @return String with HTML data
@@ -450,10 +451,10 @@ public class OneWireAnalyserDialog extends BaseToolDialog<OneWireDataSet> implem
               tr = aParent.addChild( TR );
               tr.addChild( TD ).addContent( String.valueOf( i ) );
               tr.addChild( TD ).addContent( Unit.Time.format( aAnalysisResult.getTime( data.getStartSampleIndex() ) ) );
-              tr.addChild( TD ).addContent( "0x" + StringUtils.integerToHexString( value, 2 ) );
-              tr.addChild( TD ).addContent( "0b" + StringUtils.integerToBinString( value, 8 ) );
+              tr.addChild( TD ).addContent( "0x", integerToHexString( value, 2 ) );
+              tr.addChild( TD ).addContent( "0b", integerToBinString( value, 8 ) );
               tr.addChild( TD ).addContent( String.valueOf( value ) );
-              tr.addChild( TD ).addContent( String.valueOf( ( char )value ) );
+              tr.addChild( TD ).addContent( toASCII( value ) );
             }
           }
         }

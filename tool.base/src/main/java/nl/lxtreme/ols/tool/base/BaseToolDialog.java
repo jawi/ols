@@ -15,7 +15,7 @@
  * with this program; if not, write to the Free Software Foundation, Inc.,
  * 51 Franklin St, Fifth Floor, Boston, MA 02110, USA
  *
- * 
+ *
  * Copyright (C) 2010-2011 - J.W. Janssen, http://www.lxtreme.nl
  */
 package nl.lxtreme.ols.tool.base;
@@ -72,7 +72,7 @@ public abstract class BaseToolDialog<RESULT_TYPE> extends JFrame implements Tool
 
   /**
    * Creates a new {@link BaseToolDialog} instance that is document modal.
-   * 
+   *
    * @param aOwner
    *          the owning window of this dialog;
    * @param aTitle
@@ -80,15 +80,15 @@ public abstract class BaseToolDialog<RESULT_TYPE> extends JFrame implements Tool
    * @param aContext
    *          the tool context to use in this dialog.
    */
-  protected BaseToolDialog( final Window aOwner, final ToolContext aContext,
-      final BundleContext aBundleContext, final Tool<RESULT_TYPE> aTool )
+  protected BaseToolDialog( final Window aOwner, final ToolContext aContext, final BundleContext aBundleContext,
+      final Tool<RESULT_TYPE> aTool )
   {
     super( aTool.getName() );
-    
+
     this.context = aContext;
     this.bundleContext = aBundleContext;
     this.tool = aTool;
-    
+
     setModalExclusionType( ModalExclusionType.NO_EXCLUDE );
 
     this.taskExecutionService = new TaskExecutionServiceTracker( aBundleContext );
@@ -149,7 +149,7 @@ public abstract class BaseToolDialog<RESULT_TYPE> extends JFrame implements Tool
 
   /**
    * Returns the current value of lastResult.
-   * 
+   *
    * @return the lastResult
    */
   public final RESULT_TYPE getLastResult()
@@ -159,7 +159,7 @@ public abstract class BaseToolDialog<RESULT_TYPE> extends JFrame implements Tool
 
   /**
    * Returns the current value of tool.
-   * 
+   *
    * @return the tool
    */
   public final Tool<RESULT_TYPE> getTool()
@@ -286,7 +286,7 @@ public abstract class BaseToolDialog<RESULT_TYPE> extends JFrame implements Tool
 
   /**
    * Returns the current value of bundleContext.
-   * 
+   *
    * @return the bundleContext
    */
   protected final BundleContext getBundleContext()
@@ -296,7 +296,7 @@ public abstract class BaseToolDialog<RESULT_TYPE> extends JFrame implements Tool
 
   /**
    * Returns the acquisition result data.
-   * 
+   *
    * @return the acquisition data, never <code>null</code>.
    */
   protected final AcquisitionResult getData()
@@ -325,7 +325,7 @@ public abstract class BaseToolDialog<RESULT_TYPE> extends JFrame implements Tool
    * <p>
    * <b>THIS METHOD WILL BE INVOKED ON THE EVENT-DISPATCH THREAD (EDT)!</b>
    * </p>
-   * 
+   *
    * @param aResult
    *          the result of the tool, can be <code>null</code>.
    */
@@ -339,7 +339,7 @@ public abstract class BaseToolDialog<RESULT_TYPE> extends JFrame implements Tool
    * <p>
    * <b>THIS METHOD WILL BE INVOKED ON THE EVENT-DISPATCH THREAD (EDT)!</b>
    * </p>
-   * 
+   *
    * @param aException
    *          the exception with the failure, can be <code>null</code>.
    */
@@ -362,7 +362,7 @@ public abstract class BaseToolDialog<RESULT_TYPE> extends JFrame implements Tool
    * <p>
    * This method will be called right before the tool task is to be executed.
    * </p>
-   * 
+   *
    * @param aToolTask
    *          the tool task to prepare, cannot be <code>null</code>.
    */
@@ -374,7 +374,7 @@ public abstract class BaseToolDialog<RESULT_TYPE> extends JFrame implements Tool
   /**
    * Convenience method to set the combobox index to a "safe" value, based on
    * the given user settings.
-   * 
+   *
    * @param aComboBox
    *          the combobox to set the selected index for;
    * @param aSettings
@@ -382,14 +382,15 @@ public abstract class BaseToolDialog<RESULT_TYPE> extends JFrame implements Tool
    * @param aSettingName
    *          the name of the user setting to use.
    */
-  protected final void setComboBoxIndex( final JComboBox aComboBox, final UserSettings aSettings, final String aSettingName )
+  protected final void setComboBoxIndex( final JComboBox aComboBox, final UserSettings aSettings,
+      final String aSettingName )
   {
     ToolUtils.setComboBoxIndex( aComboBox, aSettings.getInt( aSettingName, -1 ) );
   }
 
   /**
    * set the controls of the dialog enabled/disabled
-   * 
+   *
    * @param aEnabled
    *          status of the controls
    */
@@ -399,9 +400,26 @@ public abstract class BaseToolDialog<RESULT_TYPE> extends JFrame implements Tool
   }
 
   /**
+   * @param aValue
+   *          the value to consider as an ASCII value.
+   * @return the ASCII string representation of the given value, or <tt>""</tt>
+   *         if the given value is not a printable ASCII character.
+   */
+  protected final String toASCII( final int aValue )
+  {
+    // If it is in the "printable" ASCII range, show it, otherwise not...
+    if ( ( aValue > 0x1f ) && ( aValue < 0x7f ) )
+    {
+      return Character.toString( ( char )aValue );
+    }
+
+    return "";
+  }
+
+  /**
    * Called right before the tool is invoked to allow additional validation on
    * the tool settings.
-   * 
+   *
    * @return <code>true</code> if the tool settings are correct and the task can
    *         be started, <code>false</code> if the settings are incorrect and
    *         the task should not be started.

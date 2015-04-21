@@ -15,71 +15,44 @@
  * with this program; if not, write to the Free Software Foundation, Inc.,
  * 51 Franklin St, Fifth Floor, Boston, MA 02110, USA
  *
- * 
+ *
  * Copyright (C) 2010-2011 - J.W. Janssen, http://www.lxtreme.nl
  */
 package nl.lxtreme.ols.tool.jtag;
 
 
-import static nl.lxtreme.ols.util.ExportUtils.HtmlExporter.DIV;
-import static nl.lxtreme.ols.util.ExportUtils.HtmlExporter.H1;
-import static nl.lxtreme.ols.util.ExportUtils.HtmlExporter.HR;
-import static nl.lxtreme.ols.util.ExportUtils.HtmlExporter.TABLE;
-import static nl.lxtreme.ols.util.ExportUtils.HtmlExporter.TBODY;
-import static nl.lxtreme.ols.util.ExportUtils.HtmlExporter.TD;
-import static nl.lxtreme.ols.util.ExportUtils.HtmlExporter.TH;
-import static nl.lxtreme.ols.util.ExportUtils.HtmlExporter.THEAD;
-import static nl.lxtreme.ols.util.ExportUtils.HtmlExporter.TR;
-import static nl.lxtreme.ols.util.swing.SwingComponentUtils.createRightAlignedLabel;
+import static nl.lxtreme.ols.util.ExportUtils.HtmlExporter.*;
+import static nl.lxtreme.ols.util.swing.SwingComponentUtils.*;
 
-import java.awt.Dimension;
-import java.awt.GridBagConstraints;
-import java.awt.GridBagLayout;
-import java.awt.GridLayout;
-import java.awt.Insets;
-import java.awt.Window;
-import java.io.File;
-import java.io.IOException;
-import java.math.BigInteger;
-import java.text.DateFormat;
-import java.util.Date;
+import java.awt.*;
+import java.io.*;
+import java.math.*;
+import java.text.*;
+import java.util.*;
 import java.util.List;
-import java.util.logging.Level;
-import java.util.logging.Logger;
+import java.util.logging.*;
 
-import javax.swing.Action;
-import javax.swing.JButton;
-import javax.swing.JComboBox;
-import javax.swing.JComponent;
-import javax.swing.JEditorPane;
-import javax.swing.JPanel;
-import javax.swing.JScrollPane;
-import javax.swing.SpringLayout;
+import javax.swing.*;
 
-import nl.lxtreme.ols.api.UserSettings;
-import nl.lxtreme.ols.api.tools.ToolContext;
-import nl.lxtreme.ols.api.tools.ToolTask;
-import nl.lxtreme.ols.api.util.Unit;
-import nl.lxtreme.ols.tool.base.BaseToolDialog;
-import nl.lxtreme.ols.tool.base.ExportAware;
-import nl.lxtreme.ols.tool.base.ToolUtils;
+import nl.lxtreme.ols.api.*;
+import nl.lxtreme.ols.api.tools.*;
+import nl.lxtreme.ols.api.util.*;
+import nl.lxtreme.ols.tool.base.*;
 import nl.lxtreme.ols.tool.base.ToolUtils.RestorableAction;
-import nl.lxtreme.ols.util.ExportUtils;
+import nl.lxtreme.ols.util.*;
 import nl.lxtreme.ols.util.ExportUtils.CsvExporter;
 import nl.lxtreme.ols.util.ExportUtils.HtmlExporter;
 import nl.lxtreme.ols.util.ExportUtils.HtmlExporter.Element;
 import nl.lxtreme.ols.util.ExportUtils.HtmlExporter.MacroResolver;
 import nl.lxtreme.ols.util.ExportUtils.HtmlFileExporter;
-import nl.lxtreme.ols.util.HostUtils;
-import nl.lxtreme.ols.util.swing.SpringLayoutUtils;
-import nl.lxtreme.ols.util.swing.SwingComponentUtils;
+import nl.lxtreme.ols.util.swing.*;
 
-import org.osgi.framework.BundleContext;
+import org.osgi.framework.*;
 
 
 /**
  * The Dialog Class for configuring the JTAG protocol analysis settings.
- * 
+ *
  * @author Mario Schrenk
  */
 public final class JTAGProtocolAnalysisDialog extends BaseToolDialog<JTAGDataSet> implements ExportAware<JTAGDataSet>
@@ -106,7 +79,7 @@ public final class JTAGProtocolAnalysisDialog extends BaseToolDialog<JTAGDataSet
 
   /**
    * Creates a new JTAGProtocolAnalysisDialog instance.
-   * 
+   *
    * @param aOwner
    *          the owner of this dialog;
    * @param aToolContext
@@ -243,7 +216,7 @@ public final class JTAGProtocolAnalysisDialog extends BaseToolDialog<JTAGDataSet
 
   /**
    * set the controls of the dialog enabled/disabled
-   * 
+   *
    * @param aEnable
    *          status of the controls
    */
@@ -261,7 +234,7 @@ public final class JTAGProtocolAnalysisDialog extends BaseToolDialog<JTAGDataSet
 
   /**
    * Creates the HTML template for exports to HTML.
-   * 
+   *
    * @param aExporter
    *          the HTML exporter instance to use, cannot be <code>null</code>.
    * @return a HTML exporter filled with the template, never <code>null</code>.
@@ -368,7 +341,7 @@ public final class JTAGProtocolAnalysisDialog extends BaseToolDialog<JTAGDataSet
 
   /**
    * Generates an empty HTML page.
-   * 
+   *
    * @return String with HTML data.
    */
   private String getEmptyHtmlPage()
@@ -422,7 +395,7 @@ public final class JTAGProtocolAnalysisDialog extends BaseToolDialog<JTAGDataSet
 
   /**
    * exports the table data to a CSV file
-   * 
+   *
    * @param aFile
    *          File object
    */
@@ -457,7 +430,7 @@ public final class JTAGProtocolAnalysisDialog extends BaseToolDialog<JTAGDataSet
             i++;
           }
         }
-        
+
         if ( ( tdiData == null ) && data.isTdiData() )
         {
           tdiData = ( BigInteger )data.getDataValue();
@@ -468,7 +441,7 @@ public final class JTAGProtocolAnalysisDialog extends BaseToolDialog<JTAGDataSet
           tdiData = null;
           tdoData = ( BigInteger )data.getDataValue();
         }
-        
+
         final String tdiDataValue = tdiData != null ? "0x" + tdiData.toString( 16 ) : null;
         final String tdoDataValue = tdoData != null ? "0x" + tdoData.toString( 16 ) : null;
 
@@ -489,7 +462,7 @@ public final class JTAGProtocolAnalysisDialog extends BaseToolDialog<JTAGDataSet
 
   /**
    * stores the data to a HTML file
-   * 
+   *
    * @param aFile
    *          file object
    */
@@ -511,7 +484,7 @@ public final class JTAGProtocolAnalysisDialog extends BaseToolDialog<JTAGDataSet
 
   /**
    * generate a HTML page
-   * 
+   *
    * @param aDataSet
    *          the data set to create the HTML page for, cannot be
    *          <code>null</code>.
@@ -574,7 +547,7 @@ public final class JTAGProtocolAnalysisDialog extends BaseToolDialog<JTAGDataSet
                   i++;
                 }
               }
-              
+
               if ( ( tdiData == null ) && data.isTdiData() )
               {
                 tdiData = ( BigInteger )data.getDataValue();
@@ -588,8 +561,8 @@ public final class JTAGProtocolAnalysisDialog extends BaseToolDialog<JTAGDataSet
 
               if ( tdiData != null )
               {
-                tr.addChild( TD ).addContent( "0x" + tdiData.toString( 16 ) );
-                tr.addChild( TD ).addContent( "0b" + tdiData.toString( 2 ) );
+                tr.addChild( TD ).addContent( "0x", tdiData.toString( 16 ) );
+                tr.addChild( TD ).addContent( "0b", tdiData.toString( 2 ) );
               }
               else
               {
@@ -597,8 +570,8 @@ public final class JTAGProtocolAnalysisDialog extends BaseToolDialog<JTAGDataSet
               }
               if ( tdoData != null )
               {
-                tr.addChild( TD ).addContent( "0x" + tdoData.toString( 16 ) );
-                tr.addChild( TD ).addContent( "0b" + tdoData.toString( 2 ) );
+                tr.addChild( TD ).addContent( "0x", tdoData.toString( 16 ) );
+                tr.addChild( TD ).addContent( "0b", tdoData.toString( 2 ) );
               }
               else
               {

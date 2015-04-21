@@ -15,13 +15,14 @@
  * with this program; if not, write to the Free Software Foundation, Inc.,
  * 51 Franklin St, Fifth Floor, Boston, MA 02110, USA
  *
- * 
+ *
  * Copyright (C) 2010-2011 - J.W. Janssen, http://www.lxtreme.nl
  */
 package nl.lxtreme.ols.tool.dmx512;
 
 
 import static nl.lxtreme.ols.util.ExportUtils.HtmlExporter.*;
+import static nl.lxtreme.ols.util.StringUtils.*;
 import static nl.lxtreme.ols.util.swing.SwingComponentUtils.*;
 
 import java.awt.*;
@@ -73,7 +74,7 @@ public final class DMX512AnalyzerDialog extends BaseToolDialog<DMX512DataSet> im
 
   /**
    * Creates a new {@link DMX512AnalyzerDialog} instance.
-   * 
+   *
    * @param aOwner
    *          the owner of this dialog;
    * @param aToolContext
@@ -205,7 +206,7 @@ public final class DMX512AnalyzerDialog extends BaseToolDialog<DMX512DataSet> im
 
   /**
    * set the controls of the dialog enabled/disabled
-   * 
+   *
    * @param aEnable
    *          status of the controls
    */
@@ -220,7 +221,7 @@ public final class DMX512AnalyzerDialog extends BaseToolDialog<DMX512DataSet> im
 
   /**
    * Creates the HTML template for exports to HTML.
-   * 
+   *
    * @param aExporter
    *          the HTML exporter instance to use, cannot be <code>null</code>.
    * @return a HTML exporter filled with the template, never <code>null</code>.
@@ -322,7 +323,7 @@ public final class DMX512AnalyzerDialog extends BaseToolDialog<DMX512DataSet> im
 
   /**
    * generate a HTML page
-   * 
+   *
    * @param empty
    *          if this is true an empty output is generated
    * @return String with HTML data
@@ -387,7 +388,7 @@ public final class DMX512AnalyzerDialog extends BaseToolDialog<DMX512DataSet> im
 
   /**
    * exports the data to a CSV file
-   * 
+   *
    * @param aFile
    *          File object
    */
@@ -428,7 +429,7 @@ public final class DMX512AnalyzerDialog extends BaseToolDialog<DMX512DataSet> im
 
   /**
    * stores the data to a HTML file
-   * 
+   *
    * @param aFile
    *          file object
    */
@@ -450,7 +451,7 @@ public final class DMX512AnalyzerDialog extends BaseToolDialog<DMX512DataSet> im
 
   /**
    * generate a HTML page
-   * 
+   *
    * @param empty
    *          if this is true an empty output is generated
    * @return String with HTML data
@@ -522,19 +523,10 @@ public final class DMX512AnalyzerDialog extends BaseToolDialog<DMX512DataSet> im
               // normal symbol...
               int data = ds.getData();
 
-              String dataHex = "0x" + StringUtils.integerToHexString( data, ( bitCount / 4 ) + bitAdder );
-              String dataBin = "0b" + StringUtils.integerToBinString( data, bitCount );
-              String dataDec = String.valueOf( data );
-              String dataASCII = "";
-              if ( isPrintableCharacter( data ) )
-              {
-                dataASCII = String.valueOf( ( char )data );
-              }
-
-              tr.addChild( TD ).addContent( dataHex );
-              tr.addChild( TD ).addContent( dataBin );
-              tr.addChild( TD ).addContent( dataDec );
-              tr.addChild( TD ).addContent( dataASCII );
+              tr.addChild( TD ).addContent( "0x", integerToHexString( data, ( bitCount / 4 ) + bitAdder ) );
+              tr.addChild( TD ).addContent( "0b", integerToBinString( data, bitCount ) );
+              tr.addChild( TD ).addContent( String.valueOf( data ) );
+              tr.addChild( TD ).addContent( toASCII( data ) );
             }
             else
             {
@@ -544,21 +536,6 @@ public final class DMX512AnalyzerDialog extends BaseToolDialog<DMX512DataSet> im
           }
         }
         return null;
-      }
-
-      /**
-       * Returns whether the given value can be represented as an
-       * ASCII-character.
-       * 
-       * @param aValue
-       *          the value to test.
-       * @return <code>true</code> if the given character can be represented as
-       *         printable ASCII-character, <code>false</code> otherwise.
-       */
-      private boolean isPrintableCharacter( final int aValue )
-      {
-        final boolean withinRange = ( aValue >= 32 ) && ( aValue < 255 );
-        return withinRange;
       }
     };
 

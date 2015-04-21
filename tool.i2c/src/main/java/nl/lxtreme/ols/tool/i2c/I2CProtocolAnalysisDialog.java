@@ -15,13 +15,14 @@
  * with this program; if not, write to the Free Software Foundation, Inc.,
  * 51 Franklin St, Fifth Floor, Boston, MA 02110, USA
  *
- * 
+ *
  * Copyright (C) 2010-2011 - J.W. Janssen, http://www.lxtreme.nl
  */
 package nl.lxtreme.ols.tool.i2c;
 
 
 import static nl.lxtreme.ols.util.ExportUtils.HtmlExporter.*;
+import static nl.lxtreme.ols.util.StringUtils.*;
 import static nl.lxtreme.ols.util.swing.SwingComponentUtils.*;
 
 import java.awt.*;
@@ -53,7 +54,7 @@ import org.osgi.framework.*;
 
 /**
  * Provides a main dialog for the I2C analyser.
- * 
+ *
  * @author Frank Kunz
  * @author J.W. Janssen
  */
@@ -88,7 +89,7 @@ public final class I2CProtocolAnalysisDialog extends BaseToolDialog<I2CDataSet> 
 
   /**
    * Creates a new I2CProtocolAnalysisDialog instance.
-   * 
+   *
    * @param aOwner
    *          the owner of this dialog;
    * @param aToolContext
@@ -197,7 +198,7 @@ public final class I2CProtocolAnalysisDialog extends BaseToolDialog<I2CDataSet> 
 
   /**
    * set the controls of the dialog enabled/disabled
-   * 
+   *
    * @param aEnabled
    *          status of the controls
    */
@@ -316,7 +317,7 @@ public final class I2CProtocolAnalysisDialog extends BaseToolDialog<I2CDataSet> 
 
   /**
    * Creates the HTML template for exports to HTML.
-   * 
+   *
    * @param aExporter
    *          the HTML exporter instance to use, cannot be <code>null</code>.
    * @return a HTML exporter filled with the template, never <code>null</code>.
@@ -469,7 +470,7 @@ public final class I2CProtocolAnalysisDialog extends BaseToolDialog<I2CDataSet> 
 
   /**
    * Returns an "empty" HTML page.
-   * 
+   *
    * @return an empty HTML page string, never <code>null</code>.
    */
   private String getEmptyHtmlPage()
@@ -536,7 +537,7 @@ public final class I2CProtocolAnalysisDialog extends BaseToolDialog<I2CDataSet> 
 
   /**
    * Stores the given analysis results to the given file in CSV format.
-   * 
+   *
    * @param aSelectedFile
    * @param aAnalysisResult
    */
@@ -575,7 +576,7 @@ public final class I2CProtocolAnalysisDialog extends BaseToolDialog<I2CDataSet> 
 
   /**
    * Stores the given analysis results to the given file as HTML.
-   * 
+   *
    * @param aSelectedFile
    * @param aAnalysisResult
    */
@@ -597,7 +598,7 @@ public final class I2CProtocolAnalysisDialog extends BaseToolDialog<I2CDataSet> 
 
   /**
    * generate a HTML page
-   * 
+   *
    * @param aEmpty
    *          if this is true an empty output is generated
    * @return String with HTML data
@@ -678,10 +679,10 @@ public final class I2CProtocolAnalysisDialog extends BaseToolDialog<I2CDataSet> 
               tr = aParent.addChild( TR );
               tr.addChild( TD ).addContent( String.valueOf( i ) );
               tr.addChild( TD ).addContent( Unit.Time.format( aAnalysisResult.getTime( data.getStartSampleIndex() ) ) );
-              tr.addChild( TD ).addContent( "0x" + StringUtils.integerToHexString( value, 2 ) );
-              tr.addChild( TD ).addContent( "0b" + StringUtils.integerToBinString( value, 8 ) );
+              tr.addChild( TD ).addContent( "0x" + integerToHexString( value, 2 ) );
+              tr.addChild( TD ).addContent( "0b" + integerToBinString( value, 8 ) );
               tr.addChild( TD ).addContent( String.valueOf( value ) );
-              tr.addChild( TD ).addContent( String.valueOf( ( char )value ) );
+              tr.addChild( TD ).addContent( toASCII( value ) );
             }
           }
         }

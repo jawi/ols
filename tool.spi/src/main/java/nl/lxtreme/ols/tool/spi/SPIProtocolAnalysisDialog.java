@@ -15,13 +15,14 @@
  * with this program; if not, write to the Free Software Foundation, Inc.,
  * 51 Franklin St, Fifth Floor, Boston, MA 02110, USA
  *
- * 
+ *
  * Copyright (C) 2010-2011 - J.W. Janssen, http://www.lxtreme.nl
  */
 package nl.lxtreme.ols.tool.spi;
 
 
 import static nl.lxtreme.ols.util.ExportUtils.HtmlExporter.*;
+import static nl.lxtreme.ols.util.StringUtils.*;
 import static nl.lxtreme.ols.util.swing.SwingComponentUtils.*;
 
 import java.awt.*;
@@ -55,7 +56,7 @@ import org.osgi.framework.*;
 
 /**
  * The Dialog Class
- * 
+ *
  * @author Frank Kunz The dialog class draws the basic dialog with a grid
  *         layout. The dialog consists of three main parts. A settings panel, a
  *         table panel and three buttons.
@@ -218,7 +219,7 @@ public final class SPIProtocolAnalysisDialog extends BaseToolDialog<SPIDataSet> 
 
   /**
    * Creates a new SPIProtocolAnalysisDialog instance.
-   * 
+   *
    * @param aOwner
    *          the owner of this dialog;
    * @param aToolContext
@@ -324,7 +325,7 @@ public final class SPIProtocolAnalysisDialog extends BaseToolDialog<SPIDataSet> 
 
   /**
    * Sets the auto detected SPI mode to the given value.
-   * 
+   *
    * @param aMode
    *          the detected SPI mode, cannot be <code>null</code>.
    */
@@ -454,7 +455,7 @@ public final class SPIProtocolAnalysisDialog extends BaseToolDialog<SPIDataSet> 
 
   /**
    * set the controls of the dialog enabled/disabled
-   * 
+   *
    * @param aEnable
    *          status of the controls
    */
@@ -547,7 +548,7 @@ public final class SPIProtocolAnalysisDialog extends BaseToolDialog<SPIDataSet> 
 
   /**
    * Creates the HTML template for exports to HTML.
-   * 
+   *
    * @param aExporter
    *          the HTML exporter instance to use, cannot be <code>null</code>.
    * @return a HTML exporter filled with the template, never <code>null</code>.
@@ -732,7 +733,7 @@ public final class SPIProtocolAnalysisDialog extends BaseToolDialog<SPIDataSet> 
 
   /**
    * Generates an empty HTML page.
-   * 
+   *
    * @return String with HTML data.
    */
   private String getEmptyHtmlPage()
@@ -786,7 +787,7 @@ public final class SPIProtocolAnalysisDialog extends BaseToolDialog<SPIDataSet> 
 
   /**
    * exports the table data to a CSV file
-   * 
+   *
    * @param aFile
    *          File object
    */
@@ -826,7 +827,7 @@ public final class SPIProtocolAnalysisDialog extends BaseToolDialog<SPIDataSet> 
 
   /**
    * stores the data to a HTML file
-   * 
+   *
    * @param aFile
    *          file object
    */
@@ -848,7 +849,7 @@ public final class SPIProtocolAnalysisDialog extends BaseToolDialog<SPIDataSet> 
 
   /**
    * generate a HTML page
-   * 
+   *
    * @param aDataSet
    *          the data set to create the HTML page for, cannot be
    *          <code>null</code>.
@@ -979,23 +980,10 @@ public final class SPIProtocolAnalysisDialog extends BaseToolDialog<SPIDataSet> 
        */
       private void addDataValues( final Element aTableRow, final int aIdx, final int aSampleIdx, final int aValue )
       {
-        final String mosiDataHex = StringUtils.integerToHexString( aValue, ( bitCount / 4 ) + bitAdder );
-        final String mosiDataBin = StringUtils.integerToBinString( aValue, bitCount );
-        final String mosiDataDec = String.valueOf( aValue );
-        final String mosiDataASCII;
-        if ( Character.isLetterOrDigit( aValue ) )
-        {
-          mosiDataASCII = Character.toString( ( char )aValue );
-        }
-        else
-        {
-          mosiDataASCII = "";
-        }
-
-        aTableRow.addChild( TD ).addContent( "0x", mosiDataHex );
-        aTableRow.addChild( TD ).addContent( "0b", mosiDataBin );
-        aTableRow.addChild( TD ).addContent( mosiDataDec );
-        aTableRow.addChild( TD ).addContent( mosiDataASCII );
+        aTableRow.addChild( TD ).addContent( "0x", integerToHexString( aValue, ( bitCount / 4 ) + bitAdder ) );
+        aTableRow.addChild( TD ).addContent( "0b", integerToBinString( aValue, bitCount ) );
+        aTableRow.addChild( TD ).addContent( String.valueOf( aValue ) );
+        aTableRow.addChild( TD ).addContent( toASCII( aValue ) );
       }
     };
 

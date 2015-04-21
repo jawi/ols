@@ -15,13 +15,14 @@
  * with this program; if not, write to the Free Software Foundation, Inc.,
  * 51 Franklin St, Fifth Floor, Boston, MA 02110, USA
  *
- * 
+ *
  * Copyright (C) 2010-2011 - J.W. Janssen, http://www.lxtreme.nl
  */
 package nl.lxtreme.ols.tool.uart.impl;
 
 
 import static nl.lxtreme.ols.util.ExportUtils.HtmlExporter.*;
+import static nl.lxtreme.ols.util.StringUtils.*;
 import static nl.lxtreme.ols.util.swing.SwingComponentUtils.*;
 
 import java.awt.*;
@@ -40,11 +41,11 @@ import nl.lxtreme.ols.api.util.*;
 import nl.lxtreme.ols.tool.base.*;
 import nl.lxtreme.ols.tool.base.ToolUtils.RestorableAction;
 import nl.lxtreme.ols.tool.uart.*;
-import nl.lxtreme.ols.tool.uart.AsyncSerialDataDecoder.Parity;
-import nl.lxtreme.ols.tool.uart.AsyncSerialDataDecoder.StopBits;
-import nl.lxtreme.ols.tool.uart.AsyncSerialDataDecoder.BitOrder;
 import nl.lxtreme.ols.tool.uart.AsyncSerialDataDecoder.BitEncoding;
 import nl.lxtreme.ols.tool.uart.AsyncSerialDataDecoder.BitLevel;
+import nl.lxtreme.ols.tool.uart.AsyncSerialDataDecoder.BitOrder;
+import nl.lxtreme.ols.tool.uart.AsyncSerialDataDecoder.Parity;
+import nl.lxtreme.ols.tool.uart.AsyncSerialDataDecoder.StopBits;
 import nl.lxtreme.ols.util.*;
 import nl.lxtreme.ols.util.ExportUtils.CsvExporter;
 import nl.lxtreme.ols.util.ExportUtils.HtmlExporter;
@@ -59,7 +60,7 @@ import org.osgi.framework.*;
 
 /**
  * The Dialog Class
- * 
+ *
  * @author Frank Kunz The dialog class draws the basic dialog with a grid
  *         layout. The dialog consists of three main parts. A settings panel, a
  *         table panel and three buttons.
@@ -226,7 +227,6 @@ public final class UARTProtocolAnalysisDialog extends BaseToolDialog<UARTDataSet
     }
   }
 
-
   // CONSTANTS
 
   private static final long serialVersionUID = 1L;
@@ -261,7 +261,7 @@ public final class UARTProtocolAnalysisDialog extends BaseToolDialog<UARTDataSet
 
   /**
    * Creates a new UARTProtocolAnalysisDialog instance.
-   * 
+   *
    * @param aOwner
    *          the owner of this dialog;
    * @param aToolContext
@@ -449,7 +449,7 @@ public final class UARTProtocolAnalysisDialog extends BaseToolDialog<UARTDataSet
 
   /**
    * set the controls of the dialog enabled/disabled
-   * 
+   *
    * @param aEnable
    *          status of the controls
    */
@@ -477,7 +477,7 @@ public final class UARTProtocolAnalysisDialog extends BaseToolDialog<UARTDataSet
 
   /**
    * Creates the HTML template for exports to HTML.
-   * 
+   *
    * @param aExporter
    *          the HTML exporter instance to use, cannot be <code>null</code>.
    * @return a HTML exporter filled with the template, never <code>null</code>.
@@ -680,7 +680,7 @@ public final class UARTProtocolAnalysisDialog extends BaseToolDialog<UARTDataSet
 
   /**
    * generate a HTML page
-   * 
+   *
    * @param empty
    *          if this is true an empty output is generated
    * @return String with HTML data
@@ -745,7 +745,7 @@ public final class UARTProtocolAnalysisDialog extends BaseToolDialog<UARTDataSet
 
   /**
    * exports the data to a CSV file
-   * 
+   *
    * @param aFile
    *          File object
    */
@@ -816,7 +816,7 @@ public final class UARTProtocolAnalysisDialog extends BaseToolDialog<UARTDataSet
 
   /**
    * stores the data to a HTML file
-   * 
+   *
    * @param aFile
    *          file object
    */
@@ -838,7 +838,7 @@ public final class UARTProtocolAnalysisDialog extends BaseToolDialog<UARTDataSet
 
   /**
    * generate a HTML page
-   * 
+   *
    * @param empty
    *          if this is true an empty output is generated
    * @return String with HTML data
@@ -949,58 +949,37 @@ public final class UARTProtocolAnalysisDialog extends BaseToolDialog<UARTDataSet
               {
                 final int rxData = ds.getData();
 
-                rxDataHex = "0x" + StringUtils.integerToHexString( rxData, ( bitCount / 4 ) + bitAdder );
-                rxDataBin = "0b" + StringUtils.integerToBinString( rxData, bitCount );
+                rxDataHex = integerToHexString( rxData, ( bitCount / 4 ) + bitAdder );
+                rxDataBin = integerToBinString( rxData, bitCount );
                 rxDataDec = String.valueOf( rxData );
-                if ( isPrintableCharacter( rxData ) )
-                {
-                  rxDataASCII = String.valueOf( ( char )rxData );
-                }
+                rxDataASCII = toASCII( ( char )rxData );
               }
               else
               /* if ( UARTData.UART_TYPE_TXDATA == ds.getType() ) */
               {
                 final int txData = ds.getData();
 
-                txDataHex = "0x" + StringUtils.integerToHexString( txData, ( bitCount / 4 ) + bitAdder );
-                txDataBin = "0b" + StringUtils.integerToBinString( txData, bitCount );
+                txDataHex = integerToHexString( txData, ( bitCount / 4 ) + bitAdder );
+                txDataBin = integerToBinString( txData, bitCount );
                 txDataDec = String.valueOf( txData );
-                if ( isPrintableCharacter( txData ) )
-                {
-                  txDataASCII = String.valueOf( ( char )txData );
-                }
+                txDataASCII = toASCII( txData );
               }
 
               tr = aParent.addChild( TR );
               tr.addChild( TD ).addContent( String.valueOf( i ) );
               tr.addChild( TD ).addContent( Unit.Time.format( aDataSet.getTime( ds.getStartSampleIndex() ) ) );
-              tr.addChild( TD ).addContent( rxDataHex );
-              tr.addChild( TD ).addContent( rxDataBin );
+              tr.addChild( TD ).addContent( "0x", rxDataHex );
+              tr.addChild( TD ).addContent( "0b", rxDataBin );
               tr.addChild( TD ).addContent( rxDataDec );
               tr.addChild( TD ).addContent( rxDataASCII );
-              tr.addChild( TD ).addContent( txDataHex );
-              tr.addChild( TD ).addContent( txDataBin );
+              tr.addChild( TD ).addContent( "0x", txDataHex );
+              tr.addChild( TD ).addContent( "0b", txDataBin );
               tr.addChild( TD ).addContent( txDataDec );
               tr.addChild( TD ).addContent( txDataASCII );
             }
           }
         }
         return null;
-      }
-
-      /**
-       * Returns whether the given value can be represented as an
-       * ASCII-character.
-       * 
-       * @param aValue
-       *          the value to test.
-       * @return <code>true</code> if the given character can be represented as
-       *         printable ASCII-character, <code>false</code> otherwise.
-       */
-      private boolean isPrintableCharacter( final int aValue )
-      {
-        final boolean withinRange = ( aValue >= 32 ) && ( aValue < 255 );
-        return withinRange;
       }
     };
 
