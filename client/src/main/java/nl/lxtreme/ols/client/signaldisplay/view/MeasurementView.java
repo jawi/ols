@@ -1,5 +1,5 @@
 /*
- * OpenBench LogicSniffer / SUMP project 
+ * OpenBench LogicSniffer / SUMP project
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -50,7 +50,7 @@ import nl.lxtreme.ols.util.swing.component.*;
  * signals, such as frequency, # of pulses and so on.
  */
 public class MeasurementView extends AbstractViewLayer implements IToolWindow, ISignalElementChangeListener,
-    ICursorChangeListener, IMeasurementListener
+ICursorChangeListener, IMeasurementListener
 {
   // INNER TYPES
 
@@ -238,13 +238,15 @@ public class MeasurementView extends AbstractViewLayer implements IToolWindow, I
 
     /**
      * Executes the actual measurement.
-     * 
+     *
      * @return the measurement information, never <code>null</code>.
      */
     public PulseCountInfo run()
     {
-      final int startIdx = this.result.getSampleIndex( this.startTimestamp );
-      final int endIdx = this.result.getSampleIndex( this.endTimestamp );
+      // Issue #215 - we need to start *before* the first index and end *before*
+      // the last index
+      final int startIdx = Math.max( 0, this.result.getSampleIndex( this.startTimestamp ) - 1 );
+      final int endIdx = Math.max( 0, this.result.getSampleIndex( this.endTimestamp ) - 1 );
 
       final boolean hasTimingData = this.result.hasTimingData();
 
@@ -277,7 +279,7 @@ public class MeasurementView extends AbstractViewLayer implements IToolWindow, I
             lowTime += periodTime;
           }
           else
-          /* if ( edge.isFalling() ) */
+            /* if ( edge.isFalling() ) */
           {
             // High to low transition: previously seen a high-state...
             fallingEdgeCount++;
@@ -312,7 +314,7 @@ public class MeasurementView extends AbstractViewLayer implements IToolWindow, I
 
     /**
      * Creates a new {@link SignalMeasurerWorker} instance.
-     * 
+     *
      * @param aChannel
      *          the channel to measure;
      * @param aCursorA
@@ -414,7 +416,7 @@ public class MeasurementView extends AbstractViewLayer implements IToolWindow, I
 
   /**
    * Creates a new MeasurementView instance.
-   * 
+   *
    * @param aController
    */
   public MeasurementView( final SignalDiagramController aController )
@@ -451,7 +453,7 @@ public class MeasurementView extends AbstractViewLayer implements IToolWindow, I
 
   /**
    * Factory method to create a new {@link MeasurementView} instance.
-   * 
+   *
    * @param aController
    *          the controller to use for the SignalDetailsView instance, cannot
    *          be <code>null</code>.
@@ -628,7 +630,7 @@ public class MeasurementView extends AbstractViewLayer implements IToolWindow, I
 
   /**
    * Returns all available channels.
-   * 
+   *
    * @return a collection of all channels, never <code>null</code>.
    */
   final Collection<Channel> getAllChannels()
@@ -801,7 +803,7 @@ public class MeasurementView extends AbstractViewLayer implements IToolWindow, I
 
   /**
    * Determines whether all preconditions are met to perform a measurement.
-   * 
+   *
    * @return <code>true</code> if a measurement can be performed,
    *         <code>false</code> otherwise.
    */
@@ -840,7 +842,7 @@ public class MeasurementView extends AbstractViewLayer implements IToolWindow, I
 
   /**
    * Returns all available channels.
-   * 
+   *
    * @return a collection of all channels, never <code>null</code>.
    */
   private Collection<Channel> getAllChannels( final Collection<SignalElement> aSignalElements )
@@ -858,7 +860,7 @@ public class MeasurementView extends AbstractViewLayer implements IToolWindow, I
 
   /**
    * Returns the channel group manager.
-   * 
+   *
    * @return a channel group manager, never <code>null</code>.
    */
   private SignalElementManager getSignalElementManager()
@@ -996,7 +998,7 @@ public class MeasurementView extends AbstractViewLayer implements IToolWindow, I
   /**
    * Updates a given combobox' model to contain the current list of defined
    * cursors.
-   * 
+   *
    * @return the given combobox.
    */
   private JComboBox updateChannelComboBoxModel( final JComboBox aComboBox, final Collection<Channel> aChannels )
@@ -1013,7 +1015,7 @@ public class MeasurementView extends AbstractViewLayer implements IToolWindow, I
   /**
    * Updates a given combobox' model to contain the current list of defined
    * cursors.
-   * 
+   *
    * @return the given combobox.
    */
   private JComboBox updateCursorComboBoxModel( final JComboBox aComboBox )
