@@ -1,6 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <project name="ols.distribution" default="noop" basedir=".">
 
+	<property environment="env" />
 	<property name="ols.project.name" value="LogicSniffer" />
 	<property name="project.target" value="${basedir}/../../../../target" />
 	<property name="project.targetapp" value="${project.target}/osx" />
@@ -8,12 +9,14 @@
 	<taskdef name="jarbundler" classname="net.sourceforge.jarbundler.JarBundler" classpath="${basedir}/../lib/jarbundler-2.1.0.jar" />
 
 	<target name="init" description="Initializes the artifact target folder." unless="package.osx.skip">
+
 		<!-- be sure to have a proper version defined at all times! -->
 		<fail message="No project version property is defined! Cannot continue..." unless="project.version" />
 
 		<condition property="isMac">
 			<and>
 				<os family="mac" />
+				<isset property="env.createDMG" />
 			</and>
 		</condition>
 	</target>
@@ -47,13 +50,15 @@
 			<documenttype name="OLS data files" extensions="ols" role="Editor" />
 			<documenttype name="OLS project files" extensions="olp" role="Editor" />
 		</jarbundler>
-		<!-- Sign the application 
+	</target>
+
+	<target name="sign-app" description="Signs the OSX app bundle" if="isMac">
+		<!-- Sign the application -->
 		<exec executable="codesign">
 			<arg line="-f" />
 			<arg line="-s 'OLS client'" />
 			<arg line="${project.targetapp}/${ols.project.name}.app" />
 		</exec>
-		-->
 	</target>
 
 	<target name="create-dmg" depends="init" description="Creates the DMG archive" if="isMac">
@@ -102,7 +107,7 @@
 		<delete dir="${project.target}" includes="ols-tmp.dmg" />
 	</target>
 
-	<target name="all" depends="init, create, package, create-dmg" description="Does it all." />
+	<target name="all" depends="init, create, package, sign-app, create-dmg" description="Does it all." />
 
 	<target name="noop" />
 </project>
