@@ -61,7 +61,7 @@ import org.osgi.service.cm.*;
  * Denotes a front-end controller for the client.
  */
 public final class ClientController implements ActionProvider, AcquisitionProgressListener, AcquisitionStatusListener,
-    AcquisitionDataListener, AnnotationListener, ApplicationCallback
+AcquisitionDataListener, AnnotationListener, PlatformCallback
 {
   // INNER TYPES
 
@@ -840,34 +840,74 @@ public final class ClientController implements ActionProvider, AcquisitionProgre
    * {@inheritDoc}
    */
   @Override
-  public final boolean handleAbout()
+  public final void handleAbout()
   {
     showAboutBox();
-    return true;
   }
 
   /**
    * {@inheritDoc}
    */
   @Override
-  public final boolean handlePreferences()
+  public void handleAppReOpened()
+  {
+    // Bring application to foreground...
+    if ( this.mainFrame != null )
+    {
+      this.mainFrame.requestFocus();
+    }
+  }
+
+  /**
+   * {@inheritDoc}
+   */
+  @Override
+  public void handleOpenFiles( final List<File> aFileList )
+  {
+    if ( !aFileList.isEmpty() )
+    {
+      File first = aFileList.get( 0 );
+      String name = first.getName().toLowerCase( Locale.US );
+      try
+      {
+        if ( name.endsWith( ".ols" ) )
+        {
+          openDataFile( first );
+        }
+        else
+        {
+          openProjectFile( first );
+        }
+      }
+      catch ( IOException exception )
+      {
+        // Make sure to handle IO-interrupted exceptions properly!
+        if ( !HostUtils.handleInterruptedException( exception ) )
+        {
+          LOG.log( Level.WARNING, "Loading OLS project failed!", exception );
+          JErrorDialog.showDialog( this.mainFrame, "Loading the project data failed!", exception );
+        }
+      }
+    }
+  }
+
+  /**
+   * {@inheritDoc}
+   */
+  @Override
+  public final void handlePreferences()
   {
     showPreferencesDialog( getMainFrame() );
-    return true;
   }
 
   /**
    * {@inheritDoc}
    */
   @Override
-  public final boolean handleQuit()
+  public final boolean shouldQuit()
   {
-    exit();
-    // On Mac OS, it appears that if we acknowledge this event, the system
-    // shuts down our application for us, thereby not calling our stop/shutdown
-    // hooks... By returning false, we're not acknowledging the quit action to
-    // the system, but instead do it all on our own...
-    return false;
+    exit(); // XXX
+    return true;
   }
 
   /**
@@ -880,15 +920,6 @@ public final class ClientController implements ActionProvider, AcquisitionProgre
   {
     final DataSet currentDataSet = getCurrentDataSet();
     return ( currentDataSet != null ) && ( currentDataSet.getCapturedData() != null );
-  }
-
-  /**
-   * {@inheritDoc}
-   */
-  @Override
-  public final boolean hasPreferences()
-  {
-    return true;
   }
 
   /**

@@ -1,5 +1,5 @@
 /*
- * OpenBench LogicSniffer / SUMP project 
+ * OpenBench LogicSniffer / SUMP project
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -61,12 +61,10 @@ public class Activator extends DependencyActivatorBase
         );
 
     aManager.add( createComponent() //
-        .setImplementation( ApplicationCallbackFacade.class ) //
-        .add( //
-            createServiceDependency() //
-                .setService( ApplicationCallback.class ) //
-                .setRequired( false ) ) //
-        );
+        .setImplementation( PlatformCallbackHelper.class ) //
+        .add( createServiceDependency().setService( PlatformCallback.class )
+            .setCallbacks( "setPlatformCallback", "removePlatformCallback" )
+            .setRequired( false ) ) );
   }
 
   /**
@@ -82,7 +80,7 @@ public class Activator extends DependencyActivatorBase
 
     StringBuilder sb = new StringBuilder();
     sb.append( name ).append( " running on " ).append( osName ).append( ", " ).append( osVersion ).append( " (" )
-        .append( processor ).append( "); " ).append( javaVersion ).append( "." );
+    .append( processor ).append( "); " ).append( javaVersion ).append( "." );
 
     Logger.getLogger( getClass().getName() ).info( sb.toString() );
   }

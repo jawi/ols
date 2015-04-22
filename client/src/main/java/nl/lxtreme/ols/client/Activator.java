@@ -208,8 +208,7 @@ public class Activator extends DependencyActivatorBase
 
     // All the interfaces we're registering the client controller under...
     serviceNames = new String[] { AcquisitionDataListener.class.getName(), AcquisitionProgressListener.class.getName(),
-        AcquisitionStatusListener.class.getName(), AnnotationListener.class.getName(),
-        ApplicationCallback.class.getName() };
+        AcquisitionStatusListener.class.getName(), AnnotationListener.class.getName(), PlatformCallback.class.getName() };
 
     // Client controller...
     aManager.add( createComponent() //
