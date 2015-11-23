@@ -1,4 +1,5 @@
 */felix-cache/
+.recommenders/
 */target/
 eclipse/run/
 */.DS_Store/
