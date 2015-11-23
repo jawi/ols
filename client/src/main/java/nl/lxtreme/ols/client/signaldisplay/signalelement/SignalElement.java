@@ -1,5 +1,5 @@
 /*
- * OpenBench LogicSniffer / SUMP project 
+ * OpenBench LogicSniffer / SUMP project
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -24,6 +24,7 @@ package nl.lxtreme.ols.client.signaldisplay.signalelement;
 import static nl.lxtreme.ols.client.signaldisplay.laf.UIManagerKeys.*;
 
 import java.awt.*;
+import java.util.List;
 
 import javax.swing.*;
 
@@ -72,11 +73,11 @@ public final class SignalElement implements Comparable<SignalElement>, IUIElemen
 
   /**
    * Creates a new {@link SignalElement} instance.
-   * 
+   *
    * @param aSignalElement
    *          the signal element to copy, cannot be <code>null</code>.
    */
-  protected SignalElement( SignalElement aSignalElement )
+  protected SignalElement( final SignalElement aSignalElement )
   {
     this.index = aSignalElement.index;
     this.type = aSignalElement.type;
@@ -93,7 +94,7 @@ public final class SignalElement implements Comparable<SignalElement>, IUIElemen
 
   /**
    * Creates a new {@link SignalElement} instance.
-   * 
+   *
    * @param aType
    *          the type of this signal element, cannot be <code>null</code>;
    * @param aMask
@@ -115,7 +116,7 @@ public final class SignalElement implements Comparable<SignalElement>, IUIElemen
   /**
    * Factory method for creating a {@link SignalElement} instance representing
    * an analog scope for a channel group.
-   * 
+   *
    * @param aGroup
    *          the channel group to create a channel element for, cannot be
    *          <code>null</code>.
@@ -133,7 +134,7 @@ public final class SignalElement implements Comparable<SignalElement>, IUIElemen
   /**
    * Factory method for creating a {@link SignalElement} instance representing a
    * digital signal.
-   * 
+   *
    * @param aChannel
    *          the channel to create a channel element for, cannot be
    *          <code>null</code>.
@@ -154,7 +155,7 @@ public final class SignalElement implements Comparable<SignalElement>, IUIElemen
   /**
    * Factory method for creating a {@link SignalElement} instance representing a
    * summary for a group of signals.
-   * 
+   *
    * @param aGroup
    *          the channel group to create a channel element for, cannot be
    *          <code>null</code>.
@@ -234,7 +235,7 @@ public final class SignalElement implements Comparable<SignalElement>, IUIElemen
   /**
    * Returns the channel of this signal element, when this signal element
    * represents a digital signal.
-   * 
+   *
    * @return the channel, never <code>null</code>.
    * @throws IllegalStateException
    *           in case this signal element does not represent a digital signal.
@@ -251,7 +252,7 @@ public final class SignalElement implements Comparable<SignalElement>, IUIElemen
 
   /**
    * Returns the main color of this signal element.
-   * 
+   *
    * @return a color, never <code>null</code>.
    */
   public Color getColor()
@@ -284,7 +285,7 @@ public final class SignalElement implements Comparable<SignalElement>, IUIElemen
 
   /**
    * Returns the element group this element belongs to.
-   * 
+   *
    * @return a group, can be <code>null</code>.
    */
   public ElementGroup getGroup()
@@ -302,7 +303,7 @@ public final class SignalElement implements Comparable<SignalElement>, IUIElemen
 
   /**
    * Returns the label of this signal element.
-   * 
+   *
    * @return a label, can be <code>null</code>.
    */
   public String getLabel()
@@ -329,7 +330,7 @@ public final class SignalElement implements Comparable<SignalElement>, IUIElemen
 
   /**
    * Returns the current value of mask.
-   * 
+   *
    * @return the mask
    */
   public int getMask()
@@ -378,7 +379,7 @@ public final class SignalElement implements Comparable<SignalElement>, IUIElemen
 
   /**
    * Returns the current value of alignment.
-   * 
+   *
    * @return the alignment
    */
   public SignalAlignment getSignalAlignment()
@@ -388,7 +389,7 @@ public final class SignalElement implements Comparable<SignalElement>, IUIElemen
 
   /**
    * Returns the current value of signalHeight.
-   * 
+   *
    * @return the signalHeight
    */
   public int getSignalHeight()
@@ -398,7 +399,7 @@ public final class SignalElement implements Comparable<SignalElement>, IUIElemen
 
   /**
    * Returns the type of this signal element.
-   * 
+   *
    * @return a signal element type, never <code>null</code>.
    */
   public SignalElementType getType()
@@ -407,8 +408,34 @@ public final class SignalElement implements Comparable<SignalElement>, IUIElemen
   }
 
   /**
+   * @return the masked sample value.
+   */
+  public int getValue( final int aSampleValue )
+  {
+    int value = 0;
+    if ( isDigitalSignal() && ( ( aSampleValue & this.mask ) != 0 ) )
+    {
+      value |= 1;
+    }
+    else if ( isAnalogSignal() || isGroupSummary() )
+    {
+      List<SignalElement> elements = getGroup().getElements();
+      for ( int i = elements.size() - 1; i >= 0; i-- )
+      {
+        SignalElement el = elements.get( i );
+        if ( el.isDigitalSignal() )
+        {
+          value = ( value << 1 ) | el.getValue( aSampleValue );
+        }
+      }
+    }
+
+    return value;
+  }
+
+  /**
    * Returns the virtual index of this channel.
-   * 
+   *
    * @return the virtualIndex, >= 0.
    */
   public int getVirtualIndex()
@@ -444,7 +471,7 @@ public final class SignalElement implements Comparable<SignalElement>, IUIElemen
 
   /**
    * Returns whether we should show the analog signal for this group.
-   * 
+   *
    * @return <code>true</code> if the analog signal is to be shown,
    *         <code>false</code> to hide it.
    */
@@ -455,7 +482,7 @@ public final class SignalElement implements Comparable<SignalElement>, IUIElemen
 
   /**
    * Returns whether we should show digital signals in this group.
-   * 
+   *
    * @return <code>true</code> if the individual digital signals are to be
    *         shown, <code>false</code> to hide them.
    */
@@ -466,7 +493,7 @@ public final class SignalElement implements Comparable<SignalElement>, IUIElemen
 
   /**
    * Returns whether or not this signal element is enabled.
-   * 
+   *
    * @return
    */
   public boolean isEnabled()
@@ -495,7 +522,7 @@ public final class SignalElement implements Comparable<SignalElement>, IUIElemen
 
   /**
    * Returns whether we should a summary for this group.
-   * 
+   *
    * @return <code>true</code> if the data values are to be shown,
    *         <code>false</code> to hide them.
    */
@@ -506,7 +533,7 @@ public final class SignalElement implements Comparable<SignalElement>, IUIElemen
 
   /**
    * Sets the main color of this signal element.
-   * 
+   *
    * @param aColor
    *          the color to set, cannot be <code>null</code>.
    */
@@ -521,7 +548,7 @@ public final class SignalElement implements Comparable<SignalElement>, IUIElemen
 
   /**
    * Sets whether or not this signal element is enabled.
-   * 
+   *
    * @param aEnabled
    *          <code>true</code> to enable this signal element,
    *          <code>false</code> to disable it.
@@ -551,7 +578,7 @@ public final class SignalElement implements Comparable<SignalElement>, IUIElemen
 
   /**
    * Sets height to the given value.
-   * 
+   *
    * @param aHeight
    *          the height to set.
    */
@@ -562,7 +589,7 @@ public final class SignalElement implements Comparable<SignalElement>, IUIElemen
 
   /**
    * Returns the label of this signal element.
-   * 
+   *
    * @param aLabel
    *          the label to set, may be <code>null</code>.
    */
@@ -591,7 +618,7 @@ public final class SignalElement implements Comparable<SignalElement>, IUIElemen
 
   /**
    * Sets alignment to the given value.
-   * 
+   *
    * @param aAlignment
    *          the alignment to set.
    */
@@ -606,7 +633,7 @@ public final class SignalElement implements Comparable<SignalElement>, IUIElemen
 
   /**
    * Sets signalHeight to the given value.
-   * 
+   *
    * @param aSignalHeight
    *          the signalHeight to set.
    */
@@ -639,7 +666,7 @@ public final class SignalElement implements Comparable<SignalElement>, IUIElemen
 
   /**
    * Connects this signal element to a the given group.
-   * 
+   *
    * @param aGroup
    *          the group to connect this element to, can be <code>null</code> to
    *          disconnect this element from its current group.
@@ -654,7 +681,7 @@ public final class SignalElement implements Comparable<SignalElement>, IUIElemen
 
   /**
    * Sets yPosition to the given value.
-   * 
+   *
    * @param aYPosition
    *          the yPosition to set.
    */
@@ -680,7 +707,7 @@ public final class SignalElement implements Comparable<SignalElement>, IUIElemen
 
   /**
    * Crafts a default channel name for use when a channel has no label set.
-   * 
+   *
    * @return a channel name, never <code>null</code>.
    */
   private String getDefaultName()

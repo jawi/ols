@@ -428,7 +428,16 @@ public class ElementGroup implements IUIElement
    */
   public int getValue( final int aSampleValue )
   {
-    return aSampleValue & this.mask;
+    int value = 0;
+    for ( SignalElement el : this.elements )
+    {
+      if ( ( aSampleValue & el.getMask() ) != 0 )
+      {
+        value |= 0x01;
+      }
+      value <<= 1;
+    }
+    return value;
   }
 
   /**

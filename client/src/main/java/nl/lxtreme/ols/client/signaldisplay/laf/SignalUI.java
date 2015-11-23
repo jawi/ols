@@ -1,5 +1,5 @@
 /*
- * OpenBench LogicSniffer / SUMP project 
+ * OpenBench LogicSniffer / SUMP project
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -88,7 +88,7 @@ public class SignalUI extends ComponentUI
 
   /**
    * Creates the rendering hints for this view.
-   * 
+   *
    * @param aUseAA
    *          <code>true</code> if anti aliasing should be used,
    *          <code>false</code> if anti aliasing shouldn't be used.
@@ -107,7 +107,7 @@ public class SignalUI extends ComponentUI
 
   /**
    * Returns the current value of measurementRect.
-   * 
+   *
    * @return the measurementRect
    */
   public Rectangle getMeasurementRect()
@@ -204,7 +204,7 @@ public class SignalUI extends ComponentUI
 
   /**
    * Returns the stroke to use to render the annotation lines.
-   * 
+   *
    * @param renderStyle
    * @param zoomFactor
    * @return
@@ -348,7 +348,7 @@ public class SignalUI extends ComponentUI
 
   /**
    * Paints the cursors over the signals.
-   * 
+   *
    * @param aCanvas
    *          the canvas to paint the cursor on;
    * @param aModel
@@ -380,7 +380,7 @@ public class SignalUI extends ComponentUI
 
   /**
    * Renders the measurement information arrows.
-   * 
+   *
    * @param aCanvas
    *          the canvas to paint the measurement arrows on, cannot be
    *          <code>null</code>;
@@ -415,7 +415,7 @@ public class SignalUI extends ComponentUI
   /**
    * Paints the individual signal channels, group bytes and analogue scope
    * signals.
-   * 
+   *
    * @param aCanvas
    *          the canvas to paint on, cannot be <code>null</code>;
    * @param aModel
@@ -565,7 +565,7 @@ public class SignalUI extends ComponentUI
           {
             int x = ( int )( zoomFactor * timestamps[sampleIdx] );
 
-            String text = String.format( "%02X", Integer.valueOf( prevSampleValue ) );
+            String text = String.format( "%02X", Integer.valueOf( signalElement.getValue( prevSampleValue ) ) );
 
             int textWidth = fm.stringWidth( text ) + ( 2 * padding );
             int cellWidth = x - prevX;
