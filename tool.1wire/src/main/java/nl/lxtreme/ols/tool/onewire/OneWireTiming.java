@@ -30,9 +30,9 @@ final class OneWireTiming
   // VARIABLES
 
   private final double aMin, aMax;
-  private final double bMin;
+  private final double bMin, bMax;
   private final double cMin, cMax;
-  private final double dMin;
+  private final double dMin, dMax;
   private final double eMax;
   private final double gMin;
   private final double hMin, hMax;
@@ -55,18 +55,20 @@ final class OneWireTiming
     {
       // Issue #76, take 3: make the minimum level for writing a 'one' even
       // shorter...
-      this.aMin = 3;
+      this.aMin = 1;
       this.aMax = 15;
       this.bMin = 59;
+	  this.bMax = 119;
       this.cMin = 60;
       this.cMax = 120;
       this.dMin = 5.3;
-      this.eMax = 9.3;
+	  this.dMax = 60;
+      this.eMax = 0;
       this.gMin = 0;
       this.hMin = 480;
       this.hMax = 640;
-      this.iMin = 60.3;
-      this.iMax = 75.3;
+      this.iMin = 15;
+      this.iMax = 60;
       this.jMin = 410;
     }
     else if ( OneWireBusMode.OVERDRIVE == aMode )
@@ -74,9 +76,11 @@ final class OneWireTiming
       this.aMin = 1;
       this.aMax = 2;
       this.bMin = 8;
+	  this.bMax = 15;
       this.cMin = 7;
       this.cMax = 14;
       this.dMin = 2.3;
+	  this.dMax = 10; 
       this.eMax = 1.2;
       this.gMin = 2.5;
       this.hMin = 68;
@@ -100,7 +104,7 @@ final class OneWireTiming
    */
   public double getBitFrameLength()
   {
-    return Math.max( this.aMin + this.bMin, this.cMin + this.dMin );
+    return Math.max( this.aMin + this.bMax, this.cMin + this.dMax );
   }
 
   /**
