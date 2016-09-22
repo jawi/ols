@@ -68,7 +68,7 @@ final class OneWireTiming
       this.hMin = 480;
       this.hMax = 640;
       this.iMin = 15;
-      this.iMax = 60;
+      this.iMax = 70;
       this.jMin = 410;
     }
     else if ( OneWireBusMode.OVERDRIVE == aMode )
