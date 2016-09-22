@@ -204,9 +204,28 @@ public class OneWireAnalyserTask implements ToolTask<OneWireDataSet>
           // Found, lets check whether it is a valid slave presence pulse...
           slavePresent = this.owTiming.isSlavePresencePulse( ( nextFallingEdge - risingEdge ) * timingCorrection );
         }
-
-        // Advance the time until *after* the reset pulse...
-        time = ( long )( fallingEdge + ( this.owTiming.getResetFrameLength() / timingCorrection ) );
+		long ttime = ( long )( fallingEdge + ( this.owTiming.getResetFrameLength() / timingCorrection ) );
+		if(slavePresent) {
+			//slavePresent means there was a falling edge soon enough after the reset rising edge
+			//so now lets look for the rising edge of the slavePresent pulse
+			 long slavePresentRisingEdge = findEdge(aData, nextFallingEdge, endOfDecode, Edge.RISING );
+			 if(slavePresentRisingEdge>0) {
+				long nextSlotFallingEdge = findEdge(aData, slavePresentRisingEdge, endOfDecode, Edge.FALLING );
+				if(nextSlotFallingEdge>0) {
+					//set time one sample before the falling edge of the next slot, like accounting for the recovery time
+					time = nextSlotFallingEdge - 1;
+				} else {
+					//may occur if capture ends before the begining of the next slot
+					time = ttime;
+				}
+			 } else {
+					//may occur if capture ends during slavePresent pulse
+					time = ttime;
+			 }
+		} else {
+			// Advance the time until *after* the reset pulse... (in case a better criteria was not matched above, since this method does not account for admisable parmeter variation)
+			time = ttime;
+		}
 
         LOG.log( Level.FINE, "Master bus reset; slave is {0}present...", ( slavePresent ? "" : "NOT " ) );
 
@@ -224,14 +243,12 @@ public class OneWireAnalyserTask implements ToolTask<OneWireDataSet>
         if ( this.owTiming.isZero( diff ) )
         {
           // Zero bit: only update timing...
-          time = ( long )( fallingEdge + ( this.owTiming.getBitFrameLength() / timingCorrection ) );
         }
         else if ( this.owTiming.isOne( diff ) )
         {
           // Bytes are sent LSB first, so decode the byte as well with LSB
           // first...
-          byteValue |= 0x80;
-          time = ( long )( fallingEdge + ( this.owTiming.getBitFrameLength() / timingCorrection ) );
+          byteValue |= 0x80;          
         }
         else
         {
@@ -242,7 +259,35 @@ public class OneWireAnalyserTask implements ToolTask<OneWireDataSet>
           time = fallingEdge;
           // Don't bother continuing; instead start over...
           continue;
-        }
+        }		
+		
+		//looking for the rising edge of the low pulse
+		long tRisingEdge = findEdge(aData, fallingEdge, endOfDecode, Edge.RISING );
+		long ttime = ( long )( fallingEdge + ( this.owTiming.getBitFrameLength() / timingCorrection ));
+		if(tRisingEdge>0) {
+		  //rising edge of the pulse is within the capture
+		  // now looking for the start of the next slot
+		  long tFallingEdge = findEdge(aData, tRisingEdge, endOfDecode, Edge.FALLING );
+		  if(tFallingEdge > 0) {
+			//start of the next slot is within the capture
+			// ending current slot one sample before so that next slot can be identified
+			// on the next loop
+			time = tFallingEdge - 1;
+			if(time>ttime) {
+				//when the next slot starts after idle time
+				// the current slot limit is considered the maximum slot length
+				time = ttime;
+			}
+		  } else {
+			//the next slot does not start within the capture
+			// the current slot limit is considered the maximum slot length 
+			time = ttime;
+		  }
+		} else {
+		  //the current low pulse does not finish within the capture
+		  //  the current slot limit is considered the maximum slot length
+		  time = ttime;
+		}
 
         if ( --bitCount == 0 )
         {
