@@ -108,6 +108,7 @@ public class LogicSnifferAcquisitionTask implements SumpProtocolConstants, Acqui
     final int sampleCount = this.config.getSampleCount();
     if ( sampleCount <= 0 )
     {
+      LOG.log( Level.WARNING, "Internal error: did not obtain correct number of samples (" + sampleCount + ")?!" );
       throw new InternalError( "Internal error: did not obtain correct number of samples (" + sampleCount + ")?!" );
     }
 
