@@ -27,7 +27,7 @@ set BASEDIR=%~dp0
 rem all paths are used relatively from the base dir...
 set PLUGINDIR=%BASEDIR%\plugins
 set CLASSPATH=.;%BASEDIR%\bin\*
-rem give the client roughly 1gigabyte of memory 
+rem give the client roughly 1gigabyte of memory
 set MEMSETTINGS=-Xmx1024m
 rem <https://github.com/jawi/ols/issues/125>
 set SYSPROPS=-Djna.nosys=true

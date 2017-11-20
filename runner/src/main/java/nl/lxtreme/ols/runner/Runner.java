@@ -21,6 +21,8 @@
 package nl.lxtreme.ols.runner;
 
 
+import static org.apache.felix.resolver.Logger.*;
+
 import java.io.*;
 import java.net.*;
 import java.util.*;
@@ -99,8 +101,8 @@ public final class Runner
       this.cacheDir = new File( _cacheDir ).getCanonicalFile();
       if ( !this.cacheDir.exists() && !this.cacheDir.mkdirs() )
       {
-        throw new IllegalArgumentException( String.format( "Invalid cache directory (%s): cannot create directory!",
-            this.cacheDir ) );
+        throw new IllegalArgumentException(
+            String.format( "Invalid cache directory (%s): cannot create directory!", this.cacheDir ) );
       }
 
       this.cleanCache = _cleanCache;
@@ -188,18 +190,18 @@ public final class Runner
 
       // Issue #36: log something about where we're trying to read/store stuff,
       // makes offline debugging a bit easier...
-      log( LogService.LOG_INFO, "Framework started..." );
-      log( LogService.LOG_INFO, "  plugin dir: " + this.options.pluginDir );
-      log( LogService.LOG_INFO, "  cache dir : " + this.options.cacheDir );
+      this.fwLogger.log( LogService.LOG_INFO, "Framework started..." );
+      this.fwLogger.log( LogService.LOG_INFO, "  plugin dir: " + this.options.pluginDir );
+      this.fwLogger.log( LogService.LOG_INFO, "  cache dir : " + this.options.cacheDir );
 
       bootstrap( this.framework.getBundleContext() );
 
-      log( LogService.LOG_INFO, "Bootstrap complete..." );
+      this.fwLogger.log( LogService.LOG_INFO, "Bootstrap complete..." );
     }
     catch ( Exception exception )
     {
-      log( LogService.LOG_ERROR, "Failed to start OSGi framework! Possible reason: " + exception.getMessage(),
-          exception );
+      this.fwLogger.log( LogService.LOG_ERROR,
+          "Failed to start OSGi framework! Possible reason: " + exception.getMessage(), exception );
 
       throw exception;
     }
@@ -288,6 +290,7 @@ public final class Runner
   private Map<String, Object> createConfig()
   {
     this.fwLogger = new Logger();
+    this.fwLogger.setLogger( this );
 
     final String logLevel = "" + Math.min( 4, this.options.logLevel );
     final Map<String, Object> config = new HashMap<String, Object>();
@@ -343,7 +346,7 @@ public final class Runner
 
   private Bundle installBundle( final BundleContext context, final String plugin )
   {
-    log( LogService.LOG_DEBUG, "Installing plugin: '" + plugin + "'..." );
+    this.fwLogger.log( LogService.LOG_DEBUG, "Installing plugin: '" + plugin + "'..." );
 
     try
     {
@@ -351,7 +354,7 @@ public final class Runner
     }
     catch ( BundleException exception )
     {
-      log( LogService.LOG_WARNING, "Failed to install bundle: " + plugin + "...", exception );
+      this.fwLogger.log( LogService.LOG_WARNING, "Failed to install bundle: " + plugin + "...", exception );
       return null;
     }
   }
@@ -371,14 +374,44 @@ public final class Runner
     return aBundle.getHeaders().get( Constants.FRAGMENT_HOST ) != null;
   }
 
-  private void log( final int aLevel, final String aMessage )
+  public void log( final int aLevel, final String aMessage, Throwable aException )
   {
-    this.fwLogger.log( aLevel, aMessage );
-  }
+    StringBuilder sb = new StringBuilder();
+    switch ( aLevel )
+    {
+      case LOG_DEBUG:
+        sb.append( "DEBUG" );
+        break;
+      case LOG_ERROR:
+        sb.append( "ERROR" );
+        break;
+      case LOG_INFO:
+        sb.append( "INFO" );
+        break;
+      case LOG_WARNING:
+        sb.append( "WARNING" );
+        break;
+      default:
+        sb.append( "UNKNOWN[" + aLevel + "]" );
+        break;
+    }
+    sb.append( ": " ).append( aMessage );
+    if ( aException != null )
+    {
+      if ( ( aException instanceof BundleException )
+          && ( ( ( BundleException )aException ).getNestedException() != null ) )
+      {
+        aException = ( ( BundleException )aException ).getNestedException();
+      }
+      sb.append( " " ).append( aException.getMessage() );
+    }
 
-  private void log( final int aLevel, final String aMessage, final Throwable aException )
-  {
-    this.fwLogger.log( aLevel, aMessage, aException );
+    System.err.println( sb.toString() );
+
+    if ( aException != null )
+    {
+      aException.printStackTrace();
+    }
   }
 
   @SuppressWarnings( "deprecation" )
@@ -416,7 +449,7 @@ public final class Runner
         {
           if ( !packageAdm.resolveBundles( null ) )
           {
-            log( LogService.LOG_WARNING, "Not all bundles resolve correctly!" );
+            this.fwLogger.log( LogService.LOG_WARNING, "Not all bundles resolve correctly!" );
           }
         }
         else
@@ -436,7 +469,7 @@ public final class Runner
   {
     if ( !isFragment( aBundle ) )
     {
-      log( LogService.LOG_DEBUG, "Starting bundle: " + aBundle.getSymbolicName() + "..." );
+      this.fwLogger.log( LogService.LOG_DEBUG, "Starting bundle: " + aBundle.getSymbolicName() + "..." );
 
       try
       {
@@ -444,14 +477,15 @@ public final class Runner
       }
       catch ( BundleException exception )
       {
-        log( LogService.LOG_WARNING, "Failed to start bundle: " + aBundle.getSymbolicName() + "...", exception );
+        this.fwLogger.log( LogService.LOG_WARNING, "Failed to start bundle: " + aBundle.getSymbolicName() + "...",
+            exception );
       }
     }
   }
 
   private void uninstallBundle( final Bundle aBundle )
   {
-    log( LogService.LOG_DEBUG, "Removing stale plugin: " + aBundle.getSymbolicName() + "..." );
+    this.fwLogger.log( LogService.LOG_DEBUG, "Removing stale plugin: " + aBundle.getSymbolicName() + "..." );
 
     try
     {
@@ -459,7 +493,8 @@ public final class Runner
     }
     catch ( BundleException exception )
     {
-      log( LogService.LOG_WARNING, "Failed to stop bundle: " + aBundle.getSymbolicName() + "...", exception );
+      this.fwLogger.log( LogService.LOG_WARNING, "Failed to stop bundle: " + aBundle.getSymbolicName() + "...",
+          exception );
     }
     try
     {
@@ -467,18 +502,19 @@ public final class Runner
     }
     catch ( BundleException exception )
     {
-      log( LogService.LOG_WARNING, "Failed to uninstall bundle: " + aBundle.getSymbolicName() + "...", exception );
+      this.fwLogger.log( LogService.LOG_WARNING, "Failed to uninstall bundle: " + aBundle.getSymbolicName() + "...",
+          exception );
     }
   }
 
   private Bundle updateBundle( final Bundle aBundle )
   {
-    log( LogService.LOG_DEBUG, "Updating plugin: " + aBundle.getSymbolicName() + "..." );
+    this.fwLogger.log( LogService.LOG_DEBUG, "Updating plugin: " + aBundle.getSymbolicName() + "..." );
 
     Bundle result = null;
     if ( !isFragment( aBundle ) && ( ( aBundle.getState() & Bundle.ACTIVE ) != 0 ) )
     {
-      log( LogService.LOG_DEBUG, "Stopping plugin: " + aBundle.getSymbolicName() + " for update..." );
+      this.fwLogger.log( LogService.LOG_DEBUG, "Stopping plugin: " + aBundle.getSymbolicName() + " for update..." );
 
       try
       {
@@ -486,7 +522,8 @@ public final class Runner
       }
       catch ( BundleException exception )
       {
-        log( LogService.LOG_WARNING, "Failed to stop bundle: " + aBundle.getSymbolicName() + "...", exception );
+        this.fwLogger.log( LogService.LOG_WARNING, "Failed to stop bundle: " + aBundle.getSymbolicName() + "...",
+            exception );
       }
       result = aBundle;
     }
@@ -497,7 +534,8 @@ public final class Runner
     }
     catch ( BundleException exception )
     {
-      log( LogService.LOG_WARNING, "Failed to update bundle: " + aBundle.getSymbolicName() + "...", exception );
+      this.fwLogger.log( LogService.LOG_WARNING, "Failed to update bundle: " + aBundle.getSymbolicName() + "...",
+          exception );
     }
     return result;
   }

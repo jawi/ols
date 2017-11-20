@@ -21,9 +21,11 @@
 package nl.lxtreme.ols.util.internal;
 
 
+import java.awt.*;
 import java.io.*;
 import java.lang.reflect.*;
 import java.util.*;
+import java.util.List;
 
 import javax.swing.*;
 
@@ -128,7 +130,7 @@ public final class OSXPlatformHook
         {
           final Object eventObj = aArgs[0];
           final Class<?> eventObjectClass = eventObj.getClass();
-          if ( OPEN_FILES_EVENT_CLASS_NAME.equals( eventObjectClass.getName() ) )
+          if ( JDK8_OPEN_FILES_EVENT_CLASS_NAME.equals( eventObjectClass.getName() ) )
           {
             Method getFilesMethod = eventObjectClass.getMethod( "getFiles" );
 
@@ -207,7 +209,7 @@ public final class OSXPlatformHook
         {
           final Object quitResponseObj = aArgs[1];
           final Class<?> quitResponseClass = quitResponseObj.getClass();
-          if ( QUIT_RESPONSE_CLASS_NAME.equals( quitResponseClass.getName() ) )
+          if ( JDK8_QUIT_RESPONSE_CLASS_NAME.equals( quitResponseClass.getName() ) )
           {
             if ( confirmQuit )
             {
@@ -229,19 +231,31 @@ public final class OSXPlatformHook
   // CONSTANTS
 
   static final String APPLICATION_CLASS_NAME = "com.apple.eawt.Application";
-  static final String ABOUT_HANDLER_CLASS_NAME = "com.apple.eawt.AboutHandler";
-  static final String OPEN_FILES_HANDLER_CLASS_NAME = "com.apple.eawt.OpenFilesHandler";
-  static final String PREFS_HANDLER_CLASS_NAME = "com.apple.eawt.PreferencesHandler";
-  static final String QUIT_HANDLER_CLASS_NAME = "com.apple.eawt.QuitHandler";
-  static final String APP_EVENT_LISTENER_CLASS_NAME = "com.apple.eawt.AppEventListener";
-  static final String APP_REOPENED_LISTENER_CLASS_NAME = "com.apple.eawt.AppReOpenedListener";
+  static final String DESKTOP_CLASS_NAME = "java.awt.Desktop";
 
-  static final String QUIT_RESPONSE_CLASS_NAME = "com.apple.eawt.QuitResponse";
-  static final String OPEN_FILES_EVENT_CLASS_NAME = "com.apple.eawt.AppEvent$OpenFilesEvent";
+  static final String JDK8_ABOUT_HANDLER_CLASS_NAME = "com.apple.eawt.AboutHandler";
+  static final String JDK8_OPEN_FILES_HANDLER_CLASS_NAME = "com.apple.eawt.OpenFilesHandler";
+  static final String JDK8_PREFS_HANDLER_CLASS_NAME = "com.apple.eawt.PreferencesHandler";
+  static final String JDK8_QUIT_HANDLER_CLASS_NAME = "com.apple.eawt.QuitHandler";
+  static final String JDK8_APP_EVENT_LISTENER_CLASS_NAME = "com.apple.eawt.AppEventListener";
+  static final String JDK8_APP_REOPENED_LISTENER_CLASS_NAME = "com.apple.eawt.AppReOpenedListener";
+  static final String JDK8_QUIT_RESPONSE_CLASS_NAME = "com.apple.eawt.QuitResponse";
+  static final String JDK8_OPEN_FILES_EVENT_CLASS_NAME = "com.apple.eawt.AppEvent$OpenFilesEvent";
+
+  static final String JDK9_ABOUT_HANDLER_CLASS_NAME = "java.awt.desktop.AboutHandler";
+  static final String JDK9_OPEN_FILES_HANDLER_CLASS_NAME = "java.awt.desktop.OpenFilesHandler";
+  static final String JDK9_PREFS_HANDLER_CLASS_NAME = "java.awt.desktop.PreferencesHandler";
+  static final String JDK9_QUIT_HANDLER_CLASS_NAME = "java.awt.desktop.QuitHandler";
+  static final String JDK9_QUIT_STRATEGY_CLASS_NAME = "java.awt.desktop.QuitStrategy";
+  static final String JDK9_SYSTEM_EVENT_LISTENER = "java.awt.desktop.SystemEventListener";
+  static final String JDK9_APP_REOPENED_LISTENER_CLASS_NAME = "java.awt.desktop.AppReopenedListener";
+  static final String JDK9_APP_REOPENED_EVENT_CLASS_NAME = "java.awt.desktop.AppReopenedEvent";
+  static final String JDK9_QUIT_RESPONSE_CLASS_NAME = "java.awt.desktop.QuitResponse";
+  static final String JDK9_OPEN_FILES_EVENT_CLASS_NAME = "java.awt.desktop.OpenFilesEvent";
 
   // METHODS
 
-  public static void installDefaultMenuBar( final JMenuBar defaultMenuBar )
+  public static void installDefaultMenuBar_Java8( final JMenuBar defaultMenuBar )
   {
     final ClassLoader classLoader = Thread.currentThread().getContextClassLoader();
 
@@ -262,77 +276,158 @@ public final class OSXPlatformHook
     catch ( Exception exception )
     {
       System.err.printf( "[WARNING] Installation of default menubar failed: %s", exception.getMessage() );
+      exception.printStackTrace();
     }
   }
 
-  public static void installPlatformCallback( final PlatformCallback callback )
+  public static void installDefaultMenuBar_Java9( final JMenuBar defaultMenuBar )
+  {
+    try
+    {
+      Desktop desktop = Desktop.getDesktop();
+      Class<?> desktopClass = desktop.getClass();
+
+      Method setDefaultMenuBarMethod = desktopClass.getMethod( "setDefaultMenuBar", JMenuBar.class );
+      setDefaultMenuBarMethod.invoke( desktop, defaultMenuBar );
+    }
+    catch ( Exception exception )
+    {
+      System.err.printf( "[WARNING] Installation of default menubar failed: %s", exception.getMessage() );
+      exception.printStackTrace();
+    }
+  }
+
+  public static void installPlatformCallback_Java8( final PlatformCallback callback )
   {
     final ClassLoader classLoader = Thread.currentThread().getContextClassLoader();
 
     try
     {
-      Class<?> aboutHandlerClass = classLoader.loadClass( ABOUT_HANDLER_CLASS_NAME );
+      Class<?> appClass = classLoader.loadClass( APPLICATION_CLASS_NAME );
+
+      Class<?> aboutHandlerClass = classLoader.loadClass( JDK8_ABOUT_HANDLER_CLASS_NAME );
       Object aboutHandler = OSXAboutHandler.createInstance( classLoader, callback, aboutHandlerClass );
 
-      Class<?> openFilesHandlerClass = classLoader.loadClass( OPEN_FILES_HANDLER_CLASS_NAME );
+      Class<?> openFilesHandlerClass = classLoader.loadClass( JDK8_OPEN_FILES_HANDLER_CLASS_NAME );
       Object openFilesHandler = OSXOpenFilesHandler.createInstance( classLoader, callback, openFilesHandlerClass );
 
-      Class<?> prefsHandlerClass = classLoader.loadClass( PREFS_HANDLER_CLASS_NAME );
+      Class<?> prefsHandlerClass = classLoader.loadClass( JDK8_PREFS_HANDLER_CLASS_NAME );
       Object prefsHandler = OSXPrefsHandler.createInstance( classLoader, callback, prefsHandlerClass );
 
-      Class<?> quitHandlerClass = classLoader.loadClass( QUIT_HANDLER_CLASS_NAME );
+      Class<?> quitHandlerClass = classLoader.loadClass( JDK8_QUIT_HANDLER_CLASS_NAME );
       Object quitHandler = OSXQuitHandler.createInstance( classLoader, callback, quitHandlerClass );
 
-      Class<?> appEventListenerClass = classLoader.loadClass( APP_EVENT_LISTENER_CLASS_NAME );
-      Class<?> appReOpenedListenerClass = classLoader.loadClass( APP_REOPENED_LISTENER_CLASS_NAME );
+      Class<?> appEventListenerClass = classLoader.loadClass( JDK8_APP_EVENT_LISTENER_CLASS_NAME );
+      Class<?> appReOpenedListenerClass = classLoader.loadClass( JDK8_APP_REOPENED_LISTENER_CLASS_NAME );
       Object appReOpenedListenerHandler = OSXAppReOpenedListenerHandler.createInstance( classLoader, callback,
           appEventListenerClass, appReOpenedListenerClass );
 
-      Class<?> appClass = classLoader.loadClass( APPLICATION_CLASS_NAME );
-      if ( appClass != null )
-      {
-        // Call Application#getApplication() ...
-        Method getAppMethod = appClass.getMethod( "getApplication" );
-        Object app = getAppMethod.invoke( null );
+      // Call Application#getApplication() ...
+      Method getAppMethod = appClass.getMethod( "getApplication" );
+      Object app = getAppMethod.invoke( null );
 
-        // Call Application#addAppEventListener() ...
-        Method addAppEventListenerMethod = appClass.getMethod( "addAppEventListener", appEventListenerClass );
-        addAppEventListenerMethod.invoke( app, appReOpenedListenerHandler );
+      // Call Application#addAppEventListener() ...
+      Method addAppEventListenerMethod = appClass.getMethod( "addAppEventListener", appEventListenerClass );
+      addAppEventListenerMethod.invoke( app, appReOpenedListenerHandler );
 
-        // Call Application#setAboutHandler() ...
-        Method setAboutHandlerMethod = appClass.getMethod( "setAboutHandler", aboutHandlerClass );
-        setAboutHandlerMethod.invoke( app, aboutHandler );
+      // Call Application#setAboutHandler() ...
+      Method setAboutHandlerMethod = appClass.getMethod( "setAboutHandler", aboutHandlerClass );
+      setAboutHandlerMethod.invoke( app, aboutHandler );
 
-        // Call Application#setOpenFilesHandler() ...
-        Method setOpenFilesHandlerMethod = appClass.getMethod( "setOpenFileHandler", openFilesHandlerClass );
-        setOpenFilesHandlerMethod.invoke( app, openFilesHandler );
+      // Call Application#setOpenFilesHandler() ...
+      Method setOpenFilesHandlerMethod = appClass.getMethod( "setOpenFileHandler", openFilesHandlerClass );
+      setOpenFilesHandlerMethod.invoke( app, openFilesHandler );
 
-        // Call Application#setPreferencesHandler() ...
-        Method setPreferencesHandlerMethod = appClass.getMethod( "setPreferencesHandler", prefsHandlerClass );
-        setPreferencesHandlerMethod.invoke( app, prefsHandler );
+      // Call Application#setPreferencesHandler() ...
+      Method setPreferencesHandlerMethod = appClass.getMethod( "setPreferencesHandler", prefsHandlerClass );
+      setPreferencesHandlerMethod.invoke( app, prefsHandler );
 
-        // Call Application#setQuitHandler() ...
-        Method setQuitHandlerMethod = appClass.getMethod( "setQuitHandler", quitHandlerClass );
-        setQuitHandlerMethod.invoke( app, quitHandler );
-      }
+      // Call Application#setQuitHandler() ...
+      Method setQuitHandlerMethod = appClass.getMethod( "setQuitHandler", quitHandlerClass );
+      setQuitHandlerMethod.invoke( app, quitHandler );
     }
     catch ( Exception exception )
     {
       System.err.printf( "[WARNING] Installation of platform callback failed: %s", exception.getMessage() );
+      exception.printStackTrace();
     }
   }
 
-  public static void uninstallPlatformCallback()
+  public static void installPlatformCallback_Java9( final PlatformCallback callback )
   {
     final ClassLoader classLoader = Thread.currentThread().getContextClassLoader();
 
     try
     {
-      Class<?> aboutHandlerClass = classLoader.loadClass( ABOUT_HANDLER_CLASS_NAME );
-      Class<?> openFilesHandlerClass = classLoader.loadClass( OPEN_FILES_HANDLER_CLASS_NAME );
-      Class<?> prefsHandlerClass = classLoader.loadClass( PREFS_HANDLER_CLASS_NAME );
-      Class<?> quitHandlerClass = classLoader.loadClass( QUIT_HANDLER_CLASS_NAME );
-      Class<?> appEventListenerClass = classLoader.loadClass( APP_EVENT_LISTENER_CLASS_NAME );
+      Desktop desktop = Desktop.getDesktop();
+      Class<?> desktopClass = desktop.getClass();
+
+      Class<?> aboutHandlerClass = classLoader.loadClass( JDK9_ABOUT_HANDLER_CLASS_NAME );
+      Object aboutHandler = OSXAboutHandler.createInstance( classLoader, callback, aboutHandlerClass );
+
+      Class<?> openFilesHandlerClass = classLoader.loadClass( JDK9_OPEN_FILES_HANDLER_CLASS_NAME );
+      Object openFilesHandler = OSXOpenFilesHandler.createInstance( classLoader, callback, openFilesHandlerClass );
+
+      Class<?> prefsHandlerClass = classLoader.loadClass( JDK9_PREFS_HANDLER_CLASS_NAME );
+      Object prefsHandler = OSXPrefsHandler.createInstance( classLoader, callback, prefsHandlerClass );
+
+      Class<?> quitHandlerClass = classLoader.loadClass( JDK9_QUIT_HANDLER_CLASS_NAME );
+      Object quitHandler = OSXQuitHandler.createInstance( classLoader, callback, quitHandlerClass );
+
+      Class<?> quitStrategyClass = classLoader.loadClass( JDK9_QUIT_STRATEGY_CLASS_NAME );
+
+      Object quitStrategy = Arrays.stream( quitStrategyClass.getEnumConstants() )
+          .filter( v -> "CLOSE_ALL_WINDOWS".equals( ( ( Enum<?> )v ).name() ) ).findFirst()
+          .orElseThrow( () -> new RuntimeException( "Unable to find correct quit strategy!" ) );
+
+      Class<?> systemEventListener = classLoader.loadClass( JDK9_SYSTEM_EVENT_LISTENER );
+
+      Class<?> appReOpenedListenerClass = classLoader.loadClass( JDK9_APP_REOPENED_LISTENER_CLASS_NAME );
+      Object appReOpenedListenerHandler = OSXAppReOpenedListenerHandler.createInstance( classLoader, callback,
+          appReOpenedListenerClass );
+
+      // Call Desktop#addAppEventListener() ...
+      Method addAppEventListenerMethod = desktopClass.getMethod( "addAppEventListener", systemEventListener );
+      addAppEventListenerMethod.invoke( desktop, appReOpenedListenerHandler );
+
+      // Call Desktop#setAboutHandler() ...
+      Method setAboutHandlerMethod = desktopClass.getMethod( "setAboutHandler", aboutHandlerClass );
+      setAboutHandlerMethod.invoke( desktop, aboutHandler );
+
+      // Call Desktop#setOpenFilesHandler() ...
+      Method setOpenFilesHandlerMethod = desktopClass.getMethod( "setOpenFileHandler", openFilesHandlerClass );
+      setOpenFilesHandlerMethod.invoke( desktop, openFilesHandler );
+
+      // Call Desktop#setPreferencesHandler() ...
+      Method setPreferencesHandlerMethod = desktopClass.getMethod( "setPreferencesHandler", prefsHandlerClass );
+      setPreferencesHandlerMethod.invoke( desktop, prefsHandler );
+
+      // Call Desktop#setQuitHandler() ...
+      Method setQuitHandlerMethod = desktopClass.getMethod( "setQuitHandler", quitHandlerClass );
+      setQuitHandlerMethod.invoke( desktop, quitHandler );
+
+      // Call Desktop#setQuitStrategy() ...
+      Method setQuitStrategyMethod = desktopClass.getMethod( "setQuitStrategy", quitStrategyClass );
+      setQuitStrategyMethod.invoke( desktop, quitStrategy );
+    }
+    catch ( Exception exception )
+    {
+      System.err.printf( "[WARNING] Installation of platform callback failed: %s", exception.getMessage() );
+      exception.printStackTrace();
+    }
+  }
+
+  public static void uninstallPlatformCallback_Java8()
+  {
+    final ClassLoader classLoader = Thread.currentThread().getContextClassLoader();
+
+    try
+    {
+      Class<?> aboutHandlerClass = classLoader.loadClass( JDK8_ABOUT_HANDLER_CLASS_NAME );
+      Class<?> openFilesHandlerClass = classLoader.loadClass( JDK8_OPEN_FILES_HANDLER_CLASS_NAME );
+      Class<?> prefsHandlerClass = classLoader.loadClass( JDK8_PREFS_HANDLER_CLASS_NAME );
+      Class<?> quitHandlerClass = classLoader.loadClass( JDK8_QUIT_HANDLER_CLASS_NAME );
+      Class<?> appEventListenerClass = classLoader.loadClass( JDK8_APP_EVENT_LISTENER_CLASS_NAME );
 
       Class<?> appClass = classLoader.loadClass( APPLICATION_CLASS_NAME );
       if ( appClass != null )
@@ -365,6 +460,44 @@ public final class OSXPlatformHook
     catch ( Exception exception )
     {
       System.err.printf( "[WARNING] Uninstallation of platform callback failed: %s", exception.getMessage() );
+      exception.printStackTrace();
+    }
+  }
+
+  public static void uninstallPlatformCallback_Java9()
+  {
+    final ClassLoader classLoader = Thread.currentThread().getContextClassLoader();
+
+    try
+    {
+      Desktop desktop = Desktop.getDesktop();
+      Class<?> desktopClass = desktop.getClass();
+
+      Class<?> aboutHandlerClass = classLoader.loadClass( JDK9_ABOUT_HANDLER_CLASS_NAME );
+      Class<?> openFilesHandlerClass = classLoader.loadClass( JDK9_OPEN_FILES_HANDLER_CLASS_NAME );
+      Class<?> prefsHandlerClass = classLoader.loadClass( JDK9_PREFS_HANDLER_CLASS_NAME );
+      Class<?> quitHandlerClass = classLoader.loadClass( JDK9_QUIT_HANDLER_CLASS_NAME );
+
+      // Call Desktop#setAboutHandler() ...
+      Method setAboutHandlerMethod = desktopClass.getMethod( "setAboutHandler", aboutHandlerClass );
+      setAboutHandlerMethod.invoke( desktop, new Object[] { null } );
+
+      // Call Desktop#setOpenFilesHandler() ...
+      Method setOpenFilesHandlerMethod = desktopClass.getMethod( "setOpenFileHandler", openFilesHandlerClass );
+      setOpenFilesHandlerMethod.invoke( desktop, new Object[] { null } );
+
+      // Call Desktop#setPreferencesHandler() ...
+      Method setPreferencesHandlerMethod = desktopClass.getMethod( "setPreferencesHandler", prefsHandlerClass );
+      setPreferencesHandlerMethod.invoke( desktop, new Object[] { null } );
+
+      // Call Desktop#setQuitHandler() ...
+      Method setQuitHandlerMethod = desktopClass.getMethod( "setQuitHandler", quitHandlerClass );
+      setQuitHandlerMethod.invoke( desktop, new Object[] { null } );
+    }
+    catch ( Exception exception )
+    {
+      System.err.printf( "[WARNING] Uninstallation of platform callback failed: %s", exception.getMessage() );
+      exception.printStackTrace();
     }
   }
 }

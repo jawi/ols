@@ -18,8 +18,8 @@ else
 	platformOpts="-DPlastic.defaultTheme=SkyBluer -Dswing.defaultlaf=com.jgoodies.looks.plastic.Plastic3DLookAndFeel"
 fi
 
-# cross-platform "readlink -f" function; taken and modified (clean ups and made 
-# recursive) from <http://stackoverflow.com/questions/1055671>. 
+# cross-platform "readlink -f" function; taken and modified (clean ups and made
+# recursive) from <http://stackoverflow.com/questions/1055671>.
 canonical_readlink() {
 	local targetFile=$1
 
@@ -41,7 +41,7 @@ basedir=$(dirname "$scriptname")
 plugindir="$basedir/plugins/"
 classpath="$basedir/bin/*"
 
-# give the client roughly 1gigabyte of memory 
+# give the client roughly 1gigabyte of memory
 memsettings=-Xmx1024m
 
 java $platformOpts $memsettings -Djna.nosys=true -cp "$classpath" nl.lxtreme.ols.runner.Runner -pluginDir="$plugindir" "$@"

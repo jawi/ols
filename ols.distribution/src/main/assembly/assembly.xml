@@ -29,6 +29,7 @@
 				<include>org.osgi:org.osgi.compendium</include>
 				<include>org.apache.felix:org.apache.felix.configadmin</include>
                 <include>org.apache.felix:org.apache.felix.log</include>
+                <include>org.apache.felix:org.apache.felix.metatype</include>
 				<include>org.apache.felix:org.apache.felix.prefs</include>
 				<include>org.apache.felix:org.apache.felix.dependencymanager</include>
 				<include>nl.lxtreme.ols:lib.mydoggy</include>

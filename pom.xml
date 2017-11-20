@@ -134,8 +134,8 @@
 				<version>3.7.0</version>
 				<inherited>true</inherited>
 				<configuration>
-					<source>1.6</source>
-					<target>1.6</target>
+					<source>1.8</source>
+					<target>1.8</target>
 				</configuration>
 			</plugin>
 			<plugin>
@@ -413,6 +413,11 @@
 				<groupId>org.apache.felix</groupId>
 				<artifactId>org.apache.felix.log</artifactId>
 				<version>1.0.1</version>
+			</dependency>
+			<dependency>
+				<groupId>org.apache.felix</groupId>
+				<artifactId>org.apache.felix.metatype</artifactId>
+				<version>1.1.6</version>
 			</dependency>
 			<dependency>
 				<groupId>org.apache.felix</groupId>

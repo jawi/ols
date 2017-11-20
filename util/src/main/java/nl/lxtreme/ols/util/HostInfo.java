@@ -1,5 +1,5 @@
 /*
- * OpenBench LogicSniffer / SUMP project 
+ * OpenBench LogicSniffer / SUMP project
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -20,13 +20,19 @@
  */
 package nl.lxtreme.ols.util;
 
+
 /**
- * Provides information about the host the application is currently running
- * on.
+ * Provides information about the host the application is currently running on.
  */
 public interface HostInfo
 {
   // METHODS
+
+  /**
+   * @return the major java version, for example 7 for Java 7, 8 for Java 8, and
+   *         so on.
+   */
+  int getJavaVersion();
 
   /**
    * @return <code>true</code> if the running host is (any form of) Linux,
@@ -47,8 +53,8 @@ public interface HostInfo
   boolean isSolaris();
 
   /**
-   * @return <code>true</code> if the running host is any form of Unix, that
-   *         is, Linux, Solaris, and so on, <code>false</code> otherwise.
+   * @return <code>true</code> if the running host is any form of Unix, that is,
+   *         Linux, Solaris, and so on, <code>false</code> otherwise.
    */
   boolean isUnix();
 
@@ -59,9 +65,9 @@ public interface HostInfo
   boolean isWindows();
 
   /**
-   * @return <code>true</code> if an explicit about menu item needs to be
-   *         added to a UI created on the running host, <code>false</code> if
-   *         the running host already provides an about menu item by default.
+   * @return <code>true</code> if an explicit about menu item needs to be added
+   *         to a UI created on the running host, <code>false</code> if the
+   *         running host already provides an about menu item by default.
    */
   boolean needsAboutMenuItem();
 
@@ -73,9 +79,9 @@ public interface HostInfo
   boolean needsExitMenuItem();
 
   /**
-   * @return <code>true</code> if an explicit preferences menu item needs to
-   *         be added to a UI created on the running host, <code>false</code>
-   *         if the running host already provides a preferences menu item by
+   * @return <code>true</code> if an explicit preferences menu item needs to be
+   *         added to a UI created on the running host, <code>false</code> if
+   *         the running host already provides a preferences menu item by
    *         default.
    */
   boolean needsPreferencesMenuItem();

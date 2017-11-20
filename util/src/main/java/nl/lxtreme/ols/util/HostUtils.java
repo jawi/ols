@@ -15,7 +15,7 @@
  * with this program; if not, write to the Free Software Foundation, Inc.,
  * 51 Franklin St, Fifth Floor, Boston, MA 02110, USA
  *
- * 
+ *
  * Copyright (C) 2010-2011 - J.W. Janssen, http://www.lxtreme.nl
  */
 package nl.lxtreme.ols.util;
@@ -23,6 +23,8 @@ package nl.lxtreme.ols.util;
 
 import java.io.*;
 import java.util.logging.*;
+
+import org.osgi.framework.Version;
 
 
 /**
@@ -54,7 +56,7 @@ public final class HostUtils implements HostInfo
    * If the given resource also implements the {@link Flushable} interface, the
    * resource is flushed before being closed.
    * </p>
-   * 
+   *
    * @param aResource
    *          the resource to close, can be <code>null</code>, it might already
    *          be closed.
@@ -97,7 +99,7 @@ public final class HostUtils implements HostInfo
 
   /**
    * Creates an OS-specific file location to store data.
-   * 
+   *
    * @param aName
    *          the name of the data file, excluding the file extension, cannot be
    *          <code>null</code> or empty;
@@ -149,7 +151,7 @@ public final class HostUtils implements HostInfo
 
   /**
    * Creates an OS-specific file location to store properties.
-   * 
+   *
    * @param aName
    *          the name of the properties file, excluding <tt>.properties</tt>,
    *          cannot be <code>null</code> or empty. By convention, the name of a
@@ -166,7 +168,7 @@ public final class HostUtils implements HostInfo
   /**
    * Flushes the given input stream by reading as many bytes as there are still
    * available.
-   * 
+   *
    * @param aResource
    *          the resource to flush, can be <code>null</code>.
    * @throws IOException
@@ -185,7 +187,7 @@ public final class HostUtils implements HostInfo
   /**
    * Returns the "presumed" filename extension (like '.jpg', '.zip') from a
    * given file.
-   * 
+   *
    * @param aFile
    *          the file to return the extension for, cannot be <code>null</code>.
    * @return the file extension (always in lower case), never <code>null</code>
@@ -214,7 +216,7 @@ public final class HostUtils implements HostInfo
 
   /**
    * Returns the current value of hostinfo.
-   * 
+   *
    * @return the host information, never <code>null</code>.
    */
   public static HostInfo getHostInfo()
@@ -228,7 +230,7 @@ public final class HostUtils implements HostInfo
    * {@link InterruptedIOException} or {@link InterruptedException}. This method
    * should be called in every catch(IOException), catch(Exception) or
    * catch(Throwable) block.
-   * 
+   *
    * @param aThrowable
    *          the exception to be checked for interruption. Does nothing if
    *          <code>null</code>.
@@ -260,7 +262,7 @@ public final class HostUtils implements HostInfo
   /**
    * Allows the logging properties of the JVM to be set at any moment in time
    * providing the logging configuration in an input-stream.
-   * 
+   *
    * @param aInputStream
    *          the input stream providing the logging properties, cannot be
    *          <code>null</code>.
@@ -286,7 +288,7 @@ public final class HostUtils implements HostInfo
 
   /**
    * Reverses the elements in the given array.
-   * 
+   *
    * @param aArray
    *          the array to reverse, cannot be <code>null</code>.
    * @throws IllegalArgumentException
@@ -310,7 +312,7 @@ public final class HostUtils implements HostInfo
 
   /**
    * Reverses the elements in the given array.
-   * 
+   *
    * @param aArray
    *          the array to reverse, cannot be <code>null</code>.
    * @throws IllegalArgumentException
@@ -335,7 +337,7 @@ public final class HostUtils implements HostInfo
   /**
    * Sets the filename to end with the given file extension, if this is not
    * already the case.
-   * 
+   *
    * @param aFile
    *          the file that should get the given file extension, cannot be
    *          <code>null</code>;
@@ -381,7 +383,7 @@ public final class HostUtils implements HostInfo
   /**
    * Returns the "presumed" filename extension (like '.jpg', '.zip') from a
    * given file.
-   * 
+   *
    * @param aFile
    *          the file to return the extension for, cannot be <code>null</code>.
    * @return the file extension (always in lower case), never <code>null</code>
@@ -395,7 +397,7 @@ public final class HostUtils implements HostInfo
   /**
    * Returns the "presumed" filename extension (like '.jpg', '.zip') from a
    * given file.
-   * 
+   *
    * @param aFilename
    *          the name of the file to strip the extension from, cannot be
    *          <code>null</code>;
@@ -438,10 +440,22 @@ public final class HostUtils implements HostInfo
     return result;
   }
 
+  @Override
+  public int getJavaVersion()
+  {
+    String prop = System.getProperty( "java.version" );
+    if ( prop.contains( "_" ) )
+    {
+      prop = prop.replaceFirst( "_", "." );
+    }
+    Version version = Version.parseVersion( prop );
+    return version.getMajor();
+  }
+
   /**
    * Returns whether the current host's operating system is Linux or any other
    * UNIX-like operating system, such as Solaris (SunOS).
-   * 
+   *
    * @return <code>true</code> if running on Linux or any other UNIX system,
    *         <code>false</code> otherwise.
    */
@@ -453,7 +467,7 @@ public final class HostUtils implements HostInfo
 
   /**
    * Returns whether the current host's operating system is Mac OS X.
-   * 
+   *
    * @return <code>true</code> if running on Mac OS X, <code>false</code>
    *         otherwise.
    */
@@ -465,7 +479,7 @@ public final class HostUtils implements HostInfo
 
   /**
    * Returns whether the current host's operating system is Sun/Open Solaris.
-   * 
+   *
    * @return <code>true</code> if running on Sun/Open Solaris system,
    *         <code>false</code> otherwise.
    */
@@ -479,7 +493,7 @@ public final class HostUtils implements HostInfo
   /**
    * Returns whether the current host's operating system is Linux or any other
    * UNIX-like operating system, such as Solaris (SunOS).
-   * 
+   *
    * @return <code>true</code> if running on Linux or any other UNIX system,
    *         <code>false</code> otherwise.
    */
@@ -487,7 +501,7 @@ public final class HostUtils implements HostInfo
   {
     String osName = System.getProperty( "os.name" ).toLowerCase();
     return ( osName.indexOf( "nix" ) >= 0 ) || //
-        // linux
+    // linux
         isLinux() ||
         // solaris
         isSolaris();
@@ -495,7 +509,7 @@ public final class HostUtils implements HostInfo
 
   /**
    * Returns whether the current host's operating system is Windows.
-   * 
+   *
    * @return <code>true</code> if running on Windows, <code>false</code>
    *         otherwise.
    */

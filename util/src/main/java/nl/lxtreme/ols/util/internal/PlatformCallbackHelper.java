@@ -39,9 +39,17 @@ public class PlatformCallbackHelper
    */
   public void setPlatformCallback( final PlatformCallback aCallback )
   {
-    if ( HostUtils.getHostInfo().isMacOS() )
+    HostInfo hostInfo = HostUtils.getHostInfo();
+    if ( hostInfo.isMacOS() )
     {
-      OSXPlatformHook.installPlatformCallback( aCallback );
+      if ( hostInfo.getJavaVersion() > 8 )
+      {
+        OSXPlatformHook.installPlatformCallback_Java9( aCallback );
+      }
+      else
+      {
+        OSXPlatformHook.installPlatformCallback_Java8( aCallback );
+      }
     }
   }
 

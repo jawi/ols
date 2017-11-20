@@ -42,11 +42,6 @@
 		</dependency>
 
 		<dependency>
-			<groupId>org.osgi</groupId>
-			<artifactId>osgi.cmpn</artifactId>
-			<scope>runtime</scope>
-		</dependency>
-		<dependency>
 			<groupId>org.apache.felix</groupId>
 			<artifactId>org.apache.felix.prefs</artifactId>
 			<scope>runtime</scope>
@@ -56,6 +51,11 @@
 			<artifactId>org.apache.felix.log</artifactId>
 			<scope>runtime</scope>
 		</dependency>
+        <dependency>
+            <groupId>org.apache.felix</groupId>
+            <artifactId>org.apache.felix.metatype</artifactId>
+            <scope>runtime</scope>
+        </dependency>
 
 		<dependency>
 			<groupId>nl.lxtreme.ols</groupId>
