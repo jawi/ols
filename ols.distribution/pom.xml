@@ -37,13 +37,13 @@
 		</dependency>
 		<dependency>
 			<groupId>com.jgoodies</groupId>
-			<artifactId>looks</artifactId>
+			<artifactId>jgoodies-looks</artifactId>
 			<scope>runtime</scope>
 		</dependency>
 
 		<dependency>
 			<groupId>org.osgi</groupId>
-			<artifactId>org.osgi.compendium</artifactId>
+			<artifactId>osgi.cmpn</artifactId>
 			<scope>runtime</scope>
 		</dependency>
 		<dependency>

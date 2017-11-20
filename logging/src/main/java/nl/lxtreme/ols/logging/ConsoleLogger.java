@@ -1,5 +1,5 @@
 /*
- * OpenBench LogicSniffer / SUMP project 
+ * OpenBench LogicSniffer / SUMP project
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -15,10 +15,11 @@
  * with this program; if not, write to the Free Software Foundation, Inc.,
  * 51 Franklin St, Fifth Floor, Boston, MA 02110, USA
  *
- * 
+ *
  * Copyright (C) 2010-2011 - J.W. Janssen, http://www.lxtreme.nl
  */
 package nl.lxtreme.ols.logging;
+
 
 import static nl.lxtreme.ols.logging.Activator.*;
 
@@ -31,28 +32,29 @@ import org.osgi.service.log.*;
  * message to <code>System.out</code>. It does not implement the LogReader or
  * LogListeners.
  */
+@SuppressWarnings( "rawtypes" )
 public class ConsoleLogger implements LogService
 {
   private static String[] LEVEL = { "", "ERROR", "WARN ", "INFO ", "DEBUG" };
 
-  public void log( int level, String message )
+  public void log( final int level, final String message )
   {
     log( null, level, message, null );
   }
 
-  public void log( int level, String message, Throwable throwable )
+  public void log( final int level, final String message, final Throwable throwable )
   {
     log( null, level, message, throwable );
   }
 
-  public void log( ServiceReference reference, int level, String message )
+  public void log( final ServiceReference reference, final int level, final String message )
   {
     log( reference, level, message, null );
   }
 
-  public void log( ServiceReference reference, int level, String message, Throwable throwable )
+  public void log( final ServiceReference reference, final int level, final String message, final Throwable throwable )
   {
-    if ( !isDebugMode() || level > getOsgiLogLevel() )
+    if ( !isDebugMode() || ( level > getOsgiLogLevel() ) )
     {
       return;
     }
@@ -69,9 +71,8 @@ public class ConsoleLogger implements LogService
       {
         StringBuffer buffer = new StringBuffer();
         String[] objClassArr = ( ( String[] )objectClass );
-        for ( int i = 0; i < objClassArr.length; i++ )
+        for ( String svc : objClassArr )
         {
-          String svc = objClassArr[i];
           if ( buffer.length() > 0 )
           {
             buffer.append( ';' );

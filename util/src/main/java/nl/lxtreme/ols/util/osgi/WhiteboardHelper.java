@@ -1,5 +1,5 @@
 /*
- * OpenBench LogicSniffer / SUMP project 
+ * OpenBench LogicSniffer / SUMP project
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -29,14 +29,14 @@ import org.osgi.util.tracker.*;
  * Provides a helper class for easy implementation of the whiteboard pattern as
  * used in OSGi.
  */
-public class WhiteboardHelper<T> extends ServiceTracker
+public class WhiteboardHelper<T> extends ServiceTracker<T, T>
 {
   // INNER TYPES
 
   /**
    * To be implemented by the class that wants to obtain a reference to a
    * certain service.
-   * 
+   *
    * @param <T>
    *          the type of the service that is to be visited.
    */
@@ -44,7 +44,7 @@ public class WhiteboardHelper<T> extends ServiceTracker
   {
     /**
      * Called for each service.
-     * 
+     *
      * @param aService
      *          the service that is to be visited, never <code>null</code>.
      */
@@ -55,7 +55,7 @@ public class WhiteboardHelper<T> extends ServiceTracker
 
   /**
    * Creates a new WhiteboardHelper instance.
-   * 
+   *
    * @param aContext
    *          the bundle context to use;
    * @param aServiceClass
@@ -64,12 +64,12 @@ public class WhiteboardHelper<T> extends ServiceTracker
    */
   public WhiteboardHelper( final BundleContext aContext, final Class<T> aServiceClass )
   {
-    super( aContext, aServiceClass.getName(), null /* aCustomizer */);
+    super( aContext, aServiceClass.getName(), null /* aCustomizer */ );
   }
 
   /**
    * Creates a new WhiteboardHelper instance.
-   * 
+   *
    * @param aContext
    *          the bundle context to use;
    * @param aFilter
@@ -85,7 +85,7 @@ public class WhiteboardHelper<T> extends ServiceTracker
 
   /**
    * Called to invoke the given {@link Visitor} for each found service.
-   * 
+   *
    * @param aVisitor
    *          the visitor to call for each found service, cannot be
    *          <code>null</code>.
@@ -112,7 +112,7 @@ public class WhiteboardHelper<T> extends ServiceTracker
 
   /**
    * Called to invoke the given {@link Visitor} for the first found service.
-   * 
+   *
    * @param aVisitor
    *          the visitor to call for the first found service, cannot be
    *          <code>null</code>.
@@ -132,15 +132,5 @@ public class WhiteboardHelper<T> extends ServiceTracker
     {
       aVisitor.visit( ( T )serviceObj );
     }
-  }
-
-  /**
-   * {@inheritDoc}
-   */
-  @Override
-  @SuppressWarnings( "unchecked" )
-  public T getService()
-  {
-    return ( T )super.getService();
   }
 }

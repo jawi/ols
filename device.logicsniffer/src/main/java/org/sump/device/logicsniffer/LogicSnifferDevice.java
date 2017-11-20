@@ -15,7 +15,7 @@
  * with this program; if not, write to the Free Software Foundation, Inc.,
  * 51 Franklin St, Fifth Floor, Boston, MA 02110, USA
  *
- * 
+ *
  * Copyright (C) 2010-2011 - J.W. Janssen, http://www.lxtreme.nl
  */
 package org.sump.device.logicsniffer;
@@ -24,12 +24,9 @@ package org.sump.device.logicsniffer;
 import java.awt.*;
 import java.io.*;
 import java.util.logging.*;
+import java.util.logging.Logger;
 
 import javax.microedition.io.*;
-
-import nl.lxtreme.ols.api.acquisition.*;
-import nl.lxtreme.ols.api.devices.*;
-import nl.lxtreme.ols.util.swing.*;
 
 import org.apache.felix.dm.*;
 import org.apache.felix.dm.Component;
@@ -38,10 +35,14 @@ import org.osgi.service.cm.*;
 import org.osgi.service.io.*;
 import org.sump.device.logicsniffer.profile.*;
 
+import nl.lxtreme.ols.api.acquisition.*;
+import nl.lxtreme.ols.api.devices.*;
+import nl.lxtreme.ols.util.swing.*;
+
 
 /**
  * A representation of the LogicSniffer device.
- * 
+ *
  * @author J.W. Janssen
  */
 public class LogicSnifferDevice implements Device
@@ -81,8 +82,7 @@ public class LogicSnifferDevice implements Device
    * {@inheritDoc}
    */
   @Override
-  public AcquisitionTask createAcquisitionTask( final AcquisitionProgressListener aProgressListener )
-      throws IOException
+  public AcquisitionTask createAcquisitionTask( final AcquisitionProgressListener aProgressListener ) throws IOException
   {
     return new LogicSnifferAcquisitionTask( this.config, getStreamConnection(), getDeviceProfileManager(),
         aProgressListener );
@@ -122,7 +122,7 @@ public class LogicSnifferDevice implements Device
   /**
    * Displays the device controller dialog with enabled configuration portion
    * and waits for user input.
-   * 
+   *
    * @see nl.lxtreme.ols.api.devices.Device#setupCapture()
    */
   @Override
@@ -156,12 +156,13 @@ public class LogicSnifferDevice implements Device
    */
   final StreamConnection createStreamConnection( final String uri ) throws IOException
   {
-    return ( StreamConnection )this.connectorService.open( uri, ConnectorService.READ_WRITE, true /* timeouts */);
+    return ( StreamConnection )this.connectorService.open( uri, ConnectorService.READ_WRITE,
+        true /* timeouts */ );
   }
 
   /**
    * Returns the default device profile.
-   * 
+   *
    * @return a default profile, never <code>null</code>.
    */
   final DeviceProfile getDefaultProfile()
@@ -171,7 +172,7 @@ public class LogicSnifferDevice implements Device
 
   /**
    * Returns the current device profile manager.
-   * 
+   *
    * @return a device profile manager, never <code>null</code>.
    */
   final DeviceProfileManager getDeviceProfileManager()
@@ -189,7 +190,7 @@ public class LogicSnifferDevice implements Device
 
   /**
    * Called when this class is registered as OSGi service.
-   * 
+   *
    * @param aComponent
    *          the bundle context to use, cannot be <code>null</code>.
    */
@@ -201,14 +202,12 @@ public class LogicSnifferDevice implements Device
         .add( this.dependencyManager.createServiceDependency() //
             .setService( ManagedServiceFactory.class, pmFilter ) //
             .setAutoConfig( "deviceProfileManagerServiceFactory" ) //
-            .setInstanceBound( true ) //
             .setRequired( true ) ) //
         .add( this.dependencyManager.createServiceDependency() //
             .setService( ConnectorService.class ) //
             .setAutoConfig( "connectorService" ) //
-            .setInstanceBound( true ) //
             .setRequired( true ) //
-        );
+    );
   }
 
   /**
@@ -226,7 +225,7 @@ public class LogicSnifferDevice implements Device
 
   /**
    * Returns the current stream connection that is opened.
-   * 
+   *
    * @return a stream connection, can be a cached one, never <code>null</code>.
    * @throws IOException
    *           in case of I/O problems creating the stream connection.

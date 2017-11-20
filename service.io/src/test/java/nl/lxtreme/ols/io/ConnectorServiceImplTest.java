@@ -69,7 +69,7 @@ public class ConnectorServiceImplTest
     // VARIABLES
 
     private Connection connection;
-    private ServiceReference serviceRef;
+    private ServiceReference<MyConnectionFactory> serviceRef;
 
     // METHODS
 
@@ -95,7 +95,7 @@ public class ConnectorServiceImplTest
     /**
      * @return the serviceRef
      */
-    public ServiceReference getServiceReference()
+    public ServiceReference<MyConnectionFactory> getServiceReference()
     {
       return this.serviceRef;
     }
@@ -112,7 +112,7 @@ public class ConnectorServiceImplTest
     /**
      * @param aRef
      */
-    public void setServiceReference( final ServiceReference aServiceRef )
+    public void setServiceReference( final ServiceReference<MyConnectionFactory> aServiceRef )
     {
       this.serviceRef = aServiceRef;
     }
@@ -306,7 +306,8 @@ public class ConnectorServiceImplTest
   @Test
   public void openStringCFWithTwoSchemes() throws Exception
   {
-    final MyConnectionFactory factory = create( new String[] { Protocols.FTP.protocol(), Protocols.HTTP.protocol() }, 1 );
+    final MyConnectionFactory factory = create( new String[] { Protocols.FTP.protocol(), Protocols.HTTP.protocol() },
+        1 );
     registerConnectionFactory( factory );
 
     Connection returnedConn = this.connectorService.open( Protocols.HTTP.url() );
@@ -387,31 +388,28 @@ public class ConnectorServiceImplTest
     openStringWithMode( ConnectorService.WRITE );
   }
 
-  /**
-   *
-   */
+  @SuppressWarnings( "unchecked" )
   @Before
   public void setUp()
   {
     this.context = mock( BundleContext.class );
 
-    final Answer<ServiceRegistration> csAnswer = new Answer<ServiceRegistration>()
-        {
+    final Answer<ServiceRegistration<?>> csAnswer = new Answer<ServiceRegistration<?>>()
+    {
       @Override
-      public ServiceRegistration answer( final InvocationOnMock aInvocation ) throws Throwable
+      public ServiceRegistration<?> answer( final InvocationOnMock aInvocation ) throws Throwable
       {
         ConnectorServiceImplTest.this.connectorService = ( ConnectorServiceImpl )aInvocation.getArguments()[1];
         return mock( ServiceRegistration.class );
       }
-        };
+    };
 
-        when(
-            this.context.registerService( matches( ConnectorService.class.getName() ), anyObject(),
-                ( Dictionary<String, ?> )isNull() ) ).thenAnswer( csAnswer );
+    when( this.context.registerService( matches( ConnectorService.class.getName() ), anyObject(),
+        ( Dictionary<String, ?> )isNull() ) ).thenAnswer( csAnswer );
 
-        this.connectorService = new ConnectorServiceImpl( this.context );
+    this.connectorService = new ConnectorServiceImpl( this.context );
 
-        this.pid = 0;
+    this.pid = 0;
   }
 
   /**
@@ -440,21 +438,17 @@ public class ConnectorServiceImplTest
     final MyConnectionFactory factory = new MyConnectionFactory();
     factory.setConnection( conn );
 
-    final ServiceReference ref = create( aSchemes, factory, aRanking );
+    final ServiceReference<MyConnectionFactory> ref = create( aSchemes, factory, aRanking );
     factory.setServiceReference( ref );
 
     return factory;
   }
 
-  /**
-   * @param aSchemes
-   * @param aFactory
-   * @param aRanking
-   * @return
-   */
-  private ServiceReference create( final String[] aSchemes, final MyConnectionFactory aFactory, final int aRanking )
+  @SuppressWarnings( "unchecked" )
+  private ServiceReference<MyConnectionFactory> create( final String[] aSchemes, final MyConnectionFactory aFactory,
+      final int aRanking )
   {
-    final ServiceReference ref = mock( ServiceReference.class );
+    final ServiceReference<MyConnectionFactory> ref = mock( ServiceReference.class );
 
     when( ref.getProperty( Constants.SERVICE_RANKING ) ).thenReturn( Integer.valueOf( aRanking ) );
     when( ref.getProperty( ConnectionFactory.IO_SCHEME ) ).thenReturn( aSchemes );
@@ -491,13 +485,10 @@ public class ConnectorServiceImplTest
         this.connectorService.open( Protocols.HTTP.url(), ConnectorService.READ, timeouts ) );
   }
 
-  /**
-   * @param aFactories
-   * @throws InvalidSyntaxException
-   */
+  @SuppressWarnings( "unchecked" )
   private void registerConnectionFactory( final MyConnectionFactory... aFactories ) throws InvalidSyntaxException
   {
-    final ServiceReference[] serviceRefs = new ServiceReference[aFactories.length];
+    final ServiceReference<MyConnectionFactory>[] serviceRefs = new ServiceReference[aFactories.length];
     int i = 0;
     for ( MyConnectionFactory factory : aFactories )
     {
@@ -506,8 +497,8 @@ public class ConnectorServiceImplTest
       i++;
     }
 
-    when( this.context.getAllServiceReferences( eq( ConnectionFactory.class.getName() ), anyString() ) ).thenReturn(
-        serviceRefs );
+    when( this.context.getAllServiceReferences( eq( ConnectionFactory.class.getName() ), anyString() ) )
+    .thenReturn( serviceRefs );
   }
 
   /**
@@ -519,7 +510,7 @@ public class ConnectorServiceImplTest
   {
     when( this.context.getService( aFactory.getServiceReference() ) ).thenReturn( aFactory );
 
-    when( this.context.getAllServiceReferences( eq( ConnectionFactory.class.getName() ), eq( aFilter ) ) ).thenReturn(
-        new ServiceReference[] { aFactory.getServiceReference() } );
+    when( this.context.getAllServiceReferences( eq( ConnectionFactory.class.getName() ), eq( aFilter ) ) )
+    .thenReturn( new ServiceReference[] { aFactory.getServiceReference() } );
   }
 }

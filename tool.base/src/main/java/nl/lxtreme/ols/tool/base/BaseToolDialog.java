@@ -41,8 +41,8 @@ import org.osgi.framework.*;
 /**
  * Provides a base tool dialog.
  */
-public abstract class BaseToolDialog<RESULT_TYPE> extends JFrame implements ToolDialog, TaskStatusListener,
-    Configurable, Closeable
+public abstract class BaseToolDialog<RESULT_TYPE> extends JFrame
+    implements ToolDialog, TaskStatusListener, Configurable, Closeable
 {
   // CONSTANTS
 
@@ -63,7 +63,7 @@ public abstract class BaseToolDialog<RESULT_TYPE> extends JFrame implements Tool
   private final AnnotationListenerServiceTracker annotationListener;
   private final ToolProgressListenerServiceTracker toolProgressListener;
 
-  private ServiceRegistration serviceReg;
+  private ServiceRegistration<?> serviceReg;
   private volatile Future<RESULT_TYPE> toolFutureTask;
   private volatile ToolTask<RESULT_TYPE> toolTask;
   private volatile RESULT_TYPE lastResult;
@@ -109,7 +109,7 @@ public abstract class BaseToolDialog<RESULT_TYPE> extends JFrame implements Tool
       throw new IllegalStateException( "Tool is already cancelled!" );
     }
 
-    this.toolFutureTask.cancel( true /* mayInterruptIfRunning */);
+    this.toolFutureTask.cancel( true /* mayInterruptIfRunning */ );
     this.toolFutureTask = null;
   }
 

@@ -13,7 +13,7 @@
 	<dependencies>
 		<dependency>
 			<groupId>org.osgi</groupId>
-			<artifactId>org.osgi.compendium</artifactId>
+			<artifactId>osgi.cmpn</artifactId>
 			<scope>compile</scope>
 		</dependency>
 
@@ -45,7 +45,7 @@
 							org.osgi.service.prefs;version="1.1",
 							nl.lxtreme.ols.util</Import-Package>
 						<Export-Package>nl.lxtreme.ols.api,
-							nl.lxtreme.ols.api.acquisition, 
+							nl.lxtreme.ols.api.acquisition,
 							nl.lxtreme.ols.api.data,
                             nl.lxtreme.ols.api.data.annotation,
 							nl.lxtreme.ols.api.data.export,
@@ -73,7 +73,7 @@
 		</plugins>
 		<pluginManagement>
 			<plugins>
-				<!--This plugin's configuration is used to store Eclipse m2e settings 
+				<!--This plugin's configuration is used to store Eclipse m2e settings
 					only. It has no influence on the Maven build itself. -->
 				<plugin>
 					<groupId>org.eclipse.m2e</groupId>

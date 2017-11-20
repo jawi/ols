@@ -57,7 +57,7 @@ public class ConfiguratorImplTest
     Configuration config = mock( Configuration.class );
     when( config.getPid() ).thenReturn( pid );
 
-    when( this.configAdmin.getConfiguration( eq( pid ), anyString() ) ).thenReturn( config );
+    when( this.configAdmin.getConfiguration( eq( pid ), ( String )isNull() ) ).thenReturn( config );
 
     // We should be able to provision this "new" configuration resource...
     assertTrue( this.configurator.provision( configFile ) );

@@ -1,5 +1,5 @@
 /*
- * OpenBench LogicSniffer / SUMP project 
+ * OpenBench LogicSniffer / SUMP project
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -90,7 +90,7 @@ public class SerialConsoleTool implements Tool<Void>
 
   /**
    * Called when this class is unregistered as OSGi service.
-   * 
+   *
    * @param aComponent
    *          the bundle context to use, cannot be <code>null</code>.
    */
@@ -108,7 +108,7 @@ public class SerialConsoleTool implements Tool<Void>
 
   /**
    * Called when this class is registered as OSGi service.
-   * 
+   *
    * @param aComponent
    *          the bundle context to use, cannot be <code>null</code>.
    */
@@ -119,9 +119,8 @@ public class SerialConsoleTool implements Tool<Void>
     aComponent //
         .add( dependencyManager.createServiceDependency() //
             .setService( LogService.class ) //
-            .setInstanceBound( true ) //
             .setRequired( false ) //
-        );
+    );
   }
 
   /**

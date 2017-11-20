@@ -19,9 +19,9 @@
 package nl.lxtreme.ols.test;
 
 
-import java.io.*;
+import static org.junit.Assert.*;
 
-import junit.framework.*;
+import java.io.*;
 
 
 /**
@@ -55,12 +55,12 @@ public class Ensure
    */
   public Ensure()
   {
-    this( false /* aDebug */);
+    this( false /* aDebug */ );
   }
 
   /**
    * Creates a new Ensure object.
-   * 
+   *
    * @param aDebug
    *          <code>true</code> to output more information about the steps this
    *          class enters/waits for, <code>false</code> otherwise.
@@ -75,7 +75,7 @@ public class Ensure
 
   /**
    * Factory method to create a runnable step that steps to the given number.
-   * 
+   *
    * @param aEnsure
    *          the ensure class to use for setting the step;
    * @param aNr
@@ -95,7 +95,7 @@ public class Ensure
 
   /**
    * Sets the output stream for printing the results of steps to.
-   * 
+   *
    * @param aOutput
    *          the print stream to set, cannot be <code>null</code>.
    * @throws IllegalArgumentException
@@ -125,14 +125,14 @@ public class Ensure
 
   /**
    * Mark this point as step <code>nr</code>.
-   * 
+   *
    * @param aNr
    *          the step we are in.
    */
   public synchronized void step( final int aNr )
   {
     this.step++;
-    Assert.assertEquals( aNr, this.step );
+    assertEquals( aNr, this.step );
     if ( this.debug )
     {
       this.outStream.println( "[Ensure " + instance + "] step " + this.step );
@@ -145,7 +145,7 @@ public class Ensure
    * fail if that takes more than <code>timeout</code> milliseconds. If you
    * invoke wait on a thread, you are effectively assuming some other thread
    * will invoke the <code>step(nr)</code> method.
-   * 
+   *
    * @param aNr
    *          the step to wait for
    * @param aTimeout
@@ -179,8 +179,8 @@ public class Ensure
 
     if ( this.step < aNr )
     {
-      throw new IllegalStateException( "Timed out waiting for " + initialTimeout + " ms for step " + aNr
-          + ", we are still at step " + this.step );
+      throw new IllegalStateException(
+          "Timed out waiting for " + initialTimeout + " ms for step " + aNr + ", we are still at step " + this.step );
     }
 
     if ( this.debug )

@@ -15,7 +15,7 @@
  * with this program; if not, write to the Free Software Foundation, Inc.,
  * 51 Franklin St, Fifth Floor, Boston, MA 02110, USA
  *
- * 
+ *
  * Copyright (C) 2010-2011 - J.W. Janssen, http://www.lxtreme.nl
  */
 package nl.lxtreme.ols.io.serial;
@@ -67,7 +67,7 @@ public class CommConnectionFactoryTest
         mavenBundle().groupId( "nl.lxtreme.ols" ).artifactId( "org.rxtx" ).version( "2.2.0-10" ) //
 
         , vmOption( "-Xrunjdwp:transport=dt_socket,server=y,suspend=y,address=5006" ), systemTimeout( 10000 ) //
-    );
+        );
   }
 
   /**
@@ -75,7 +75,7 @@ public class CommConnectionFactoryTest
    */
   @Test
   public void testCreateExistingConnectionLinux( final BundleContext aContext ) throws IOException,
-      InvalidSyntaxException
+  InvalidSyntaxException
   {
     assumeTrue( HostUtils.getHostInfo().isUnix() );
 
@@ -95,7 +95,7 @@ public class CommConnectionFactoryTest
    */
   @Test
   public void testCreateExistingConnectionMacOS( final BundleContext aContext ) throws IOException,
-      InvalidSyntaxException
+  InvalidSyntaxException
   {
     assumeTrue( HostUtils.getHostInfo().isMacOS() );
 
@@ -116,7 +116,7 @@ public class CommConnectionFactoryTest
    */
   @Test
   public void testCreateExistingConnectionSolaris( final BundleContext aContext ) throws IOException,
-      InvalidSyntaxException
+  InvalidSyntaxException
   {
     assumeTrue( HostUtils.getHostInfo().isSolaris() );
 
@@ -136,7 +136,7 @@ public class CommConnectionFactoryTest
    */
   @Test
   public void testCreateExistingConnectionWin32( final BundleContext aContext ) throws IOException,
-      InvalidSyntaxException
+  InvalidSyntaxException
   {
     assumeTrue( HostUtils.getHostInfo().isWindows() );
 
@@ -233,7 +233,7 @@ public class CommConnectionFactoryTest
   private ConnectionFactory getConnectionFactory( final BundleContext aContext ) throws InvalidSyntaxException
   {
     final String filter = "(" + ConnectionFactory.IO_SCHEME + "=" + CommConnectionFactory.SCHEME + ")";
-    final ServiceReference[] serviceRefs = aContext.getServiceReferences( ConnectionFactory.class.getName(), filter );
+    final ServiceReference<?>[] serviceRefs = aContext.getServiceReferences( ConnectionFactory.class.getName(), filter );
     assertNotNull( serviceRefs );
     assertTrue( serviceRefs.length == 1 );
 

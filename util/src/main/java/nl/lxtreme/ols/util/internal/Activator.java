@@ -21,7 +21,7 @@
 package nl.lxtreme.ols.util.internal;
 
 
-import java.util.logging.*;
+import java.util.logging.Logger;
 
 import nl.lxtreme.ols.util.*;
 
@@ -58,13 +58,12 @@ public class Activator extends DependencyActivatorBase
     aManager.add( createComponent() //
         .setInterface( HostProperties.class.getName(), null ) //
         .setImplementation( hostProperties ) //
-        );
+    );
 
     aManager.add( createComponent() //
         .setImplementation( PlatformCallbackHelper.class ) //
         .add( createServiceDependency().setService( PlatformCallback.class )
-            .setCallbacks( "setPlatformCallback", "removePlatformCallback" )
-            .setRequired( false ) ) );
+            .setCallbacks( "setPlatformCallback", "removePlatformCallback" ).setRequired( false ) ) );
   }
 
   /**
@@ -80,7 +79,7 @@ public class Activator extends DependencyActivatorBase
 
     StringBuilder sb = new StringBuilder();
     sb.append( name ).append( " running on " ).append( osName ).append( ", " ).append( osVersion ).append( " (" )
-    .append( processor ).append( "); " ).append( javaVersion ).append( "." );
+        .append( processor ).append( "); " ).append( javaVersion ).append( "." );
 
     Logger.getLogger( getClass().getName() ).info( sb.toString() );
   }

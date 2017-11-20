@@ -1,5 +1,5 @@
 /*
- * OpenBench LogicSniffer / SUMP project 
+ * OpenBench LogicSniffer / SUMP project
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -15,7 +15,7 @@
  * with this program; if not, write to the Free Software Foundation, Inc.,
  * 51 Franklin St, Fifth Floor, Boston, MA 02110, USA
  *
- * 
+ *
  * Copyright (C) 2010-2011 - J.W. Janssen, http://www.lxtreme.nl
  */
 package nl.lxtreme.ols.io;
@@ -48,7 +48,7 @@ public class ConnectorServiceImpl implements ConnectorService
 
   /**
    * Creates a new ConnectorServiceImpl instance.
-   * 
+   *
    * @param aContext
    *          the bundle context to use, cannot be <code>null</code>.
    */
@@ -63,7 +63,7 @@ public class ConnectorServiceImpl implements ConnectorService
   /**
    * Determines for the given URI the scheme and returns its corresponding
    * {@link Scheme} object.
-   * 
+   *
    * @param aURI
    *          the URI to get the scheme name for, cannot be <code>null</code>.
    * @return a scheme name, can be <code>null</code>.
@@ -91,7 +91,7 @@ public class ConnectorServiceImpl implements ConnectorService
 
   /**
    * Locates the connection factory service instance through OSGi.
-   * 
+   *
    * @param aContext
    *          the bundle context to use for communication with the OSGi
    *          framework, cannot be <code>null</code>;
@@ -111,7 +111,7 @@ public class ConnectorServiceImpl implements ConnectorService
     final String filter = "(".concat( ConnectionFactory.IO_SCHEME ).concat( "=" ).concat( protocol ).concat( ")" );
     try
     {
-      final ServiceReference[] serviceRefs = aContext.getAllServiceReferences( ConnectionFactory.class.getName(),
+      final ServiceReference<?>[] serviceRefs = aContext.getAllServiceReferences( ConnectionFactory.class.getName(),
           filter );
       if ( ( serviceRefs != null ) && ( serviceRefs.length > 0 ) )
       {
@@ -142,7 +142,7 @@ public class ConnectorServiceImpl implements ConnectorService
   @Override
   public Connection open( final String aName, final int aMode ) throws IOException
   {
-    return open( aName, aMode, false /* aTimeouts */);
+    return open( aName, aMode, false /* aTimeouts */ );
   }
 
   /**
@@ -228,7 +228,7 @@ public class ConnectorServiceImpl implements ConnectorService
 
   /**
    * Helper method to open a stream connection for a given URI.
-   * 
+   *
    * @param aURI
    *          the URI to open a stream connection for, cannot be
    *          <code>null</code>.

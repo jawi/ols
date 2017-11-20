@@ -28,15 +28,20 @@ import java.util.*;
 import java.util.List;
 import java.util.concurrent.*;
 import java.util.logging.*;
+import java.util.logging.Logger;
 
 import javax.swing.*;
+
+import org.apache.felix.dm.*;
+import org.apache.felix.dm.Component;
+import org.osgi.framework.*;
+import org.osgi.service.cm.*;
 
 import nl.lxtreme.ols.api.*;
 import nl.lxtreme.ols.api.acquisition.*;
 import nl.lxtreme.ols.api.data.*;
 import nl.lxtreme.ols.api.data.Cursor;
-import nl.lxtreme.ols.api.data.annotation.Annotation;
-import nl.lxtreme.ols.api.data.annotation.AnnotationListener;
+import nl.lxtreme.ols.api.data.annotation.*;
 import nl.lxtreme.ols.api.data.export.*;
 import nl.lxtreme.ols.api.data.project.*;
 import nl.lxtreme.ols.api.devices.*;
@@ -51,17 +56,12 @@ import nl.lxtreme.ols.util.*;
 import nl.lxtreme.ols.util.swing.*;
 import nl.lxtreme.ols.util.swing.component.*;
 
-import org.apache.felix.dm.*;
-import org.apache.felix.dm.Component;
-import org.osgi.framework.*;
-import org.osgi.service.cm.*;
-
 
 /**
  * Denotes a front-end controller for the client.
  */
 public final class ClientController implements ActionProvider, AcquisitionProgressListener, AcquisitionStatusListener,
-AcquisitionDataListener, AnnotationListener, PlatformCallback
+    AcquisitionDataListener, AnnotationListener, PlatformCallback
 {
   // INNER TYPES
 
@@ -534,7 +534,8 @@ AcquisitionDataListener, AnnotationListener, PlatformCallback
     {
       if ( device.setupCapture( aParent ) )
       {
-        setStatusOnEDT( "Capture from {0} started at {1,date,medium} {1,time,medium} ...", device.getName(), new Date() );
+        setStatusOnEDT( "Capture from {0} started at {1,date,medium} {1,time,medium} ...", device.getName(),
+            new Date() );
 
         acquisitionService.acquireData( device );
         return true;
@@ -1191,7 +1192,8 @@ AcquisitionDataListener, AnnotationListener, PlatformCallback
 
     try
     {
-      setStatusOnEDT( "Capture from {0} started at {1,date,medium} {1,time,medium} ...", devCtrl.getName(), new Date() );
+      setStatusOnEDT( "Capture from {0} started at {1,date,medium} {1,time,medium} ...", devCtrl.getName(),
+          new Date() );
 
       acquisitionService.acquireData( devCtrl );
     }
@@ -1322,26 +1324,29 @@ AcquisitionDataListener, AnnotationListener, PlatformCallback
     final DependencyManager dm = new DependencyManager( this.bundleContext );
     final Component comp = dm.createComponent();
 
-    comp.setImplementation( dialog ).add( dm.createServiceDependency() //
-        .setService( ConfigurationAdmin.class ) //
-        .setInstanceBound( true ) //
-        .setRequired( true ) ) //
-        .addStateListener( new ComponentStateAdapter()
+    comp.setImplementation( dialog ) //
+        .add( dm.createServiceDependency() //
+            .setService( ConfigurationAdmin.class ) //
+            .setRequired( true ) ) //
+        .add( new ComponentStateListener()
         {
           @Override
-          public void started( final Component aComponent )
+          public void changed( final Component aComponent, final ComponentState aState )
           {
-            if ( dialog.showDialog() )
+            if ( aState == ComponentState.STARTED )
             {
-              // Update the default settings (if needed)...
-              updateDefaultSettings();
+              if ( dialog.showDialog() )
+              {
+                // Update the default settings (if needed)...
+                updateDefaultSettings();
 
-              // Ensure all UI-related changes are immediately visible...
-              repaintMainFrame();
+                // Ensure all UI-related changes are immediately visible...
+                repaintMainFrame();
+              }
+
+              // All changes are persisted automatically...
+              dm.remove( comp );
             }
-
-            // All changes are persisted automatically...
-            dm.remove( comp );
           }
         } );
 
