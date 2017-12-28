@@ -22,6 +22,11 @@
 		</dependency>
 		<dependency>
 			<groupId>com.jgoodies</groupId>
+			<artifactId>jgoodies-common</artifactId>
+			<scope>runtime</scope>
+		</dependency>
+		<dependency>
+			<groupId>com.jgoodies</groupId>
 			<artifactId>jgoodies-looks</artifactId>
 			<scope>runtime</scope>
 		</dependency>

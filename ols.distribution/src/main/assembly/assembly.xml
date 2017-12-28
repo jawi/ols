@@ -14,6 +14,7 @@
 			<outputDirectory>bin</outputDirectory>
 			<includes>
 				<include>org.apache.felix:org.apache.felix.main</include>
+				<include>com.jgoodies:jgoodies-common</include>
 				<include>com.jgoodies:jgoodies-looks</include>
 				<include>nl.lxtreme.ols:runner</include>
 			</includes>
@@ -85,7 +86,7 @@
 			<includes>
 				<include>**</include>
 			</includes>
-			<lineEnding>dos</lineEnding>
+			<lineEnding>unix</lineEnding>
 			<directoryMode>0755</directoryMode>
 			<fileMode>0644</fileMode>
 		</fileSet>
@@ -100,7 +101,7 @@
 				<include>CHANGELOG</include>
 				<include>run.bat</include>
 			</includes>
-			<lineEnding>dos</lineEnding>
+			<lineEnding>unix</lineEnding>
 			<directoryMode>0755</directoryMode>
 			<fileMode>0644</fileMode>
 		</fileSet>
