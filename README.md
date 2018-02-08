@@ -6,7 +6,7 @@ This is the public [Git][git] repository for the OpenBench LogicSniffer (*ols*
 for short) written by J.W. Janssen. It is an alternative client for an open
 source [logic analyzer](https://en.wikipedia.org/wiki/Logic_analyzer) called
 the [Open Bench Logic Sniffer](http://dangerousprototypes.com/docs/Open_Bench_Logic_Sniffer).
-Refer to this [page](http://ols.lxtreme.nl) for more information about the
+Refer to this [page](https://lxtreme.nl/projects/ols/) for more information about the
 project.
 
 ## FEATURES
