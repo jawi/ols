@@ -22,6 +22,10 @@ package nl.lxtreme.ols.test.data.project;
 
 
 import static org.junit.Assert.*;
+
+import java.util.ArrayList;
+import java.util.List;
+
 import nl.lxtreme.ols.api.*;
 import nl.lxtreme.ols.api.acquisition.*;
 import nl.lxtreme.ols.api.data.*;
@@ -181,7 +185,16 @@ public class StubDataSet implements DataSet
   @Override
   public Channel[] getChannels()
   {
-    return this.channels;
+    List<Channel> result = new ArrayList<Channel>();
+    // Issue #244 - only return non-null channels...
+    for ( Channel chan : this.channels )
+    {
+      if ( chan != null )
+      {
+        result.add( chan );
+      }
+    }
+    return result.toArray( size -> new Channel[size] );
   }
 
   /**
@@ -222,10 +235,18 @@ public class StubDataSet implements DataSet
     this.capturedData = aCapturedData;
 
     int count = aCapturedData.getChannels();
+    int mask = aCapturedData.getEnabledChannels();
+
     this.channels = new Channel[count];
-    for ( int i = 0; i < count; i++ )
+    for ( int i = 0, j = 0; ( j < count ) && ( i < Ols.MAX_CHANNELS ); i++ )
     {
-      this.channels[i] = new StubChannel( i );
+      final int chMask = ( 1 << i );
+      // Issue #99: demultiplex the channels to the right group...
+      if ( ( mask & chMask ) == 0 )
+      {
+        continue;
+      }
+      this.channels[j++] = new StubChannel( i );
     }
   }
 

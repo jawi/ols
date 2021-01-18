@@ -59,8 +59,8 @@ public class DataSetImpl implements PropertyChangeListener, DataSet, ProjectProp
 
     this.capturedData = aCapturedData;
     this.cursorsEnabled = aOld.isCursorsEnabled();
-    this.channels = createChannels( aCapturedData.getChannels(), aCapturedData.getEnabledChannels(),
-        aRetainAnnotations, aOld.getChannels() );
+    this.channels = createChannels( aCapturedData.getChannels(), aCapturedData.getEnabledChannels(), aRetainAnnotations,
+        aOld.getChannels() );
     this.cursors = createCursors( Ols.MAX_CURSORS, aOld.getCursors() );
   }
 
@@ -73,7 +73,8 @@ public class DataSetImpl implements PropertyChangeListener, DataSet, ProjectProp
 
     this.capturedData = null;
     this.cursors = createCursors( Ols.MAX_CURSORS );
-    this.channels = createChannels( Ols.MAX_CHANNELS, 0xFFFFFFFF, false /* aRetainAnnotations */);
+    this.channels = createChannels( Ols.MAX_CHANNELS, 0xFFFFFFFF,
+        false /* aRetainAnnotations */ );
     this.cursorsEnabled = true;
   }
 
@@ -120,7 +121,16 @@ public class DataSetImpl implements PropertyChangeListener, DataSet, ProjectProp
   @Override
   public Channel[] getChannels()
   {
-    return Arrays.copyOf( this.channels, this.channels.length );
+    List<Channel> result = new ArrayList<Channel>();
+    // Issue #244 - only return non-null channels...
+    for ( Channel chan : this.channels )
+    {
+      if ( chan != null )
+      {
+        result.add( chan );
+      }
+    }
+    return result.toArray( size -> new Channel[size] );
   }
 
   /**

@@ -74,6 +74,35 @@ public class CsvExporterTest
    * Test method for
    * {@link CsvExporter#export(DataSet, JComponent, OutputStream)}.
    * <p>
+   * Tests issue #244 - export with null channels (due to enabledMask not being
+   * continuous).
+   * </p>
+   */
+  @Test
+  public void testExportDataSetWithMaskedOutChannels() throws Exception
+  {
+    final int channelCount = CHANNEL_COUNT;
+    final int dataSize = 10;
+    final int sampleRate = -1;
+    final long triggerPos = -1;
+
+    // create a dataset with only channels 0 and 3 enabled...
+    final DataSet dataSet = createTestDataSet( channelCount, dataSize, sampleRate, triggerPos, 9 );
+
+    this.exporter.export( dataSet, this.component, this.outputStream );
+
+    String[] results = getCsvData();
+    assertNotNull( results );
+
+    int expectedRows = 1 /* header */ + dataSize;
+    int expectedCols = 1 /* time */ + 2 /* channels 0 & 3 */;
+    assertCsvDimensions( results, expectedRows, expectedCols );
+  }
+
+  /**
+   * Test method for
+   * {@link CsvExporter#export(DataSet, JComponent, OutputStream)}.
+   * <p>
    * Tests the export of a 4-bit data set without a sample rate and a trigger
    * position, works correctly.
    * </p>
@@ -93,8 +122,8 @@ public class CsvExporterTest
     String[] results = getCsvData();
     assertNotNull( results );
 
-    int expectedRows = 1 /* header */+ dataSize;
-    int expectedCols = 1 /* time */+ channelCount;
+    int expectedRows = 1 /* header */ + dataSize;
+    int expectedCols = 1 /* time */ + channelCount;
     assertCsvDimensions( results, expectedRows, expectedCols );
   }
 
@@ -121,8 +150,8 @@ public class CsvExporterTest
     String[] results = getCsvData();
     assertNotNull( results );
 
-    int expectedRows = 1 /* header */+ dataSize;
-    int expectedCols = 2 /* state abs, state rel */+ channelCount;
+    int expectedRows = 1 /* header */ + dataSize;
+    int expectedCols = 2 /* state abs, state rel */ + channelCount;
     assertCsvDimensions( results, expectedRows, expectedCols );
   }
 
@@ -149,8 +178,8 @@ public class CsvExporterTest
     String[] results = getCsvData();
     assertNotNull( results );
 
-    int expectedRows = 1 /* header */+ dataSize;
-    int expectedCols = 3 /* time abs, time rel & sample rate */+ channelCount;
+    int expectedRows = 1 /* header */ + dataSize;
+    int expectedCols = 3 /* time abs, time rel & sample rate */ + channelCount;
     assertCsvDimensions( results, expectedRows, expectedCols );
   }
 
@@ -177,8 +206,8 @@ public class CsvExporterTest
     String[] results = getCsvData();
     assertNotNull( results );
 
-    int expectedRows = 1 /* header */+ dataSize;
-    int expectedCols = 2 /* time + samplerate */+ channelCount;
+    int expectedRows = 1 /* header */ + dataSize;
+    int expectedCols = 2 /* time + samplerate */ + channelCount;
     assertCsvDimensions( results, expectedRows, expectedCols );
   }
 
@@ -197,18 +226,20 @@ public class CsvExporterTest
     }
   }
 
-  /**
-   * @param aChannelCount
-   * @return
-   */
   private DataSet createTestDataSet( final int aChannelCount, final int aSize, final int aSampleRate,
       final long aTriggerPos )
+  {
+    return createTestDataSet( aChannelCount, aSize, aSampleRate, aTriggerPos, ( 1 << aChannelCount ) - 1 );
+  }
+
+  private DataSet createTestDataSet( final int aChannelCount, final int aSize, final int aSampleRate,
+      final long aTriggerPos, final long aMask )
   {
     List<Integer> values = new ArrayList<Integer>( aSize );
     List<Long> timestamps = new ArrayList<Long>( aSize );
 
     int value = 0;
-    int mask = ( 1 << aChannelCount ) - 1;
+    int mask = ( int )( aMask & 0xffffffff );
     for ( int i = 0; i < aSize; i++ )
     {
       values.add( Integer.valueOf( value & mask ) );
