@@ -31,12 +31,20 @@
             <groupId>org.apache.felix</groupId>
             <artifactId>org.apache.felix.dependencymanager</artifactId>
         </dependency>
-
         <dependency>
             <groupId>nl.lxtreme.ols</groupId>
             <artifactId>lib.mydoggy</artifactId>
         </dependency>
-
+		<dependency>
+			<groupId>net.sourceforge.mydoggy</groupId>
+			<artifactId>mydoggy-api</artifactId>
+			<scope>compile</scope>
+		</dependency>
+		<dependency>
+			<groupId>net.sourceforge.mydoggy</groupId>
+			<artifactId>mydoggy-plaf</artifactId>
+			<scope>compile</scope>
+		</dependency>
 		<dependency>
 			<groupId>nl.lxtreme.ols</groupId>
 			<artifactId>test.util</artifactId>

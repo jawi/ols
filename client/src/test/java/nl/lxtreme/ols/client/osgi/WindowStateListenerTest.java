@@ -54,8 +54,9 @@ public class WindowStateListenerTest
   public void setUp() throws Exception
   {
     PreferencesService mockedPreferenceService = mock( PreferencesService.class );
-
+    
     Project mockedProject = mock( Project.class );
+    when( mockedProject.getSettings( anyString() ) ).thenReturn( mock( UserSettings.class ) );
     ProjectManager mockedProjectManager = mock( ProjectManager.class );
     when( mockedProjectManager.getCurrentProject() ).thenReturn( mockedProject );
 

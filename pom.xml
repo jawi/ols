@@ -174,7 +174,7 @@
 			<plugin>
 				<groupId>org.apache.maven.plugins</groupId>
 				<artifactId>maven-surefire-plugin</artifactId>
-				<version>2.20.1</version>
+				<version>2.21.0</version>
 				<inherited>true</inherited>
 				<configuration>
 					<forkMode>once</forkMode>
@@ -183,7 +183,7 @@
 			<plugin>
 				<groupId>org.apache.maven.plugins</groupId>
 				<artifactId>maven-javadoc-plugin</artifactId>
-				<version>3.0.0-M1</version>
+				<version>3.2.0</version>
                 <configuration>
                     <quiet/>
                 </configuration>
@@ -201,10 +201,11 @@
                     <plugin>
                         <groupId>org.apache.maven.plugins</groupId>
                         <artifactId>maven-javadoc-plugin</artifactId>
-                        <version>2.9.1</version>
+                        <version>3.2.0</version>
                         <configuration>
                             <quiet/>
-                            <additionalparam>-Xdoclint:none</additionalparam>
+                            <doclint>none</doclint>
+                            <source>8</source>
                         </configuration>
                     </plugin>
                 </plugins>
@@ -455,6 +456,27 @@
 				<groupId>org.mockito</groupId>
 				<artifactId>mockito-all</artifactId>
 				<version>2.0.2-beta</version>
+			</dependency>
+
+			<dependency>
+				<groupId>net.sourceforge.mydoggy</groupId>
+				<artifactId>mydoggy-api</artifactId>
+				<version>1.5.0-beta-r1389</version>
+			</dependency>
+			<dependency>
+				<groupId>net.sourceforge.mydoggy</groupId>
+				<artifactId>mydoggy-plaf</artifactId>
+				<version>1.5.0-beta-r1389</version>
+			</dependency>
+			<dependency>
+				<groupId>net.sourceforge.mydoggy</groupId>
+				<artifactId>mydoggy-res</artifactId>
+				<version>1.5.0-beta-r1389</version>
+			</dependency>
+			<dependency>
+				<groupId>tablelayout</groupId>
+				<artifactId>TableLayout</artifactId>
+				<version>20050920</version>
 			</dependency>
 
 		</dependencies>

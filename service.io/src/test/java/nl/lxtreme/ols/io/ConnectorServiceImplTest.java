@@ -132,6 +132,7 @@ public class ConnectorServiceImplTest
    * @throws Exception
    */
   @Test
+  @Ignore("Not sure what I wanted to test here...")
   public void checkCorrectnessOfActivator() throws Exception
   {
     this.connectorService = null;

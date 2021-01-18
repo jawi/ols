@@ -1436,6 +1436,14 @@ public final class ClientController implements ActionProvider, AcquisitionProgre
   }
 
   /**
+   * Called by the dependency manager when there is an updated configuration.
+   */
+  public final void updated( final Dictionary<String, ?> aProperties ) throws ConfigurationException
+  {
+	  LOG.fine( "Ignoring configuration (dependency only): " + aProperties );
+  }
+
+  /**
    * Returns the current data set.
    *
    * @return the current data set, never <code>null</code>.
