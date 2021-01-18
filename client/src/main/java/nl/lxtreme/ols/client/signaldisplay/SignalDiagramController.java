@@ -505,6 +505,13 @@ public final class SignalDiagramController implements ZoomListener
       public void run()
       {
         JComponent viewComp = null;
+        // Issue #181 - do not crash upon new projects...
+        if ( aDataSet.getCapturedData() == null )
+        {
+          setViewComponent( viewComp );
+          return;
+        }
+
         if ( aDataSet.getCapturedData().hasTimingData() )
         {
           viewComp = new SignalDiagramComponent( SignalDiagramController.this );
