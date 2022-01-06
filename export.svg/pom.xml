@@ -56,7 +56,7 @@
 			<groupId>org.apache.xmlgraphics</groupId>
 			<artifactId>batik-xml</artifactId>
 			<scope>runtime</scope>
-			<version>1.7</version>
+			<version>1.14</version>
 		</dependency>
 		<dependency>
 			<groupId>org.apache.xmlgraphics</groupId>
