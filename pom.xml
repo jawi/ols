@@ -177,7 +177,11 @@
 				<version>2.21.0</version>
 				<inherited>true</inherited>
 				<configuration>
-					<forkMode>once</forkMode>
+					<forkMode>once</forkMode>					
+					<argLine>
+						--add-opens java.base/java.lang=ALL-UNNAMED
+						--add-opens java.desktop/java.awt=ALL-UNNAMED
+					</argLine>
 				</configuration>
 			</plugin>
 			<plugin>
