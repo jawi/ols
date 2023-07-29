@@ -31,6 +31,7 @@ rem give the client roughly 1gigabyte of memory
 set MEMSETTINGS=-Xmx1024m
 rem <https://github.com/jawi/ols/issues/125>
 set SYSPROPS=-Djna.nosys=true
+set JDK_JAVA_OPTIONS=--add-opens java.desktop/javax.swing.plaf.basic=ALL-UNNAMED
 
 rem For now, use the "console enabled" java for Windows...
 java %PLATFORMOPTS% %MEMSETTINGS% %SYSPROPS% -cp "%CLASSPATH%" nl.lxtreme.ols.runner.Runner -pluginDir="%PLUGINDIR%" %*
